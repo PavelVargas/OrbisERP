@@ -80,10 +80,43 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # INIT DB
 db.init_app(app)
 
+# =========================
+# 🔥 CREATE SUPERADMIN
+# =========================
+def create_superadmin():
+    try:
+        admin = User.query.filter_by(email='admin@orbis.com').first()
+        
+        if not admin:
+            new_admin = User(
+                name='Administrador Global',
+                email='admin@orbis.com',
+                password='admin1234',
+                cedula='000-0000000-0',
+                role='superadmin',
+                default_currency='DOP',
+                company_id=None,
+                warehouse_id=None
+            )
+            
+            db.session.add(new_admin)
+            db.session.commit()
+            
+            print("🔥 Superadmin creado automáticamente")
+        else:
+            print("✅ Superadmin ya existe")
+
+    except Exception as e:
+        print("⚠️ Error creando superadmin:", e)
+
+
+# =========================
 # 🔥 CREATE TABLES SAFE
+# =========================
 try:
     with app.app_context():
         db.create_all()
+        create_superadmin()
         print("✅ DB conectada y tablas creadas")
 except Exception as e:
     print("⚠️ DB aún no lista:", e)
