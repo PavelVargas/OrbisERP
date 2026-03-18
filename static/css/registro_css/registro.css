@@ -1,0 +1,183 @@
+/* --- VARIABLES MAESTRAS --- */
+:root {
+    --primary: #faa200;
+    --bg-main: #f8fafc;
+    --bg-card: #ffffff;
+    --border: rgba(0, 0, 0, 0.08);
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --glass: rgba(255, 255, 255, 0.8);
+}
+
+html.dark {
+    --bg-main: #0b0f1a; 
+    --bg-card: #151b2c; 
+    --border: rgba(255, 255, 255, 0.08);
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --glass: rgba(21, 27, 44, 0.8);
+}
+
+body {
+    margin: 0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    min-height: 100vh;
+}
+
+/* --- NAV / HEADER --- */
+.auth-nav {
+    position: fixed;
+    top: 0; width: 96%;
+    padding: 25px 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+}
+
+.nav-logo {
+    text-decoration: none;
+    color: var(--text-main);
+    font-size: 1.4rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.nav-logo i { color: var(--primary); font-size: 1.8rem; }
+
+.theme-switch {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    border-radius: 50px;
+    color: var(--text-main);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+/* --- SPLIT LAYOUT --- */
+.split-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 100vh;
+}
+
+.side-visual {
+    background: radial-gradient(circle at top left, rgba(250, 162, 0, 0.1), transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px;
+}
+
+.visual-content h1 {
+    font-size: 4rem;
+    line-height: 1.1;
+    margin-bottom: 20px;
+    letter-spacing: -2px;
+}
+
+.text-gradient {
+    background: linear-gradient(135deg, var(--primary), #ff8c00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* --- FORM SIDE --- */
+.side-form {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+}
+
+.register-card {
+    width: 100%;
+    max-width: 440px;
+}
+
+.form-header { margin-bottom: 30px; }
+.form-header h2 { font-size: 2rem; font-weight: 800; margin: 0; color: var(--primary); }
+.form-header p { color: var(--text-muted); margin-top: 10px; }
+
+.form-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.field-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+.field-group label i { color: var(--primary); }
+
+.field-group input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 14px 18px;
+    border-radius: 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    font-family: inherit;
+    transition: 0.3s;
+}
+
+.field-group input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(250, 162, 0, 0.1);
+}
+
+.btn-register-main {
+    width: 100%;
+    margin-top: 30px;
+    padding: 16px;
+    border-radius: 12px;
+    border: none;
+    background: var(--primary);
+    color: white;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    transition: 0.3s;
+}
+
+.btn-register-main:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+    box-shadow: 0 10px 20px rgba(250, 162, 0, 0.2);
+}
+
+.login-redirect {
+    margin-top: 25px;
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+.login-redirect a { color: var(--primary); text-decoration: none; }
+
+/* RESPONSIVO */
+@media (max-width: 992px) {
+    .split-layout { grid-template-columns: 1fr; }
+    .side-visual { display: none; }
+    .auth-nav { padding: 20px; }
+    .side-form { padding-top: 100px; }
+    .mode-text { display: none; }
+}

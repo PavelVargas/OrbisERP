@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es" class="{% if session.get('theme') == 'dark' %}dark{% endif %}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productos | OrbisERP</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/products_css/products.css">
+    <style>
+        .rate-info-badge {
+            background: rgba(52, 152, 219, 0.1);
+            border: 1px solid rgba(52, 152, 219, 0.2);
+            padding: 6px 14px;
+            border-radius: 50px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 15px;
+            vertical-align: middle;
+        }
+        .rate-info-badge i { color: #3498db; font-size: 1.1rem; }
+        .rate-text { color: #3498db; font-size: 13px; font-weight: 600; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .conversion-note {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            opacity: 0.7;
+            display: block;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+        .margin-tag {
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: rgba(39, 174, 96, 0.1);
+            color: #27ae60;
+            margin-top: 5px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    {% include "layouts/left_bar.html" %}
+
+    <main>
+        <div class="top-nav">
+            <a href="/dashboard" class="back-link">
+                <i class="bi bi-chevron-left"></i> Volver
+            </a>
+            <div class="user-meta">
+                <i class="bi bi-box-seam"></i> Gestión de Inventario
+            </div>
+        </div>
+
+        <header class="page-header">
+            <div class="title-group">
+                <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <h2 style="margin: 0; font-family: 'Plus Jakarta Sans'; font-weight: 800;">Productos</h2>
+                    <div class="rate-info-badge">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <span class="rate-text">
+                            {% if selected_currency == 'DOP' %}
+                                Moneda Base: DOP
+                            {% else %}
+                                1 {{ selected_currency }} = {{ "{:,.2f}".format(conversion_rate) }} DOP
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                <p>Gestiona los precios, SKU y existencias globales en tiempo real.</p>
+            </div>
+            <a href="{{ url_for('products_bp.create_product') }}" class="btn-primary">
+                <i class="bi bi-plus-lg"></i> Nuevo Producto
+            </a>
+        </header>
+
+        <section class="filter-section">
+            <form method="GET" action="{{ url_for('products_bp.list_products') }}" class="filter-bar">
+                <div class="search-wrapper">
+                    <i class="bi bi-search"></i>
+                    <input type="text" name="search" placeholder="Buscar por nombre o SKU..." value="{{ search_query if search_query }}">
+                </div>
+                <div class="filter-controls">
+                    <select name="category_id">
+                        <option value="">Todas las Categorías</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}" {% if selected_category == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn-filter">Filtrar</button>
+                    {% if selected_category or search_query %}
+                    <a href="{{ url_for('products_bp.list_products') }}" class="btn-clear">
+                        <i class="bi bi-x-circle-fill"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </form>
+        </section>
+
+        <div class="products-grid">
+            {% for product in products %}
+            <div class="product-card">
+                <a href="{{ url_for('products_bp.view_product', id=product.id) }}" class="card-link-wrapper">
+                    <div class="card-top">
+                        <span class="sku-tag">#{{ product.sku }}</span>
+                        <span class="cat-tag">{{ product.category.name if product.category else "Sin categoría" }}</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="product-name">{{ product.name }}</div>
+                        
+                        <div class="price-box">
+                            <div style="display: flex; align-items: baseline; gap: 4px;">
+                                <span class="currency" style="color: #faa200; font-weight: 800; font-size: 0.8rem;">
+                                    {{ currency_symbol }}
+                                </span>
+                                
+                                <span class="amount" style="font-size: 1.4rem; font-weight: 800; color: var(--text-main, #ffffff);">
+                                    {{ "{:,.2f}".format(product.price / conversion_rate) }}
+                                </span>
+                            </div>
+
+                            {% if product.cost and product.cost > 0 %}
+                            <div class="margin-tag">
+                                <i class="bi bi-lightning-fill"></i> 
+                                Margen: {{ currency_symbol }} {{ "{:,.2f}".format((product.price - product.cost) / conversion_rate) }}
+                            </div>
+                            {% endif %}
+
+                            <span class="conversion-note">
+                                {% if selected_currency != 'DOP' %}
+                                    <i class="bi bi-arrow-repeat"></i> {{ selected_currency }} (Tasa: {{ conversion_rate }})
+                                {% else %}
+                                    Precio Base (Pesos)
+                                {% endif %}
+                            </span>
+                        </div>
+
+                        <div class="stock-status {% if product.total_stock > 10 %}st-ok{% elif product.total_stock > 0 %}st-low{% else %}st-out{% endif %}">
+                            <i class="bi bi-archive"></i> Stock: {{ product.total_stock }}
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+</body>
+</html>

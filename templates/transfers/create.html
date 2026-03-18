@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transferencia Masiva | OrbisERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <style>
+        /* --- APLICANDO TUS VARIABLES --- */
+        :root {
+            --primary: #faa200;
+            --accent: #faa200;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-input: #f1f5f9;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 1px 3px rgba(0,0,0,0.05);
+            --radius: 22px;
+        }
+
+        html.dark {
+            --bg-main: #0b0f1a; 
+            --bg-card: #151b2c; 
+            --bg-input: #1e2538;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #222d45;
+            --shadow: 0 15px 30px -15px rgba(0,0,0,0.4);
+            background-color: #0b0f1a; 
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px 40px;
+            transition: background 0.3s;
+        }
+
+        main { width: 100%; max-width: 1200px; }
+
+        .top-nav { margin-bottom: 25px; }
+        .back-link { 
+            text-decoration: none; color: var(--text-muted); font-size: 11px; 
+            font-weight: 700; display: flex; align-items: center; gap: 8px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        .page-header { margin-bottom: 30px; }
+        .page-header h2 { font-size: 28px; font-weight: 800; margin: 0; color: var(--text-main); }
+        .page-header p { color: var(--text-muted); font-size: 14px; margin-top: 5px; }
+
+        /* --- CARDS ESTILO ORBIS --- */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 25px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+            width: 100%;
+        }
+
+        .warehouse-grid { display: flex; gap: 20px; align-items: center; }
+        .wh-field { flex: 0 1 320px; }
+        .wh-field label { 
+            display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); 
+            margin-bottom: 10px; text-transform: uppercase;
+        }
+
+        select, .custom-input {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            padding: 14px 18px;
+            border-radius: 16px; /* Un poco menos que el card para armonía */
+            color: var(--text-main);
+            font-size: 14px;
+            outline: none;
+            transition: 0.2s;
+        }
+        select:focus, .custom-input:focus { border-color: var(--primary); }
+
+        .wh-sep { color: var(--primary); font-size: 22px; margin-top: 22px; }
+
+        /* --- SEARCH --- */
+        .search-container { position: relative; margin-bottom: 25px; width: 100%; max-width: 600px; }
+        .search-container i { position: absolute; left: 18px; top: 16px; color: var(--text-muted); }
+        .search-input { padding-left: 48px; }
+
+        .search-results {
+            position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-card);
+            border: 1px solid var(--border); border-radius: 18px; z-index: 100;
+            margin-top: 10px; overflow: hidden; display: none; box-shadow: var(--shadow);
+        }
+        .res-item { 
+            padding: 14px 20px; border-bottom: 1px solid var(--border); cursor: pointer;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .res-item:hover { background: var(--bg-input); }
+
+        /* --- TABLA --- */
+        .table-card { padding: 10px 0; }
+        .items-table { width: 100%; border-collapse: collapse; }
+        .items-table th { 
+            text-align: left; padding: 15px 25px; font-size: 11px; font-weight: 800;
+            color: var(--text-muted); text-transform: uppercase; border-bottom: 1px solid var(--border);
+        }
+        .items-table td { padding: 18px 25px; border-bottom: 1px solid var(--border); }
+
+        .prod-info b { display: block; font-size: 15px; color: var(--text-main); }
+        .prod-info span { font-size: 12px; color: var(--text-muted); }
+
+        .status-badge { 
+            font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 10px; 
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .st-pending { background: var(--bg-input); color: var(--text-muted); }
+        .st-ok { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+        .st-error { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+
+        /* --- BOTONES MAESTROS --- */
+        .footer-actions { margin-top: 30px; }
+        
+        .btn-action {
+            padding: 16px 45px; border-radius: 18px; font-weight: 800; border: none;
+            cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.3s;
+            text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px;
+        }
+
+        /* Comprobar (Blanco en light, Gris en dark) */
+        .btn-white { background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border); }
+        .btn-white:hover { filter: brightness(0.9); transform: translateY(-1px); }
+
+        /* Ejecutar (Naranja Orbis) */
+        .btn-orange { background: var(--primary); color: #fff; box-shadow: 0 4px 15px rgba(250, 162, 0, 0.3); }
+        .btn-orange:hover { filter: brightness(1.1); transform: translateY(-2px); }
+
+        .spin { animation: rotate 1s linear infinite; }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .btn-del { 
+            background: rgba(239, 68, 68, 0.1); border: none; color: var(--danger); 
+            width: 36px; height: 36px; border-radius: 10px; cursor: pointer; transition: 0.2s;
+        }
+        .btn-del:hover { background: var(--danger); color: white; }
+    </style>
+</head>
+<body class="dark"> {% include 'layouts/left_bar.html' %}
+
+    <main>
+        <div class="top-nav">
+            <a href="{{ url_for('transfer_bp.transfers') }}" class="back-link">
+                <i class="bi bi-arrow-left"></i> Volver al historial
+            </a>
+        </div>
+
+        <header class="page-header">
+            <h2>Transferencia de Inventario</h2>
+            <p>Gestiona el movimiento masivo de productos entre almacenes de OrbisERP.</p>
+        </header>
+
+        <form id="transfer-form" method="POST" action="{{ url_for('transfer_bp.create_transfer') }}">
+            
+            <div class="card">
+                <div class="warehouse-grid">
+                    <div class="wh-field">
+                        <label>Almacén Origen</label>
+                        <select name="from_warehouse" id="from-warehouse" required>
+                            <option value="">Seleccionar almacén...</option>
+                            {% for w in warehouses %}
+                                <option value="{{ w.id }}">{{ w.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="wh-sep"><i class="bi bi-arrow-right-short"></i></div>
+                    <div class="wh-field">
+                        <label>Almacén Destino</label>
+                        <select name="to_warehouse" required>
+                            <option value="">Seleccionar almacén...</option>
+                            {% for w in warehouses %}
+                                <option value="{{ w.id }}">{{ w.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="search-container">
+                <i class="bi bi-search"></i>
+                <input type="text" id="product-search" class="custom-input search-input" placeholder="Buscar productos para transferir..." autocomplete="off">
+                <div id="search-results" class="search-results"></div>
+            </div>
+
+            <div class="card table-card">
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th width="140">Cantidad</th>
+                            <th width="200">Estado de Stock</th>
+                            <th width="80"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="transfer-items">
+                        <tr id="empty-state">
+                            <td colspan="4" style="text-align: center; padding: 60px; color: var(--text-muted);">
+                                <i class="bi bi-box-seam" style="font-size: 32px; display: block; margin-bottom: 15px; opacity: 0.2;"></i>
+                                Agregue productos para iniciar la verificación
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="footer-actions">
+                <button type="button" id="btn-master" class="btn-action btn-white">
+                    <i class="bi bi-clipboard-check-fill"></i>
+                    <span>Comprobar Disponibilidad Global</span>
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <script>
+    const allProducts = [
+        {% for p in products %}
+        { id: "{{ p.id }}", name: {{ p.name|tojson|safe }}, sku: "{{ p.sku or 'S/N' }}" },
+        {% endfor %}
+    ];
+
+    const searchInput = document.getElementById('product-search');
+    const resultsBox = document.getElementById('search-results');
+    const itemsTable = document.getElementById('transfer-items');
+    const emptyState = document.getElementById('empty-state');
+    const btnMaster = document.getElementById('btn-master');
+    const fromWh = document.getElementById('from-warehouse');
+
+    let isVerified = false;
+
+    // Buscador
+    searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        resultsBox.innerHTML = '';
+        if (query.length < 1) { resultsBox.style.display = 'none'; return; }
+
+        const filtered = allProducts.filter(p => p.name.toLowerCase().includes(query) || p.sku.toLowerCase().includes(query)).slice(0, 6);
+        if (filtered.length > 0) {
+            filtered.forEach(p => {
+                const div = document.createElement('div');
+                div.className = 'res-item';
+                div.innerHTML = `<div><b>${p.name}</b><br><span>${p.sku}</span></div><i class="bi bi-plus-circle-fill" style="color:var(--primary)"></i>`;
+                div.onclick = () => addItem(p);
+                resultsBox.appendChild(div);
+            });
+            resultsBox.style.display = 'block';
+        }
+    });
+
+    function addItem(product) {
+        if (document.getElementById(`row-${product.id}`)) return;
+        if (emptyState) emptyState.style.display = 'none';
+
+        const tr = document.createElement('tr');
+        tr.id = `row-${product.id}`;
+        tr.innerHTML = `
+            <td>
+                <div class="prod-info"><b>${product.name}</b><span>SKU: ${product.sku}</span></div>
+                <input type="hidden" name="product_ids[]" value="${product.id}">
+            </td>
+            <td><input type="number" name="quantities[]" value="1" min="1" class="custom-input qty-input" oninput="resetStatus()"></td>
+            <td><span class="status-badge st-pending" id="st-${product.id}">Pendiente</span></td>
+            <td style="text-align: right;"><button type="button" class="btn-del" onclick="removeRow('${product.id}')"><i class="bi bi-trash3-fill"></i></button></td>
+        `;
+        itemsTable.appendChild(tr);
+        searchInput.value = '';
+        resultsBox.style.display = 'none';
+        resetStatus();
+    }
+
+    function removeRow(id) {
+        document.getElementById(`row-${id}`).remove();
+        if (itemsTable.querySelectorAll('tr:not(#empty-state)').length === 0) emptyState.style.display = 'table-row';
+        resetStatus();
+    }
+
+    function resetStatus() {
+        isVerified = false;
+        btnMaster.className = "btn-action btn-white";
+        btnMaster.innerHTML = '<i class="bi bi-clipboard-check-fill"></i><span>Comprobar Disponibilidad Global</span>';
+        btnMaster.type = "button";
+        document.querySelectorAll('.status-badge').forEach(b => {
+            b.className = "status-badge st-pending";
+            b.innerText = "Pendiente";
+        });
+    }
+
+    fromWh.onchange = resetStatus;
+
+    // Lógica del Botón Maestro Unificado
+    btnMaster.onclick = async () => {
+        if (isVerified) {
+            document.getElementById('transfer-form').submit();
+            return;
+        }
+
+        const whId = fromWh.value;
+        const rows = itemsTable.querySelectorAll('tr:not(#empty-state)');
+
+        if (!whId) { alert("Debe seleccionar un almacén de origen."); return; }
+        if (rows.length === 0) { alert("Agregue al menos un producto a la lista."); return; }
+
+        btnMaster.disabled = true;
+        btnMaster.innerHTML = '<i class="bi bi-arrow-repeat spin"></i><span>Validando inventario...</span>';
+
+        let allOk = true;
+
+        for (const row of rows) {
+            const pId = row.querySelector('input[name="product_ids[]"]').value;
+            const qty = row.querySelector('.qty-input').value;
+            const badge = document.getElementById(`st-${pId}`);
+
+            try {
+                const res = await fetch(`/api/get-stock?product_id=${pId}&warehouse_id=${whId}`);
+                const data = await res.json();
+
+                if (data.stock >= qty) {
+                    badge.className = "status-badge st-ok";
+                    badge.innerHTML = `<i class="bi bi-check-all"></i> OK: ${data.stock} disp.`;
+                } else {
+                    badge.className = "status-badge st-error";
+                    badge.innerHTML = `<i class="bi bi-exclamation-circle-fill"></i> Solo hay ${data.stock}`;
+                    allOk = false;
+                }
+            } catch (e) {
+                badge.innerText = "Error API";
+                allOk = false;
+            }
+        }
+
+        if (allOk) {
+            isVerified = true;
+            btnMaster.className = "btn-action btn-orange";
+            btnMaster.innerHTML = '<span>Ejecutar Transferencia</span><i class="bi bi-send-check-fill"></i>';
+        } else {
+            btnMaster.innerHTML = '<span>Corregir Cantidades</span>';
+            setTimeout(resetStatus, 2500);
+        }
+        btnMaster.disabled = false;
+    };
+
+    document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target)) resultsBox.style.display = 'none';
+    });
+</script>
+
+</body>
+</html>

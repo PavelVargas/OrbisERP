@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es" class="{% if session.get('theme') == 'dark' %}dark{% endif %}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/order_css/details_sales.css') }}">
+    <title>Venta #{{ sale.id }} | OrbisERP</title>
+</head>
+<body class="details-page">
+
+    {% include 'layouts/left_bar.html' %}
+
+    <main>
+        <div class="top-nav">
+            <a href="{{ url_for('sales_bp.list_sales') }}" class="back-link">
+                <i class="bi bi-arrow-left"></i> VOLVER A VENTAS
+            </a>
+            <div class="user-meta">
+                <i class="bi bi-shield-check"></i> Factura Auditada (Tasa: {{ "{:,.2f}".format(conversion_rate) }})
+            </div>
+        </div>
+
+        <div class="invoice-container">
+            
+            <header class="invoice-header-card">
+                <div class="title-group">
+                    <p class="invoice-subtitle">ORDEN DE VENTA OFICIAL</p>
+                    <h2>Venta #{{ sale.id }}</h2>
+                    <div class="payment-method-badge">
+                        <i class="bi bi-credit-card-2-front"></i> 
+                        MÉTODO: {{ sale.payment_method if sale.payment_method else 'CASH' }}
+                    </div>
+                </div>
+                <div class="status-badge-container">
+                    <span class="status-pill {% if sale.status == 'COMPLETED' %}b-received{% else %}b-pending{% endif %}">
+                        {{ sale.status }}
+                    </span>
+                </div>
+            </header>
+
+            {% if sale.payment_method == 'CREDIT' %}
+            <div class="debt-banner {% if sale.balance > 0 %}pending{% else %}paid{% endif %}">
+                <div class="debt-content">
+                    {% if sale.balance > 0 %}
+                        <i class="bi bi-exclamation-octagon-fill"></i>
+                        <div>
+                            <strong>CUENTA POR COBRAR</strong> 
+                            <span style="opacity: 0.85;">Esta venta tiene un saldo pendiente en el perfil del cliente.</span>
+                        </div>
+                    {% else %}
+                        <i class="bi bi-check-circle-fill"></i>
+                        <div>
+                            <strong>CRÉDITO SALDADO</strong> 
+                            <span style="opacity: 0.85;">El cliente ha completado el pago de esta factura.</span>
+                        </div>
+                    {% endif %}
+                </div>
+                <span class="balance-text">
+                    {% if sale.balance > 0 %}
+                        {{ currency_symbol }} {{ "{:,.2f}".format(sale.balance / conversion_rate) }}
+                    {% else %}
+                        PAGADO
+                    {% endif %}
+                </span>
+            </div>
+            {% endif %}
+
+            <section class="info-grid">
+                <div class="info-item">
+                    <label>Cliente / RNC</label>
+                    <span>
+                        <i class="bi bi-person-badge" style="color: var(--primary)"></i> 
+                        {{ sale.client.name if sale.client else 'Consumidor Final' }}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <label>Fecha de Emisión</label>
+                    <span>
+                        <i class="bi bi-calendar-event"></i> 
+                        {{ sale.created_at.strftime('%d/%m/%Y %I:%M %p') }}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <label>Terminal / Cajero</label>
+                    <span>
+                        <i class="bi bi-pc-display-horizontal"></i> 
+                        {{ sale.user.name if sale.user else 'Sistema' }}
+                    </span>
+                </div>
+            </section>
+
+            <section class="items-section">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>Descripción del Producto</th>
+                            <th style="text-align: center;">Cant.</th>
+                            <th style="text-align: right;">Precio Unit. ({{ selected_currency }})</th>
+                            <th style="text-align: right;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in sale.items %}
+                        <tr>
+                            <td data-label="Producto">
+                                <span class="product-name">{{ item.product.name }}</span>
+                            </td>
+                            <td data-label="Cantidad" style="text-align: center;">
+                                <span class="qty-tag">x{{ item.quantity }}</span>
+                            </td>
+                            <td data-label="Precio" style="text-align: right;">
+                                {{ currency_symbol }} {{ "{:,.2f}".format(item.price / conversion_rate) }}
+                            </td>
+                            <td data-label="Total" style="text-align: right;">
+                                <strong class="item-total-val">
+                                    {{ currency_symbol }} {{ "{:,.2f}".format((item.price * item.quantity) / conversion_rate) }}
+                                </strong>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </section>
+
+            <footer class="invoice-footer">
+                <div class="actions-left">
+                    <a href="{{ url_for('sales_bp.export_pdf', sale_id=sale.id) }}" target="_blank" class="btn-pdf">
+                        <i class="bi bi-printer-fill"></i> IMPRIMIR FACTURA
+                    </a>
+                </div>
+
+                <div class="totales-area">
+                    <div class="t-row">
+                        <span class="t-label">Subtotal Gravado</span>
+                        <span class="t-value">{{ currency_symbol }} {{ "{:,.2f}".format(sale.subtotal / conversion_rate) }}</span>
+                    </div>
+                    <div class="t-row">
+                        <span class="t-label">ITBIS (18%)</span>
+                        <span class="t-value">{{ currency_symbol }} {{ "{:,.2f}".format(sale.itbis / conversion_rate) }}</span>
+                    </div>
+                    <div class="t-row grand-total">
+                        <span class="t-label">TOTAL NETO</span>
+                        <span class="t-value">{{ currency_symbol }} {{ "{:,.2f}".format(sale.total / conversion_rate) }}</span>
+                    </div>
+
+                    <div class="financial-summary">
+                        <div class="t-row paid">
+                            <span class="t-label">Monto Pagado</span>
+                            <span class="t-value">{{ currency_symbol }} {{ "{:,.2f}".format(sale.amount_paid / conversion_rate) }}</span>
+                        </div>
+                        {% if sale.balance > 0 %}
+                        <div class="t-row balance">
+                            <span class="t-label">BALANCE PENDIENTE</span>
+                            <span class="t-value">{{ currency_symbol }} {{ "{:,.2f}".format(sale.balance / conversion_rate) }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </main>
+
+    <script>
+        // Tema oscuro
+        if (localStorage.getItem('theme') === 'dark' || 
+            (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</body>
+</html>

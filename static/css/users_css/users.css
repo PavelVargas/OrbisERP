@@ -1,0 +1,218 @@
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: 'Montserrat', sans-serif;
+    background-color: var(--bg-main);
+    display: flex;
+    color: var(--text-main);
+}
+
+
+@media (max-width: 1024px) {
+    .main-viewport { margin-left: 0; padding: 20px; }
+}
+
+/* ==========================================================================
+   TOP NAV & HEADER
+   ========================================================================== */
+.glass-top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.back-pill {
+    text-decoration: none;
+    background: var(--bg-card);
+    padding: 10px 20px;
+    border-radius: 14px;
+    color: var(--text-main);
+    font-weight: 700;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: var(--shadow);
+}
+
+.security-badge {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    padding: 8px 15px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 35px;
+}
+
+.header-text h1 { font-size: 34px; font-weight: 800; margin: 0; letter-spacing: -1px; }
+.header-text p { color: var(--text-dim); margin-top: 5px; font-weight: 600; }
+
+.btn-add-user {
+    background: var(--primary);
+    color: white;
+    text-decoration: none;
+    padding: 15px 30px;
+    border-radius: 16px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: 0.3s;
+    box-shadow: 0px 10px 20px rgba(250, 162, 0, 0.2);
+}
+
+.btn-add-user:hover { transform: translateY(-3px); box-shadow: 0px 15px 25px rgba(250, 162, 0, 0.3); }
+
+/* ==========================================================================
+   TOOLBAR Y BUSCADOR (CORRECCIÓN DE ALINEACIÓN)
+   ========================================================================== */
+.action-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 35px;
+}
+
+.search-boxx {
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: center; /* Centrado vertical perfecto */
+}
+
+.search-boxx i {
+    position: absolute;
+    left: 20px;
+    color: var(--primary);
+    font-size: 18px;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.search-boxx input {
+    width: 100%;
+    height: 56px; /* Altura generosa para control */
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 0 20px 0 55px; /* Espacio para el icono */
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    outline: none;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow);
+}
+
+.search-boxx input:focus {
+    border-color: var(--primary);
+    box-shadow: 0px 10px 20px rgba(112, 144, 176, 0.15);
+}
+
+.stats-pills .pill {
+    background: var(--bg-card);
+    height: 56px;
+    padding: 0 25px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+}
+
+.pill-label { color: var(--text-dim); font-weight: 700; font-size: 12px; text-transform: uppercase; }
+.pill-count { color: var(--primary); font-weight: 900; font-size: 18px; }
+
+/* ==========================================================================
+   TARJETAS
+   ========================================================================== */
+.users-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 25px;
+}
+
+.card-inner {
+    background: var(--bg-card);
+    border-radius: 30px;
+    padding: 25px;
+    border: 1px solid var(--border);
+    transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: var(--shadow);
+}
+
+.card-inner:hover { transform: translateY(-10px); border-color: var(--primary); }
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.user-avatar-squircle {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--primary), #ffb800);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    font-weight: 900;
+}
+
+.user-main-meta h3 { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+.user-role-badge { 
+    background: rgba(250, 162, 0, 0.1); 
+    color: var(--primary); 
+    padding: 4px 10px; 
+    border-radius: 8px; 
+    font-size: 10px; 
+    font-weight: 800;
+}
+
+.card-content {
+    background: var(--bg-main);
+    padding: 15px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+}
+
+.info-row { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--text-dim); margin-bottom: 8px; }
+.info-row i { color: var(--primary); }
+
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 1px solid var(--border);
+}
+
+.status-indicator { display: flex; align-items: center; gap: 6px; }
+.status-indicator .dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; box-shadow: 0 0 10px #10b981; }
+.status-text { font-size: 11px; font-weight: 800; color: var(--text-dim); }
+
+.action-group-pill { display: flex; gap: 5px; background: var(--bg-main); padding: 5px; border-radius: 12px; }
+.act-btn {
+    width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+    border-radius: 10px; text-decoration: none; color: var(--text-dim); transition: 0.2s; border: none; cursor: pointer;
+}
+.act-btn:hover { background: var(--bg-card); color: var(--primary); transform: scale(1.1); }

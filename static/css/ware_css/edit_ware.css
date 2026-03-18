@@ -1,0 +1,73 @@
+.main-content {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    padding: 33px;
+}
+
+.top-nav {
+    margin-bottom: 2rem;
+}
+
+.page-header {
+    margin-bottom: 2.5rem;
+}
+
+.page-header h2 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--text-main);
+}
+
+.page-header p {
+    color: var(--text-muted);
+    margin-top: 5px;
+}
+
+/* Contenedor limitado para que no se vea gigante en pantallas grandes */
+.small-container {
+    max-width: 600px;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    color: var(--text-main);
+}
+
+.form-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+}
+
+/* Estilo para que el link de cancelar parezca botón secundario */
+.btn-secondary {
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    transition: color 0.2s;
+}
+
+.btn-secondary:hover {
+    color: var(--danger);
+}
+
+@media (max-width: 1024px) {
+    .main-content {
+        margin-left: 0;
+        padding: 1.5rem;
+    }
+}

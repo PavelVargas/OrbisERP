@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es" class="{% if session.get('theme') == 'dark' %}dark{% endif %}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.name }} | OrbisERP</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/css/products_css/detail_products.css">
+    
+    <style>
+        .val::before, .stats-value::before {
+            content: "" !important;
+            display: none !important;
+        }
+        .success-text { color: var(--success, #27ae60); font-weight: 700; }
+        .base-price-label { font-size: 0.7rem; color: var(--text-muted); display: block; text-align: right; margin-top: 2px; }
+    </style>
+</head>
+
+<body>
+    {% include "layouts/left_bar.html" %}
+
+    <main>
+        <nav class="top-nav">
+            <a href="{{ url_for('products_bp.list_products') }}" class="back-link">
+                <i class="bi bi-arrow-left-circle-fill"></i> VOLVER AL LISTADO
+            </a>
+            <div class="online-indicator">
+                <span style="margin-right: 10px; font-size: 12px; color: #3498db; font-weight: 600;">
+                    TASA: 1 {{ selected_currency }} = {{ "{:,.2f}".format(conversion_rate) }} DOP
+                </span>
+                <span class="pulse-dot"></span> EN LÍNEA
+            </div>
+        </nav>
+
+        <header class="hero-banner">
+            <div class="product-identity">
+                <span class="category-tag">
+                    {{ product.category.name if product.category else "General" }}
+                </span>
+                <h1>{{ product.name }}</h1>
+                <code class="sku">REF: {{ product.sku }}</code>
+            </div>
+
+            <div class="price-hero-card">
+                <small>Precio de Venta ({{ selected_currency }})</small>
+                <span class="val" style="display: flex; align-items: center; gap: 5px;">
+                    <span style="font-size: 0.9rem; opacity: 0.8;">{{ currency_symbol }}</span>
+                    <span>{{ "{:,.2f}".format(display_price) }}</span>
+                </span>
+                <span class="base-price-label">Base: RD$ {{ "{:,.2f}".format(product.price|float) }}</span>
+            </div>
+        </header>
+
+        <div class="content-grid">
+            <div class="main-area">
+                <section class="card">
+                    <div class="card-header">
+                        <i class="bi bi-graph-up-arrow"></i> Tendencia de Stock
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="stockTrendChart"></canvas>
+                    </div>
+                </section>
+
+                <section class="card">
+                    <div class="card-header">
+                        <i class="bi bi-file-earmark-text"></i> Especificaciones Financieras
+                    </div>
+                    <table class="stats-table">
+                        <tr>
+                            <td class="stats-label">Costo Unitario ({{ selected_currency }})</td>
+                            <td class="stats-value">
+                                <div style="display: flex; align-items: center; justify-content: flex-end; gap: 4px;">
+                                    <span style="font-size: 0.8rem; opacity: 0.7;">{{ currency_symbol }}</span>
+                                    <span style="color: var(--text-main); font-weight: 700;">
+                                        {{ "{:,.2f}".format(display_cost) }}
+                                    </span>
+                                </div>
+                                <span class="base-price-label">Base: RD$ {{ "{:,.2f}".format(product.cost|float) }}</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="stats-label">Margen de Ganancia ({{ selected_currency }})</td>
+                            <td class="stats-value">
+                                {% set margin = display_price - display_cost %}
+                                <div style="display: flex; align-items: center; justify-content: flex-end; gap: 4px;" class="{% if margin > 0 %}success-text{% endif %}">
+                                    <span style="font-size: 0.8rem; opacity: 0.8;">{{ currency_symbol }}</span>
+                                    <span>{{ "{:,.2f}".format(margin) }}</span>
+                                </div>
+                                <small class="base-price-label">Utilidad neta por unidad</small>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="stats-label">ID de Registro</td>
+                            <td class="stats-value text-mono">#{{ product.id }}</td>
+                        </tr>
+                        <tr>
+                            <td class="stats-label">Fecha de Creación</td>
+                            <td class="stats-value">
+                                {{ product.created_at.strftime('%d %b, %Y') if product.created_at else 'Sin fecha' }}
+                            </td>
+                        </tr>
+                    </table>
+                </section>
+            </div>
+
+            <aside class="sidebar-area">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-archive"></i> Existencia Total
+                    </div>
+                    <div class="stock-container">
+                        <div class="stock-circle {% if product.total_stock > 10 %}ok{% elif product.total_stock > 0 %}low{% else %}empty{% endif %}">
+                            <span class="stock-number">{{ product.total_stock }}</span>
+                            <span class="stock-label">Unidades</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-lightning-charge"></i> Acciones Rápidas 
+                    </div>
+                    <div class="actions-grid">
+                        <a href="{{ url_for('products_bp.product_stock_detail', id=product.id) }}" class="btn-act primary">
+                            <i class="bi bi-box-seam"></i>
+                            <span>A la mano</span>
+                        </a>
+
+                        {% if session.get('user_role') == 'admin' %}
+                            <a href="{{ url_for('products_bp.edit_product', id=product.id) }}" class="btn-act">
+                                <i class="bi bi-pencil-square"></i>
+                                <span>Editar</span>
+                            </a>
+                            <a href="#" class="btn-act">
+                                <i class="bi bi-clock-history"></i>
+                                <span>Kardex</span>
+                            </a>
+                            <form action="{{ url_for('products_bp.delete_product', id=product.id) }}" method="POST" style="display: contents;">
+                                <button type="submit" class="btn-act btn-delete-full" onclick="return confirm('¿Eliminar producto?')">
+                                    <i class="bi bi-trash3"></i> ELIMINAR
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <script>
+        const ctx = document.getElementById('stockTrendChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Ene','Feb','Mar','Abr','May','Jun'],
+                datasets: [{
+                    label: 'Nivel Stock',
+                    data: [12,19,15,8,22,{{ product.total_stock }}],
+                    borderColor: '#faa200',
+                    backgroundColor: 'rgba(250,162,0,0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options:{
+                responsive:true,
+                maintainAspectRatio:false,
+                plugins:{ 
+                    legend:{ display:false },
+                    tooltip: {
+                        backgroundColor: '#1a1a1a',
+                        titleColor: '#faa200',
+                        bodyColor: '#ffffff',
+                        cornerRadius: 8
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: var(--bg-main); 
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+        }
+
+        main { flex: 1; padding: 40px; max-width: 1200px; margin: 0 auto; }
+
+        /* Navegación Superior */
+        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .back-link { 
+            text-decoration: none; color: var(--text-muted); font-weight: 700; font-size: 0.8rem;
+            display: flex; align-items: center; gap: 8px; transition: 0.2s;
+        }
+        .back-link:hover { color: var(--primary); }
+
+        /* Encabezado */
+        .page-header { margin-bottom: 40px; }
+        .page-header h2 { font-size: 2rem; font-weight: 800; margin: 0; }
+        .page-header p { color: var(--text-muted); margin: 5px 0 0; }
+
+        /* Mini Stats */
+        .quick-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: var(--bg-card); padding: 20px; border-radius: var(--radius); border: 1px solid var(--border); }
+        .stat-card small { color: var(--text-muted); font-weight: 700; text-transform: uppercase; font-size: 0.7rem; }
+        .stat-card .value { display: block; font-size: 1.5rem; font-weight: 800; color: var(--primary); margin-top: 5px; }
+
+        /* Contenedor de Tabla */
+        .table-container { 
+            background: var(--bg-card); 
+            border-radius: var(--radius); 
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .modern-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .modern-table thead { background: var(--bg-main); }
+        .modern-table th { padding: 18px 25px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+        .modern-table td { padding: 20px 25px; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
+        
+        /* Estilos de Fila */
+        .order-id { background: var(--primary-soft); color: var(--primary); padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 0.85rem; }
+        .client-info { display: flex; align-items: center; gap: 10px; }
+        .client-avatar { width: 32px; height: 32px; background: #e2e8f0; border-radius: 8px; display: grid; place-items: center; color: var(--text-muted); }
+        
+        .total-amount { font-weight: 800; color: var(--text-main); }
+        .date-text { color: var(--text-muted); font-size: 0.85rem; }
+
+        /* Acciones */
+        .actions-group { display: flex; gap: 10px; justify-content: flex-end; }
+        .act-btn { 
+            width: 38px; height: 38px; border-radius: 10px; border: none; 
+            display: grid; place-items: center; cursor: pointer; transition: 0.2s;
+            text-decoration: none;
+        }
+        .btn-resume { background: var(--primary-soft); color: var(--primary); }
+        .btn-resume:hover { background: var(--primary); color: white; }
+        .btn-quote { background: #f1f5f9; color: var(--text-muted); }
+        .btn-quote:hover { background: var(--text-main); color: white; }
+
+        /* Estado Vacío */
+        .empty-state { padding: 80px 40px; text-align: center; }
+        .empty-state i { font-size: 4rem; color: var(--border); display: block; margin-bottom: 20px; }
+        .btn-new { 
+            background: var(--primary); color: white; padding: 12px 25px; 
+            border-radius: 12px; text-decoration: none; font-weight: 700; 
+            display: inline-flex; align-items: center; gap: 10px; margin-top: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (max-width: 768px) {
+            main { padding: 20px; }
+            .modern-table th:nth-child(3), .modern-table td:nth-child(3) { display: none; }
+        }

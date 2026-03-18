@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es" class="{% if session.get('theme') == 'dark' %}dark{% endif %}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Editar Producto | OrbisERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/products_css/editar_producto.css">
+</head>
+<body>
+    {% include "layouts/left_bar.html" %}
+
+    <main>
+        <header class="page-header">
+            <div>
+                <nav class="breadcrumb">
+                    <a href="{{ url_for('products_bp.list_products') }}" style="color: inherit; text-decoration: none;">Inventario</a>
+                    <i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>
+                    <span>Editar Producto</span>
+                </nav>
+                <h1 class="title">{{ product.name }}</h1>
+            </div>
+            <a href="{{ url_for('products_bp.list_products') }}" class="btn btn-cancel">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </header>
+
+        <form action="{{ url_for('products_bp.edit_product', id=product.id) }}" method="POST" class="edit-grid">
+            
+            <div class="card">
+                <div class="section-label"><i class="bi bi-info-circle"></i> Datos del Producto</div>
+                
+                <div class="form-group">
+                    <label>Nombre Comercial</label>
+                    <div class="input-wrapper">
+                        <i class="bi bi-box-seam"></i>
+                        <input type="text" name="name" value="{{ product.name }}" required placeholder="Nombre del producto">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>SKU / Referencia</label>
+                        <div class="input-wrapper">
+                            <i class="bi bi-qr-code"></i>
+                            <input type="text" name="sku" value="{{ product.sku }}" required placeholder="Código único">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Categoría</label>
+                        <div class="input-wrapper">
+                            <i class="bi bi-tag" style="z-index: 1;"></i>
+                            <select name="category_id">
+                                <option value="">Sin categoría</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}" {% if product.category_id == cat.id %}selected{% endif %}>
+                                    {{ cat.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Notas o Descripción</label>
+                    <textarea name="description" placeholder="Añade detalles adicionales del producto...">{{ product.description or '' }}</textarea>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-label"><i class="bi bi-currency-exchange"></i> Precios y Márgenes ({{ selected_currency }})</div>
+                
+                <div class="form-group">
+                    <label>Costo Unitario ({{ selected_currency }})</label>
+                    <div class="input-wrapper">
+                        <i class="bi bi-cart-dash"></i>
+                        <input type="number" step="0.01" name="cost" value="{{ "%.2f"|format(display_cost) }}" id="input-cost" placeholder="0.00">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Precio de Venta ({{ selected_currency }})</label>
+                    <div class="input-wrapper">
+                        <i class="bi bi-cash-stack"></i>
+                        <input type="number" step="0.01" name="price" value="{{ "%.2f"|format(display_price) }}" required id="input-price" placeholder="0.00">
+                    </div>
+                </div>
+
+                <div class="profit-widget">
+                    <div>
+                        <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 4px;">BENEFICIO POR UNIDAD</div>
+                        <div id="profit-val" data-symbol="{{ currency_symbol }}" style="font-size: 1.2rem; font-weight: 800; color: var(--success);">
+                            {{ currency_symbol }} 0.00
+                        </div>
+                    </div>
+                    <i class="bi bi-graph-up-arrow" id="profit-icon" style="font-size: 1.5rem; color: var(--success);"></i>
+                </div>
+
+                <div class="info-alert">
+                    <div style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 5px;">
+                        <i class="bi bi-shield-check"></i> SINCRONIZACIÓN DE DIVISA
+                    </div>
+                    <p style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">
+                        Estás editando en <strong>{{ selected_currency }}</strong>. El sistema recalculará el valor base en la base de datos automáticamente al guardar.
+                    </p>
+                </div>
+            </div>
+
+            <div class="actions-bar">
+                <button type="submit" class="btn btn-save">
+                    <i class="bi bi-check-lg"></i> Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <script>
+        // Lógica de cálculo de margen profesional
+        const costIn = document.getElementById('input-cost');
+        const priceIn = document.getElementById('input-price');
+        const profitOut = document.getElementById('profit-val');
+        const profitIcon = document.getElementById('profit-icon');
+        const currencySymbol = profitOut.getAttribute('data-symbol') || '$';
+
+        function updateProfitUI() {
+            const cost = parseFloat(costIn.value) || 0;
+            const price = parseFloat(priceIn.value) || 0;
+            const margin = price - cost;
+
+            // Formateo de moneda con el símbolo dinámico de la sesión
+            profitOut.innerText = `${currencySymbol} ${margin.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            })}`;
+
+            // Cambio de color e iconos dinámicos según el beneficio
+            if (margin > 0) {
+                profitOut.style.color = 'var(--success)';
+                profitIcon.className = 'bi bi-graph-up-arrow';
+                profitIcon.style.color = 'var(--success)';
+            } else if (margin < 0) {
+                profitOut.style.color = 'var(--danger)';
+                profitIcon.className = 'bi bi-graph-down-arrow';
+                profitIcon.style.color = 'var(--danger)';
+            } else {
+                profitOut.style.color = 'var(--text-muted)';
+                profitIcon.className = 'bi bi-dash-lg';
+                profitIcon.style.color = 'var(--text-muted)';
+            }
+        }
+
+        costIn.addEventListener('input', updateProfitUI);
+        priceIn.addEventListener('input', updateProfitUI);
+        
+        // Inicializar al cargar para mostrar el estado actual
+        window.addEventListener('DOMContentLoaded', updateProfitUI);
+    </script>
+</body>
+</html>

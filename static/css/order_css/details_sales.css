@@ -1,0 +1,189 @@
+
+
+body {
+    background: var(--bg-main);
+    color: var(--text-main);
+    font-family: 'Montserrat', sans-serif;
+    margin: 0;
+    padding-bottom: 50px;
+}
+
+main {
+    margin-left: 280px;
+    padding: 30px;
+    max-width: 1100px;
+    margin-right: auto;
+}
+
+/* NAVEGACIÓN */
+.top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.back-link {
+    text-decoration: none;
+    color: var(--text-main);
+    font-weight: 800;
+    font-size: 13px;
+    background: var(--bg-card);
+    padding: 10px 18px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    transition: 0.3s;
+}
+
+.back-link:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+/* ==========================================================================
+   CONTENEDOR DE FACTURA
+   ========================================================================== */
+.invoice-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+/* HEADER */
+.invoice-header-card {
+    padding: 35px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.title-group h2 { font-size: 28px; font-weight: 900; margin: 0; letter-spacing: -1px; }
+.invoice-subtitle { color: var(--text-muted); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+.status-pill {
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+.b-received { background: var(--success-bg); color: var(--success); }
+
+.payment-method-badge {
+    background: rgba(255,255,255,0.05);
+    color: var(--text-muted);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    border: 1px solid var(--border);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+/* BANNER DE DEUDA (ROJO) - ALINEADO AL GRID */
+.debt-banner {
+    margin: 0 40px 20px; /* Margen de 40px igual al padding del grid */
+    padding: 18px 25px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    font-size: 14px;
+    background: var(--danger-bg);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: var(--danger);
+}
+
+.debt-content { display: flex; align-items: center; gap: 12px; }
+.debt-content strong { display: block; font-size: 11px; text-transform: uppercase; }
+.balance-text { font-weight: 900; font-size: 20px; }
+
+/* GRID DE INFO (AZULADO) */
+.info-grid {
+    padding: 25px 40px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    background: rgba(255, 255, 255, 0.02); /* Sutil fondo para diferenciar el bloque */
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}
+
+.info-item label {
+    display: block;
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+
+.info-item span {
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* TABLA DE PRODUCTOS */
+.items-section { padding: 20px 40px; }
+.modern-table { width: 100%; border-collapse: collapse; }
+.modern-table th {
+    text-align: left;
+    padding: 15px 0;
+    color: var(--text-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+}
+.modern-table td { padding: 20px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+.product-name { font-weight: 700; }
+.qty-tag { background: var(--border); padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 12px; }
+
+/* FOOTER Y TOTALES */
+.invoice-footer {
+    padding: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    background: rgba(0,0,0,0.1);
+}
+
+.totales-area { width: 340px; }
+.t-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
+.grand-total {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 2px solid var(--border);
+    font-size: 26px;
+    font-weight: 900;
+}
+
+.financial-summary {
+    margin-top: 15px;
+    padding: 15px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+.t-row.paid { color: var(--success); }
+.t-row.balance { color: var(--danger); font-weight: 900; font-size: 18px; }
+
+.btn-pdf {
+    background: var(--primary);
+    color: var(--text-main);
+    text-decoration: none;
+    padding: 16px 28px;
+    border-radius: 12px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 15px rgba(250, 162, 0, 0.2);
+}

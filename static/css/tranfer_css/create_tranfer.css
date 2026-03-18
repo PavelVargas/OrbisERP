@@ -1,0 +1,264 @@
+
+
+/* --- RESET Y ESTRUCTURA --- */
+body {
+    display: flex;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Montserrat', sans-serif;
+    margin: 0;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1;
+    margin-left: 280px; 
+    padding: 33px;
+    transition: margin-left 0.3s ease;
+}
+
+.container-narrow {
+    max-width: 800px;
+    width: 100%;     
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;    
+    margin-left: 0;   
+    margin-right: auto; 
+}
+
+/* --- ENCABEZADO --- */
+.top-nav { margin-bottom: 25px; }
+.back-link {
+    text-decoration: none;
+    color: var(--text-dim);
+    font-weight: 600;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: color 0.2s;
+}
+.back-link:hover { color: var(--fg); }
+
+.page-header { margin-bottom: 35px; }
+.page-header h2 { font-size: 28px; font-weight: 800; margin: 0; letter-spacing: -0.5px; }
+.page-header p { color: var(--text-dim); margin: 5px 0 0; font-size: 14px; }
+
+/* --- COMPONENTES --- */
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+/* SELECTORES DE ALMACÉN */
+.warehouse-selector {
+    display: flex;
+    align-items: center;
+    padding: 30px;
+    margin-bottom: 30px;
+}
+
+.wh-box { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.wh-box label { font-size: 10px; font-weight: 800; letter-spacing: 1.2px; color: var(--text-dim); }
+.wh-box select {
+    background: var(--input-bg);
+    border: 1px solid var(--accent);
+    padding: 14px;
+    border-radius: 12px;
+    color: var(--fg);
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+.wh-box select:focus { outline: none; border-color: var(--fg); }
+
+.wh-divider {
+    padding: 0 30px;
+    font-size: 22px;
+    color: var(--text-dim);
+    margin-top: 18px;
+    opacity: 0.5;
+}
+
+.wh-divider i {
+  background: #332d2d;
+  padding: 20px;
+  border-radius: 20px;
+  color: var(--accent);
+  font-size: 30px;
+}
+
+/* BUSCADOR SPOTLIGHT */
+.search-container {
+    position: relative;
+    margin-bottom: 30px;
+    z-index: 100; /* Asegura que los resultados floten sobre todo */
+}
+
+.search-bar {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-bar i {
+    position: absolute;
+    left: 20px;
+    font-size: 20px;
+    color: var(--text-dim);
+}
+
+.search-bar input {
+    width: 100%;
+    padding: 20px 20px 20px 60px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--fg);
+    font-size: 16px;
+    box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+}
+
+
+.search-results-floating {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0;
+    right: 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+    display: none;
+    max-height: 350px;
+    overflow-y: auto;
+}
+
+.result-item {
+    padding: 15px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.2s;
+}
+
+.result-item:last-child { border-bottom: none; }
+.result-item:hover { background: var(--hover); }
+
+.res-info { display: flex; flex-direction: column; gap: 2px; }
+.res-name { font-weight: 700; font-size: 14px; color: var(--fg); }
+.res-sku { font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; }
+.result-item i { font-size: 20px; color: var(--text-dim); transition: 0.2s; }
+.result-item:hover i { color: var(--fg); transform: scale(1.1); }
+
+/* TABLA DE PRODUCTOS */
+.items-card { overflow: hidden; }
+.items-table { width: 100%; border-collapse: collapse; }
+
+.items-table th {
+    background: var(--input-bg);
+    padding: 16px 25px;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--text-dim);
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+}
+
+.items-table td {
+    padding: 20px 25px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    background: var(--bg-card);
+}
+
+.td-product .p-name { display: block; font-weight: 700; font-size: 14px; margin-bottom: 2px; }
+.td-product .p-sku { font-size: 11px; color: var(--text-dim); font-family: monospace; }
+
+.qty-input {
+    width: 100px;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--input-bg);
+    color: var(--fg);
+    text-align: center;
+    font-weight: 700;
+    font-family: inherit;
+}
+.qty-input:focus { outline: none; border-color: var(--fg); }
+
+.btn-delete {
+    background: none;
+    border: none;
+    color: #ff4d4f;
+    font-size: 22px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+    opacity: 0.7;
+}
+.btn-delete:hover { transform: scale(1.2); opacity: 1; }
+
+/* ESTADO VACÍO */
+.py-4 { padding: 40px 0; }
+.text-center { text-align: center; }
+
+/* BOTÓN DE ENVÍO */
+.form-footer {
+    margin-top: 40px;
+    text-align: right;
+}
+
+.btn-submit {
+    background: var(--accent);
+    color: var(--card);
+    padding: 20px 45px;
+    border-radius: 16px;
+    border: none;
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.btn-submit:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+    opacity: 0.95;
+}
+
+.btn-submit:active { transform: translateY(0); }
+
+/* ANIMACIONES */
+.fade-in {
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* RESPONSIVO */
+@media (max-width: 1024px) {
+    main { margin-left: 0; padding: 20px; }
+    .warehouse-selector { flex-direction: column; gap: 20px; }
+    .wh-divider { transform: rotate(90deg); padding: 10px 0; margin: 0; }
+}

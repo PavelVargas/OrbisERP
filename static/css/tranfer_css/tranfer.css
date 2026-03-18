@@ -1,0 +1,320 @@
+/* ==========================================================================
+   OPTIMIZACIÓN RESPONSIVE (transfer.css)
+   ========================================================================== */
+
+/* Estructura Principal */
+.main-content {
+    margin-left: 0; /* Default móvil */
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+@media (min-width: 1025px) {
+    .main-content {
+        margin-left: var(--sidebar-width);
+        padding: 2rem 3rem;
+    }
+}
+
+/* Header Adaptable */
+@media (max-width: 768px) {
+    .workstation-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.5rem;
+    }
+    .btn-text { display: none; } /* Ocultar texto en móviles para ahorrar espacio */
+    .btn-primary { width: 50px; height: 50px; padding: 0; justify-content: center; border-radius: 50%; }
+    .workstation-header h1 { font-size: 1.5rem; }
+}
+
+/* Grid de Logística */
+.logistics-grid {
+    display: grid;
+    grid-template-columns: 1fr; /* Columna única móvil */
+    gap: 1.5rem;
+}
+
+@media (min-width: 1200px) {
+    .logistics-grid {
+        grid-template-columns: 320px 1fr;
+    }
+}
+
+/* Sidebar de Almacenes (Transformación a Tabs Horizontales en móvil) */
+@media (max-width: 1200px) {
+    .tabs-nav {
+        flex-direction: row !important;
+        overflow-x: auto;
+        padding-bottom: 10px;
+        -webkit-overflow-scrolling: touch;
+    }
+    .tab-btn {
+        min-width: 200px;
+        flex-shrink: 0;
+    }
+    .sidebar-label { display: none; }
+}
+
+/* --- TRANSFORMACIÓN DE TABLA A CARDS (Mobile) --- */
+@media (max-width: 992px) {
+    .table-enterprise thead { display: none; } /* Ocultar cabecera */
+    
+    .table-enterprise, 
+    .table-enterprise tbody, 
+    .table-enterprise tr, 
+    .table-enterprise td {
+        display: block;
+        width: 100%;
+    }
+
+    .transfer-row {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        padding: 10px;
+    }
+
+    .table-enterprise td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 12px;
+        border: none !important;
+        text-align: right;
+    }
+
+    .table-enterprise td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        font-size: 0.7rem;
+        color: var(--text-tertiary);
+        text-transform: uppercase;
+    }
+
+    .product-cell { align-items: flex-end; }
+    .text-right { text-align: right !important; }
+}
+
+/* Estilos de calidad de vida */
+.table-card {
+    background: var(--bg-secondary);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.badge-info {
+    background: var(--bg-tertiary);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    border: 1px solid var(--border-color);
+}
+
+.workstation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 2.5rem;
+}
+
+.module-label {
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.workstation-header h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+/* Layout de dos columnas */
+.logistics-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+/* Sidebar de Almacenes */
+.sidebar-label {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: var(--text-tertiary);
+    margin-bottom: 1rem;
+    padding-left: 0.5rem;
+}
+
+.tabs-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.tab-btn {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    color: var(--text-primary);
+}
+
+.tab-btn .tab-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--bg-tertiary);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+}
+
+.tab-btn .tab-content {
+    flex: 1;
+}
+
+.tab-btn .tab-title {
+    display: block;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.tab-btn .tab-sub {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+}
+
+.tab-btn .arrow {
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: 0.2s;
+}
+
+.tab-btn:hover {
+    border-color: var(--accent);
+    transform: translateX(5px);
+}
+
+.tab-btn.active {
+    border-color: var(--accent);
+    background: var(--bg-active);
+    box-shadow: var(--shadow-sm);
+}
+
+.tab-btn.active .tab-icon {
+    background: var(--accent);
+    color: white;
+}
+
+.tab-btn.active .arrow {
+    opacity: 1;
+    transform: translateX(0);
+    color: var(--accent);
+}
+
+/* Panel de Control */
+.warehouse-panel {
+    display: none;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.warehouse-panel.active {
+    display: block;
+}
+
+.panel-header {
+    margin-bottom: 1.5rem;
+}
+
+.origin-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-tertiary);
+    padding: 8px 16px;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.origin-badge i {
+    color: var(--accent);
+}
+
+/* Celda de Producto */
+.product-cell {
+    display: flex;
+    flex-direction: column;
+}
+
+.product-cell .sku {
+    font-size: 0.7rem;
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.product-cell .p-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.time-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.qty-text {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.empty-state {
+    padding: 10px;
+    text-align: center;
+    color: var(--text-tertiary);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 1200px) {
+    .logistics-grid {
+        grid-template-columns: 1fr;
+    }
+    .warehouse-sidebar {
+        overflow-x: auto;
+    }
+    .tabs-nav {
+        flex-direction: row;
+    }
+    .tab-btn {
+        min-width: 250px;
+    }
+}

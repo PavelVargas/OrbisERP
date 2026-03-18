@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transferencias Pendientes - {{ warehouse.name }}</title>
+    <link rel="stylesheet" href="/static/css/ware_css/ware.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body id="page-body">
+
+    {% include 'layouts/left_bar.html' %}
+
+    <main>
+        <div class="top-nav">
+            <a href="{{ url_for('warehouse_bp.list_warehouses') }}" class="btn-back">
+                <i class="bi bi-arrow-left-short" style="font-size: 1.5rem;"></i> Volver a Almacenes
+            </a>
+        </div>
+
+        <div class="page-header">
+            <h2>Pendientes de Recepción</h2>
+            <p>Gestionando entradas para <span style="color: var(--fg-main)">{{ warehouse.name }}</span></p>
+        </div>
+
+        <div class="warehouse-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha de Envío</th>
+                        <th>Producto</th>
+                        <th>Almacén Origen</th>
+                        <th style="text-align: center;">Cantidad</th>
+                        <th style="text-align: right;">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in transfers %}
+                    <tr>
+                        <td>
+                            <div style="font-weight: 600; font-size: 14px;">{{ t.created_at.strftime('%d %b') }}</div>
+                            <div style="font-size: 12px; color: var(--text-dim);">{{ t.created_at.strftime('%H:%M') }}</div>
+                        </td>
+                        <td>
+                            <div class="product-info">
+                                <span class="product-name">{{ t.product.name }}</span>
+                                <span class="product-sku">ID Transferencia #{{ t.id }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="origin-tag">
+                                <i class="bi bi-box-arrow-up-right" style="font-size: 0.9rem;"></i>
+                                {{ t.from_warehouse.name }}
+                            </div>
+                        </td>
+                        <td style="text-align: center;">
+                            <span class="badge-qty">{{ t.quantity }}</span>
+                        </td>
+                        <td style="text-align: right;">
+                            <a href="{{ url_for('transfer_bp.view_transfer', transfer_id=t.id) }}" class="btn-action">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="padding: 80px; text-align: center;">
+                            <div style="font-size: 3rem; opacity: 0.1;"><i class="bi bi-inbox"></i></div>
+                            <p style="color: var(--text-dim); font-weight: 600;">No tienes transferencias pendientes por recibir.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        // Sincronizar tema con localStorage
+        function applyTheme() {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'dark') {
+                document.getElementById('page-body').classList.add('dark');
+            } else {
+                document.getElementById('page-body').classList.remove('dark');
+            }
+        }
+        applyTheme();
+        // Escuchar cambios de otros apartados si ocurren en la misma pestaña
+        window.addEventListener('storage', applyTheme);
+    </script>
+
+</body>
+</html>

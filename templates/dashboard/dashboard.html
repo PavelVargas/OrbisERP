@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es" class="{% if user.dark_mode %}dark{% endif %}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OrbisERP | OverView</title>
+
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link rel="stylesheet" href="/static/css/dashboard_2.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="shortcut icon" href="/static/assets/isotipo.png" type="image/x-icon">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    {% include "layouts/left_bar.html" %}
+
+    <main class="dashboard">
+        <header class="main-header">
+            <div class="header-content">
+                <span class="system-path">Dashboard / Overview</span>
+                <h1>Panel de Control {% if not is_admin %}<small>— Mis Ventas</small>{% endif %}</h1>
+                <div class="user-meta">
+                    <span class="meta-item"><i class="bi bi-person"></i> {{ user.name }}</span>
+                    <span class="meta-divider"></span>
+                    <span class="meta-item"><i class="bi bi-building"></i> {{ user.company.name if user.company else 'Sin Empresa' }}</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="current-date">
+                    <i class="bi bi-calendar4"></i> {{ now.strftime('%d %b %Y') }}
+                </div>
+                <a href="{{ url_for('cash_bp.close_cash') }}" class="current-date2">
+                    <i class="bi bi-door-closed"></i> <span>Cerrar dia</span>
+                </a>
+            </div>
+        </header>
+
+        {% if company.receipt_status == 'PENDING' %}
+        <div style="background: #faa200; color: #000; padding: 10px; text-align: center; font-weight: 800;">
+            <i class="bi bi-clock-history"></i> PAGO EN VALIDACIÓN: Tienes acceso temporal mientras el equipo de OrbisERP confirma tu transferencia.
+        </div>
+        {% endif %}
+
+       <section class="kpi-container">
+        {% if session.get('user_role') == 'admin' %}
+        <div class="kpi-box">
+            <div class="kpi-head">
+                <span class="kpi-label">Ingresos Totales</span>
+                <div class="kpi-dot primary"></div>
+            </div>
+            <h3 class="kpi-value" id="kpi-total-revenue">{{ currency_symbol }} {{ "{:,.2f}".format(total_revenue) }}</h3>
+            <div class="kpi-trend {% if revenue_growth >= 0 %}up{% else %}down{% endif %}">
+                <i class="bi bi-graph-{% if revenue_growth >= 0 %}up{% else %}down{% endif %}"></i>
+                <span>{{ "{:+.1f}".format(revenue_growth) }}%</span>
+                <span class="trend-label">este mes</span>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="kpi-box">
+            <div class="kpi-head">
+                <span class="kpi-label">Tickets Procesados</span>
+                <div class="kpi-dot info" style="background: #0ea5e9;"></div>
+            </div>
+            <h3 class="kpi-value" id="kpi-tickets-count">{{ total_tickets_count if total_tickets_count is not none else 0 }}</h3>
+            <div class="kpi-trend">
+                <i class="bi bi-receipt-cutoff"></i>
+                <span class="trend-label">Ventas finalizadas</span>
+            </div>
+        </div>
+
+
+        <div class="kpi-box">
+            <div class="kpi-head">
+                <span class="kpi-label">Ventas Hoy</span>
+                <div class="kpi-dot success"></div>
+            </div>
+            <h3 class="kpi-value" id="kpi-sales-today">{{ currency_symbol }} {{ "{:,.2f}".format(sales_today) }}</h3>
+            <div class="kpi-trend {% if sales_growth >= 0 %}up{% else %}down{% endif %}">
+                <i class="bi bi-caret-{% if sales_growth >= 0 %}up{% else %}down{% endif %}-fill"></i>
+                <span>{{ "{:+.1f}".format(sales_growth) }}%</span>
+                <span class="trend-label">vs ayer</span>
+            </div>
+        </div>
+
+        <div class="kpi-box">
+            <div class="kpi-head">
+                <span class="kpi-label">Ticket Promedio</span>
+                <div class="kpi-dot purple" style="background: #8b5cf6;"></div>
+            </div>
+            <h3 class="kpi-value" id="kpi-avg-ticket">{{ currency_symbol }} {{ "{:,.0f}".format(avg_ticket) }}</h3>
+            <div class="kpi-trend">
+                <i class="bi bi-lightning-charge"></i>
+                <span class="trend-label">Eficiencia ventas</span>
+            </div>
+        </div>
+
+        <a href="{{ url_for('sales_bp.pending_sales') }}" class="kpi-box interactive">
+            <div class="kpi-head">
+                <span class="kpi-label">Pendientes</span>
+                <div class="kpi-dot warning"></div>
+            </div>
+            <div class="kpi-footer">
+                <h3 class="kpi-value" id="kpi-pending-count">{{ pending_count }}</h3>
+                <span class="status-pill warning">Revisar</span>
+                <i class="bi bi-arrow-up-right"></i>
+            </div>
+        </a>
+
+        <a href="/stock" class="kpi-box interactive">
+            <div class="kpi-head">
+                <span class="kpi-label">Stock Bajo</span>
+                <div class="kpi-dot danger"></div>
+            </div>
+            <div class="kpi-footer">
+                <h3 class="kpi-value" id="kpi-low-stock">{{ low_stock_products }}</h3>
+                <span class="status-pill danger">Crítico</span>
+                <i class="bi bi-arrow-up-right"></i>
+            </div>
+        </a>
+    </section>
+        
+     {% if session.get('user_role') == 'admin' or session.get('role') == 'admin' %}
+        <section class="plan-status-section" style="margin-bottom: 10px;">
+            <div class="table-card" style="padding: 20px;">
+                <div class="card-header" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <div class="plan-status-wrapper">
+                        <span class="kpi-label"><i class="bi bi-gem"></i> Estado del Plan</span>
+                        <span class="plan-badge {{ plan_name.lower() }}">
+                            {{ plan_name }}
+                        </span>
+                    </div>
+                    <a href="{{ url_for('company_bp.view_plans') }}" style="font-size: 0.8rem; color: var(--primary); text-decoration: none; font-weight: 700;">MEJORAR PLAN</a>
+                </div>
+                
+                <div class="usage-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px;">
+                    
+                    <div class="usage-item">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem; font-weight: 600;">
+                            <span>Facturas Mensuales</span>
+                            <span>{{ invoices_usage|int }} / {{ invoices_limit|int if invoices_limit < 999999 else '∞' }}</span>
+                        </div>
+                        <div style="background: var(--bg-input); height: 8px; border-radius: 10px; overflow: hidden;">
+                            <div style="width: {{ inv_percent }}%; height: 100%; background: {% if inv_percent > 85 %}#ef4444{% else %}var(--primary){% endif %}; transition: 0.5s;"></div>
+                        </div>
+                    </div>
+
+                    <div class="usage-item">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem; font-weight: 600;">
+                            <span>Usuarios</span>
+                            <span>{{ users_count|int }} / {{ users_limit|int }}</span>
+                        </div>
+                        <div style="background: var(--bg-input); height: 8px; border-radius: 10px; overflow: hidden;">
+                            <div style="width: {{ users_percent }}%; height: 100%; background: #8b5cf6; transition: 0.5s;"></div>
+                        </div>
+                    </div>
+
+                    <div class="usage-item">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem; font-weight: 600;">
+                            <span>Sedes / Almacenes</span>
+                            <span>{{ wares_count|int }} / {{ wares_limit|int }}</span>
+                        </div>
+                        <div style="background: var(--bg-input); height: 8px; border-radius: 10px; overflow: hidden;">
+                            <div style="width: {{ wares_percent }}%; height: 100%; background: #10b981; transition: 0.5s;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        {%endif%}
+
+       <section class="chart-container">
+        <div class="canvas-holder" style="position: relative; height: 350px; width: 100%;">
+            <canvas id="myChart" 
+                data-labels='{{ chart_labels | tojson | safe }}' 
+                data-values='{{ chart_values | tojson | safe }}'
+                data-currency-iso="{{ current_currency }}"
+                data-currency-symbol="{{ currency_symbol }}"
+                data-rate="{{ conversion_rate }}">
+            </canvas>
+        </div>
+    </section>
+        
+
+        <section class="dual-grid">
+            <div class="table-card">
+                <div class="card-header">
+                    <span class="card-title">Ventas Recientes</span>
+                </div>
+                <div class="table-wrapper">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>CLIENTE</th>
+                                <th>ESTADO</th>
+                                <th class="align-right">TOTAL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in recent_sales %}
+                            <tr>
+                                <td class="mono">#{{ sale.id }}</td>
+                                <td>{{ sale.client.name if sale.client else 'Consumidor Final' }}</td>
+                                <td><span class="tag {{ sale.status | lower }}">{{ sale.status }}</span></td>
+                                <td class="align-right bold">{{ currency_symbol }} {{ "{:,.2f}".format(sale.converted_total) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="table-card">
+                <div class="card-header">
+                    <span class="card-title">Top Productos</span>
+                </div>
+                <div class="table-wrapper">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>DESCRIPCIÓN</th>
+                                <th class="align-right">VENTAS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in top_products %}
+                            <tr>
+                                <td>
+                                    <div style="display: flex; flex-direction: column;">
+                                        <span>{{ p.name }}</span>
+                                        <small style="color: var(--text-muted); font-size: 0.7rem;">Código: {{ p.code if p.code else 'SKU-00'+loop.index|string }}</small>
+                                    </div>
+                                </td>
+                                <td class="align-right">
+                                    <span class="qty-tag" style="background: var(--bg-input); padding: 4px 10px; border-radius: 6px; font-weight: 700;">
+                                        {{ p.qty }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // VARIABLES GLOBALES DE CONVERSIÓN
+        const conversionRate = {{ conversion_rate }};
+        const currencySymbol = "{{ currency_symbol }}";
+
+        async function refreshDashboard() {
+            try {
+                const response = await fetch('/api/dashboard/realtime-stats');
+                if (!response.ok) return;
+                
+                const data = await response.json();
+
+                // El backend ya envía los datos convertidos en el nuevo .py
+                if (data.sales_today !== undefined) {
+                    const val = parseFloat(data.sales_today);
+                    document.getElementById('kpi-sales-today').innerText = `${currencySymbol} ${val.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+                }
+                
+                if (data.pending_count !== undefined) document.getElementById('kpi-pending-count').innerText = data.pending_count;
+                if (data.low_stock_count !== undefined) document.getElementById('kpi-low-stock').innerText = data.low_stock_count;
+                
+                console.log("Dashboard sincronizado (" + currencySymbol + "):", new Date().toLocaleTimeString());
+            } catch (err) {
+                console.error("Error en sincronización:", err);
+            }
+        }
+
+        setInterval(refreshDashboard, 60000);
+    </script>
+
+   <script src="/static/js/dashboard.js"></script>
+</body>
+</html>

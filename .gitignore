@@ -1,0 +1,28 @@
+# Entornos virtuales
+venv/
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Node
+node_modules/
+npm-debug.log
+
+# Variables de entorno
+.env
+
+# Archivos de usuario
+static/uploads/
+uploads/
+
+# Build
+dist/
+build/
+
+# Sistema
+.DS_Store
+Thumbs.db

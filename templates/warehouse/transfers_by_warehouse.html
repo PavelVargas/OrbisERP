@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transferencias - {{ warehouse.name }}</title>
+    <link rel="stylesheet" href="/static/css/ware_css/ware.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+
+{% include 'layouts/left_bar.html' %}
+
+<main>
+    <div class="top-nav">
+        <a href="{{ url_for('warehouse_bp.list_warehouses') }}" class="back-link">
+            <i class="bi bi-arrow-left"></i> Volver a Almacenes
+        </a>
+    </div>
+
+    <div class="page-header">
+        <div class="title-group">
+            <h2>
+                <i class="bi bi-shuffle" style="color: var(--accent); margin-right: 10px;"></i>
+                Transferencias
+            </h2>
+            <p>Historial de movimientos para <strong>{{ warehouse.name }}</strong></p>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert {{ category }}" style="padding: 16px; border-radius: 12px; margin-bottom: 25px; background: var(--card); border: 1px solid var(--border); display: flex; align-items: center; gap: 10px;">
+                    <i class="bi bi-info-circle"></i> {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="warehouse-card" style="padding: 0; overflow: hidden; border-radius: 20px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+            <thead>
+                <tr style="background: var(--bg); border-bottom: 1px solid var(--border);">
+                    <th style="padding: 20px 25px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--gray-text);">Fecha</th>
+                    <th style="padding: 20px 25px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--gray-text);">Producto</th>
+                    <th style="padding: 20px 25px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--gray-text);">Origen / Destino</th>
+                    <th style="padding: 20px 25px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--gray-text);">Cantidad</th>
+                    <th style="padding: 20px 25px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--gray-text);">Estado</th>
+                    <th style="padding: 20px 25px; text-align: center; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--gray-text);">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in transfers %}
+                <tr style="border-bottom: 1px solid var(--border); transition: 0.2s;">
+                    <td style="padding: 20px 25px;">
+                        <span style="font-weight: 600; color: var(--gray-text); font-size: 13px;">
+                            {{ t.created_at.strftime('%d/%m/%Y') }}
+                        </span>
+                    </td>
+                    <td style="padding: 20px 25px;">
+                        <div style="font-weight: 700; color: var(--fg);">{{ t.product.name }}</div>
+                    </td>
+                    <td style="padding: 20px 25px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span title="Origen">{{ t.from_warehouse.name }}</span>
+                            <i class="bi bi-arrow-right" style="color: var(--gray-text); font-size: 12px;"></i>
+                            <span style="font-weight: 600;">{{ t.to_warehouse.name }}</span>
+                        </div>
+                    </td>
+                    <td style="padding: 20px 25px;">
+                        <span style="background: var(--bg); padding: 4px 10px; border-radius: 8px; font-weight: 800;">
+                            {{ t.quantity }}
+                        </span>
+                    </td>
+                    <td style="padding: 20px 25px;">
+                        {% if t.status == 'PENDING' %}
+                            <span style="display: inline-flex; align-items: center; gap: 5px; color: #f39c12; font-weight: 700; font-size: 12px; text-transform: uppercase;">
+                                <span class="dot pulse" style="background: #f39c12;"></span> Pendiente
+                            </span>
+                        {% else %}
+                            <span style="display: inline-flex; align-items: center; gap: 5px; color: var(--success); font-weight: 700; font-size: 12px; text-transform: uppercase;">
+                                <i class="bi bi-check-all"></i> Recibida
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 20px 25px; text-align: center;">
+                        {% if t.status == 'PENDING' and t.to_warehouse.id == warehouse.id %}
+                            <form method="POST" action="{{ url_for('transfer_bp.receive_transfer', transfer_id=t.id) }}">
+                                <button class="act-btn highlight" style="border: none; cursor: pointer; height: 36px; padding: 0 15px; font-size: 12px; width: auto;">
+                                    <i class="bi bi-box-arrow-in-down"></i> Recibir
+                                </button>
+                            </form>
+                        {% else %}
+                            <span style="color: var(--border);">---</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="padding: 80px; text-align: center;">
+                        <div class="empty-state">
+                            <i class="bi bi-arrow-left-right" style="font-size: 40px; margin-bottom: 15px; display: block;"></i>
+                            <p>No hay transferencias registradas.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</main>
+
+</body>
+</html>

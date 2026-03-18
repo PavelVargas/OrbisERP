@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal POS | OrbisERP</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sales_css/create_sales.css') }}">
+    <style>
+        /* Estilos optimizados para el selector de pago y tasas */
+        .payment-method-selector {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: var(--bg-card, #f8fafc);
+            border-radius: 12px;
+            border: 1px solid var(--border, #e2e8f0);
+        }
+        .payment-method-selector label {
+            display: block;
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .method-select {
+            width: 100%;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 10px;
+            font-family: inherit;
+            font-weight: 600;
+            background: #fff;
+            color: #1e293b;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .method-select:focus { border-color: #4f46e5; }
+
+        .rate-info-tag {
+            font-size: 11px;
+            font-weight: 700;
+            color: #4f46e5;
+            background: rgba(79, 70, 229, 0.1);
+            padding: 4px 10px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Mejora visual para el desglose de impuestos */
+        .summary-row.tax-row {
+            font-size: 0.85rem;
+            color: #64748b;
+            border-top: 1px dashed #e2e8f0;
+            padding-top: 8px;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    {% include 'layouts/left_bar.html' %}
+
+    <main class="main-content-pos">
+        <header class="top-terminal-header">
+            <div class="brand-zone">
+                <a href="{{ url_for('sales_bp.list_sales') }}" class="back-btn">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <div>
+                    <h1>Facturación</h1>
+                    <span class="terminal-id">CAJA ACTIVA • {{ session.get('user_name', 'Usuario') }}</span>
+                </div>
+            </div>
+            <div class="live-meta">
+                <div class="rate-info-tag">
+                    <i class="bi bi-currency-exchange"></i>
+                    Tasa: 1 {{ current_currency }} = {{ "{:,.2f}".format(conversion_rate) }} DOP
+                </div>
+                <div class="clock-box">
+                    <i class="bi bi-clock"></i>
+                    <span id="live-clock">00:00:00</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="pos-container">
+            <section class="scan-workspace">
+                <div class="scanner-container">
+                    <div class="scan-focus-area">
+                        <div class="visual-scanner">
+                            <div class="laser-line"></div>
+                            <i class="bi bi-upc-scan"></i>
+                        </div>
+                        <h2>Escanee Producto</h2>
+                        <p>El sistema detectará el SKU automáticamente</p>
+                        
+                        <form id="barcode-form" action="{{ url_for('sales_bp.create_sale') }}" method="POST" class="scanner-input-group">
+                            <input type="text" 
+                                   name="search" 
+                                   id="barcode-input" 
+                                   placeholder="Esperando código..." 
+                                   autocomplete="off" 
+                                   autofocus>
+                        </form>
+                    </div>
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                      {% if messages %}
+                        {% for category, message in messages %}
+                          <div class="alert-toast {{ category }}">{{ message }}</div>
+                        {% endfor %}
+                      {% endif %}
+                    {% endwith %}
+                </div>
+            </section>
+
+            <aside class="order-sidebar" id="sidebar-ticket">
+                <button class="close-mobile-ticket" onclick="toggleTicket()">
+                    <i class="bi bi-chevron-compact-down"></i>
+                </button>
+
+                <div class="ticket-wrapper">
+                    <div class="ticket-head">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <span class="order-tag">ORDEN #{{ sale.id if sale else 'NUEVA' }}</span>
+                            <span class="count-badge">{{ sale.items|length if sale else 0 }} Items</span>
+                        </div>
+                        
+                        <div class="client-select-container">
+                            <form action="{{ url_for('sales_bp.assign_client') }}" method="POST" id="client-form">
+                                <select name="client_id" class="client-select" onchange="this.form.submit()">
+                                    <option value="">-- SELECCIONAR CLIENTE --</option>
+                                    {% for client in clients %}
+                                    <option value="{{ client.id }}" {{ 'selected' if sale and sale.client_id == client.id else '' }}>
+                                        {{ client.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="ticket-scroll-area">
+                        {% if sale and sale.items %}
+                            {% for item in sale.items %}
+                            <div class="order-item-card">
+                                <div class="item-main">
+                                    <span class="item-qty">{{ item.quantity }}</span>
+                                    <div class="item-details">
+                                        <span class="name">{{ item.product.name }}</span>
+                                        <span class="price-unit">
+                                            {{ currency_symbol }} {{ "{:,.2f}".format(item.price / conversion_rate) }}
+                                        </span>
+                                    </div>
+                                    <span class="item-total-price">
+                                        {{ currency_symbol }} {{ "{:,.2f}".format((item.quantity * item.price) / conversion_rate) }}
+                                    </span>
+                                </div>
+                                <form action="{{ url_for('sales_bp.remove_item', item_id=item.id) }}" method="POST">
+                                    <button type="submit" class="remove-btn">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state">
+                                <i class="bi bi-cart3"></i>
+                                <p>Esperando productos</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="ticket-footer">
+                        <div class="summary-box">
+                            <div class="summary-row">
+                                <span>Subtotal ({{ current_currency }})</span>
+                                <span>{{ currency_symbol }} {{ "{:,.2f}".format((sale.subtotal if sale else 0) / conversion_rate) }}</span>
+                            </div>
+                            <div class="summary-row tax-row">
+                                <span>ITBIS Inc. (18%)</span>
+                                <span>{{ currency_symbol }} {{ "{:,.2f}".format((sale.itbis if sale else 0) / conversion_rate) }}</span>
+                            </div>
+                            <div class="summary-row total-row">
+                                <span>TOTAL</span>
+                                <span class="big-total">
+                                    {{ currency_symbol }} {{ "{:,.2f}".format((sale.total if sale else 0) / conversion_rate) }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="checkout-zone">
+                            <div class="payment-method-selector">
+                                <label><i class="bi bi-credit-card-2-back"></i> Método de Pago</label>
+                                <select name="payment_method" form="finish-sale-form" class="method-select">
+                                    <option value="CASH">EFECTIVO / CONTADO</option>
+                                    <option value="CREDIT">CRÉDITO (CXC)</option>
+                                    <option value="TRANSFER">TRANSFERENCIA</option>
+                                </select>
+                            </div>
+
+                            <form action="{{ url_for('sales_bp.finish_sale') }}" method="POST" id="finish-sale-form">
+                                <button type="submit" class="btn-checkout" 
+                                    {{ 'disabled' if not sale or not sale.items or not sale.client_id else '' }}>
+                                    <span>PAGAR AHORA</span>
+                                    <div class="icon"><i class="bi bi-arrow-right"></i></div>
+                                </button>
+                            </form>
+
+                            <div class="alt-buttons">
+                                <form action="{{ url_for('sales_bp.convert_to_quote', sale_id=sale.id if sale else 0) }}" method="POST" style="flex:1">
+                                    <button type="submit" class="btn-secondary" {{ 'disabled' if not sale or not sale.items else '' }}>
+                                        COTIZAR
+                                    </button>
+                                </form>
+                                <form action="{{ url_for('sales_bp.cancel_sale', sale_id=sale.id if sale else 0) }}" method="POST">
+                                    <button type="submit" class="btn-danger-outline">
+                                        <i class="bi bi-x-circle"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <button class="mobile-ticket-trigger" onclick="toggleTicket()">
+            <i class="bi bi-receipt"></i>
+            <span>{{ currency_symbol }} {{ "{:,.2f}".format((sale.total if sale else 0) / conversion_rate) }}</span>
+        </button>
+    </main>
+
+    <div id="success-overlay" class="success-overlay" style="display: none;">
+        <div class="success-card">
+            <div class="success-icon-wrapper">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+            <h2>¡Venta Registrada!</h2>
+            <p>Generando comprobante fiscal...</p>
+            <div class="success-footer">
+                <span id="countdown-text">Finalizando en 3s...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. Reloj Real
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('live-clock').textContent = now.toLocaleTimeString('es-DO', { hour12: false });
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // 2. Control de Foco del Scanner
+        const barcodeInput = document.getElementById('barcode-input');
+        document.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+                barcodeInput.focus();
+            }
+        });
+
+        // 3. Auto-submit al escanear (Delay de 400ms)
+        let typingTimer;
+        barcodeInput.addEventListener('input', () => {
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(() => {
+                if (barcodeInput.value.trim().length >= 2) {
+                    document.getElementById('barcode-form').submit();
+                }
+            }, 400); 
+        });
+
+        // 4. Utilidades UI
+        function toggleTicket() {
+            document.getElementById('sidebar-ticket').classList.toggle('active');
+        }
+
+        // 5. Animación de Pago
+        const finishForm = document.getElementById('finish-sale-form');
+        finishForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const overlay = document.getElementById('success-overlay');
+            overlay.style.display = 'grid';
+
+            let seconds = 3;
+            const countdownEl = document.getElementById('countdown-text');
+            
+            const timer = setInterval(() => {
+                seconds--;
+                countdownEl.textContent = `Finalizando en ${seconds}s...`;
+                if (seconds <= 0) {
+                    clearInterval(timer);
+                    finishForm.submit();
+                }
+            }, 1000);
+        });
+
+        // 6. Auto-ocultar alertas
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.alert-toast');
+            alerts.forEach(alert => {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 500);
+            });
+        }, 3000);
+    </script>
+</body>
+</html>

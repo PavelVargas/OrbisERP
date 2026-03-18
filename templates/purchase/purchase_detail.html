@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/order_css/order.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <title>Detalle #{{ order.id }}</title>
+</head>
+<body>
+    {% include 'layouts/left_bar.html'%}
+    <main>
+        <div class="top-nav">
+            <a href="{{ url_for('purchase_bp.purchase_list') }}" class="back-link"><i class="bi bi-chevron-left"></i> Órdenes</a>
+        </div>
+        <header class="page-header">
+            <div class="title-group">
+                <h2>Orden #{{ order.id }}</h2>
+                <p>Estado: 
+                    {% if order.status == 'PENDING' %}Pendiente{% elif order.status == 'RECEIVED' %}Recibida{% else %}Cancelada{% endif %}
+                </p>
+            </div>
+            {% if order.status == 'PENDING' and order.items %}
+            <form action="{{ url_for('purchase_bp.receive_purchase', order_id=order.id) }}" method="POST">
+                <button type="submit" class="btn-primary success">Recibir Mercancía</button>
+            </form>
+            {% endif %}
+        </header>
+
+        <div class="detail-grid">
+            <div class="side-panel">
+                <div class="info-card-modern">
+                    <h4>Proveedor: {{ order.supplier_name }}</h4>
+                    {% if order.status == 'PENDING' %}
+                    <form method="post" action="{{ url_for('purchase_bp.purchase_detail', order_id=order.id) }}" class="modern-form">
+                        <div class="form-group">
+                            <label>Producto</label>
+                            <select name="product_id" required>
+                                <option value="" disabled selected>Seleccionar...</option>
+                                {% for p in products %}
+                                <option value="{{ p.id }}">{{ p.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Cantidad</label>
+                            <input type="number" name="quantity" min="1" value="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Costo Unitario</label>
+                            <input type="number" name="unit_cost" step="0.01" min="0" placeholder="0.00" required>
+                        </div>
+                        <button type="submit" class="btn-submit-full">Añadir Producto</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="main-panel">
+                <div class="table-container">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                                <th>Costo U.</th>
+                                <th class="text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                            <tr>
+                                <td>{{ item.product.name if item.product else 'Producto eliminado' }}</td>
+                                <td><span class="items-count">{{ item.quantity }}</span></td>
+                                <td>${{ item.unit_cost }}</td>
+                                <td class="text-right">
+                                    {% if order.status == 'PENDING' %}
+                                    <a href="{{ url_for('purchase_bp.delete_purchase_item', item_id=item.id) }}" class="act-btn cancel">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="empty-state">
+                                    <i class="bi bi-cart-x"></i>
+                                    No hay productos en esta orden.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,146 @@
+
+
+body {
+    margin: 0;
+    font-family: 'Montserrat', sans-serif;
+    background: var(--bg-app);
+    color: var(--text-main);
+    display: flex;
+}
+
+main {
+    flex-grow: 1;
+    padding: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.content-wrapper {
+    width: 100%;
+    max-width: 460px;
+}
+
+/* NAVEGACIÓN */
+.top-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.back-link {
+    text-decoration: none;
+    color: var(--accent);
+}
+
+.user-meta { color: var(--text-dim); }
+
+/* CARD */
+.form-card {
+    background: var(--card-bg);
+    padding: 40px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.header-icon {
+    font-size: 32px;
+    color: var(--accent);
+    margin-bottom: 10px;
+}
+
+.form-header h2 {
+    font-size: 22px;
+    margin: 0;
+    font-weight: 600;
+}
+
+.form-header p {
+    color: var(--text-dim);
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+/* INPUTS */
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 8px;
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-wrapper i:not(.bi-eye) {
+    position: absolute;
+    left: 15px;
+    color: var(--text-dim);
+    font-size: 16px;
+}
+
+.input-wrapper input, .input-wrapper select {
+    width: 100%;
+    padding: 12px 15px 12px 42px;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.input-wrapper input:focus {
+    border-color: var(--accent);
+}
+
+/* PASSWORD VIEW */
+.view-pass {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 5px;
+}
+
+/* BOTÓN REGISTRAR */
+.form-footer { margin-top: 30px; }
+
+.btn-submit {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-submit:hover { opacity: 0.9; }
+
+.btn-submit:active { transform: scale(0.99); }

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es" class="{% if session.get('theme') == 'dark' %}dark{% endif %}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil de Cliente | OrbisERP</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/client_css/detail_client.css">
+</head>
+<body class="{% if session.get('theme') == 'dark' %}dark{% endif %}">
+
+    {% include 'layouts/left_bar.html' %}
+
+    <main class="main-content" style="padding: 40px;">
+        <header style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px;">
+            <div>
+                <a href="/clients" class="btn-back" style="text-decoration: none; color: var(--text-muted); font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; gap: 8px; margin-bottom: 15px;">
+                    <i class="bi bi-chevron-left"></i> VOLVER A CLIENTES
+                </a>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <h1 style="font-weight: 900; font-size: 2.5rem; margin: 0;">{{ client.name }}</h1>
+                    <span class="currency-badge">{{ selected_currency }} TASA: {{ conversion_rate }}</span>
+                </div>
+                <p style="color: var(--text-muted); font-weight: 500; margin-top: 5px;">ID de Cliente: #{{ client.id }} • Registrado en Orbis {{ client.created_at.strftime('%Y') }}</p>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <a href="/clients/edit/{{ client.id }}" class="btn-plan btn-primary" style="padding: 10px 20px; border-radius: 12px; text-decoration: none; display: inline-block;">
+                    <i class="bi bi-pencil"></i> Editar
+                </a>
+            </div>
+        </header>
+
+        <section class="info-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 40px;">
+            <div class="metric-card">
+                <span style="color: var(--text-muted); font-weight: 700; font-size: 0.75rem; text-transform: uppercase;">Inversión Acumulada</span>
+                <div class="total-highlight" id="total_spent_display">
+                    <small style="font-size: 1rem;">{{ currency_symbol }}</small> 0.00
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+                    <i class="bi bi-graph-up-arrow" style="color: var(--success-emerald);"></i>
+                    <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Basado en {{ total_sales }} facturas</span>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <span style="color: var(--text-muted); font-weight: 700; font-size: 0.75rem; text-transform: uppercase;">Promedio por Ticket</span>
+                <div class="total-highlight" id="avg_ticket_display" style="color: var(--accent-gold);">
+                    <small style="font-size: 1rem;">{{ currency_symbol }}</small> 0.00
+                </div>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 10px; font-weight: 600;">Moneda de visualización: {{ selected_currency }}</p>
+            </div>
+
+            <div class="metric-card">
+                <span style="color: var(--text-muted); font-weight: 700; font-size: 0.75rem; text-transform: uppercase;">Última Operación</span>
+                <div class="total-highlight" style="font-size: 1.8rem; margin-top: 10px;">
+                    {{ last_sale.strftime('%d %b') if last_sale else 'N/A' }}
+                </div>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 10px; font-weight: 600;">Estado: Activo</p>
+            </div>
+        </section>
+
+        <div class="content-wrapper" style="display: grid; grid-template-columns: 350px 1fr; gap: 30px;">
+            <aside class="details-section" style="background: var(--bg-card); border-radius: 20px; padding: 30px; height: fit-content; border: 1px solid var(--border);">
+                <h3 style="font-size: 0.9rem; font-weight: 800; margin-bottom: 25px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">INFORMACIÓN PERSONAL</h3>
+                
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    <div>
+                        <label style="display: block; font-size: 0.65rem; font-weight: 800; color: var(--text-muted); margin-bottom: 5px;">EMAIL</label>
+                        <strong style="font-size: 0.9rem;">{{ client.email or 'Sin correo' }}</strong>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.65rem; font-weight: 800; color: var(--text-muted); margin-bottom: 5px;">TELÉFONO / WHATSAPP</label>
+                        <strong style="font-size: 0.9rem;">{{ client.phone or 'Sin teléfono' }}</strong>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.65rem; font-weight: 800; color: var(--text-muted); margin-bottom: 5px;">FECHA REGISTRO</label>
+                        <strong style="font-size: 0.9rem;">{{ client.created_at.strftime('%d de %B, %Y') }}</strong>
+                    </div>
+                </div>
+            </aside>
+
+            <section class="table-section">
+                <div style="margin-bottom: 20px;">
+                    <h3 style="font-weight: 900; font-size: 1.2rem;">Historial de Auditoría</h3>
+                    <p style="color: var(--text-muted); font-size: 0.85rem;">Todos los montos han sido convertidos a la tasa actual ({{ conversion_rate }}).</p>
+                </div>
+
+                <div class="table-container" style="background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); overflow: hidden;">
+                    <table class="custom-table" style="width: 100%; border-collapse: collapse;">
+                        <thead style="background: rgba(0,0,0,0.1);">
+                            <tr style="text-align: left;">
+                                <th style="padding: 20px; font-size: 0.7rem; font-weight: 800; color: var(--text-muted);">REF</th>
+                                <th style="padding: 20px; font-size: 0.7rem; font-weight: 800; color: var(--text-muted);">FECHA</th>
+                                <th style="padding: 20px; font-size: 0.7rem; font-weight: 800; color: var(--text-muted);">ESTADO</th>
+                                <th style="padding: 20px; font-size: 0.7rem; font-weight: 800; color: var(--text-muted);">MONTO ({{ selected_currency }})</th>
+                                <th style="padding: 20px; text-align: center;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in sales %}
+                            <tr style="border-bottom: 1px solid var(--border);">
+                                <td style="padding: 20px; font-weight: 700; color: var(--accent-gold);">#{{ sale.id }}</td>
+                                <td style="padding: 20px; font-size: 0.9rem; font-weight: 500;">{{ sale.created_at.strftime('%d/%m/%Y') }}</td>
+                                <td style="padding: 20px;"><span class="status-pill">COMPLETADO</span></td>
+                                <td style="padding: 20px; font-weight: 800; font-size: 1rem;" class="convert-monto" data-valor="{{ sale.total }}">
+                                    </td>
+                                <td style="padding: 20px; text-align: center;">
+                                    <a href="/sales/{{ sale.id }}" style="color: var(--text-muted); font-size: 1.2rem;"><i class="bi bi-arrow-right-circle"></i></a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        // Lógica de conversión dinámica de OrbisERP
+        const tasa = {{ conversion_rate }};
+        const simbolo = "{{ currency_symbol }}";
+
+        // Función para formatear dinero
+        const formatMoney = (val) => {
+            return simbolo + " " + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        };
+
+        // 1. Convertir montos de la tabla
+        const montosTabla = document.querySelectorAll('.convert-monto');
+        let totalAcumulado = 0;
+
+        montosTabla.forEach(el => {
+            const valorOriginal = parseFloat(el.getAttribute('data-valor'));
+            const valorConvertido = valorOriginal / tasa;
+            totalAcumulado += valorConvertido;
+            el.innerHTML = formatMoney(valorConvertido);
+        });
+
+        // 2. Actualizar tarjetas superiores
+        document.getElementById('total_spent_display').innerHTML = formatMoney(totalAcumulado);
+        
+        const totalSales = {{ total_sales }};
+        const avg = totalSales > 0 ? totalAcumulado / totalSales : 0;
+        document.getElementById('avg_ticket_display').innerHTML = formatMoney(avg);
+    </script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OrbisERP | Configuración de Empresa</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/company_css/company.css">
+</head>
+<body class="{% if user and user.dark_mode %}dark{% endif %}">
+
+    {% include 'layouts/left_bar.html' %}
+
+    <main class="main-content">
+        <div class="settings-container">
+            <header class="settings-header">
+                <a href="/dashboard" class="btn-back"><i class="bi bi-arrow-left"></i></a>
+                <div class="title-block">
+                    <h1><i class="bi bi-building-gear"></i> Perfil de la Empresa</h1>
+                    <p>Gestiona la identidad visual y fiscal de tu negocio para facturas y reportes.</p>
+                </div>
+            </header>
+
+            <form action="{{ url_for('company_bp.settings') }}" method="POST" enctype="multipart/form-data" class="settings-card">
+                
+                <div class="logo-upload-section">
+                    <div class="logo-display">
+                        {% if company.logo %}
+                            <img src="{{ url_for('static', filename=company.logo) }}" alt="Logo" class="logo-preview" id="preview-img">
+                        {% else %}
+                            <div class="logo-placeholder" id="preview-placeholder">
+                                <i class="bi bi-camera"></i>
+                            </div>
+                        {% endif %}
+                        <label for="logo-input" class="btn-change-logo">
+                            <i class="bi bi-pencil"></i>
+                        </label>
+                    </div>
+                    <div class="logo-info">
+                        <h3>Logo Corporativo</h3>
+                        <p>Se recomienda formato PNG o JPG (Máx. 2MB)</p>
+                        <input type="file" name="logo" id="logo-input" hidden onchange="previewImage(this)">
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label><i class="bi bi-info-circle"></i> Nombre Comercial</label>
+                        <input type="text" name="name" value="{{ company.name }}" placeholder="Nombre de tu negocio" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="bi bi-hash"></i> RNC / Identificación Fiscal</label>
+                        <input type="text" name="rnc" value="{{ company.rnc or '' }}" placeholder="Ej: 1-31-XXXXX-X">
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="bi bi-envelope-at"></i> Correo de Contacto</label>
+                        <input type="email" name="email" value="{{ company.email or '' }}" placeholder="empresa@ejemplo.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="bi bi-telephone"></i> Teléfono</label>
+                        <input type="text" name="phone" value="{{ company.phone or '' }}" placeholder="+1 (809) 000-0000">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label><i class="bi bi-geo-alt"></i> Dirección Física</label>
+                        <textarea name="address" rows="3" placeholder="Calle, Número, Ciudad, País...">{{ company.address or '' }}</textarea>
+                    </div>
+                </div>
+
+                <div class="form-footer">
+                    <button type="submit" class="btn-save">
+                        <span>Guardar Cambios</span>
+                        <i class="bi bi-cloud-arrow-up-fill"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    let img = document.getElementById('preview-img');
+                    const placeholder = document.getElementById('preview-placeholder');
+                    
+                    if (!img) {
+                        img = document.createElement('img');
+                        img.id = 'preview-img';
+                        img.className = 'logo-preview';
+                        placeholder.parentNode.replaceChild(img, placeholder);
+                    }
+                    img.src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
+
+</body>
+</html>

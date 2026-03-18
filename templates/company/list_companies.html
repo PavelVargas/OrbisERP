@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/company_css/list_companies.css">
+    <title>Global Empresas | OrbisERP</title>
+</head>
+<body class="admin-view {% if session.get('impersonating') %}mode-impersonate{% endif %}">
+
+    {% include "layouts/left_bar.html" %}
+    
+    <div class="main-content-wrapper">
+        <header class="section-header">
+            <div class="header-info">
+                <span class="badge-system">Gestión de OrbisERP</span>
+                <h1>Empresas en el Sistema</h1>
+                <p>Monitoreo y administración de organizaciones activas</p>
+            </div>
+            <div class="header-stats">
+                <div class="stat-pill">
+                    <i class="bi bi-buildings-fill"></i>
+                    <span><strong>{{ companies|length }}</strong> Registradas</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="toolbar-premium">
+            <div class="search-box">
+                <i class="bi bi-search"></i>
+                <input type="text" id="companySearch" placeholder="Escribe nombre, RNC o admin...">
+            </div>
+            <div class="filter-pills">
+                <button class="pill active" data-filter="all">Todas las cuentas</button>
+            </div>
+        </div>
+
+        <div class="company-bento-grid" id="companyGrid">
+            {% for company in companies %}
+            <div class="company-card" data-name="{{ company.name|lower }}" data-rnc="{{ company.rnc }}">
+                <div class="card-inner">
+                    <div class="card-top">
+                        <div class="company-avatar">
+                            {% if company.logo %}
+                                <img src="{{ url_for('static', filename=company.logo) }}" alt="Logo">
+                            {% else %}
+                                <div class="avatar-placeholder">
+                                    <i class="bi bi-building"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="status-indicator">
+                            <span class="dot"></span>
+                            <span class="status-text">Activa</span>
+                        </div>
+                    </div>
+
+                    <div class="card-main">
+                        <h3 class="company-title">{{ company.name }}</h3>
+                        <div class="rnc-tag">
+                            <i class="bi bi-patch-check-fill"></i>
+                            <span>RNC: {{ company.rnc if company.rnc else 'No definido' }}</span>
+                        </div>
+                    </div>
+
+                    <div class="card-details">
+                        <div class="detail-item">
+                            <i class="bi bi-envelope-at"></i>
+                            <div class="detail-text">
+                                <label>Email Corporativo</label>
+                                <span>{{ company.email if company.email else 'N/A' }}</span>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <i class="bi bi-geo-alt"></i>
+                            <div class="detail-text">
+                                <label>Ubicación</label>
+                                <span>{{ company.address if company.address else 'Sin dirección' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-actions">
+                        <button class="btn-icon secondary" onclick="window.location.href='/company/settings'"><i class="bi bi-gear"></i></button>
+                        <a href="{{ url_for('company_bp.impersonate_company', company_id=company.id) }}" class="btn-icon manage">
+                            <i class="bi bi-box-arrow-in-right"></i>
+                            <span>Acceder como Admin</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {# Barra flotante que solo aparece en modo suplantación #}
+    {% if session.get('impersonating') %}
+    <div class="impersonate-float-bar">
+        <div class="float-content">
+            <div class="alert-icon"><i class="bi bi-shield-lock-fill"></i></div>
+            <div class="float-text">
+                <p>Estás visualizando: <strong>{{ user.company.name }}</strong></p>
+                <span>Cualquier cambio afectará los datos de esta empresa</span>
+            </div>
+        </div>
+        <a href="{{ url_for('company_bp.stop_impersonate') }}" class="btn-stop-impersonate">
+            <span>Salir y volver a mi cuenta</span>
+            <i class="bi bi-x-circle-fill"></i>
+        </a>
+    </div>
+    {% endif %}
+
+    <script>
+        const searchInput = document.getElementById('companySearch');
+        const cards = document.querySelectorAll('.company-card');
+
+        searchInput.addEventListener('input', (e) => {
+            const value = e.target.value.toLowerCase();
+            cards.forEach(card => {
+                const name = card.getAttribute('data-name');
+                const rnc = (card.getAttribute('data-rnc') || "").toLowerCase();
+                const matches = name.includes(value) || rnc.includes(value);
+                
+                if(matches) {
+                    card.style.display = 'block';
+                    setTimeout(() => { card.style.opacity = '1'; card.style.transform = 'scale(1)'; }, 10);
+                } else {
+                    card.style.opacity = '0';
+                    card.style.transform = 'scale(0.95)';
+                    setTimeout(() => { card.style.display = 'none'; }, 200);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,339 @@
+/* OrbisERP - Master Base CSS 
+    Optimizado para: Modo Oscuro Nativo, Cero Flashazos, Alto Rendimiento
+*/
+
+/* --- VARIABLES MAESTRAS --- */
+:root {
+    --primary: #faa200;
+    --accent: #faa200;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --sidebar-width: 290px;
+    --sidebar-collapsed: 68px;
+
+    /* Tema Claro */
+    --bg-main: #f8fafc;
+    --bg-card: #ffffff;
+    --bg-input: #f1f5f9;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --shadow: 0 1px 3px rgba(0,0,0,0.05);
+    --radius: 22px;
+    
+    color-scheme: light;
+}
+
+/* 🔥 MODO OSCURO PREMIUM (Solución Anti-Flash Reforzada) */
+html.dark {
+    --bg-main:      #0b0f1a; 
+    --bg-card:      #151b2c; 
+    --bg-input:     #1e2538;
+    --text-main:    #f1f5f9;
+    --text-muted:   #94a3b8;
+    --border:       #222d45;
+    --shadow:       0 15px 30px -15px rgba(0,0,0,0.4);
+    
+    /* Forzado de fondo en la raíz para evitar el flash blanco */
+    background-color: #0b0f1a !important; 
+    color-scheme: dark; 
+}
+
+/* --- RESET Y ESTRUCTURA MAESTRA --- */
+* { 
+    box-sizing: border-box; 
+    -webkit-font-smoothing: antialiased;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+    overflow-x: hidden;
+    /* Transición suave solo después de carga inicial */
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Evita transiciones de color durante el renderizado inicial */
+body.no-transition {
+    transition: none !important;
+}
+
+/* --- MAIN: CONTROL DINÁMICO DE ESPACIOS --- */
+main {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    padding: 90px 16px 30px 16px; 
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+/* Contenedor interno que limita el ancho máximo */
+.content-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+/* --- LÓGICA DE ESCRITORIO --- */
+@media (min-width: 1025px) {
+    main {
+        padding: 40px;
+        margin-left: var(--sidebar-width);
+        width: calc(100% - var(--sidebar-width));
+    }
+
+    html.sidebar-collapsed main {
+        margin-left: var(--sidebar-collapsed) !important;
+        width: calc(100% - var(--sidebar-collapsed)) !important;
+    }
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 1024px) {
+    main {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 80px 15px 30px 15px;
+    }
+}
+
+/* --- SCROLLBARS (Modernos y sutiles) --- */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { 
+    background: var(--border); 
+    border-radius: 10px; 
+}
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* Para esconder el scrollbar si prefieres la estética limpia total */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
+/* --- HEADER DE PÁGINA --- */
+.page-header {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.page-header h2 {
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -0.04em;
+    color: var(--text-main);
+}
+
+.page-header p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+@media (min-width: 768px) {
+    .page-header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+}
+
+/* --- INPUTS Y FORMULARIOS --- */
+.input-with-icon { 
+    position: relative; 
+    width: 100%;
+}
+
+.input-with-icon i { 
+    position: absolute; 
+    left: 16px; 
+    top: 50%; 
+    transform: translateY(-50%); 
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    pointer-events: none;
+}
+
+.input-global, 
+.input-with-icon input, 
+.custom-select,
+textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--bg-input);
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input-with-icon input { padding-left: 45px; }
+
+.input-global:focus, 
+.input-with-icon input:focus, 
+.custom-select:focus,
+textarea:focus {
+    border-color: var(--primary);
+    background: var(--bg-card);
+    box-shadow: 0 0 0 4px rgba(250, 162, 0, 0.15);
+}
+
+/* Autocompletado del navegador */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--text-main) !important;
+    -webkit-box-shadow: 0 0 0px 1000px var(--bg-input) inset !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+/* --- BOTONES --- */
+.btn-primary {
+    background: var(--primary);
+    color: white;
+    padding: 14px 28px;
+    border-radius: var(--radius);
+    font-weight: 700;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-size: 0.95rem;
+}
+
+.btn-primary:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px -5px rgba(250, 162, 0, 0.4);
+}
+
+.btn-primary:active { transform: translateY(0); }
+
+@media (max-width: 768px) {
+    .btn-primary { width: 100%; }
+}
+
+/* --- TARJETAS Y TABLAS --- */
+.table-card, .glass-form, .bento-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+    width: 100%;
+}
+
+.table-enterprise {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table-enterprise th {
+    background: var(--bg-main);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 14px 16px;
+    border-bottom: 2px solid var(--border);
+    text-align: left;
+}
+
+.table-enterprise td {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.85rem;
+    color: var(--text-main);
+}
+
+.table-enterprise tr:last-child td { border-bottom: none; }
+
+/* --- BADGES (Indicadores) --- */
+.badge {
+    padding: 6px 14px;
+    border-radius: 50px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.badge-success { background: rgba(16, 185, 129, 0.12); color: #10b981; }
+.badge-warning { background: rgba(245, 158, 11, 0.12); color: #f59e0b; }
+.badge-danger { background: rgba(239, 68, 68, 0.12); color: #ef4444; }
+
+/* --- NAV ICONS (Sidebar & Menu) --- */
+.nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;  
+    height: 38px;
+    border-radius: 12px; 
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(0, 0, 0, 0.04); 
+    color: var(--text-muted);
+    flex-shrink: 0; 
+}
+
+html.dark .nav-icon { background: rgba(255, 255, 255, 0.05); }
+
+.nav-item.active .nav-icon {
+    background: rgba(250, 162, 0, 0.15);
+    color: var(--primary);
+}
+
+.nav-item:hover .nav-icon {
+    background: rgba(250, 162, 0, 0.1);
+    color: var(--primary);
+    transform: scale(1.05);
+}
+
+/* --- BENTO GRID --- */
+.bento-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.main-feature { 
+    grid-column: span 2; 
+    border-top: 4px solid var(--primary); 
+}
+
+@media (max-width: 800px) { 
+    .main-feature { grid-column: span 1; } 
+    .bento-container { grid-template-columns: 1fr; }
+}
+
+/* --- UTILITIES --- */
+.text-mono { font-family: 'JetBrains Mono', monospace; }
+.mt-20 { margin-top: 20px; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }

@@ -1,0 +1,22 @@
+{
+  "name": "orbis-erp",
+  "version": "1.0.0",
+  "description": "Desktop version of OrbisERP System",
+  "main": "main.js",
+  "scripts": {
+    "flask": "source .venv/bin/activate && python app.py",
+    "electron": "electron .",
+    "start": "concurrently \"npm run flask\" \"npm run electron\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PavelVargas/OrbisERP.git"
+  },
+  "author": "Pavel Vargas",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "electron": "^40.6.0"
+  }
+}

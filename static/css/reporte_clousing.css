@@ -1,0 +1,132 @@
+     /* Estructura Base y Reset */
+        body { 
+            display: flex; 
+            background-color: var(--bg-main); 
+            margin: 0; 
+            min-height: 100vh; 
+        }
+        
+        main { 
+            flex-grow: 1; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 25px; 
+            min-width: 0; 
+        }
+
+        @media (min-width: 768px) {
+            main { padding: 40px; gap: 30px; }
+        }
+
+        /* Header Responsivo */
+        .page-header {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        @media (min-width: 992px) {
+            .page-header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: flex-start;
+            }
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        @media (min-width: 600px) {
+            .header-actions { width: auto; }
+        }
+
+        .btn-back, .btn-export {
+            flex: 1;
+            justify-content: center;
+            display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 12px;
+            font-size: 0.85rem; font-weight: 700; text-decoration: none; transition: 0.2s;
+        }
+
+        .btn-back {
+            border: 1px solid var(--border); background: transparent; color: var(--text-muted);
+        }
+
+        .btn-export {
+            background: var(--primary); color: #111; border: none;
+        }
+
+        .btn-back:hover, .btn-export:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+
+        /* Contenedor de Historial */
+        .history-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .history-container { padding: 30px; }
+        }
+
+        /* Tabla Responsiva: Oculta en móviles, se convierte en Cards */
+        .audit-table {
+            width: 100%;
+            border-collapse: collapse;
+            display: none; /* Oculta por defecto */
+        }
+
+        @media (min-width: 992px) {
+            .audit-table { display: table; }
+        }
+
+        .audit-table th {
+            text-align: left; padding: 15px; font-size: 0.7rem; font-weight: 800;
+            color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .audit-table td {
+            padding: 20px 15px; border-bottom: 1px solid var(--border);
+            font-size: 0.9rem; color: var(--text-main);
+        }
+
+        /* Vista de Móvil (Cards) */
+        .mobile-audit-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        @media (min-width: 992px) {
+            .mobile-audit-cards { display: none; }
+        }
+
+        .audit-card {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            padding: 15px;
+        }
+
+        .card-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .card-row:last-child { border: none; }
+        .card-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
+        .card-value { font-size: 0.85rem; font-weight: 700; color: var(--text-main); }
+
+        /* Badges y Status */
+        .status-pill {
+            padding: 4px 10px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase;
+        }
+        .pill-success { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .pill-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); }

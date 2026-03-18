@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil de {{ target_user.name }} | OrbisERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/perfil_css/perfil.css">
+</head>
+<body class="{% if session.get('theme') == 'dark' %}dark{% endif %}">
+    
+    {% include 'layouts/left_bar.html' %}
+
+    <main>
+        <div class="content-wrapper">
+            <div class="top-nav">
+                <a href="{{ url_for('users_bp.users') }}" class="back-link">
+                    <i class="bi bi-arrow-left"></i> Volver al listado
+                </a>
+                <div class="user-meta">
+                    <i class="bi bi-shield-check"></i> Registro de Seguridad: #{{ target_user.id }}
+                </div>
+            </div>
+            
+            {% if target_user %}
+            <div class="profile-container">
+                
+                <section class="profile-header-card">
+                    <div class="header-content">
+                        <div class="avatar-wrapper">
+                            <div class="profile-avatar">
+                                {{ target_user.name[0] | upper }}
+                            </div>
+                            <span class="status-badge">Activo</span>
+                        </div>
+                        <div class="profile-main-info">
+                            <h2>{{ target_user.name }}</h2>
+                            <p>
+                                <i class="bi bi-patch-check-fill"></i> 
+                                {{ target_user.role | capitalize }} del Sistema
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="header-actions">
+                        {% if session.get('user_role') == 'admin'%}
+                        <a href="{{ url_for('users_bp.edit_user', id=target_user.id) }}" class="btn-primary-custom">
+                            <i class="bi bi-pencil-square"></i> EDITAR INFORMACIÓN
+                        </a>
+                        {% endif %}
+                    </div>
+                </section>
+
+                <div class="quick-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Estado de cuenta</span>
+                        <span class="stat-value active">● Verificada y Operativa</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Almacén Asignado</span>
+                        <span class="stat-value">
+                            {{ target_user.warehouse.name if target_user.warehouse else 'Acceso Global' }}
+                        </span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Nivel de Privilegios</span>
+                        <span class="stat-value" style="text-transform: uppercase;">
+                            {{ target_user.role }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="card-icon"><i class="bi bi-envelope-at"></i></div>
+                        <div class="card-details">
+                            <span class="info-label">Correo Electrónico</span>
+                            <span class="info-value">{{ target_user.email }}</span>
+                        </div>
+                    </div>
+
+                    <!-- NUEVO CAMPO CÉDULA -->
+                    <div class="info-card">
+                        <div class="card-icon"><i class="bi bi-card-text"></i></div>
+                        <div class="card-details">
+                            <span class="info-label">Cédula</span>
+                            <span class="info-value">
+                                {{ target_user.cedula if target_user.cedula else 'No registrada' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-icon"><i class="bi bi-building-check"></i></div>
+                        <div class="card-details">
+                            <span class="info-label">Empresa Asociada</span>
+                            <span class="info-value">
+                                {{ target_user.company.name if target_user.company else 'Global Account' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-icon"><i class="bi bi-person-badge"></i></div>
+                        <div class="card-details">
+                            <span class="info-label">Identificador (ID)</span>
+                            <span class="info-value">#{{ target_user.id }}</span>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-icon"><i class="bi bi-calendar-check"></i></div>
+                        <div class="card-details">
+                            <span class="info-label">Fecha de Registro</span>
+                            <span class="info-value">
+                                {{ target_user.created_at.strftime('%d %b, %Y') if target_user.created_at else 'No disponible' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+                <div class="error-state">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <p>No se pudo cargar la información de este usuario.</p>
+                    <a href="{{ url_for('users_bp.users') }}" class="btn-primary-custom" style="display:inline-flex">Volver al listado</a>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark');
+        }
+    </script>
+</body>
+</html>

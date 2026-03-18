@@ -1,0 +1,156 @@
+/* ==========================================================================
+   ESTRUCTURA DE PÁGINA
+   ========================================================================== */
+.main-wrapper {
+    margin-left: 0;
+    min-height: 100vh;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+}
+
+@media (min-width: 1025px) {
+    .main-wrapper {
+        margin-left: 260px; /* Espacio para el sidebar */
+        width: calc(100% - 260px);
+        padding: 40px 60px; /* Espacio generoso a la izquierda y arriba */
+    }
+}
+
+.form-container {
+    max-width: 650px; /* Ancho óptimo para no cansar la vista */
+    margin: 0; /* SE PEGA A LA IZQUIERDA */
+    width: 100%;
+}
+
+/* ==========================================================================
+   CABECERA
+   ========================================================================== */
+.top-nav {
+    margin-bottom: 25px;
+}
+
+.back-link {
+    text-decoration: none;
+    color: var(--text-dim);
+    font-weight: 700;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.page-header {
+    margin-bottom: 35px;
+}
+
+.page-header h2 {
+    font-size: 32px;
+    font-weight: 900;
+    letter-spacing: -1.5px;
+    margin: 0 0 8px 0;
+    color: var(--text-main);
+}
+
+/* ==========================================================================
+   TARJETA Y FORMULARIO
+   ========================================================================== */
+.form-card {
+    background: var(--bg-card);
+    border-radius: 28px;
+    border: 1px solid var(--border);
+    padding: 40px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 800;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+}
+
+/* CONTENEDOR DE ICONO + INPUT */
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-wrapper i {
+    position: absolute;
+    left: 18px;
+    color: var(--primary);
+    font-size: 18px;
+}
+
+.input-wrapper input {
+    width: 100%;
+    padding: 16px 16px 16px 50px;
+    border-radius: 16px;
+    border: 2px solid var(--bg-main);
+    background: var(--bg-main);
+    color: var(--text-main);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.input-wrapper input:focus {
+    border-color: var(--primary);
+    background: var(--bg-card);
+    box-shadow: 0 0 0 5px rgba(250, 162, 0, 0.1);
+}
+
+/* ==========================================================================
+   ACCIONES
+   ========================================================================== */
+.form-actions {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    margin-top: 40px;
+}
+
+.btn-save {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 16px 35px;
+    border-radius: 16px;
+    font-weight: 800;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 8px 20px rgba(250, 162, 0, 0.2);
+    transition: 0.3s;
+}
+
+.btn-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 25px rgba(250, 162, 0, 0.3);
+}
+
+.btn-cancel {
+    text-decoration: none;
+    color: var(--text-dim);
+    font-weight: 700;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+.btn-cancel:hover {
+    color: #ef4444;
+}

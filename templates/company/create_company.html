@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro OrbisERP | 2026</title>
+    
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            if (savedTheme === 'dark') document.documentElement.classList.add('dark');
+        })();
+    </script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/static/css/base_css/base.css">
+    <link rel="stylesheet" href="/static/css/company_css/company_register.css">
+</head>
+<body class="auth-page">
+
+    <div class="bg-glow"></div>
+
+    <header class="auth-nav">
+        <div class="nav-logo">
+            <i class="bi bi-intersect"></i>
+            <span>Orbis<strong>ERP</strong></span>
+        </div>
+        <button id="themeToggle" class="theme-switch">
+            <i class="bi bi-moon-stars-fill"></i>
+            <span class="mode-text">Modo Oscuro</span>
+        </button>
+    </header>
+
+    <main class="split-layout">
+        <section class="side-visual">
+            <div class="visual-content">
+                <span class="pill-badge">Cloud Engine 2026</span>
+                <h1>Gestiona con <br><span class="text-gradient">Precisión.</span></h1>
+                <p>La infraestructura digital que tu negocio necesita para escalar sin límites.</p>
+                
+                <div class="mini-features">
+                    <div class="m-item"><i class="bi bi-shield-lock"></i> Encriptado</div>
+                    <div class="m-item"><i class="bi bi-cpu"></i> Automatizado</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="side-form">
+            <div class="register-card">
+                <div class="form-header">
+                    <h2>Registrar Empresa</h2>
+                    <p>Configura tu entorno de trabajo en segundos.</p>
+                </div>
+
+                <form action="/company/create" method="POST" enctype="multipart/form-data" class="modern-form">
+                    <div class="form-grid">
+                        
+                        <div class="field-group full">
+                            <label><i class="bi bi-briefcase"></i> Nombre del Negocio</label>
+                            <input type="text" name="business_name" placeholder="Ej. Distribuidora Vargas" required>
+                        </div>
+
+                        <div class="field-group">
+                            <label><i class="bi bi-card-heading"></i> RNC / ID</label>
+                            <input type="text" name="rnc" placeholder="Opcional">
+                        </div>
+
+                        <div class="field-group">
+                            <label><i class="bi bi-camera"></i> Logo</label>
+                            <div class="file-upload">
+                                <input type="file" name="logo" id="logo_input" accept="image/*">
+                                <label for="logo_input"><i class="bi bi-cloud-arrow-up"></i> <span>Subir</span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-divider"><span>Acceso Administrativo</span></div>
+
+                        <div class="field-group full">
+                            <label><i class="bi bi-person-badge"></i> Nombre Completo</label>
+                            <input type="text" name="admin_name" placeholder="Pavel Vargas" required>
+                        </div>
+
+                        <div class="field-group full">
+                            <label><i class="bi bi-envelope-at"></i> Correo Electrónico</label>
+                            <input type="email" name="admin_email" placeholder="pavel@ejemplo.com" required>
+                        </div>
+
+                        <div class="field-group full">
+                            <label><i class="bi bi-key"></i> Contraseña Maestra</label>
+                            <input type="password" name="password" placeholder="••••••••" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-register">
+                        <span>Empezar Ahora</span>
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+
+                    <div class="form-footer">
+                        ¿Ya tienes cuenta? <a href="/login">Inicia sesión</a>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const btn = document.getElementById('themeToggle');
+        btn.addEventListener('click', () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            btn.querySelector('i').className = isDark ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
+            btn.querySelector('.mode-text').innerText = isDark ? 'Modo Oscuro' : 'Modo Claro';
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/order_css/order.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <title>Órdenes de Compra</title>
+</head>
+<body>
+    {% include 'layouts/left_bar.html'%}
+    <main>
+        <div class="top-nav">
+            <a href="{{ url_for('dashboard_bp.dashboard') }}" class="back-link"><i class="bi bi-chevron-left"></i> Dashboard</a>
+            <div class="user-meta"><i class="bi bi-cart-check"></i> Compras</div>
+        </div>
+        <header class="page-header">
+            <div class="title-group">
+                <h2>Órdenes de Compra</h2>
+                <p>Gestión de abastecimiento y proveedores.</p>
+            </div>
+            <a href="{{ url_for('purchase_bp.create_purchase') }}" class="btn-primary"><i class="bi bi-plus-lg"></i> Nueva Orden</a>
+        </header>
+        <div class="table-container">
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>Referencia</th>
+                    <th>Proveedor</th>
+                    <th>Fecha Emisión</th>
+                    <th>Volumen</th>
+                    <th>Estado</th>
+                    <th class="text-right">Gestión</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr class="order-row">
+                    <td data-label="Referencia">
+                        <div class="id-badge">
+                            <i class="bi bi-hash"></i>
+                            <span>{{ "%05d" % order.id }}</span>
+                        </div>
+                    </td>
+                    <td data-label="Proveedor">
+                        <div class="supplier-info">
+                            <span class="main-text">{{ order.supplier_name }}</span>
+                            <span class="sub-text">Suministros Externos</span>
+                        </div>
+                    </td>
+                    <td data-label="Fecha">
+                        <div class="date-stack">
+                            <i class="bi bi-calendar3"></i>
+                            <span>{{ order.created_at.strftime('%d %b, %Y') }}</span>
+                        </div>
+                    </td>
+                    <td data-label="Volumen">
+                        <div class="items-pill">
+                            <strong>{{ order.total_items }}</strong> 
+                            <span>uds.</span>
+                        </div>
+                    </td>
+                    <td data-label="Estado">
+                        {% if order.status == 'PENDING' %}
+                            <span class="status-chip pending">
+                                <i class="bi bi-clock-history"></i> Pendiente
+                            </span>
+                        {% elif order.status == 'RECEIVED' %}
+                            <span class="status-chip received">
+                                <i class="bi bi-check2-all"></i> Recibida
+                            </span>
+                        {% else %}
+                            <span class="status-chip cancelled">
+                                <i class="bi bi-x-circle"></i> Cancelada
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="text-right" data-label="Acciones">
+                        <div class="action-dock">
+                            <a href="{{ url_for('purchase_bp.purchase_detail', order_id=order.id) }}" class="dock-btn view" title="Ver Detalles">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            {% if order.status == 'PENDING' %}
+                            <a href="{{ url_for('purchase_bp.cancel_purchase', order_id=order.id) }}" class="dock-btn delete" title="Cancelar Orden" onclick="return confirm('¿Confirmar cancelación?')">
+                                <i class="bi bi-trash3"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="empty-placeholder">
+                        <i class="bi bi-cart-x"></i>
+                        <p>No se encontraron registros de compra.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Pagos | OrbisERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/base_css/base.css">
+    <link rel="stylesheet" href="/static/css/superadmin_css/superadmin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .payments-table { width: 100%; border-collapse: separate; border-spacing: 0 10px; margin-top: 2rem; }
+        .payments-table tr { background: var(--card-bg, #151b2c); border: 1px solid var(--border-color, #222d45); transition: 0.3s; }
+        .payments-table td, .payments-table th { padding: 1.2rem; text-align: left; color: #94a3b8; }
+        .payments-table th { text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; color: #64748b; }
+        
+        .status-pill { padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
+        .status-PENDING { background: rgba(250, 162, 0, 0.1); color: #faa200; border: 1px solid #faa200; }
+        .status-APPROVED { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid #22c55e; }
+        
+        .plan-badge { 
+            padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; 
+            background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid rgba(255,255,255,0.1);
+        }
+        .upgrade-indicator { color: #10b981; font-size: 0.9rem; margin: 0 5px; }
+        
+        .receipt-link { color: #38bdf8; text-decoration: none; display: flex; align-items: center; gap: 5px; font-weight: 600; }
+        .receipt-link:hover { filter: brightness(1.2); text-decoration: underline; }
+
+        /* Estilos para etiquetas de tipo de operación */
+        .op-tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 800; text-transform: uppercase; margin-left: 8px; }
+        .tag-upgrade { background: #10b981; color: #000; }
+        .tag-renewal { background: #3b82f6; color: #fff; }
+        
+        [data-theme="light"] .payments-table tr { background: #ffffff; border-color: #e2e8f0; }
+        [data-theme="light"] .company-name-text { color: #1e293b !important; }
+        [data-theme="light"] .plan-badge { background: #f1f5f9; color: #475569; }
+    </style>
+</head>
+<body class="master-theme">
+    <header class="auth-nav">
+        <a href="{{ url_for('superadmin_bp.admin_dashboard') }}" class="nav-logo" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px;">
+            <i class="bi bi-arrow-left-circle-fill" style="font-size: 1.5rem; color: #faa200;"></i>
+            <span>Volver al <strong>Panel Maestro</strong></span>
+        </a>
+        <div class="nav-actions">
+            <button id="themeToggle" class="theme-switch">
+                <i class="bi bi-sun-fill" id="themeIcon"></i>
+                <span id="themeText">Modo Oscuro</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="content-container">
+        <div class="welcome-box">
+            <span class="badge-root">Financial Audit</span>
+            <h2>Solicitudes de Pago</h2>
+            <p>Valida los comprobantes para aplicar cambios de plan y extensiones de licencia.</p>
+        </div>
+
+        <table class="payments-table">
+            <thead>
+                <tr>
+                    <th>Empresa</th>
+                    <th>Operación / Plan</th>
+                    <th>Estado</th>
+                    <th>Vencimiento Actual</th>
+                    <th>Comprobante</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for company in payments %}
+                <tr>
+                    <td>
+                        <strong class="company-name-text" style="color: white; display: block; font-size: 1.1rem;">{{ company.name }}</strong>
+                        <small style="color: #64748b;">ID: #NODE-{{ company.id }}</small>
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 5px;">
+                            <span class="plan-badge">{{ company.plan_name }}</span>
+                            
+                            {% if company.requested_plan and company.requested_plan != company.plan_name %}
+                                <i class="bi bi-arrow-right upgrade-indicator"></i>
+                                <span class="plan-badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border-color: #10b981;">
+                                    {{ company.requested_plan }}
+                                </span>
+                                <span class="op-tag tag-upgrade">Upgrade</span>
+                            {% else %}
+                                <span class="op-tag tag-renewal">Renovación</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="status-pill status-{{ company.receipt_status }}">
+                            {{ 'PENDIENTE' if company.receipt_status == 'PENDING' else 'APROBADO' }}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="font-size: 0.85rem;">
+                            <i class="bi bi-calendar-event"></i> 
+                            {{ company.expiration_date.strftime('%d/%m/%Y') if company.expiration_date else 'Sin fecha' }}
+                        </div>
+                    </td>
+                    <td>
+                        {% if company.last_receipt_path %}
+                            <a href="{{ url_for('static', filename=company.last_receipt_path) }}" target="_blank" class="receipt-link">
+                                <i class="bi bi-file-earmark-arrow-down-fill"></i> Ver Recibo
+                            </a>
+                        {% else %}
+                            <span style="color: #475569;"><i class="bi bi-x-circle"></i> Sin archivo</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if company.receipt_status == 'PENDING' %}
+                        <form action="{{ url_for('superadmin_bp.approve_payment', id=company.id) }}" method="POST" onsubmit="return confirm('¿Confirmar aprobación de pago para {{ company.name }}?')">
+                            <button type="submit" class="btn-main-action" style="padding: 10px 20px; font-size: 0.8rem; background: #22c55e; border: none; cursor: pointer; color: white; border-radius: 8px; font-weight: 800;">
+                                <i class="bi bi-check-lg"></i> APROBAR PAGO
+                            </button>
+                        </form>
+                        {% else %}
+                        <span style="color: #22c55e; font-weight: 700;"><i class="bi bi-shield-fill-check"></i> PROCESADO</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </main>
+
+    <script>
+        const html = document.documentElement;
+        const themeBtn = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const themeText = document.getElementById('themeText');
+        
+        const updateUI = (isDark) => {
+            if (isDark) {
+                html.classList.add('dark');
+                html.setAttribute('data-theme', 'dark');
+                themeIcon.className = 'bi bi-sun-fill';
+                themeText.innerText = 'Modo Claro';
+            } else {
+                html.classList.remove('dark');
+                html.setAttribute('data-theme', 'light');
+                themeIcon.className = 'bi bi-moon-stars-fill';
+                themeText.innerText = 'Modo Oscuro';
+            }
+        };
+
+        themeBtn.onclick = () => {
+            const isDark = !html.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateUI(isDark);
+        };
+
+        window.onload = () => {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            updateUI(savedTheme === 'dark');
+        };
+    </script>
+</body>
+</html>

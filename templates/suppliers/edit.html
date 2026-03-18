@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Proveedor | Sistema</title>
+    <link rel="stylesheet" href="/static/css/order_css/supplier.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+
+    {% include 'layouts/left_bar.html' %}
+
+    <main class="main">
+        <div class="top-nav">
+            <a href="{{ url_for('supplier_bp.supplier_list') }}" class="back-link">
+                <i class="bi bi-chevron-left"></i> VOLVER AL LISTADO
+            </a>
+            <div class="user-meta">
+                <i class="bi bi-pencil-square"></i> Edición de Datos
+            </div>
+        </div>
+
+        <header class="page-header">
+            <div class="title-group">
+                <h2>Editar Proveedor</h2>
+                <p>Actualiza la información de <strong>{{ supplier.name }}</strong></p>
+            </div>
+        </header>
+
+        <div class="form-container-left" style="max-width: 600px;">
+            <form method="POST" class="modern-form">
+                <div class="form-group">
+                    <label>Nombre del Proveedor</label>
+                    <input type="text" name="name" value="{{ supplier.name }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Correo Electrónico</label>
+                    <input type="email" name="email" value="{{ supplier.email }}">
+                </div>
+
+                <div class="form-group">
+                    <label>Teléfono de Contacto</label>
+                    <input type="text" name="phone" value="{{ supplier.phone }}">
+                </div>
+
+                <div class="form-actions-left" style="margin-top: 20px;">
+                    <button type="submit" class="btn-primary">
+                        <i class="bi bi-arrow-clockwise"></i> Actualizar proveedor
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+</body>
+</html>

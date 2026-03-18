@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios | OrbisERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/users_css/users.css">
+</head>
+<body class="{% if session.get('theme') == 'dark' %}dark{% endif %}">
+
+    {% include 'layouts/left_bar.html' %}
+
+    <main class="main-viewport">
+        <nav class="glass-top-nav">
+            <div class="nav-left">
+                <a href="/dashboard" class="back-pill">
+                    <i class="bi bi-grid-fill"></i>
+                    <span>DASHBOARD</span>
+                </a>
+            </div>
+            <div class="nav-right">
+                <div class="security-badge">
+                    <i class="bi bi-shield-lock-fill"></i>
+                    <span>SISTEMA PROTEGIDO</span>
+                </div>
+            </div>
+        </nav>
+
+        <header class="section-header">
+            <div class="header-text">
+                <h1>Gestión de Personal</h1>
+                <p>
+                    Plan: <strong style="color: var(--primary);">{{ user.company.plan_name }}</strong> 
+                    <span style="margin: 0 10px; opacity: 0.3;">|</span>
+                    Capacidad: <strong>{{ users|length }}</strong> de <strong>{{ user.company.get_plan_limits().max_users }}</strong>
+                </p>
+            </div>
+
+            {% if session.get('user_role') == 'admin' %}
+                {% set limits = user.company.get_plan_limits() %}
+                
+                {% if users|length >= limits.max_users %}
+                    <div class="btn-add-user limit-reached" style="background: #4a4a4a; cursor: not-allowed; opacity: 0.7;" title="Límite de plan alcanzado">
+                        <i class="bi bi-lock-fill"></i>
+                        <span>LÍMITE ALCANZADO</span>
+                    </div>
+                {% else %}
+                    <a href="/create_user" class="btn-add-user">
+                        <i class="bi bi-person-plus-fill"></i>
+                        <span>NUEVO USUARIO</span>
+                    </a>
+                {% endif %}
+            {% endif %}
+        </header>
+
+        <div class="action-toolbar">
+            <div class="search-boxx">
+                <i class="bi bi-search"></i>
+                <input type="text" id="userSearch" placeholder="Buscar por nombre, email o rol...">
+            </div>
+            <div class="stats-pills">
+                <div class="pill">
+                    <span class="pill-label">Total en lista:</span>
+                    <span class="pill-count">{{ users|length }}</span>
+                </div>
+            </div>
+        </div>
+
+        {% if users|length >= user.company.get_plan_limits().max_users %}
+        <div class="upgrade-alert" style="background: rgba(250, 162, 0, 0.1); border: 1px solid var(--primary); padding: 15px; border-radius: 12px; margin-bottom: 25px; display: flex; align-items: center; gap: 15px;">
+            <i class="bi bi-exclamation-diamond-fill" style="color: var(--primary); font-size: 1.5rem;"></i>
+            <div style="flex-grow: 1;">
+                <h4 style="margin: 0; font-size: 1rem;">Has alcanzado el límite de tu plan {{ user.company.plan_name }}</h4>
+                <p style="margin: 0; font-size: 0.85rem; opacity: 0.8;">Para añadir más colaboradores, debes subir de categoría.</p>
+            </div>
+            <a href="{{ url_for('company_bp.view_plans') }}" class="btn-upgrade-now" style="background: var(--primary); color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.8rem;">
+                VER PLANES
+            </a>
+        </div>
+        {% endif %}
+
+        <div class="users-grid">
+            {% for u in users %}
+            <article class="user-card" style="animation-delay: {{ loop.index0 * 0.05 }}s">
+                <div class="card-inner">
+                    <div class="card-header">
+                        <div class="user-avatar-squircle">
+                            {{ u.name[0] | upper }}
+                        </div>
+                        <div class="user-main-meta">
+                            <span class="user-role-badge">{{ u.role }}</span>
+                            <h3>{{ u.name }}</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="card-content">
+                        <div class="info-row">
+                            <i class="bi bi-envelope-fill"></i>
+                            <span>{{ u.email }}</span>
+                        </div>
+                        <div class="info-row">
+                            <i class="bi bi-building-fill"></i>
+                            <span>{{ u.company.name if u.company else 'Sede Central' }}</span>
+                        </div>
+                    </div>
+
+                    <div class="card-footer">
+                        <div class="status-indicator">
+                            <span class="dot"></span>
+                            <span class="status-text">ACTIVO</span>
+                        </div>
+                        {% if session.get('user_role') == 'admin'%}
+                        <div class="action-group-pill">
+                            <a href="{{ url_for('users_bp.edit_user', id=u.id) }}" class="act-btn edit" title="Editar">
+                                <i class="bi bi-pencil-fill"></i>
+                            </a>
+                            <a href="{{ url_for('users_bp.entrada_user', id=u.id) }}" class="act-btn view" title="Ver Perfil">
+                                <i class="bi bi-eye-fill"></i>
+                            </a>
+                            <form action="{{ url_for('users_bp.delete_user', id=u.id) }}" method="post" onsubmit="return confirm('¿Eliminar?')">
+                                <button type="submit" class="act-btn delete">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </main>
+
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark');
+            document.documentElement.classList.add('dark');
+        }
+
+        document.getElementById('userSearch').addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('.user-card');
+            cards.forEach(card => {
+                const content = card.textContent.toLowerCase();
+                card.style.display = content.includes(term) ? 'block' : 'none';
+            });
+        });
+    </script>
+</body>
+</html>

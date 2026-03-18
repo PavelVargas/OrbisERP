@@ -1,0 +1,431 @@
+/* ORBIS ERP - MASTER CONTROL CSS 
+   VERSION: 2.2.0 - UNIFIED BASE VARIABLES
+*/
+:root {
+    --tr-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --tr-smooth: 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    --font-main: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* --- ESTRUCTURA BASE --- */
+body.master-theme {
+    background: var(--bg-main); 
+    color: var(--text-main);
+    font-family: var(--font-main); 
+    margin: 0;
+    padding-top: 75px; 
+    transition: background 0.3s ease;
+    -webkit-font-smoothing: antialiased;
+}
+
+.content-container {
+    max-width: 1380px; 
+    margin: 0 auto; 
+    padding: 57px 1.5rem 2rem;
+}
+
+/* --- NAV SUPERIOR COMPACTA --- */
+.auth-nav {
+    position: fixed; top: 0; left: 0; right: 0; padding: 1.8rem 6.5rem;
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(var(--bg-main), 0.8); 
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid var(--border); 
+    z-index: 1000;
+}
+
+.nav-logo { 
+    display: flex; align-items: center; gap: 8px; 
+    text-decoration: none; color: var(--text-main); 
+    font-weight: 800; font-size: 1rem; 
+}
+
+.logo-icon { 
+    width: 32px; height: 32px; 
+    background: var(--primary); 
+    color: #000; display: grid; place-items: center; border-radius: 10px; 
+}
+
+.theme-switch {
+    background: var(--bg-card); 
+    border: 1px solid var(--border); 
+    padding: 6px 14px;
+    border-radius: 50px; color: var(--text-main); 
+    cursor: pointer; display: flex; 
+    align-items: center; gap: 6px; font-weight: 700; font-size: 11px;
+    transition: var(--tr-fast);
+}
+.theme-switch:hover { border-color: var(--primary); }
+
+/* --- MASTER HEADER: REFINADO Y ULTRA-RESPONSIVE --- */
+.master-header-grid {
+    display: grid;
+    /* Mantenemos tu estructura pro, pero con gap inteligente */
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 2rem;
+    background: var(--bg-card);
+    padding: 1.8rem 2.5rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+    /* Efecto de cristal sutil */
+    backdrop-filter: blur(10px);
+}
+
+/* Potenciamos el gradiente de fondo para que parezca un motor encendido */
+.master-header-grid::before {
+    content: '';
+    position: absolute;
+    top: -20%;
+    right: -5%;
+    width: 350px;
+    height: 350px;
+    background: radial-gradient(circle, rgba(250, 162, 0, 0.12) 0%, transparent 75%);
+    filter: blur(40px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Capa extra de profundidad */
+.master-header-grid::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    opacity: 0.3;
+}
+
+.welcome-box {
+    position: relative;
+    z-index: 1;
+}
+
+.welcome-box h2 {
+    font-size: clamp(1.4rem, 5vw, 1.8rem); /* Tamaño fluido */
+    font-weight: 800;
+    margin: 6px 0 2px;
+    letter-spacing: -0.8px;
+    color: var(--text-main);
+}
+
+.stats-mini-grid {
+    display: flex;
+    gap: 1.2rem;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+/* Stat Mini: Refinado para parecer un componente de hardware */
+.stat-mini {
+    background: rgba(var(--bg-main-rgb), 0.5); /* Asumiendo que tienes la variable rgb */
+    background: var(--bg-main);
+    padding: 12px 22px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    min-width: 120px;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.stat-mini:hover {
+    border-color: var(--primary);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    background: var(--bg-card);
+}
+
+.stat-mini label {
+    font-size: 10px;
+    color: var(--primary); /* Color tech */
+    text-transform: uppercase;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    margin-bottom: 4px;
+    opacity: 0.8;
+}
+
+.stat-mini .value {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--text-main);
+    line-height: 1;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* El botón de salida con pulso */
+.exit-gate {
+    width: 52px;
+    height: 52px;
+    background: rgba(239, 68, 68, 0.08);
+    color: var(--danger);
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    text-decoration: none;
+    font-size: 1.4rem;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(239, 68, 68, 0.15);
+}
+
+.exit-gate:hover {
+    background: var(--danger);
+    color: white;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+    transform: rotate(20deg);
+}
+
+/* ==========================================================================
+   BREAKPOINT: EL "PURO CINE" RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 1100px) {
+    .master-header-grid {
+        grid-template-columns: 1fr; /* Colapsamos a una columna */
+        padding: 2rem;
+        gap: 2rem;
+    }
+
+    .welcome-box {
+        text-align: center;
+    }
+
+    .stats-mini-grid {
+        justify-content: center;
+        width: 100%;
+        flex-wrap: wrap; 
+    }
+
+}
+
+@media (max-width: 600px) {
+    .master-header-grid {
+        padding: 1.5rem 1rem;
+    }
+
+    .stats-mini-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.8rem;
+    }
+
+    .stat-mini {
+        min-width: 0;
+        padding: 10px 15px;
+    }
+
+    .stat-mini .value {
+        font-size: 1.2rem;
+    }
+
+    .exit-gate {
+        width: 100%;
+        height: 45px;
+        flex-direction: row;
+        gap: 10px;
+    }
+    
+    .exit-gate::after {
+        content: 'CERRAR PROTOCOLO';
+        font-size: 0.7rem;
+        font-weight: 800;
+        letter-spacing: 1px;
+    }
+}
+
+/* --- BARRA DE BÚSQUEDA --- */
+.search-command-bar { position: relative; margin-bottom: 1.5rem; max-width: 480px; }
+.search-command-bar i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--primary); font-size: 1rem; }
+.search-command-bar input {
+    width: 100%; padding: 12px 15px 12px 48px; 
+    border-radius: 14px;
+    background: var(--bg-card); 
+    border: 1px solid var(--border);
+    color: var(--text-main); 
+    font-size: 14px; outline: none; transition: var(--tr-fast);
+}
+.search-command-bar input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(250, 162, 0, 0.1); }
+
+/* --- GRID DE EMPRESAS --- */
+.company-bento-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.2rem;
+}
+
+.company-card-premium {
+    background: var(--bg-card); 
+    border: 1px solid var(--border); 
+    border-radius: var(--radius);
+    padding: 1.5rem; display: flex; flex-direction: column;
+    transition: var(--tr-smooth); 
+    box-shadow: var(--shadow); position: relative;
+}
+.company-card-premium:hover { 
+    transform: translateY(-5px); 
+    border-color: var(--primary); 
+    box-shadow: 0 20px 40px -20px rgba(0,0,0,0.3);
+}
+
+/* --- LOGO Y ESTADO --- */
+.card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; }
+
+.logo-box {
+    width: 52px; height: 52px; 
+    background: var(--bg-main);
+    border-radius: 14px; border: 1px solid var(--border);
+    overflow: hidden; display: flex; align-items: center; justify-content: center;
+}
+.logo-box img { width: 100%; height: 100%; object-fit: cover; }
+.logo-box i { font-size: 1.5rem; color: var(--text-muted); }
+
+.status-indicator {
+    padding: 5px 12px; border-radius: 50px; display: flex; 
+    align-items: center; gap: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase;
+}
+.status-indicator.active { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+.status-indicator.inactive { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+.dot { width: 7px; height: 7px; background: currentColor; border-radius: 50%; animation: pulse 1.8s infinite; }
+
+/* --- INFORMACIÓN --- */
+.card-middle h3 { font-size: 1.25rem; margin: 0; font-weight: 800; letter-spacing: -0.4px; color: var(--text-main); }
+.id-tag { font-size: 10px; color: var(--primary); font-weight: 800; margin-bottom: 2px; }
+.rnc-pill { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-top: 4px; }
+
+.card-data-grid {
+    display: grid; grid-template-columns: 1fr 1.2fr; gap: 12px;
+    margin: 1.2rem 0; padding: 1rem; 
+    background: var(--bg-main);
+    border-radius: 16px; border: 1px solid var(--border);
+}
+.data-cell label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 2px; }
+.data-cell span { font-size: 12px; font-weight: 700; color: var(--text-main); }
+.data-cell.full { grid-column: span 2; }
+
+/* --- BOTONES DE ACCIÓN --- */
+.card-footer { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: auto; }
+
+.btn-main-action {
+    background: var(--primary); 
+    color: #fff; text-decoration: none;
+    padding: 12px; border-radius: 100px; font-weight: 800; font-size: 9px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: var(--tr-fast);
+    border: none;
+}
+.btn-main-action:hover { opacity: 0.95; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(250, 162, 0, 0.2); }
+
+.mini-actions { display: flex; gap: 8px; }
+
+.btn-icon-alt {
+    width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--border);
+    background: var(--bg-card); color: var(--text-main); cursor: pointer; transition: 0.2s;
+    display: grid; place-items: center;
+}
+.btn-icon-alt:hover { border-color: var(--text-main); background: var(--bg-input); }
+.btn-icon-alt.danger:hover { background: var(--danger); border-color: var(--danger); color: white; }
+
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* RESPONSIVE */
+@media (max-width: 992px) {
+    .auth-nav { padding: 0.8rem 2rem; }
+}
+
+/* Estilo para el botón de Pagos en el Grid de Stats */
+.btn-payment-hub {
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    border: 1px solid rgba(250, 162, 0, 0.2) !important;
+}
+
+.btn-payment-hub:hover {
+    background: rgba(250, 162, 0, 0.1) !important;
+    transform: translateY(-3px);
+    border-color: #faa200 !important;
+}
+
+.btn-payment-hub .value {
+    color: #faa200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* Badge de notificación */
+.payment-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff4757;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 50px;
+    box-shadow: 0 4px 10px rgba(255, 71, 87, 0.4);
+    border: 2px solid #151b2c;
+}
+
+  /* --- ESTILOS DEL MODAL MAESTRO --- */
+        .master-modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0; top: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            align-items: center; justify-content: center;
+        }
+
+        .modal-content-premium {
+            background: var(--card-bg, #151b2c);
+            border: 1px solid var(--border-color, #222d45);
+            width: 90%; max-width: 650px;
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: modalSlide 0.3s ease-out;
+            position: relative;
+        }
+
+        @keyframes modalSlide { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
+        .modal-header h2 { font-weight: 800; font-size: 1.8rem; margin-top: 0.5rem; color: var(--text-main, #fff); }
+
+        .close-modal { background: none; border: none; font-size: 2rem; color: #64748b; cursor: pointer; transition: 0.2s; }
+        .close-modal:hover { color: #ef4444; }
+
+        .modal-body-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .full-width { grid-column: span 2; }
+
+        .info-section { background: rgba(255,255,255,0.03); padding: 1.2rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); }
+        .info-section h4 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #faa200; margin-bottom: 1rem; font-weight: 800; }
+
+        .data-row { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.6rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.3rem; }
+        .data-row label { color: #64748b; font-weight: 500; }
+        .data-row span { font-weight: 600; color: var(--text-main, #fff); }
+
+        /* Badge de Plan en Tarjeta */
+        .plan-badge-mini {
+            position: absolute; top: 75px; right: 25px;
+            padding: 4px 10px; border-radius: 8px; font-size: 0.65rem; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            background: rgba(250, 162, 0, 0.15); color: #faa200; border: 1px solid rgba(250, 162, 0, 0.3);
+        }
+        .plan-badge-mini.ultra { background: rgba(168, 85, 247, 0.15); color: #a855f7; border-color: rgba(168, 85, 247, 0.3); }
+
+        [data-theme="light"] .modal-content-premium { background: #fff; border-color: #e2e8f0; }
+        [data-theme="light"] .modal-header h2, [data-theme="light"] .data-row span { color: #1e293b; }
+        [data-theme="light"] .info-section { background: #f8fafc; border-color: #e2e8f0; }
+        [data-theme="light"] .data-row { border-color: #e2e8f0; }

@@ -1,0 +1,64 @@
+ /* --- ESTILOS DE TENDENCIA Y CRECIMIENTO --- */
+        :root {
+            --up-color: #10b981;
+            --down-color: #ef4444;
+            --up-bg: rgba(16, 185, 129, 0.1);
+            --down-bg: rgba(239, 68, 68, 0.1);
+        }
+
+        .kpi-trend {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-top: 10px;
+        }
+
+        /* Variantes de color dinámicas */
+        .kpi-trend.up { background: var(--up-bg); color: var(--up-color); }
+        .kpi-trend.down { background: var(--down-bg); color: var(--down-color); }
+
+        .kpi-trend i { font-size: 0.9rem; }
+        
+        .trend-label {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 400;
+            margin-left: 4px;
+        }
+
+        /* Badges de estado para Stock y Pendientes */
+        .status-pill {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            font-weight: 800;
+        }
+        .status-pill.warning { background: rgba(250, 162, 0, 0.1); color: #faa200; }
+        .status-pill.danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+
+        .kpi-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        /* Ajuste para que las flechas de las cajas interactivas no estorben */
+        .kpi-box.interactive i.bi-arrow-up-right {
+            color: var(--text-muted);
+            opacity: 0.5;
+            transition: 0.3s;
+        }
+        .kpi-box.interactive:hover i.bi-arrow-up-right {
+            transform: translate(3px, -3px);
+            opacity: 1;
+            color: var(--primary);
+        }
+
+        html.dark .kpi-box { border: 1px solid rgba(255,255,255,0.05); }

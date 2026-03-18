@@ -1,0 +1,560 @@
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, abort, make_response, current_app
+from models.sales.sales import Sale
+from models.sales.sale_item import SaleItem
+from models.products.products import Product
+from models.stock_movement.stock_movement import StockMovement
+from models.category.category import Category
+from models.client.client import Client
+from models.warehouse.warehouse import Warehouse
+from models.warehouse_stock.warehouse_stock import WarehouseStock
+from models.user.user import User
+from models.company.company import Company
+from db import db
+from decimal import Decimal
+from datetime import datetime, timedelta
+import pdfkit
+import os
+import base64
+from decimal import Decimal, ROUND_HALF_UP
+from models.divisas.divisas import ExchangeRate
+
+sales_bp = Blueprint('sales_bp', __name__, url_prefix='/sales')
+
+def recalc_sale(sale):
+    """Recalcula subtotal, ITBIS y total de la venta."""
+    subtotal_base = sum(item.quantity * item.price for item in sale.items)
+    sale.subtotal = Decimal(subtotal_base).quantize(Decimal('0.01'))
+    sale.itbis = (sale.subtotal * Decimal('0.18')).quantize(Decimal('0.01'))
+    sale.total = (sale.subtotal + sale.itbis).quantize(Decimal('0.01'))
+
+@sales_bp.route('/create', methods=['GET', 'POST'])
+def create_sale():
+    user_id = session.get('user_id')
+    company_id = session.get('company_id')
+    
+    if not user_id or not company_id:
+        flash('Debes iniciar sesión para crear ventas', 'warning')
+        return redirect(url_for('login_bp.login'))
+
+    user = User.query.get(user_id)
+    # Importación local para evitar importaciones circulares si las hubiera
+    from models.company.company import Company
+    company = Company.query.get(company_id)
+    plan_limits = company.get_plan_limits()
+    current_usage = company.get_current_month_usage()
+
+    user_warehouse_id = user.warehouse_id if user else None
+
+    current_id = session.get('current_sale_id')
+    sale = None
+    if current_id:
+        sale = Sale.query.filter_by(id=current_id, company_id=company_id, user_id=user_id).first()
+        if sale and sale.status not in ['PENDING']:
+            sale = None
+            session.pop('current_sale_id', None)
+
+    if not sale:
+        sale = Sale.query.filter_by(status='PENDING', user_id=user_id, company_id=company_id).first()
+
+    if not sale:
+        sale = Sale(status='PENDING', user_id=user_id, company_id=company_id, created_at=datetime.now())
+        db.session.add(sale)
+        db.session.commit()
+
+    session['current_sale_id'] = sale.id
+
+    # ========================================================
+    # PROCESAR ESCANEO AUTOMÁTICO (POST)
+    # ========================================================
+    if request.method == 'POST':
+        if current_usage >= plan_limits['max_monthly_invoices']:
+            flash(f'Límite de facturación alcanzado ({plan_limits["max_monthly_invoices"]} facturas/mes). No puedes procesar más ventas.', 'danger')
+            return redirect(url_for('sales_bp.create_sale'))
+
+        barcode = request.form.get('search')
+        if barcode:
+            product = Product.query.filter_by(company_id=company_id, sku=barcode, status=True).first()
+            
+            if product:
+                w_id = user_warehouse_id
+                if not w_id:
+                    first_w = Warehouse.query.filter_by(company_id=company_id, status=True).first()
+                    w_id = first_w.id if first_w else None
+
+                if w_id:
+                    item = SaleItem.query.filter_by(sale_id=sale.id, product_id=product.id, warehouse_id=w_id).first()
+                    if item:
+                        item.quantity += 1
+                    else:
+                        item = SaleItem(
+                            sale_id=sale.id,
+                            product_id=product.id,
+                            warehouse_id=w_id,
+                            quantity=1,
+                            price=product.price
+                        )
+                        db.session.add(item)
+                    
+                    recalc_sale(sale)
+                    db.session.commit()
+                else:
+                    flash('Error: No hay almacenes configurados', 'danger')
+            else:
+                flash(f'Producto {barcode} no encontrado', 'warning')
+        
+        return redirect(url_for('sales_bp.create_sale'))
+
+    # --- LÓGICA GET (CORREGIDA PARA DIVISAS) ---
+    categories = Category.query.filter_by(company_id=company_id).order_by(Category.name.asc()).all()
+    clients = Client.query.filter_by(company_id=company_id).order_by(Client.name.asc()).all()
+
+    # Extraer datos de divisa de la sesión
+    selected_currency = session.get('currency', 'DOP')
+    currency_symbol = session.get('currency_symbol', 'RD$')
+    
+    # CONVERSIÓN CRÍTICA: Convertir el float de la sesión a Decimal
+    raw_rate = session.get('conversion_rate', 1.0)
+    conversion_rate = Decimal(str(raw_rate))
+
+    # Si está cerca del límite (ej: faltan 5 facturas), mandamos un aviso preventivo
+    if current_usage >= (plan_limits['max_monthly_invoices'] - 5) and current_usage < plan_limits['max_monthly_invoices']:
+        flash(f'Aviso: Te quedan solo {plan_limits["max_monthly_invoices"] - current_usage} facturas disponibles este mes.', 'info')
+
+    return render_template(
+        'sales/create_sales.html',
+        sale=sale,
+        categories=categories,
+        clients=clients,
+        user=user,
+        plan_limits=plan_limits,        
+        current_usage=current_usage,
+        selected_currency=selected_currency,
+        currency_symbol=currency_symbol,
+        conversion_rate=conversion_rate
+    )
+    
+# =========================
+# ASIGNAR CLIENTE
+# =========================
+@sales_bp.route('/assign-client', methods=['POST'])
+def assign_client():
+    company_id = session.get('company_id')
+    sale_id = session.get('current_sale_id')
+    
+    sale = Sale.query.filter_by(id=sale_id, company_id=company_id).first_or_404()
+    client_id = request.form.get('client_id', type=int)
+    
+    if not client_id:
+        flash('Debes seleccionar un cliente', 'warning')
+        return redirect(url_for('sales_bp.create_sale'))
+
+    client = Client.query.filter_by(id=client_id, company_id=company_id).first_or_404()
+    sale.client_id = client.id
+    db.session.commit()
+
+    flash(f'Cliente "{client.name}" asignado', 'success')
+    return redirect(url_for('sales_bp.create_sale'))
+
+# =========================
+# AGREGAR AL CARRITO
+# =========================
+@sales_bp.route('/add/<int:product_id>', methods=['POST'])
+def add_to_cart(product_id):
+    company_id = session.get('company_id')
+    sale_id = session.get('current_sale_id')
+    user_id = session.get('user_id')
+
+    sale = Sale.query.filter_by(id=sale_id, company_id=company_id).first_or_404()
+    
+    if sale.user_id != user_id:
+        flash('No tienes permiso para modificar esta venta', 'danger')
+        return redirect(url_for('sales_bp.list_sales'))
+
+    qty = int(request.form['qty'])
+    warehouse_id = int(request.form['warehouse_id'])
+    
+    product = Product.query.filter_by(id=product_id, company_id=company_id).first_or_404()
+    warehouse = Warehouse.query.filter_by(id=warehouse_id, company_id=company_id).first_or_404()
+
+    stock = WarehouseStock.query.filter_by(product_id=product.id, warehouse_id=warehouse.id).first()
+    available_stock = stock.quantity if stock else 0
+    if available_stock < qty:
+        flash(f'Stock insuficiente en {warehouse.name}', 'danger')
+        return redirect(url_for('sales_bp.create_sale'))
+
+    item = SaleItem.query.filter_by(sale_id=sale.id, product_id=product.id, warehouse_id=warehouse.id).first()
+
+    if item:
+        item.quantity += qty
+    else:
+        item = SaleItem(
+            sale_id=sale.id,
+            product_id=product.id,
+            warehouse_id=warehouse.id,
+            quantity=qty,
+            price=product.price
+        )
+        db.session.add(item)
+
+    recalc_sale(sale)
+    db.session.commit()
+    flash('Producto agregado', 'success')
+    return redirect(url_for('sales_bp.create_sale'))
+
+# ==========================================================
+# FINALIZAR VENTA (ADAPTADO PARA CRÉDITO Y LÓGICA CRM)
+# ==========================================================
+@sales_bp.route('/finish', methods=['POST'])
+def finish_sale():
+    company_id = session.get('company_id')
+    sale_id = session.get('current_sale_id')
+    user_id = session.get('user_id')
+
+    company = db.session.get(Company, company_id)
+    if not company:
+        flash('Error de consistencia de empresa', 'danger')
+        return redirect(url_for('login_bp.login'))
+
+    limits = company.get_plan_limits()
+    current_usage = company.get_current_month_usage()
+
+    if current_usage >= limits['max_monthly_invoices']:
+        flash(f'Límite de facturación alcanzado ({limits["max_monthly_invoices"]} facturas/mes). ' 
+              f'Tu plan actual es {company.plan_name}. Por favor, solicita un upgrade.', 'warning')
+        return redirect(url_for('sales_bp.create_sale'))
+
+    sale = Sale.query.filter_by(id=sale_id, company_id=company_id).first_or_404()
+
+    if sale.user_id != user_id:
+        flash('No tienes permiso para finalizar esta venta', 'danger')
+        return redirect(url_for('sales_bp.list_sales'))
+
+    if not sale.items:
+        flash('La venta no tiene productos', 'warning')
+        return redirect(url_for('sales_bp.create_sale'))
+
+    if not sale.client_id:
+        flash('Debes asignar un cliente', 'warning')
+        return redirect(url_for('sales_bp.create_sale'))
+
+    payment_method = request.form.get('payment_method', 'CASH')
+    
+    recalc_sale(sale)
+
+    # ========================================================
+    # LÓGICA DE ESTADOS SEGÚN MÉTODO DE PAGO
+    # ========================================================
+    if payment_method == 'CREDIT':
+        sale.payment_method = 'CREDIT'
+        sale.amount_paid = Decimal('0.00')
+        sale.balance = sale.total  
+        sale.status = 'PENDING'
+    else:
+        sale.payment_method = 'CASH'
+        sale.amount_paid = sale.total
+        sale.balance = Decimal('0.00')
+        sale.status = 'COMPLETED'
+        
+    # Procesamiento de Stock
+    for item in sale.items:
+        stock = WarehouseStock.query.filter_by(product_id=item.product_id, warehouse_id=item.warehouse_id).first()
+        if not stock or stock.quantity < item.quantity:
+            flash(f'Stock insuficiente para {item.product.name}', 'danger')
+            db.session.rollback() 
+            return redirect(url_for('sales_bp.create_sale'))
+        
+        stock.quantity -= item.quantity
+
+        movement = StockMovement(
+            product_id=item.product_id,
+            warehouse_id=item.warehouse_id,
+            company_id=company_id,
+            movement_type='OUT',
+            quantity=item.quantity,
+            reason=f'Venta #{sale.id}',
+            created_at=datetime.now(timezone.utc) 
+        )
+        db.session.add(movement)
+    
+    try:
+        db.session.commit()
+        session.pop('current_sale_id', None)
+        
+        flash(f'Venta #{sale.id} finalizada (Uso: {current_usage + 1}/{limits["max_monthly_invoices"]})', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al procesar la base de datos: {str(e)}', 'danger')
+
+    return redirect(url_for('sales_bp.list_sales'))
+
+# =========================
+# CANCELAR VENTA
+# =========================
+@sales_bp.route('/cancel/<int:sale_id>', methods=['POST'])
+def cancel_sale(sale_id):
+    company_id = session.get('company_id')
+    user_id = session.get('user_id')
+    sale = Sale.query.filter_by(id=sale_id, company_id=company_id).first_or_404()
+
+    if sale.user_id != user_id:
+        flash('No puedes cancelar esta venta', 'danger')
+        return redirect(url_for('sales_bp.list_sales'))
+
+    if sale.status not in ['PENDING', 'QUOTATION']:
+        flash('Solo se pueden cancelar ventas pendientes o cotizaciones', 'warning')
+        return redirect(url_for('sales_bp.list_sales'))
+
+    sale.status = 'CANCELLED'
+    db.session.commit()
+    if session.get('current_sale_id') == sale.id:
+        session.pop('current_sale_id', None)
+
+    flash('Venta cancelada', 'info')
+    return redirect(url_for('sales_bp.list_sales'))
+@sales_bp.route('/')
+def list_sales():
+    user_id = session.get('user_id')
+    company_id = session.get('company_id')
+    
+    if not user_id:
+        return redirect(url_for('login_bp.login'))
+
+    user = User.query.get(user_id)
+    status_filter = request.args.get('status')
+    
+    # --- LÓGICA DE DIVISAS (CORREGIDA) ---
+    selected_currency = session.get('currency', 'DOP')
+    currency_symbol = session.get('currency_symbol', 'RD$')
+    
+    # Convertimos a string primero y luego a Decimal para evitar conflictos de tipo
+    raw_rate = session.get('conversion_rate', 1.0)
+    conversion_rate = Decimal(str(raw_rate))
+
+    # --- LÓGICA DEFENSIVA PARA LÍMITES ---
+    if user.company:
+        limits = user.company.get_plan_limits()
+        usage = user.company.get_current_month_usage()
+        plan_name = user.company.plan_name
+    else:
+        limits = {'max_monthly_invoices': 999999}
+        usage = 0
+        plan_name = "Acceso Maestro (Global)"
+    
+    if user.role == 'admin' or not user.company_id:
+        query = Sale.query
+        if user.company_id:
+            query = query.filter_by(company_id=user.company_id)
+    else:
+        query = Sale.query.filter_by(user_id=user_id, company_id=company_id)
+        
+    if status_filter:
+        query = query.filter_by(status=status_filter)
+        
+    sales = query.order_by(Sale.created_at.desc()).all()
+    
+    return render_template('sales/list.html', 
+                           sales=sales, 
+                           current_status=status_filter, 
+                           is_admin=(user.role == 'admin' or not user.company_id),
+                           user=user,
+                           limits=limits, 
+                           usage=usage,
+                           plan_name=plan_name,
+                           selected_currency=selected_currency,
+                           currency_symbol=currency_symbol,
+                           conversion_rate=conversion_rate) 
+    
+
+# =========================
+# DETALLE DE VENTA
+# =========================
+@sales_bp.route('/<int:sale_id>')
+def sale_detail(sale_id):
+    user_id = session.get('user_id')
+    company_id = session.get('company_id')
+    if not user_id:
+        return redirect(url_for('login_bp.login'))
+
+    user = User.query.get(user_id)
+    sale = Sale.query.filter_by(id=sale_id, company_id=company_id).first_or_404()
+    
+    # --- LÓGICA DE DIVISAS (CORREGIDA) ---
+    selected_currency = session.get('currency', 'DOP')
+    currency_symbol = session.get('currency_symbol', 'RD$')
+    
+    # Aseguramos que la tasa sea Decimal
+    raw_rate = session.get('conversion_rate', 1.0)
+    conversion_rate = Decimal(str(raw_rate))
+
+    return render_template('sales/detail_sales.html', 
+                           sale=sale, 
+                           user=user,
+                           selected_currency=selected_currency,
+                           currency_symbol=currency_symbol,
+                           conversion_rate=conversion_rate)
+    
+# =========================
+# ELIMINAR ITEM DEL CARRITO
+# =========================
+@sales_bp.route('/remove-item/<int:item_id>', methods=['POST'])
+def remove_item(item_id):
+    company_id = session.get('company_id')
+    sale_id = session.get('current_sale_id')
+    user_id = session.get('user_id')
+    
+    sale = Sale.query.filter_by(id=sale_id, company_id=company_id).first_or_404()
+    
+    if sale.user_id != user_id:
+        flash('No puedes modificar esta venta', 'danger')
+        return redirect(url_for('sales_bp.list_sales'))
+
+    item = SaleItem.query.filter_by(id=item_id, sale_id=sale.id).first_or_404()
+    db.session.delete(item)
+    recalc_sale(sale)
+    db.session.commit()
+    
+    flash('Producto eliminado de la venta', 'info')
+    return redirect(url_for('sales_bp.create_sale'))
+
+# =========================
+# RETOMAR VENTA O COTIZACIÓN
+# =========================
+@sales_bp.route('/resume/<int:sale_id>')
+def resume_sale(sale_id):
+    company_id = session.get('company_id')
+    user_id = session.get('user_id')
+    
+    sale = Sale.query.filter_by(id=sale_id, company_id=company_id).first_or_404()
+
+    if sale.user_id != user_id:
+        flash('Solo puedes retomar tus propias ventas', 'danger')
+        return redirect(url_for('sales_bp.list_sales'))
+
+    if sale.status in ['COMPLETED', 'CANCELLED']:
+        flash('Esta venta ya fue finalizada o cancelada y no se puede editar', 'warning')
+        return redirect(url_for('sales_bp.list_sales'))
+
+    if sale.status == 'QUOTATION':
+        sale.status = 'PENDING'
+        db.session.commit()
+        flash(f'Cotización #{sale.id} convertida a venta activa', 'info')
+    
+    session['current_sale_id'] = sale.id
+    session.modified = True 
+    
+    return redirect(url_for('sales_bp.create_sale'))
+
+# =========================
+# CONVERTIR EN COTIZACIÓN
+# =========================
+@sales_bp.route('/quote/<int:sale_id>', methods=['POST'])
+def convert_to_quote(sale_id):
+    company_id = session.get('company_id')
+    user_id = session.get('user_id')
+    
+    sale = Sale.query.filter_by(id=sale_id, company_id=company_id).first_or_404()
+
+    if sale.user_id != user_id:
+        flash('No tienes permiso para realizar esta acción', 'danger')
+        return redirect(url_for('sales_bp.list_sales'))
+
+    if not sale.items:
+        flash('No puedes cotizar una venta sin productos', 'warning')
+        return redirect(url_for('sales_bp.create_sale'))
+    
+    sale.status = 'QUOTATION'
+    db.session.commit()
+    
+    session.pop('current_sale_id', None)
+    
+    flash(f'Venta #{sale.id} guardada exitosamente como Cotización', 'success')
+    return redirect(url_for('sales_bp.list_sales'))
+
+# =========================
+# VENTAS PENDIENTES 24H
+# =========================
+@sales_bp.route('/pending')
+def pending_sales():
+    user_id = session.get('user_id')
+    company_id = session.get('company_id')
+    
+    if not user_id or not company_id:
+        flash('Sesión expirada', 'warning')
+        return redirect(url_for('login_bp.login'))
+
+    user = User.query.get(user_id)
+    cutoff = datetime.now() - timedelta(hours=24)
+    
+    sales = Sale.query.filter(
+        Sale.status == 'PENDING',
+        Sale.user_id == user_id,
+        Sale.company_id == company_id,
+        Sale.created_at >= cutoff
+    ).order_by(Sale.created_at.desc()).all()
+
+    return render_template('sales/pending.html', sales=sales, user=user)
+
+# =========================
+# EXPORTAR PDF (FACTURA)
+# =========================
+import platform  # Añade esta importación al inicio de tu archivo
+
+@sales_bp.route('/pdf/<int:sale_id>')
+def export_pdf(sale_id):
+    company_id = session.get('company_id')
+    if not company_id:
+        abort(403)
+
+    sale = Sale.query.filter_by(id=sale_id, company_id=company_id).first_or_404()
+    company = Company.query.get(company_id)
+    
+    # --- Lógica de Logo (se mantiene igual) ---
+    logo_base64 = None
+    if company and company.logo:
+        basedir = os.path.abspath(os.path.dirname(__file__))
+        path_logo = os.path.join(basedir, '..', 'static', company.logo)
+        path_logo = os.path.normpath(path_logo)
+
+        if os.path.exists(path_logo):
+            try:
+                with open(path_logo, "rb") as image_file:
+                    raw_encoded = base64.b64encode(image_file.read()).decode('utf-8')
+                    logo_base64 = f"data:image/png;base64,{raw_encoded}"
+            except Exception as e:
+                print(f"Error cargando logo para PDF: {e}")
+
+    html_rendered = render_template(
+        'sales/invoice_pdf.html', 
+        sale=sale, 
+        company=company, 
+        logo_exists=logo_base64 
+    )
+
+    options = {
+        'page-size': 'Letter',
+        'encoding': "UTF-8",
+        'enable-local-file-access': None,
+        'quiet': ''
+    }
+    
+    # =========================
+    # LÓGICA MULTI-PLATAFORMA
+    # =========================
+    try:
+        if platform.system() == "Windows":
+            # Si es Windows, forzamos la ruta del .exe
+            path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
+            config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+            pdf = pdfkit.from_string(html_rendered, False, options=options, configuration=config)
+        else:
+            pdf = pdfkit.from_string(html_rendered, False, options=options)
+        
+        response = make_response(pdf)
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'inline; filename=Factura_{sale.id}.pdf'
+        return response
+
+    except Exception as e:
+        return f"Error generando PDF: {str(e)}", 
+    

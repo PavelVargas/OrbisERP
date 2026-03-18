@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajustar Stock | OrbisERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/stock_css/adjust_stock.css">
+</head>
+<body>
+    <script>
+        // Aplicar el tema guardado en localStorage antes de renderizar
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark');
+        }
+    </script>
+
+    {% include "layouts/left_bar.html" %}
+
+    <main>
+        <a href="{{ url_for('stock_bp.stock_actual') }}" class="back">
+            <i class="bi bi-arrow-left"></i> VOLVER AL STOCK ACTUAL
+        </a>
+
+        <header class="page-header">
+            <h2>Ajustar Stock</h2>
+            <div class="product-badge">
+                <i class="bi bi-box-seam"></i> Producto: <strong>{{ product.name }}</strong>
+            </div>
+        </header>
+
+        <div class="form-card">
+            <form method="POST">
+                <div class="form-grid">
+                    
+                    <div class="form-group">
+                        <label>Almacén de Destino</label>
+                        <select name="warehouse_id" required>
+                            {% for w in warehouses %}
+                                <option value="{{ w.id }}">{{ w.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tipo de Movimiento</label>
+                        <select name="movement_type" required>
+                            <option value="IN">Entrada (+)</option>
+                            <option value="OUT">Salida (-)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Cantidad a Ajustar</label>
+                        <input type="number" name="quantity" min="1" placeholder="0" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Referencia / Motivo</label>
+                        <input type="text" name="reason" placeholder="Ej: Ajuste por inventario">
+                    </div>
+
+                    <div class="full-width">
+                        <button type="submit" class="btn-create">
+                            <i class="bi bi-hdd-fill"></i> REGISTRAR MOVIMIENTO
+                        </button>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </main>
+</body>
+</html>

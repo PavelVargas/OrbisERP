@@ -1,0 +1,162 @@
+/* --- BASE & LAYOUT --- */
+.auth-page {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    min-height: 100vh;
+}
+
+.auth-nav {
+    position: absolute;
+    top: 0; left: 0; width: 100%;
+    padding: 30px 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10;
+}
+
+.nav-logo { font-size: 1.5rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+.nav-logo i { color: #f9a100; }
+
+.theme-switch {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    padding: 10px 20px;
+    border-radius: 30px;
+    color: var(--text-main);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+/* --- SPLIT LAYOUT --- */
+.split-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 100vh;
+}
+
+.side-visual {
+    background: radial-gradient(circle at top left, rgba(249, 161, 0, 0.1), transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px;
+}
+
+.side-visual h1 { font-size: 4.5rem; line-height: 1; letter-spacing: -2px; margin-bottom: 20px; }
+
+/* --- SIDE FORM & COMPONENTS --- */
+.side-form {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px;
+    background: var(--bg-main);
+}
+
+.register-card {
+    width: 100%;
+    max-width: 460px;
+}
+
+.form-header { margin-bottom: 35px; }
+.form-header h2 { font-size: 2rem; font-weight: 800; margin-bottom: 10px; }
+.form-header p { color: var(--text-muted); }
+
+/* Grid de Formulario */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.field-group.full { grid-column: span 2; }
+
+.field-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-main);
+}
+
+.field-group label i { color: #f9a100; }
+
+.field-group input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    color: white;
+    transition: 0.3s;
+}
+
+.field-group input:focus {
+    outline: none;
+    border-color: #f9a100;
+    background: rgba(249, 161, 0, 0.05);
+}
+
+/* Custom File Input */
+.file-upload input { display: none; }
+.file-upload label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-bottom: 0;
+}
+.file-upload label:hover { border-color: #f9a100; color: #f9a100; }
+
+.form-divider {
+    grid-column: span 2;
+    text-align: center;
+    position: relative;
+    margin: 10px 0;
+}
+.form-divider::before { content: ""; position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: var(--border); }
+.form-divider span { position: relative; background: var(--bg-main); padding: 0 15px; font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; }
+
+/* Botón */
+.btn-register {
+    width: 100%;
+    margin-top: 30px;
+    padding: 16px;
+    border-radius: 12px;
+    border: none;
+    background: #f9a100;
+    color: #000;
+    font-weight: 800;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    transition: 0.3s;
+}
+.btn-register:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(249, 161, 0, 0.2); }
+
+.form-footer { text-align: center; margin-top: 25px; font-size: 0.9rem; color: var(--text-muted); }
+.form-footer a { color: #f9a100; text-decoration: none; font-weight: 700; }
+
+/* RESPONSIVO */
+@media (max-width: 992px) {
+    .split-layout { grid-template-columns: 1fr; }
+    .side-visual { display: none; }
+    .auth-nav { padding: 20px; }
+    .side-form { padding: 100px 20px 40px; }
+    .mode-text { display: none; }
+}

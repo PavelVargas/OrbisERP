@@ -1,0 +1,145 @@
+/* --- CONFIGURACIÓN DE ESTRUCTURA --- */
+body {
+    display: flex;
+    margin: 0;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    transition: all 0.3s ease;
+}
+
+.main-content {
+    flex: 1;
+    width: 100%;
+    min-height: 100vh;
+    padding: 20px;
+    margin-left: var(--sidebar-width); 
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body.sidebar-collapsed .main-content {
+    margin-left: var(--sidebar-collapsed);
+}
+
+@media (max-width: 1024px) {
+    .main-content { margin-left: 0 !important; padding-top: 80px; }
+}
+
+.content-container { max-width: 1300px; margin: 0 auto; width: 100%; }
+
+/* --- INPUTS Y FORMULARIOS (Mantenidos) --- */
+.input-global, select {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: var(--text-main);
+    width: 100%;
+    outline: none;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+}
+
+.input-global:focus {
+    border-color: var(--primary);
+    background: var(--bg-card);
+    box-shadow: 0 0 0 4px rgba(250, 162, 0, 0.1);
+}
+
+/* --- TARJETA DE FILTROS --- */
+.filter-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: var(--shadow);
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    align-items: flex-end;
+}
+
+.filter-group label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.filter-group label i { color: var(--primary); margin-right: 5px; }
+
+/* --- TABLA MODERNA --- */
+.table-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+.table-wrapper { overflow-x: auto; }
+
+.modern-table { width: 100%; border-collapse: collapse; }
+
+.modern-table th {
+    background: var(--bg-input);
+    padding: 16px;
+    text-align: left;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+}
+
+.modern-table td { padding: 16px; border-bottom: 1px solid var(--border); }
+
+/* Celdas especiales */
+.date-cell { display: flex; flex-direction: column; }
+.d-date { font-weight: 700; font-size: 0.9rem; }
+.d-hour { font-size: 0.75rem; color: var(--text-muted); }
+
+.product-info { display: flex; flex-direction: column; }
+.p-name { font-weight: 700; color: var(--text-main); }
+.p-sku { font-size: 0.7rem; color: var(--text-muted); }
+
+/* Badges y Tags */
+.badge {
+    padding: 6px 12px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.badge-in { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+.badge-out { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+
+.qty-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 800;
+    font-size: 1rem;
+}
+
+.text-success { color: #10b981; }
+.text-danger { color: #ef4444; }
+
+.reason-text { font-style: italic; color: var(--text-muted); font-size: 0.85rem; }
+
+/* --- OTROS --- */
+.top-nav { display: flex; justify-content: space-between; margin-bottom: 25px; }
+.back-link { text-decoration: none; color: var(--text-muted); font-weight: 600; font-size: 0.9rem; }
+.user-meta-tag { background: var(--bg-input); padding: 6px 15px; border-radius: 10px; color: var(--text-muted); font-size: 0.8rem; font-weight: 700; }
+.btn-primary { 
+    background: var(--primary); color: white; border: none; padding: 12px 25px; 
+    border-radius: 12px; cursor: pointer; font-weight: 700; 
+}
+.empty-state { text-align: center; padding: 60px !important; color: var(--text-muted); }
+.empty-state i { font-size: 3rem; opacity: 0.2; }

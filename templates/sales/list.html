@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es" class="{% if session.get('theme') == 'dark' %}dark{% endif %}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ventas Premium | OrbisERP</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/sales_css/sales.css">
+    
+    <style>
+        .st-pending { background: rgba(245, 158, 11, 0.1) !important; color: #f59e0b !important; border: 1px solid rgba(245, 158, 11, 0.2); }
+        .st-completed { background: rgba(16, 185, 129, 0.1) !important; color: #10b981 !important; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .st-cancelled { background: rgba(239, 68, 68, 0.1) !important; color: #ef4444 !important; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .st-quotation { background: rgba(99, 102, 241, 0.1) !important; color: #6366f1 !important; border: 1px solid rgba(99, 102, 241, 0.2); }
+        .price-debt { color: #ef4444 !important; font-weight: 800; }
+        .rate-badge-mini { background: rgba(var(--primary-rgb), 0.1); color: var(--primary); padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(var(--primary-rgb), 0.2); }
+        .default-currency-badge { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 6px 12px; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 700; color: var(--text-main); }
+        .pulse-dot { width: 6px; height: 6px; background-color: var(--primary); border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(var(--primary-rgb), 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(var(--primary-rgb), 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(var(--primary-rgb), 0); } }
+        .premium-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+        .premium-table tr { background: var(--card-bg); transition: all 0.3s ease; }
+        .premium-table td { padding: 16px; vertical-align: middle; }
+    </style>
+</head>
+<body>
+
+    {% include 'layouts/left_bar.html' %}
+
+    <main>
+        <header class="page-header">
+            <div class="title-group">
+                <span style="color: var(--primary); font-weight: 800; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px;">Módulo de Finanzas</span>
+                <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                    <h2 style="margin:0;">Ventas Realizadas</h2>
+                    
+                    <div class="default-currency-badge">
+                        <i class="bi bi-cash-coin" style="color: var(--primary);"></i>
+                        <span>{{ selected_currency }} ({{ currency_symbol }})</span>
+                    </div>
+
+                    <div class="rate-badge-mini">
+                        <span class="pulse-dot"></span>
+                        Tasa: 1.00 = {{ "{:,.2f}".format(conversion_rate) }} DOP
+                    </div>
+                </div>
+                <p>Mostrando montos convertidos a <strong>{{ selected_currency }}</strong>.</p>
+            </div>
+
+            <div class="header-actions">
+                {% if usage >= limits.max_monthly_invoices %}
+                    <div class="btn-action" style="background: var(--border); color: var(--text-muted); cursor: not-allowed; border: 1px solid var(--border);"><i class="bi bi-lock-fill"></i> Límite de Plan</div>
+                {% else %}
+                    <a href="{{ url_for('sales_bp.create_sale') }}" class="btn-action btn-add"><i class="bi bi-plus-circle-fill"></i> Nueva Factura</a>
+                {% endif %}
+            </div>
+        </header>
+        
+        <div class="quick-stats">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(var(--primary-rgb), 0.1); color: var(--primary);"><i class="bi bi-lightning-charge-fill"></i></div>
+                <div>
+                    <p style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Uso del Plan</p>
+                    <h4 style="font-weight: 800;">{{ usage }} / {{ limits.max_monthly_invoices if limits.max_monthly_invoices < 999999 else '∞' }}</h4>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--success);"><i class="bi bi-graph-up-arrow"></i></div>
+                <div>
+                    <p style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Total Registros</p>
+                    <h4 style="font-weight: 800;">{{ sales|length }} Ventas</h4>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(99, 102, 241, 0.1); color: var(--accent);"><i class="bi bi-person-badge"></i></div>
+                <div>
+                    <p style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Operador</p>
+                    <h4 style="font-weight: 800; text-transform: capitalize;">{{ user.name.split()[0] if user.name else 'Usuario' }}</h4>
+                </div>
+            </div>
+        </div>
+
+        <nav class="filter-bar">
+            <a href="{{ url_for('sales_bp.list_sales') }}" class="btn-filter {{ 'active' if not current_status }}">Todos</a>
+            <a href="{{ url_for('sales_bp.list_sales', status='COMPLETED') }}" class="btn-filter {{ 'active' if current_status == 'COMPLETED' }}">Pagadas</a>
+            <a href="{{ url_for('sales_bp.list_sales', status='PENDING') }}" class="btn-filter {{ 'active' if current_status == 'PENDING' }}">Pendientes</a>
+            <a href="{{ url_for('sales_bp.list_sales', status='QUOTATION') }}" class="btn-filter {{ 'active' if current_status == 'QUOTATION' }}">Cotizaciones</a>
+        </nav>
+
+        <div class="content-card">
+            <div class="table-responsive">
+                <table class="premium-table">
+                    <thead>
+                        <tr>
+                            <th>Referencia</th>
+                            <th>Emisión</th>
+                            <th>Cliente / RNC</th>
+                            <th>Estado</th>
+                            <th>Monto ({{ selected_currency }})</th>
+                            <th style="text-align: right;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sale in sales %}
+                        <tr>
+                            <td data-label="Referencia"><span class="order-id-pill">INV-{{ sale.id }}</span></td>
+                            <td data-label="Emisión">
+                                <div style="font-weight: 600; font-size: 0.85rem;">{{ sale.created_at.strftime('%d %b, %Y') }}</div>
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">{{ sale.created_at.strftime('%I:%M %p') }}</div>
+                            </td>
+                            <td data-label="Cliente">
+                                <div class="client-info">
+                                    <div class="avatar-mini">{{ (sale.client.name if sale.client else 'CF')[0] | upper }}</div>
+                                    <div>
+                                        <div style="font-weight: 700; font-size: 0.85rem;">{{ sale.client.name if sale.client else 'Consumidor Final' }}</div>
+                                        <div style="font-size: 0.7rem; color: var(--text-muted);">{{ sale.client.rnc if sale.client and sale.client.rnc else 'N/A' }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td data-label="Estado">
+                                <span class="status-badge st-{{ sale.status | lower }}">
+                                    {% if sale.status == 'PENDING' %} Por Cobrar
+                                    {% elif sale.status == 'COMPLETED' %} Pagada
+                                    {% elif sale.status == 'QUOTATION' %} Cotización
+                                    {% elif sale.status == 'CANCELLED' %} Anulada
+                                    {% else %} {{ sale.status }} {% endif %}
+                                </span>
+                            </td>
+                            <td data-label="Monto">
+                                <div class="price-tag {{ 'price-debt' if sale.balance > 0 }}">
+                                    {{ currency_symbol }} {{ "{:,.2f}".format(sale.total / conversion_rate) }}
+                                </div>
+                                {% if sale.balance > 0 %}
+                                    <small style="display:block; font-size:10px; color:#ef4444; font-weight:800; margin-top: 2px;">
+                                        DEUDA: {{ currency_symbol }} {{ "{:,.2f}".format(sale.balance / conversion_rate) }}
+                                    </small>
+                                {% endif %}
+                            </td>
+                            <td data-label="Acciones">
+                                <div class="action-btns" style="justify-content: flex-end;">
+                                    <a href="{{ url_for('sales_bp.sale_detail', sale_id=sale.id) }}" class="btn-circle" title="Detalle"><i class="bi bi-eye-fill"></i></a>
+                                    {% if sale.status not in ['COMPLETED', 'CANCELLED'] %}
+                                        <a href="{{ url_for('sales_bp.resume_sale', sale_id=sale.id) }}" class="btn-circle" style="color: var(--success);" title="Retomar"><i class="bi bi-play-fill"></i></a>
+                                    {% endif %}
+                                    <a href="{{ url_for('sales_bp.export_pdf', sale_id=sale.id) }}" target="_blank" class="btn-circle" title="PDF"><i class="bi bi-printer-fill"></i></a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if sales|length == 0 %}
+            <div class="empty-visual">
+                <i class="bi bi-folder2-open" style="font-size: 3rem; color: var(--border);"></i>
+                <h3 style="font-weight: 800; margin-top: 15px;">No hay registros</h3>
+                <a href="{{ url_for('sales_bp.list_sales') }}" class="btn-action" style="margin-top: 20px;">Resetear Filtros</a>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+    <script>
+        const filterBar = document.querySelector('.filter-bar');
+        if (filterBar) {
+            let isDown = false; let scrollLeft; let startX;
+            filterBar.addEventListener('mousedown', (e) => { isDown = true; startX = e.pageX - filterBar.offsetLeft; scrollLeft = filterBar.scrollLeft; });
+            filterBar.addEventListener('mouseleave', () => { isDown = false; });
+            filterBar.addEventListener('mouseup', () => { isDown = false; });
+            filterBar.addEventListener('mousemove', (e) => { if(!isDown) return; e.preventDefault(); const x = e.pageX - filterBar.offsetLeft; const walk = (x - startX) * 2; filterBar.scrollLeft = scrollLeft - walk; });
+        }
+    </script>
+</body>
+</html>
