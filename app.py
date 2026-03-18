@@ -1,14 +1,14 @@
 from flask import Flask, session, redirect, url_for, render_template, request, jsonify
 from db import db
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 from flask_mail import Mail
 from itsdangerous import URLSafeTimedSerializer
 
 # MODELS 
 from models.user.user import User
 from models.divisas.divisas import ExchangeRate 
-from models.company.company import Company # Importado aquí para el middleware
+from models.company.company import Company
 
 # BLUEPRINTS
 from routes.registro.registro import registrar_bp
@@ -33,26 +33,46 @@ from routes.super_admin.superadmin import superadmin_bp
 from routes.reports.reports import reports_bp
 from routes.divisas.divisas import divisas_bp
 
+
 app = Flask(__name__)
 
-# CONFIGURACIÓN BASE
-app.config["SQLALCHEMY_DATABASE_URI"] = (
-    "postgresql+psycopg://postgres:postgres@localhost:5432/db_inventario"
-)
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.secret_key = 'clave_secreta_orbis_erp_2026'
+# =========================
+# 🔥 DATABASE RAILWAY FIX
+# =========================
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# --- CONFIGURACIÓN DE CORREO GMAIL ---
+if not DATABASE_URL:
+    raise ValueError("❌ DATABASE_URL no está configurada en Railway")
+
+# Fix driver postgres railway
+if DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace(
+        "postgresql://",
+        "postgresql+psycopg://",
+        1
+    )
+
+app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+app.secret_key = os.getenv("SECRET_KEY", "orbis_secret_dev")
+
+# =========================
+# 📧 MAIL CONFIG
+# =========================
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'pavelvargas1233@gmail.com'
-app.config['MAIL_PASSWORD'] = 'bjwp mjha xjra viop' 
-app.config['MAIL_DEFAULT_SENDER'] = 'pavelvargas1233@gmail.com'
+app.config['MAIL_USERNAME'] = os.getenv("MAIL_USERNAME")
+app.config['MAIL_PASSWORD'] = os.getenv("MAIL_PASSWORD")
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv("MAIL_USERNAME")
 
 mail = Mail(app)
 s = URLSafeTimedSerializer(app.secret_key)
 
+# =========================
+# 📁 UPLOADS
+# =========================
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -60,11 +80,17 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # INIT DB
 db.init_app(app)
 
-# CREAR TABLAS
-with app.app_context():
-    db.create_all()
+# 🔥 CREATE TABLES SAFE
+try:
+    with app.app_context():
+        db.create_all()
+        print("✅ DB conectada y tablas creadas")
+except Exception as e:
+    print("⚠️ DB aún no lista:", e)
 
-# REGISTRAR BLUEPRINTS
+# =========================
+# REGISTER BLUEPRINTS
+# =========================
 app.register_blueprint(registrar_bp)
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(users_bp)
@@ -87,11 +113,18 @@ app.register_blueprint(cash_bp)
 app.register_blueprint(reports_bp)
 app.register_blueprint(divisas_bp)
 
-# --- LÓGICA MULTIMONEDA GLOBAL Y PERSISTENTE ---
+# =========================
+# ROUTES
+# =========================
+@app.route('/')
+def index():
+    user_id = session.get('user_id')
+    user = User.query.get(user_id) if user_id else None
+    return render_template('Home/index.html', user=user)
+
 
 @app.route('/set-currency/<iso_code>')
 def set_currency(iso_code):
-    """Cambia la divisa y la guarda permanentemente en la DB para el usuario"""
     user_id = session.get('user_id')
     iso_code = iso_code.upper()
     session['selected_currency'] = iso_code
@@ -108,41 +141,16 @@ def set_currency(iso_code):
             
     return redirect(request.referrer or url_for('dashboard_bp.dashboard'))
 
-@app.route('/api/get-current-rate/<currency>')
-def get_api_rate(currency):
-    """Endpoint para obtener tasas en tiempo real"""
-    try:
-        rate = ExchangeRate.get_rate(currency.upper())
-        return jsonify({'status': 'success', 'rate': rate})
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 500
-
-# --- MIDDLEWARES Y CONTEXTOS ---
-
-@app.route('/')
-def index():
-    user_id = session.get('user_id')
-    user = User.query.get(user_id) if user_id else None
-    return render_template('Home/index.html', user=user)
-
-
 
 @app.before_request
 def check_company_status():
-    """Middleware centralizado de protección de suscripción"""
-    
-    # 1. Rutas exentas (Nunca se bloquean)
     exempt_routes = [
-        'login_bp.login', 'login_bp.logout', 'login_bp.forgot_password', 
-        'users_bp.reset_with_token', 'static', 'superadmin_bp', 
-        'company_bp.upload_receipt', 'set_currency', 'index'
+        'login_bp.login','login_bp.logout','static','set_currency','index'
     ]
-    
-    # Si la ruta actual es exenta o no tiene endpoint (404), permitir el paso
+
     if not request.endpoint or any(request.endpoint.startswith(route) for route in exempt_routes):
         return
 
-    # 2. El Superadmin tiene pase libre global (No se le bloquea por suscripción)
     if session.get('user_role') == 'superadmin':
         return
 
@@ -151,30 +159,23 @@ def check_company_status():
         company = Company.query.get(company_id)
         if company:
             ahora = datetime.utcnow()
-         
+
             tiene_gracia = company.grace_period_until and company.grace_period_until > ahora
             if tiene_gracia:
-                return 
-            
-            ha_vencido = company.expiration_date and company.expiration_date < ahora
-            
-            if not company.status or ha_vencido:
+                return
 
+            ha_vencido = company.expiration_date and company.expiration_date < ahora
+
+            if not company.status or ha_vencido:
                 return render_template('errors/cuenta_suspendida.html', company=company)
+
 
 @app.context_processor
 def inject_global_data():
-    """Inyecta usuario y datos de divisa sincronizados con la DB en todo el HTML"""
     user_id = session.get("user_id")
     user = User.query.get(user_id) if user_id else None
     
-    if 'selected_currency' in session:
-        currency_code = session['selected_currency']
-    elif user and user.default_currency:
-        currency_code = user.default_currency
-        session['selected_currency'] = currency_code
-    else:
-        currency_code = 'DOP'
+    currency_code = session.get('selected_currency','DOP')
 
     exchange_info = ExchangeRate.query.filter_by(currency_code=currency_code).first()
     all_currencies = ExchangeRate.query.all()
@@ -187,6 +188,10 @@ def inject_global_data():
         conversion_rate=float(exchange_info.rate) if exchange_info else 1.0
     )
 
+
+# =========================
+# 🔥 RUN SERVER RAILWAY
+# =========================
 if __name__ == '__main__':
-    # Ejecución del servidor
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
