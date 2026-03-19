@@ -33,24 +33,25 @@ from routes.super_admin.superadmin import superadmin_bp
 from routes.reports.reports import reports_bp
 from routes.divisas.divisas import divisas_bp
 
-
 app = Flask(__name__)
 
 # =========================
-# 🔥 DATABASE RAILWAY FIX
+# 🔥 DATABASE INTELIGENTE (LOCAL + RAILWAY)
 # =========================
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-if not DATABASE_URL:
-    raise ValueError("❌ DATABASE_URL no está configurada en Railway")
+if DATABASE_URL:
+    print("🚀 Conectado a Railway")
 
-# Fix driver postgres railway
-if DATABASE_URL.startswith("postgresql://"):
-    DATABASE_URL = DATABASE_URL.replace(
-        "postgresql://",
-        "postgresql+psycopg://",
-        1
-    )
+    if DATABASE_URL.startswith("postgresql://"):
+        DATABASE_URL = DATABASE_URL.replace(
+            "postgresql://",
+            "postgresql+psycopg://",
+            1
+        )
+else:
+    print("💻 Usando base de datos LOCAL")
+    DATABASE_URL = "postgresql+psycopg://postgres:postgres@localhost:5432/db_inventario"
 
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -63,9 +64,9 @@ app.secret_key = os.getenv("SECRET_KEY", "orbis_secret_dev")
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = os.getenv("MAIL_USERNAME")
-app.config['MAIL_PASSWORD'] = os.getenv("MAIL_PASSWORD")
-app.config['MAIL_DEFAULT_SENDER'] = os.getenv("MAIL_USERNAME")
+app.config['MAIL_USERNAME'] = os.getenv("MAIL_USERNAME", "tuemail@gmail.com")
+app.config['MAIL_PASSWORD'] = os.getenv("MAIL_PASSWORD", "password")
+app.config['MAIL_DEFAULT_SENDER'] = app.config['MAIL_USERNAME']
 
 mail = Mail(app)
 s = URLSafeTimedSerializer(app.secret_key)
@@ -109,7 +110,6 @@ def create_superadmin():
     except Exception as e:
         print("⚠️ Error creando superadmin:", e)
 
-
 # =========================
 # 🔥 CREATE TABLES SAFE
 # =========================
@@ -117,9 +117,9 @@ try:
     with app.app_context():
         db.create_all()
         create_superadmin()
-        print("✅ DB conectada y tablas creadas")
+        print("✅ DB lista")
 except Exception as e:
-    print("⚠️ DB aún no lista:", e)
+    print("⚠️ DB error:", e)
 
 # =========================
 # REGISTER BLUEPRINTS
@@ -155,7 +155,6 @@ def index():
     user = User.query.get(user_id) if user_id else None
     return render_template('Home/index.html', user=user)
 
-
 @app.route('/set-currency/<iso_code>')
 def set_currency(iso_code):
     user_id = session.get('user_id')
@@ -173,7 +172,6 @@ def set_currency(iso_code):
             db.session.commit()
             
     return redirect(request.referrer or url_for('dashboard_bp.dashboard'))
-
 
 @app.before_request
 def check_company_status():
@@ -202,7 +200,6 @@ def check_company_status():
             if not company.status or ha_vencido:
                 return render_template('errors/cuenta_suspendida.html', company=company)
 
-
 @app.context_processor
 def inject_global_data():
     user_id = session.get("user_id")
@@ -221,10 +218,9 @@ def inject_global_data():
         conversion_rate=float(exchange_info.rate) if exchange_info else 1.0
     )
 
-
 # =========================
-# 🔥 RUN SERVER RAILWAY
+# RUN
 # =========================
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port, debug=True)
