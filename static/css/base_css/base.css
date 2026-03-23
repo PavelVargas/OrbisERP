@@ -25,19 +25,29 @@
     color-scheme: light;
 }
 
-/* 🔥 MODO OSCURO PREMIUM (Solución Anti-Flash Reforzada) */
 html.dark {
-    --bg-main:      #0b0f1a; 
-    --bg-card:      #151b2c; 
-    --bg-input:     #1e2538;
-    --text-main:    #f1f5f9;
-    --text-muted:   #94a3b8;
-    --border:       #222d45;
-    --shadow:       0 15px 30px -15px rgba(0,0,0,0.4);
+    /* Fondo base: Gris carbón muy oscuro (No es negro puro, es más suave) */
+    --bg-main:      #121417; 
     
-    /* Forzado de fondo en la raíz para evitar el flash blanco */
-    background-color: #0b0f1a !important; 
-    color-scheme: dark; 
+    /* Superficies: Elevación táctil de Odoo */
+    --bg-card:      #1c1f23; 
+    --bg-input:     #25292e;
+    --bg-hover:     #2a2e34;
+
+    /* Tipografía: Blanco humo para legibilidad perfecta */
+    --text-main:    #e7e9ed;
+    --text-muted:   #9ca3af;
+    
+    /* Bordes: La clave de Odoo, sutiles y definidos */
+    --border:       #32373e; 
+    --accent:       #faa200; /* El icónico color púrpura de Odoo */
+    
+    /* Sombras de profundidad de UI empresarial */
+    --shadow:       0 4px 6px -1px rgba(0, 0, 0, 0.3), 
+                    0 2px 4px -1px rgba(0, 0, 0, 0.1);
+
+    background-color: #121417 !important;
+    color-scheme: dark;
 }
 
 /* --- RESET Y ESTRUCTURA MAESTRA --- */
@@ -46,6 +56,8 @@ html.dark {
     -webkit-font-smoothing: antialiased;
     margin: 0;
     padding: 0;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+
 }
 
 body {
