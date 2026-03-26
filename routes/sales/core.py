@@ -11,7 +11,7 @@ from models.user.user import User
 from models.divisas.divisas import ExchangeRate
 from decimal import Decimal
 from datetime import datetime
-
+from sqlalchemy import or_
 from .sales import sales_bp
 
 def recalc_sale(sale):
@@ -62,32 +62,37 @@ def create_sale():
 
     session['current_sale_id'] = sale.id
 
-    # --- PROCESAR ESCANEO (POST) ---
-    if request.method == 'POST':
-        if current_usage >= plan_limits['max_monthly_invoices']:
-            flash(f'Límite de facturación alcanzado ({plan_limits["max_monthly_invoices"]}).', 'danger')
-            return redirect(url_for('sales_bp.create_sale'))
+    search_query = request.form.get('search', '').strip()
+    if search_query:
+        # Búsqueda Híbrida: 1. SKU exacto, 2. Nombre parcial
+        product = Product.query.filter(
+            Product.company_id == company_id,
+            Product.status == True,
+            or_(
+                Product.sku == search_query,
+                Product.name.ilike(f"%{search_query}%")
+            )
+        ).first()
 
-        barcode = request.form.get('search')
-        if barcode:
-            product = Product.query.filter_by(company_id=company_id, sku=barcode, status=True).first()
-            if product:
-                w_id = user_warehouse_id or (Warehouse.query.filter_by(company_id=company_id, status=True).first().id if Warehouse.query.filter_by(company_id=company_id, status=True).first() else None)
-                if w_id:
-                    item = SaleItem.query.filter_by(sale_id=sale.id, product_id=product.id, warehouse_id=w_id).first()
-                    if item:
-                        item.quantity += 1
-                    else:
-                        item = SaleItem(sale_id=sale.id, product_id=product.id, warehouse_id=w_id, quantity=1, price=product.price)
-                        db.session.add(item)
-                    recalc_sale(sale)
-                    db.session.commit()
+        if product:
+            # Seleccionar almacén (del usuario o el primero de la empresa)
+            w_id = user_warehouse_id or (Warehouse.query.filter_by(company_id=company_id, status=True).first().id if Warehouse.query.filter_by(company_id=company_id, status=True).first() else None)
+            
+            if w_id:
+                item = SaleItem.query.filter_by(sale_id=sale.id, product_id=product.id, warehouse_id=w_id).first()
+                if item:
+                    item.quantity += 1
                 else:
-                    flash('Error: No hay almacenes configurados', 'danger')
+                    item = SaleItem(sale_id=sale.id, product_id=product.id, warehouse_id=w_id, quantity=1, price=product.price)
+                    db.session.add(item)
+                
+                recalc_sale(sale)
+                db.session.commit()
             else:
-                flash(f'Producto {barcode} no encontrado', 'warning')
-        return redirect(url_for('sales_bp.create_sale'))
-
+                flash('Error: No hay almacenes configurados', 'danger')
+        else:
+            flash(f'No se encontró "{search_query}"', 'warning')
+            
     selected_currency = session.get('selected_currency', 'DOP')
     rate_row = ExchangeRate.query.filter_by(currency_code=selected_currency).first()
     

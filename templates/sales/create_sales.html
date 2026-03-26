@@ -7,16 +7,19 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    
     <link rel="stylesheet" href="{{ url_for('static', filename='css/sales_css/create_sales.css') }}">
+    
     <style>
-        /* Estilos optimizados para el selector de pago y tasas */
+        /* Mejoras de UI para la búsqueda híbrida */
+        .visual-scanner { transition: all 0.3s ease; }
+        .visual-scanner.searching { color: #4f46e5; transform: scale(1.1); }
+        
         .payment-method-selector {
             margin-bottom: 15px;
             padding: 12px;
-            background: var(--bg-card, #f8fafc);
+            background: #f8fafc;
             border-radius: 12px;
-            border: 1px solid var(--border, #e2e8f0);
+            border: 1px solid #e2e8f0;
         }
         .payment-method-selector label {
             display: block;
@@ -37,10 +40,8 @@
             color: #1e293b;
             outline: none;
             cursor: pointer;
-            transition: border-color 0.2s;
         }
-        .method-select:focus { border-color: #4f46e5; }
-
+        
         .rate-info-tag {
             font-size: 11px;
             font-weight: 700;
@@ -51,15 +52,6 @@
             display: inline-flex;
             align-items: center;
             gap: 5px;
-        }
-
-        /* Mejora visual para el desglose de impuestos */
-        .summary-row.tax-row {
-            font-size: 0.85rem;
-            color: #64748b;
-            border-top: 1px dashed #e2e8f0;
-            padding-top: 8px;
-            margin-top: 4px;
         }
     </style>
 </head>
@@ -93,18 +85,18 @@
             <section class="scan-workspace">
                 <div class="scanner-container">
                     <div class="scan-focus-area">
-                        <div class="visual-scanner">
+                        <div class="visual-scanner" id="scanner-icon">
                             <div class="laser-line"></div>
-                            <i class="bi bi-upc-scan"></i>
+                            <i class="bi bi-search"></i>
                         </div>
-                        <h2>Escanee Producto</h2>
-                        <p>El sistema detectará el SKU automáticamente</p>
+                        <h2>Buscador de Productos</h2>
+                        <p>Escanee el código de barras o escriba el nombre</p>
                         
                         <form id="barcode-form" action="{{ url_for('sales_bp.create_sale') }}" method="POST" class="scanner-input-group">
                             <input type="text" 
                                    name="search" 
                                    id="barcode-input" 
-                                   placeholder="Esperando código..." 
+                                   placeholder="Nombre o SKU del producto..." 
                                    autocomplete="off" 
                                    autofocus>
                         </form>
@@ -121,10 +113,6 @@
             </section>
 
             <aside class="order-sidebar" id="sidebar-ticket">
-                <button class="close-mobile-ticket" onclick="toggleTicket()">
-                    <i class="bi bi-chevron-compact-down"></i>
-                </button>
-
                 <div class="ticket-wrapper">
                     <div class="ticket-head">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
@@ -154,25 +142,21 @@
                                     <span class="item-qty">{{ item.quantity }}</span>
                                     <div class="item-details">
                                         <span class="name">{{ item.product.name }}</span>
-                                        <span class="price-unit">
-                                            {{ currency_symbol }} {{ "{:,.2f}".format(item.price / conversion_rate) }}
-                                        </span>
+                                        <span class="price-unit">{{ currency_symbol }} {{ "{:,.2f}".format(item.price / conversion_rate) }}</span>
                                     </div>
                                     <span class="item-total-price">
                                         {{ currency_symbol }} {{ "{:,.2f}".format((item.quantity * item.price) / conversion_rate) }}
                                     </span>
                                 </div>
                                 <form action="{{ url_for('sales_bp.remove_item', item_id=item.id) }}" method="POST">
-                                    <button type="submit" class="remove-btn">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
+                                    <button type="submit" class="remove-btn"><i class="bi bi-trash"></i></button>
                                 </form>
                             </div>
                             {% endfor %}
                         {% else %}
                             <div class="empty-state">
                                 <i class="bi bi-cart3"></i>
-                                <p>Esperando productos</p>
+                                <p>Esperando productos...</p>
                             </div>
                         {% endif %}
                     </div>
@@ -180,18 +164,16 @@
                     <div class="ticket-footer">
                         <div class="summary-box">
                             <div class="summary-row">
-                                <span>Subtotal ({{ current_currency }})</span>
+                                <span>Subtotal</span>
                                 <span>{{ currency_symbol }} {{ "{:,.2f}".format((sale.subtotal if sale else 0) / conversion_rate) }}</span>
                             </div>
                             <div class="summary-row tax-row">
-                                <span>ITBIS Inc. (18%)</span>
+                                <span>ITBIS (18%)</span>
                                 <span>{{ currency_symbol }} {{ "{:,.2f}".format((sale.itbis if sale else 0) / conversion_rate) }}</span>
                             </div>
                             <div class="summary-row total-row">
                                 <span>TOTAL</span>
-                                <span class="big-total">
-                                    {{ currency_symbol }} {{ "{:,.2f}".format((sale.total if sale else 0) / conversion_rate) }}
-                                </span>
+                                <span class="big-total">{{ currency_symbol }} {{ "{:,.2f}".format((sale.total if sale else 0) / conversion_rate) }}</span>
                             </div>
                         </div>
 
@@ -206,111 +188,79 @@
                             </div>
 
                             <form action="{{ url_for('sales_bp.finish_sale') }}" method="POST" id="finish-sale-form">
-                                <button type="submit" class="btn-checkout" 
-                                    {{ 'disabled' if not sale or not sale.items or not sale.client_id else '' }}>
+                                <button type="submit" class="btn-checkout" {{ 'disabled' if not sale or not sale.items or not sale.client_id else '' }}>
                                     <span>PAGAR AHORA</span>
                                     <div class="icon"><i class="bi bi-arrow-right"></i></div>
                                 </button>
                             </form>
-
-                            <div class="alt-buttons">
-                                <form action="{{ url_for('sales_bp.convert_to_quote', sale_id=sale.id if sale else 0) }}" method="POST" style="flex:1">
-                                    <button type="submit" class="btn-secondary" {{ 'disabled' if not sale or not sale.items else '' }}>
-                                        COTIZAR
-                                    </button>
-                                </form>
-                                <form action="{{ url_for('sales_bp.cancel_sale', sale_id=sale.id if sale else 0) }}" method="POST">
-                                    <button type="submit" class="btn-danger-outline">
-                                        <i class="bi bi-x-circle"></i>
-                                    </button>
-                                </form>
-                            </div>
                         </div>
                     </div>
                 </div>
             </aside>
         </div>
-
-        <button class="mobile-ticket-trigger" onclick="toggleTicket()">
-            <i class="bi bi-receipt"></i>
-            <span>{{ currency_symbol }} {{ "{:,.2f}".format((sale.total if sale else 0) / conversion_rate) }}</span>
-        </button>
     </main>
 
     <div id="success-overlay" class="success-overlay" style="display: none;">
         <div class="success-card">
-            <div class="success-icon-wrapper">
-                <i class="bi bi-check-circle-fill"></i>
-            </div>
+            <div class="success-icon-wrapper"><i class="bi bi-check-circle-fill"></i></div>
             <h2>¡Venta Registrada!</h2>
-            <p>Generando comprobante fiscal...</p>
-            <div class="success-footer">
-                <span id="countdown-text">Finalizando en 3s...</span>
-            </div>
+            <p id="countdown-text">Finalizando en 3s...</p>
         </div>
     </div>
 
     <script>
-        // 1. Reloj Real
+        // 1. Reloj
         function updateClock() {
-            const now = new Date();
-            document.getElementById('live-clock').textContent = now.toLocaleTimeString('es-DO', { hour12: false });
+            document.getElementById('live-clock').textContent = new Date().toLocaleTimeString('es-DO', { hour12: false });
         }
         setInterval(updateClock, 1000);
-        updateClock();
 
-        // 2. Control de Foco del Scanner
+        // 2. Control de Foco
         const barcodeInput = document.getElementById('barcode-input');
+        const scannerIcon = document.getElementById('scanner-icon');
+
         document.addEventListener('click', (e) => {
-            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
-                barcodeInput.focus();
+            if (!['INPUT', 'SELECT'].includes(e.target.tagName)) barcodeInput.focus();
+        });
+
+        // 3. Lógica de Búsqueda Inteligente
+        let typingTimer;
+        const doneTypingInterval = 600; // Espera 0.6s si es texto manual
+
+        barcodeInput.addEventListener('input', () => {
+            clearTimeout(typingTimer);
+            scannerIcon.classList.add('searching');
+            
+            typingTimer = setTimeout(() => {
+                if (barcodeInput.value.trim().length >= 3) {
+                    document.getElementById('barcode-form').submit();
+                }
+                scannerIcon.classList.remove('searching');
+            }, doneTypingInterval);
+        });
+
+        // Enviar inmediato con Enter (Scanner)
+        barcodeInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('barcode-form').submit();
             }
         });
 
-        // 3. Auto-submit al escanear (Delay de 400ms)
-        let typingTimer;
-        barcodeInput.addEventListener('input', () => {
-            clearTimeout(typingTimer);
-            typingTimer = setTimeout(() => {
-                if (barcodeInput.value.trim().length >= 2) {
-                    document.getElementById('barcode-form').submit();
-                }
-            }, 400); 
-        });
-
-        // 4. Utilidades UI
-        function toggleTicket() {
-            document.getElementById('sidebar-ticket').classList.toggle('active');
-        }
-
-        // 5. Animación de Pago
-        const finishForm = document.getElementById('finish-sale-form');
-        finishForm.addEventListener('submit', function(e) {
+        // 4. Animación de Pago
+        document.getElementById('finish-sale-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            const overlay = document.getElementById('success-overlay');
-            overlay.style.display = 'grid';
-
+            document.getElementById('success-overlay').style.display = 'grid';
             let seconds = 3;
-            const countdownEl = document.getElementById('countdown-text');
-            
             const timer = setInterval(() => {
                 seconds--;
-                countdownEl.textContent = `Finalizando en ${seconds}s...`;
+                document.getElementById('countdown-text').textContent = `Finalizando en ${seconds}s...`;
                 if (seconds <= 0) {
                     clearInterval(timer);
-                    finishForm.submit();
+                    this.submit();
                 }
             }, 1000);
         });
-
-        // 6. Auto-ocultar alertas
-        setTimeout(() => {
-            const alerts = document.querySelectorAll('.alert-toast');
-            alerts.forEach(alert => {
-                alert.style.opacity = '0';
-                setTimeout(() => alert.remove(), 500);
-            });
-        }, 3000);
     </script>
 </body>
 </html>

@@ -62,7 +62,7 @@ def user_profile(id):
     )
 
 # =========================
-# CREAR USUARIO CON LÍMITES DE PLAN
+# CREAR USUARIO CON HERENCIA DE DIVISA
 # =========================
 @users_bp.route('/create_user', methods=['GET', 'POST'])
 def create_user():
@@ -72,17 +72,17 @@ def create_user():
     if not user_id or not company_id:
         return redirect(url_for('login_bp.login'))
 
-    current_user = User.query.get(user_id)
+    current_user = db.session.get(User, user_id)
     
     from models.company.company import Company
-    company = Company.query.get(company_id)
+    company = db.session.get(Company, company_id)
     plan_limits = company.get_plan_limits() 
     
     current_users_count = User.query.filter_by(company_id=company_id).count()
 
     if request.method == 'POST':
         if current_users_count >= plan_limits['max_users']:
-            flash(f"Límite de usuarios alcanzado para el plan {company.plan_name}. Tu plan permite un máximo de {plan_limits['max_users']} usuarios.", 'danger')
+            flash(f"Límite de usuarios alcanzado. Máximo: {plan_limits['max_users']}", 'danger')
             return redirect(url_for('users_bp.users'))
 
         email = request.form.get('email')
@@ -91,6 +91,10 @@ def create_user():
         role = request.form.get('role')
         cedula = request.form.get('cedula')
         warehouse_id = request.form.get('warehouse_id')
+
+        inherited_currency = company.default_currency if hasattr(company, 'default_currency') and company.default_currency else current_user.default_currency
+        if not inherited_currency:
+            inherited_currency = 'DOP'
 
         if not email or not name or not password or not role or not cedula:
             flash('Todos los campos son obligatorios', 'danger')
@@ -110,24 +114,21 @@ def create_user():
             role=role,
             cedula=cedula,
             warehouse_id=w_id,
-            company_id=company_id
+            company_id=company_id,
+            default_currency=inherited_currency # SE ASIGNA AQUÍ
         )
 
         try:
             db.session.add(new_user)
             db.session.commit()
-            flash(f'Usuario {name} creado exitosamente en el plan {company.plan_name}', 'success')
+            flash(f'Usuario {name} creado con divisa {inherited_currency}', 'success')
             return redirect(url_for('users_bp.users'))
         except Exception as e:
             db.session.rollback()
-            flash('Error interno al guardar el usuario', 'danger')
-            print(f"Error: {e}")
+            flash('Error al guardar el usuario', 'danger')
             return redirect(url_for('users_bp.create_user'))
     
-    warehouses = Warehouse.query.filter_by(
-        status=True,
-        company_id=company_id
-    ).all()
+    warehouses = Warehouse.query.filter_by(status=True, company_id=company_id).all()
 
     return render_template(
         'users/create_user.html',
