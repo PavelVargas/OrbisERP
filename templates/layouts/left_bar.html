@@ -27,7 +27,54 @@
     
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base_css/base.css') }}">
     
-    {% block extra_css %}{% endblock %}
+    {% block extra_css %}
+        {% if session.get('tablet_mode') %}
+        <style>
+            /* Ocultamos el sidebar y el botón toggle mobile */
+            aside.sidebar, .sidebar-overlay, #sidebar-toggle { 
+                display: none !important; 
+            }
+            
+            /* Forzamos al contenido a ocupar el 100% sin márgenes de sidebar */
+            main, .main-content, .content-wrapper {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding-bottom: 100px !important;
+            }
+
+            .btn-floating-tablet {
+                position: fixed;
+                bottom: 25px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 10000;
+                background: rgba(28, 31, 35, 0.85);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                padding: 14px 28px;
+                border-radius: 100px;
+                color: var(--text-main);
+                text-decoration: none;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+                font-weight: 800;
+                letter-spacing: 0.5px;
+                transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+            }
+
+            .btn-floating-tablet:hover {
+                background: var(--primary);
+                color: #000;
+                transform: translateX(-50%) translateY(-5px);
+            }
+            
+            .btn-floating-tablet i { font-size: 1.3rem; }
+        </style>
+        {% endif %}
+    {% endblock %}
 </head>
 
 <body class="no-transition">
@@ -415,6 +462,18 @@
                     <div class="nav-tooltip">Usuarios</div>
                 </a>
                 {% endif %}
+
+                <div class="nav-section">
+                    <span class="section-title hide-collapsed">Acceso Rápido</span>
+                    <div class="nav-items">
+                        <a href="/launchpad" class="nav-item" style="background: rgba(255,255,255,0.05); border: 1px solid var(--primary);">
+                            <div class="nav-icon" style="color: var(--primary);">
+                                <i class="bi bi-tablet-landscape"></i>
+                            </div>
+                            <span class="nav-label hide-collapsed">Modo Tablet</span>
+                        </a>
+                    </div>
+                </div>
                 
                 <a href="{{ url_for('perfil_bp.perfil') }}" class="nav-item {% if '/perfil' in request.path %}active{% endif %}">
                     <div class="nav-icon">
@@ -477,5 +536,12 @@
 <link rel="stylesheet" href="/static/css/left.css">
 
 <script src="/static/js/left.js"></script>
+
+    {% if session.get('tablet_mode') %}
+        <a href="{{ url_for('launchpad_bp.launchpad') }}" class="btn-floating-tablet">
+            <i class="bi bi-grid-3x3-gap-fill"></i>
+            <span>VOLVER AL LAUNCHPAD</span>
+        </a>
+    {% endif %}
 
 </body>

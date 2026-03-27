@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orbis OS | Launchpad</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base_css/base.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+
+    <style>
+        :root {
+            --ease: cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        /* Reset para ocupar toda la pantalla */
+        main.launchpad-wrapper {
+            margin-left: 0 !important;
+            width: 100% !important;
+            padding: 40px 20px !important;
+            min-height: 100vh !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex: 1 !important;
+            box-sizing: border-box !important;
+            overflow-y: auto;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(1.05); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .lp-header {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fadeIn 0.5s var(--ease);
+        }
+
+        .lp-header h1 {
+            font-size: 3rem;
+            font-weight: 850;
+            letter-spacing: -2px;
+            margin: 0;
+        }
+
+        .lp-header h1 span { color: var(--primary); }
+
+        /* --- GRID EXPANDIDO CON COLOR --- */
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 45px 35px;
+            justify-content: center;
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto;
+            animation: fadeIn 0.6s var(--ease);
+            transition: transform 0.1s ease-out;
+        }
+
+        .app-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            transition: all 0.3s var(--ease);
+        }
+
+        .app-icon-box {
+            width: 95px;
+            height: 95px;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.8rem;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow);
+            position: relative;
+            transition: all 0.4s var(--ease);
+        }
+
+        /* Hover dinámico usando el color de la app */
+        .app-item:hover .app-icon-box {
+            border-color: var(--app-color, var(--primary));
+            background-color: var(--bg-hover);
+            transform: translateY(-8px);
+            box-shadow: 0 10px 30px -5px rgba(0,0,0,0.5), 0 0 15px var(--app-color, var(--primary));
+        }
+
+        .app-label {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-align: center;
+            transition: 0.3s;
+        }
+
+        .app-item:hover .app-label { color: var(--text-main); }
+
+        /* Controles Superiores */
+        .top-nav {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            display: flex;
+            gap: 12px;
+            z-index: 999;
+        }
+
+        .control-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            width: 45px;
+            height: 45px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.3s;
+            text-decoration: none;
+            font-size: 1.2rem;
+        }
+
+        .control-btn:hover { border-color: var(--primary); background: var(--bg-hover); }
+
+        .btn-exit {
+            margin: 60px 0;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 14px 32px;
+            border-radius: 100px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: 0.3s;
+        }
+
+        .btn-exit:hover { background: var(--danger); color: white; border-color: var(--danger); }
+
+        @media (max-width: 600px) {
+            .app-grid { grid-template-columns: repeat(2, 1fr); gap: 25px; }
+            .app-icon-box { width: 85px; height: 85px; font-size: 2.2rem; }
+            .lp-header h1 { font-size: 2.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-nav">
+        <button class="control-btn" onclick="toggleTheme()" title="Cambiar Tema">
+            <i class="bi bi-moon-stars" id="theme-icon"></i>
+        </button>
+        <a href="{{ url_for('launchpad_bp.exit_tablet') }}" class="control-btn" title="Volver al modo PC">
+            <i class="bi bi-pc-display"></i>
+        </a>
+    </div>
+
+    <main class="launchpad-wrapper">
+        <div class="lp-header">
+            <h1>Orbis<span>OS</span></h1>
+            <p style="color: var(--text-muted); font-weight: 500; margin-top: 5px;">Panel de Control Empresarial</p>
+        </div>
+
+        <div class="app-grid" id="mainGrid">
+            
+            {# --- INVENTARIO --- #}
+            <a href="/dashboard" class="app-item" style="--app-color: #3b82f6;">
+                <div class="app-icon-box"><i class="bi bi-grid-1x2-fill" style="color: #3b82f6;"></i></div>
+                <span class="app-label">Dashboard</span>
+            </a>
+
+            <a href="/list_product" class="app-item" style="--app-color: #60a5fa;">
+                <div class="app-icon-box"><i class="bi bi-box-seam" style="color: #60a5fa;"></i></div>
+                <span class="app-label">Productos</span>
+            </a>
+
+            <a href="/category" class="app-item" style="--app-color: #93c5fd;">
+                <div class="app-icon-box"><i class="bi bi-tags" style="color: #93c5fd;"></i></div>
+                <span class="app-label">Categorías</span>
+            </a>
+
+            <a href="{{ url_for('warehouse_bp.list_warehouses') }}" class="app-item" style="--app-color: #2563eb;">
+                <div class="app-icon-box"><i class="bi bi-house-gear" style="color: #2563eb;"></i></div>
+                <span class="app-label">Almacenes</span>
+            </a>
+
+            {# --- MOVIMIENTOS --- #}
+            {% if session.get('user_role') == 'admin' %}
+            <a href="{{ url_for('movements_bp.movements_in') }}" class="app-item" style="--app-color: #34c759;">
+                <div class="app-icon-box"><i class="bi bi-arrow-down-left-circle" style="color: #34c759;"></i></div>
+                <span class="app-label">Entradas</span>
+            </a>
+            
+            <a href="{{ url_for('movements_bp.movements_out') }}" class="app-item" style="--app-color: #ff3b30;">
+                <div class="app-icon-box"><i class="bi bi-arrow-up-right-circle" style="color: #ff3b30;"></i></div>
+                <span class="app-label">Salidas</span>
+            </a>
+            {% endif %}
+
+            <a href="{{ url_for('transfer_bp.transfers') }}" class="app-item" style="--app-color: #fbbf24;">
+                <div class="app-icon-box"><i class="bi bi-arrow-left-right" style="color: #fbbf24;"></i></div>
+                <span class="app-label">Transferencias</span>
+            </a>
+
+            <a href="{{ url_for('transfer_bp.scanner_mode') }}" class="app-item" style="--app-color: #f59e0b;">
+                <div class="app-icon-box"><i class="bi bi-qr-code-scan" style="color: #f59e0b;"></i></div>
+                <span class="app-label">Escáner</span>
+            </a>
+
+            {# --- OPERACIONES --- #}
+            <a href="/sales" class="app-item" style="--app-color: #10b981;">
+                <div class="app-icon-box"><i class="bi bi-cart-check" style="color: #10b981;"></i></div>
+                <span class="app-label">Ventas</span>
+            </a>
+
+            <a href="/clients" class="app-item" style="--app-color: #34d399;">
+                <div class="app-icon-box"><i class="bi bi-people" style="color: #34d399;"></i></div>
+                <span class="app-label">Clientes</span>
+            </a>
+
+            {% if session.get('user_role') == 'admin'%}
+            <a href="/purchase" class="app-item" style="--app-color: #059669;">
+                <div class="app-icon-box"><i class="bi bi-bag-check" style="color: #059669;"></i></div>
+                <span class="app-label">Órdenes</span>
+            </a>
+            {% endif %}
+
+            <a href="/suppliers" class="app-item" style="--app-color: #02a46c;">
+                <div class="app-icon-box"><i class="bi bi-truck" style="color: #02a46c;"></i></div>
+                <span class="app-label">Proveedores</span>
+            </a>
+
+            {# --- ANALÍTICA & SISTEMA --- #}
+            <a href="/kardex" class="app-item" style="--app-color: #a855f7;">
+                <div class="app-icon-box"><i class="bi bi-journal-text" style="color: #a855f7;"></i></div>
+                <span class="app-label">Kardex</span>
+            </a>
+
+            <a href="/stock" class="app-item" style="--app-color: #d946ef;">
+                <div class="app-icon-box"><i class="bi bi-pie-chart-fill" style="color: #d946ef;"></i></div>
+                <span class="app-label">Stock Actual</span>
+            </a>
+
+            <a href="{{ url_for('perfil_bp.perfil') }}" class="app-item" style="--app-color: #64748b;">
+                <div class="app-icon-box"><i class="bi bi-person-circle" style="color: #64748b;"></i></div>
+                <span class="app-label">Mi Perfil</span>
+            </a>
+
+            {% if session.get('user_role') == 'admin' %}
+            <a href="/users" class="app-item" style="--app-color: #475569;">
+                <div class="app-icon-box"><i class="bi bi-shield-lock" style="color: #475569;"></i></div>
+                <span class="app-label">Usuarios</span>
+            </a>
+
+            <a href="{{ url_for('company_bp.settings') }}" class="app-item" style="--app-color: #787b80;">
+                <div class="app-icon-box"><i class="bi bi-gear-wide-connected" style="color: #787b80;"></i></div>
+                <span class="app-label">Configuración</span>
+            </a>
+            {% endif %}
+
+        </div>
+
+        <a href="{{ url_for('launchpad_bp.exit_tablet') }}" class="btn-exit">
+            <i class="bi bi-door-open-fill"></i> Salir del Modo Tablet
+        </a>
+    </main>
+
+    <script>
+        const html = document.documentElement;
+        const icon = document.getElementById('theme-icon');
+
+        function toggleTheme() {
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.classList.replace('bi-moon-stars', 'bi-sun');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                icon.classList.replace('bi-sun', 'bi-moon-stars');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (!html.classList.contains('dark')) {
+                icon.classList.replace('bi-moon-stars', 'bi-sun');
+            }
+        });
+
+        // Efecto parallax sutil
+        document.addEventListener('mousemove', (e) => {
+            const moveX = (e.clientX - window.innerWidth / 2) * 0.005;
+            const moveY = (e.clientY - window.innerHeight / 2) * 0.005;
+            document.getElementById('mainGrid').style.transform = `translate(${moveX}px, ${moveY}px)`;
+        });
+    </script>
+</body>
+</html>

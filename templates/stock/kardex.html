@@ -3,38 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OrbisOS | Kardex General</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base_css/base.css') }}">
     <link rel="stylesheet" href="/static/css/stock_css/kardex.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <title>Kardex | Control de Inventario</title>
 </head>
 <body>
 
     {% include 'layouts/left_bar.html' %}
 
-    <main>
-        <div class="top-nav">
-            <a href="/dashboard" class="back-link">
-                <i class="bi bi-chevron-left"></i> Dashboard
-            </a>
-            <div class="user-meta">
-                <i class="bi bi-box-seam"></i> Módulo de Inventario
-            </div>
-        </div>
-
+    <main class="main-content">
         <header class="page-header">
             <div class="title-group">
                 <h2>Kardex General</h2>
-                <p>Historial detallado de movimientos de entrada y salida de mercancía.</p>
+                <p>Auditoría de flujos de inventario en tiempo real.</p>
             </div>
         </header>
 
-        <div class="card" style="margin-bottom: 25px;">
-            <form method="GET" class="filter-container" style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+        <div class="filter-card">
+            <form method="GET" style="display: grid; grid-template-columns: 1fr 200px auto; gap: 20px; align-items: flex-end;">
                 
-                <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 200px;">
-                    <label style="font-size: 11px; margin-bottom: 5px;">Producto</label>
-                    <select name="product_id" class="modern-form select" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--gray-light);">
-                        <option value="">Todos los productos</option>
+                <div class="form-group">
+                    <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; display: block;">PRODUCTO</label>
+                    <select name="product_id" class="modern-select">
+                        <option value="">Todos los productos registrados</option>
                         {% for p in products %}
                             <option value="{{ p.id }}" {% if product_id == p.id %}selected{% endif %}>
                                 {{ p.name }}
@@ -43,17 +38,17 @@
                     </select>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 0; width: 150px;">
-                    <label style="font-size: 11px; margin-bottom: 5px;">Movimiento</label>
-                    <select name="movement_type" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--gray-light);">
+                <div class="form-group">
+                    <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; display: block;">MOVIMIENTO</label>
+                    <select name="movement_type" class="modern-select">
                         <option value="">Todos</option>
-                        <option value="IN" {% if movement_type == 'IN' %}selected{% endif %}>Entradas</option>
-                        <option value="OUT" {% if movement_type == 'OUT' %}selected{% endif %}>Salidas</option>
+                        <option value="IN" {% if movement_type == 'IN' %}selected{% endif %}>Entradas (+)</option>
+                        <option value="OUT" {% if movement_type == 'OUT' %}selected{% endif %}>Salidas (-)</option>
                     </select>
                 </div>
 
-                <button type="submit" class="btn-primary" style="padding: 11px 20px;">
-                    <i class="bi bi-funnel"></i> Filtrar
+                <button type="submit" class="btn-filter">
+                    <i class="bi bi-funnel-fill"></i> Aplicar Filtros
                 </button>
             </form>
         </div>
@@ -62,44 +57,50 @@
             <table class="modern-table">
                 <thead>
                     <tr>
-                        <th>Fecha y Hora</th>
+                        <th>Cronología</th>
                         <th>Producto</th>
-                        <th>Tipo</th>
+                        <th>Operación</th>
                         <th>Cantidad</th>
-                        <th>Motivo / Referencia</th>
+                        <th>Referencia / Motivo</th>
                     </tr>
                 </thead>
                 <tbody>
                 {% for m in movements %}
                     <tr>
-                        <td style="color: var(--gray-text);">
-                            {{ m.created_at.strftime('%d/%m/%Y') }} 
-                            <small style="display: block; font-size: 11px;">{{ m.created_at.strftime('%H:%M') }}</small>
+                        <td>
+                            <div style="font-weight: 700; font-size: 0.9rem;">{{ m.created_at.strftime('%d %b, %Y') }}</div>
+                            <div style="color: var(--text-muted); font-size: 0.8rem;">{{ m.created_at.strftime('%H:%M %p') }}</div>
                         </td>
-                        <td><strong>{{ m.product.name }}</strong></td>
+                        <td>
+                            <div style="font-weight: 700; color: var(--primary);">{{ m.product.name }}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">SKU: {{ m.product.sku or 'N/A' }}</div>
+                        </td>
                         <td>
                             {% if m.movement_type == 'IN' %}
-                                <span class="badge b-received">
-                                    <i class="bi bi-arrow-down-left-circle"></i> Entrada
+                                <span class="m-badge in">
+                                    <i class="bi bi-plus-circle-fill"></i> Entrada
                                 </span>
                             {% else %}
-                                <span class="badge b-cancelled">
-                                    <i class="bi bi-arrow-up-right-circle"></i> Salida
+                                <span class="m-badge out">
+                                    <i class="bi bi-dash-circle-fill"></i> Salida
                                 </span>
                             {% endif %}
                         </td>
                         <td>
-                            <span class="order-id" style="font-size: 14px; background: {% if m.movement_type == 'IN' %}rgba(16, 185, 129, 0.1){% else %}rgba(239, 68, 68, 0.1){% endif %};">
-                                {{ m.quantity }} uds
+                            <span class="qty-box">
+                                {{ "+" if m.movement_type == 'IN' else "-" }} {{ m.quantity }}
                             </span>
+                            <small style="color: var(--text-muted); font-weight: 600;"> UDS</small>
                         </td>
-                        <td style="color: var(--gray-text); font-style: italic;">{{ m.reason or 'Sin motivo registrado' }}</td>
+                        <td style="color: var(--text-muted); font-style: italic; font-size: 0.85rem;">
+                            {{ m.reason or 'Sin nota adicional' }}
+                        </td>
                     </tr>
                 {% else %}
                     <tr>
                         <td colspan="5" class="empty-state">
-                            <i class="bi bi-search"></i>
-                            <p>No se encontraron movimientos con los filtros aplicados.</p>
+                            <i class="bi bi-ui-checks-grid"></i>
+                            <p>No hay registros que coincidan con tu búsqueda.</p>
                         </td>
                     </tr>
                 {% endfor %}

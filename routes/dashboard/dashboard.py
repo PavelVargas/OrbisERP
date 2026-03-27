@@ -294,3 +294,13 @@ def realtime_stats():
 
         "receipt_status": Company.query.get(company_id).receipt_status
     })
+    
+@dashboard_bp.route('/tablet/enable')
+def enable_tablet_mode():
+    session['tablet_mode'] = True
+    return redirect(url_for('launchpad_bp.index')) 
+
+@dashboard_bp.route('/tablet/disable')
+def disable_tablet_mode():
+    session.pop('tablet_mode', None)
+    return redirect(url_for('dashboard_bp.dashboard'))

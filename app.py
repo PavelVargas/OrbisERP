@@ -32,6 +32,7 @@ from routes.cash.cash import cash_bp
 from routes.super_admin.superadmin import superadmin_bp
 from routes.reports.reports import reports_bp
 from routes.divisas.divisas import divisas_bp
+from routes.launchpad.launchpad import launchpad_bp
 
 app = Flask(__name__)
 
@@ -145,6 +146,7 @@ app.register_blueprint(superadmin_bp)
 app.register_blueprint(cash_bp)
 app.register_blueprint(reports_bp)
 app.register_blueprint(divisas_bp)
+app.register_blueprint(launchpad_bp)
 
 # =========================
 # ROUTES

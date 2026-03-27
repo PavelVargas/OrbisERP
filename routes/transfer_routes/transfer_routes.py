@@ -73,8 +73,6 @@ def create_transfer():
                 p_id = int(p_id)
                 qty = float(qty)
 
-                # VALIDACIÓN PREVIA: Solo avisamos si no hay stock, pero NO descontamos.
-                # El descuento real ocurre en la RECEPCIÓN.
                 stock_from = WarehouseStock.query.filter_by(
                     product_id=p_id, warehouse_id=from_wh, company_id=company_id
                 ).first()
@@ -156,7 +154,6 @@ def receive_transfer(transfer_id):
         return redirect(request.referrer)
 
     try:
-        # 1. Validar y descontar stock origen (EL MOMENTO REAL DEL DESCUENTO)
         stock_from = WarehouseStock.query.filter_by(
             product_id=transfer.product_id,
             warehouse_id=transfer.from_warehouse_id,
@@ -167,7 +164,6 @@ def receive_transfer(transfer_id):
             flash('Error crítico: El almacén de origen ya no dispone del stock solicitado.', 'danger')
             return redirect(request.referrer)
 
-        # 2. Validar o crear stock destino
         stock_to = WarehouseStock.query.filter_by(
             product_id=transfer.product_id,
             warehouse_id=transfer.to_warehouse_id,

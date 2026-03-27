@@ -53,61 +53,58 @@
 
                     <div class="table-card"> 
                        <table class="table-enterprise"> 
-                        <thead>
-                            <tr>
-                                <th>MARCA DE TIEMPO</th>
-                                <th>ITEM / REFERENCIA</th>
-                                <th>DESTINO</th>
-                                <th class="text-right">CANTIDAD</th>
-                                <th class="text-right">ACCIONES</th> </tr>
-                        </thead>
-                        <tbody>
-                            {% set ns = namespace(count=0) %}
-                            {% for t in transfers %}
-                                {% if t.from_warehouse.id == w.id %}
-                                    {% set ns.count = ns.count + 1 %}
-                                    <tr class="transfer-row">
-                                        <td data-label="Tiempo">
-                                            <div class="time-cell">
-                                                <i class="bi bi-clock-history"></i>
-                                                {{ t.created_at.strftime('%H:%M · %d/%m/%y') }}
-                                            </div>
-                                        </td>
-                                        <td data-label="Producto">
-                                            <div class="product-cell">
-                                                <span class="sku">SKU-{{t.product.id}}</span>
-                                                <span class="p-name">{{ t.product.name }}</span>
-                                            </div>
-                                        </td>
-                                        <td data-label="Destino">
-                                            <span class="badge-info"> <i class="bi bi-truck"></i> {{ t.to_warehouse.name }}</span>
-                                        </td>
-                                        <td data-label="Cantidad" class="text-right">
-                                            <strong class="qty-text">{{ t.quantity }}</strong>
-                                            <span class="text-muted">UDS</span>
-                                        </td>
-                                        <td data-label="Acciones" class="text-right">
-                                            <div class="action-buttons" style="display: flex; gap: 10px; justify-content: flex-end;">
-                                                <a href="{{ url_for('transfer_bp.print_transfer', transfer_id=t.id) }}" 
-                                                target="_blank" 
-                                                class="btn-icon-print" 
-                                                style="color: var(--primary); font-size: 1.2rem;" 
-                                                title="Imprimir Conduce">
-                                                    <i class="bi bi-printer-fill"></i>
-                                                </a>
-                                                <a href="{{ url_for('transfer_bp.view_transfer', transfer_id=t.id) }}" 
-                                                class="btn-icon-view" 
-                                                style="color: var(--text-muted); font-size: 1.2rem;"
-                                                title="Ver Detalle">
-                                                    <i class="bi bi-eye-fill"></i>
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                {% endif %}
-                            {% endfor %}
+                            <thead>
+                                <tr>
+                                    <th>ID OPERACIÓN</th> <th>MARCA DE TIEMPO</th>
+                                    <th>ITEM / REFERENCIA</th>
+                                    <th>DESTINO</th>
+                                    <th class="text-right">CANTIDAD</th>
+                                    <th class="text-right">ACCIONES</th> 
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for t in transfers %}
+                                    {% if t.from_warehouse.id == w.id %}
+                                        <tr class="transfer-row">
+                                            <td data-label="ID">
+                                                <span class="badge-id" style="font-family: 'monospace'; font-weight: 700; color: var(--primary);">
+                                                    TR{{ "%06d" | format(t.id) }}
+                                                </span>
+                                            </td>
+                                            <td data-label="Tiempo">
+                                                <div class="time-cell">
+                                                    <i class="bi bi-clock-history"></i>
+                                                    {{ t.created_at.strftime('%H:%M · %d/%m/%y') }}
+                                                </div>
+                                            </td>
+                                            <td data-label="Producto">
+                                                <div class="product-cell">
+                                                    <span class="sku">SKU-{{t.product.id}}</span>
+                                                    <span class="p-name">{{ t.product.name }}</span>
+                                                </div>
+                                            </td>
+                                            <td data-label="Destino">
+                                                <span class="badge-info"> <i class="bi bi-truck"></i> {{ t.to_warehouse.name }}</span>
+                                            </td>
+                                            <td data-label="Cantidad" class="text-right">
+                                                <strong class="qty-text">{{ t.quantity }}</strong>
+                                                <span class="text-muted">UDS</span>
+                                            </td>
+                                            <td data-label="Acciones" class="text-right">
+                                                <div class="action-buttons" style="display: flex; gap: 10px; justify-content: flex-end;">
+                                                    <a href="{{ url_for('transfer_bp.print_transfer', transfer_id=t.id) }}" target="_blank" class="btn-icon-print" style="color: var(--primary); font-size: 1.2rem;">
+                                                        <i class="bi bi-printer-fill"></i>
+                                                    </a>
+                                                    <a href="{{ url_for('transfer_bp.view_transfer', transfer_id=t.id) }}" class="btn-icon-view" style="color: var(--text-muted); font-size: 1.2rem;">
+                                                        <i class="bi bi-eye-fill"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                {% endfor %}
                             </tbody>
-                    </table>
+                        </table>
                     </div>
                 </div>
                 {% endfor %}
