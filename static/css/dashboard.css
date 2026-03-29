@@ -562,8 +562,8 @@ main.dashboard {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(255, 255, 255, 0.9); /* Fondo claro semi-transparente */
-    backdrop-filter: blur(10px); /* Efecto de desenfoque moderno */
+    background-color: var(--bg-main); 
+    backdrop-filter: blur(10px);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -573,7 +573,7 @@ main.dashboard {
 
 /* Soporte para Modo Oscuro si la clase .dark existe */
 .dark #global-loader {
-    background-color: rgba(15, 23, 42, 0.9);
+    background-color: var(--bg-main);
 }
 
 .loader-content {
