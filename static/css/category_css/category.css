@@ -93,10 +93,9 @@ main {
 }
 
 .categories-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 20px;
-    width: 100%;
+   display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 25px;
 }
 
 @media (min-width: 768px) {
@@ -106,14 +105,14 @@ main {
 }
 
 .category-card {
-    background: var(--bg-card);
+   background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    transition: 0.3s ease;
+    border-radius: 28px;
+    padding: 30px;
+    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
 }
 
 .category-card:hover {

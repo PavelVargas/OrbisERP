@@ -12,6 +12,14 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+
+    <div id="global-loader">
+        <div class="loader-content">
+            <div class="spinner"></div>
+            <p>Cargando OrbisERP...</p>
+        </div>
+    </div>
+
     {% include "layouts/left_bar.html" %}
 
     <main class="dashboard">
@@ -274,6 +282,17 @@
         }
 
         setInterval(refreshDashboard, 60000);
+    </script>
+
+    <script>
+        window.addEventListener("load", function () {
+            const loader = document.getElementById("global-loader");
+            
+            // Agregamos un pequeño delay de 300ms para evitar parpadeos en cargas ultra rápidas
+            setTimeout(() => {
+                loader.classList.add("loader-hidden");
+            }, 500);
+        });
     </script>
 
    <script src="/static/js/dashboard.js"></script>

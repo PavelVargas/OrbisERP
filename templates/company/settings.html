@@ -2,11 +2,260 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>OrbisERP | Configuración de Empresa</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/company_css/company.css">
+    <style>
+        /* Aplicando tus variables y estilos base */
+        body {
+            background-color: var(--bg);
+            color: var(--fg);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            margin: 0;
+            transition: 0.3s ease;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .main-content {
+            padding: 33px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center; /* Centrado para mejor look en tablet */
+        }
+
+        .settings-container {
+            width: 100%;
+            max-width: 1000px; /* Un poco más ancho para aprovechar la tablet */
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* HEADER */
+        .settings-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between; /* Espaciado estilo OS */
+            margin-bottom: 35px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .btn-back {
+            width: 45px;
+            height: 45px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--fg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 1.2rem;
+            transition: 0.3s;
+            box-shadow: var(--shadow);
+        }
+
+        .btn-back:hover {
+            background: var(--fg);
+            color: var(--bg);
+        }
+
+        .title-block h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: -1px;
+        }
+
+        .title-block p {
+            color: var(--gray);
+            margin-top: 5px;
+            font-size: 0.95rem;
+        }
+
+        /* CARD ESTILO TABLET */
+        .settings-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 28px; /* Bordes más curvos para look moderno */
+            padding: 45px;
+            box-shadow: var(--shadow);
+            display: grid;
+            grid-template-columns: 280px 1fr; /* Separación lógica */
+            gap: 40px;
+            position: relative;
+        }
+
+        /* SECCIÓN IZQUIERDA (Logo & Info) */
+        .sidebar-info {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            padding-right: 20px;
+            border-right: 1px solid var(--border);
+        }
+
+        .logo-display {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            margin: 0 auto;
+        }
+
+        .logo-preview, .logo-placeholder {
+            width: 100%;
+            height: 100%;
+            border-radius: 24px;
+            object-fit: contain;
+            background: var(--input-bg);
+            border: 2px dashed var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+        }
+
+        .logo-placeholder i {
+            font-size: 3rem;
+            color: var(--gray);
+        }
+
+        .btn-change-logo {
+            position: absolute;
+            bottom: -8px;
+            right: -8px;
+            width: 42px;
+            height: 42px;
+            background: var(--accent);
+            color: white;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 4px solid var(--card-bg);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+            transition: 0.3s;
+        }
+
+        .btn-change-logo:hover { transform: scale(1.1) rotate(5deg); }
+
+        .logo-info h3 { font-size: 1.2rem; margin: 15px 0 8px 0; font-weight: 800; }
+        .logo-info p { font-size: 0.9rem; color: var(--gray); line-height: 1.5; }
+
+        /* SECCIÓN DERECHA (Formulario) */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            align-content: start;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .form-group.full-width { grid-column: span 2; }
+
+        .form-group label {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group label i {
+            color: var(--accent);
+            font-size: 1rem;
+        }
+
+        .form-group input, .form-group textarea {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+            color: var(--fg);
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: 0.3s var(--ease);
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: var(--card-bg);
+            box-shadow: 0 0 0 4px rgba(var(--accent-rgb, 67, 97, 238), 0.15);
+        }
+
+        /* FOOTER & BUTTON */
+        .form-footer {
+            grid-column: span 2;
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .btn-save {
+            background: var(--fg);
+            color: var(--bg);
+            border: none;
+            padding: 18px 45px;
+            border-radius: 16px;
+            font-weight: 800;
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-save:active {
+            transform: scale(0.96);
+        }
+
+        /* RESPONSIVE / TABLET PORTRAIT */
+        @media (max-width: 900px) {
+            .settings-card {
+                grid-template-columns: 1fr;
+                padding: 35px;
+                gap: 20px;
+            }
+            .sidebar-info {
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                padding-right: 0;
+                padding-bottom: 30px;
+                text-align: center;
+            }
+            .form-grid {
+                margin-top: 20px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group.full-width { grid-column: span 1; }
+            .btn-save { width: 100%; justify-content: center; }
+        }
+    </style>
 </head>
 <body class="{% if user and user.dark_mode %}dark{% endif %}">
 
@@ -14,70 +263,71 @@
 
     <main class="main-content">
         <div class="settings-container">
+            
             <header class="settings-header">
-                <a href="/dashboard" class="btn-back"><i class="bi bi-arrow-left"></i></a>
-                <div class="title-block">
-                    <h1><i class="bi bi-building-gear"></i> Perfil de la Empresa</h1>
-                    <p>Gestiona la identidad visual y fiscal de tu negocio para facturas y reportes.</p>
+                <div class="header-left">
+                    <a href="/dashboard" class="btn-back"><i class="bi bi-chevron-left"></i></a>
+                    <div class="title-block">
+                        <h1>Configuración</h1>
+                        <p>Perfil de la Empresa OrbisOS</p>
+                    </div>
                 </div>
             </header>
 
             <form action="{{ url_for('company_bp.settings') }}" method="POST" enctype="multipart/form-data" class="settings-card">
                 
-                <div class="logo-upload-section">
+                <aside class="sidebar-info">
                     <div class="logo-display">
                         {% if company.logo %}
                             <img src="{{ url_for('static', filename=company.logo) }}" alt="Logo" class="logo-preview" id="preview-img">
                         {% else %}
                             <div class="logo-placeholder" id="preview-placeholder">
-                                <i class="bi bi-camera"></i>
+                                <i class="bi bi-building"></i>
                             </div>
                         {% endif %}
                         <label for="logo-input" class="btn-change-logo">
-                            <i class="bi bi-pencil"></i>
+                            <i class="bi bi-camera-fill"></i>
                         </label>
                     </div>
                     <div class="logo-info">
-                        <h3>Logo Corporativo</h3>
-                        <p>Se recomienda formato PNG o JPG (Máx. 2MB)</p>
+                        <h3>Identidad Visual</h3>
+                        <p>Sube el logo de tu negocio. Se recomienda un archivo PNG con fondo transparente.</p>
                         <input type="file" name="logo" id="logo-input" hidden onchange="previewImage(this)">
                     </div>
-                </div>
-
-                <div class="divider"></div>
+                </aside>
 
                 <div class="form-grid">
-                    <div class="form-group">
-                        <label><i class="bi bi-info-circle"></i> Nombre Comercial</label>
-                        <input type="text" name="name" value="{{ company.name }}" placeholder="Nombre de tu negocio" required>
+                    <div class="form-group full-width">
+                        <label><i class="bi bi-info-circle-fill"></i> Nombre Comercial</label>
+                        <input type="text" name="name" value="{{ company.name }}" placeholder="Ej: Orbis Services S.R.L" required>
                     </div>
 
                     <div class="form-group">
-                        <label><i class="bi bi-hash"></i> RNC / Identificación Fiscal</label>
-                        <input type="text" name="rnc" value="{{ company.rnc or '' }}" placeholder="Ej: 1-31-XXXXX-X">
+                        <label><i class="bi bi-hash"></i> RNC / ID Fiscal</label>
+                        <input type="text" name="rnc" value="{{ company.rnc or '' }}" placeholder="1-31-XXXXX-X">
                     </div>
 
                     <div class="form-group">
-                        <label><i class="bi bi-envelope-at"></i> Correo de Contacto</label>
-                        <input type="email" name="email" value="{{ company.email or '' }}" placeholder="empresa@ejemplo.com">
-                    </div>
-
-                    <div class="form-group">
-                        <label><i class="bi bi-telephone"></i> Teléfono</label>
+                        <label><i class="bi bi-telephone-fill"></i> Teléfono</label>
                         <input type="text" name="phone" value="{{ company.phone or '' }}" placeholder="+1 (809) 000-0000">
                     </div>
 
                     <div class="form-group full-width">
-                        <label><i class="bi bi-geo-alt"></i> Dirección Física</label>
+                        <label><i class="bi bi-envelope-at-fill"></i> Correo Electrónico</label>
+                        <input type="email" name="email" value="{{ company.email or '' }}" placeholder="administracion@empresa.com">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label><i class="bi bi-geo-alt-fill"></i> Dirección Principal</label>
                         <textarea name="address" rows="3" placeholder="Calle, Número, Ciudad, País...">{{ company.address or '' }}</textarea>
                     </div>
-                </div>
 
-                <div class="form-footer">
-                    <button type="submit" class="btn-save">
-                        <span>Guardar Cambios</span>
-                        <i class="bi bi-cloud-arrow-up-fill"></i>
-                    </button>
+                    <div class="form-footer">
+                        <button type="submit" class="btn-save">
+                            <span>Sincronizar Cambios</span>
+                            <i class="bi bi-arrow-right-short" style="font-size: 1.5rem;"></i>
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
