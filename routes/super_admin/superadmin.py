@@ -145,3 +145,23 @@ def approve_payment(id):
     
     flash(msg, "success")
     return redirect(url_for('superadmin_bp.admin_dashboard'))
+
+@superadmin_bp.route('/superadmin/renew_plan/<int:id>', methods=['POST'])
+@superadmin_required
+def renew_plan(id):
+    company = Company.query.get_or_404(id)
+    ahora = datetime.utcnow()
+    
+    if not company.expiration_date or company.expiration_date < ahora:
+        company.expiration_date = ahora + timedelta(days=30)
+    else:
+        company.expiration_date += timedelta(days=30)
+    
+    company.status = True
+    company.plan_status = 'ACTIVE'
+    company.receipt_status = 'APPROVED'
+    
+    db.session.commit()
+    
+    flash(f'Plan de {company.name} renovado exitosamente por 30 días.', 'success')
+    return redirect(url_for('superadmin_bp.admin_dashboard'))

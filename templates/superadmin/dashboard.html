@@ -30,11 +30,21 @@
     </header>
 
     <main class="content-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} flash-msg" style="padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid;">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
         <div class="master-header-grid">
             <div class="welcome-box">
                 <span class="badge-root">System Level: 0</span>
                 <h2>Panel Maestro de Control</h2>
-                <p>Gestión centralizada de nodos empresariales y auditoría de divisas real de la base de datos.</p>
+                <p>Gestión centralizada de nodos empresariales y auditoría de suscripciones.</p>
             </div>
             
             <div class="stats-mini-grid">
@@ -104,19 +114,14 @@
 
                     <div class="card-data-grid">
                         <div class="data-cell">
-                            <label>Configuración Fiscal</label>
-                            <span>{{ company.tax_name }} ({{ company.tax_percent }}%)</span>
-                        </div>
-                        <div class="data-cell">
-                            <label>Moneda en Base de Datos</label>
+                            <label>Moneda DB</label>
                             <span class="currency-highlight">
-                                <i class="bi bi-cash-stack"></i> 
-                                {{ company.display_currency_code }} ({{ company.display_currency_symbol }})
+                                <i class="bi bi-cash-stack"></i> {{ company.display_currency_code }}
                             </span>
                         </div>
-                        <div class="data-cell full">
-                            <label>Administrador del Nodo</label>
-                            <span>{{ company.email or 'N/A' }}</span>
+                        <div class="data-cell">
+                            <label>Vencimiento</label>
+                            <span style="font-weight: 700;">{{ company.expiration_date.strftime("%d/%m/%Y") if company.expiration_date else "N/A" }}</span>
                         </div>
                     </div>
 
@@ -126,6 +131,14 @@
                         </a>
                         
                         <div class="mini-actions">
+                            {% if not company.status %}
+                            <form action="{{ url_for('superadmin_bp.renew_plan', id=company.id) }}" method="POST">
+                                <button type="submit" class="btn-icon-alt success" title="Renovar Plan Ahora">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+
                             <button type="button" class="btn-icon-alt info" 
                                     onclick='openMasterModal({{ {
                                         "id": company.id,
@@ -142,15 +155,15 @@
                                         "plan_name": company.plan_name,
                                         "requested_plan": company.requested_plan
                                     }|tojson }})'
-                                    title="Inspeccionar Parámetros">
+                                    title="Inspeccionar">
                                 <i class="bi bi-eye"></i>
                             </button>
 
                             <form action="{{ url_for('superadmin_bp.toggle_status', id=company.id) }}" method="POST">
-                                <button type="submit" class="btn-icon-alt" title="Cambiar Estado"><i class="bi bi-power"></i></button>
+                                <button type="submit" class="btn-icon-alt" title="Toggle Power"><i class="bi bi-power"></i></button>
                             </form>
                             
-                            <form action="{{ url_for('superadmin_bp.delete_company', id=company.id) }}" method="POST" onsubmit="return confirm('¿Eliminar nodo y purgar base de datos permanentemente?')">
+                            <form action="{{ url_for('superadmin_bp.delete_company', id=company.id) }}" method="POST" onsubmit="return confirm('¿Eliminar nodo permanentemente?')">
                                 <button type="submit" class="btn-icon-alt danger"><i class="bi bi-trash3"></i></button>
                             </form>
                         </div>
@@ -166,7 +179,7 @@
             <div class="modal-header">
                 <div>
                     <span class="badge-root">Audit Log Viewer</span>
-                    <h2 id="m-name">Cargando datos del nodo...</h2>
+                    <h2 id="m-name">Cargando...</h2>
                 </div>
                 <button class="close-modal" onclick="closeMasterModal()">&times;</button>
             </div>
@@ -177,38 +190,27 @@
                     <div class="data-row"><label>ID Interno:</label> <span id="m-id"></span></div>
                     <div class="data-row"><label>Estatus:</label> <span id="m-status"></span></div>
                     <div class="data-row"><label>Vencimiento:</label> <span id="m-expiry"></span></div>
+                    <div class="data-row"><label>Plan:</label> <span id="m-plan" style="color: #faa200; font-weight: 800;"></span></div>
                     
-                    <hr style="margin: 10px 0; border: none; border-top: 1px solid rgba(255,255,255,0.05);">
-                    
-                    <div class="data-row"><label>Plan Actual:</label> <span id="m-plan" style="color: #faa200; font-weight: 800;"></span></div>
-                    <div id="m-requested-box" class="data-row" style="display:none; background: rgba(16, 185, 129, 0.1); padding: 5px 8px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2); margin-top: 5px;">
-                        <label style="color: #10b981;">Solicitud Pendiente:</label> 
-                        <span id="m-requested" style="color: #10b981; font-weight: 800;"></span>
-                    </div>
+                    <form id="renewForm" method="POST" style="margin-top: 15px;">
+                        <button type="submit" class="btn-main-action" style="background: #10b981; border: none; width: 100%; justify-content: center;">
+                            <i class="bi bi-arrow-repeat"></i> RENOVAR PLAN (30 DÍAS)
+                        </button>
+                    </form>
                 </div>
 
                 <div class="info-section">
-                    <h4><i class="bi bi-globe-americas"></i> Contexto Regional (DB)</h4>
+                    <h4><i class="bi bi-globe-americas"></i> Contexto Regional</h4>
                     <div class="data-row"><label>RNC Fiscal:</label> <span id="m-rnc"></span></div>
-                    <div class="data-row"><label>Impuesto Local:</label> <span id="m-tax"></span></div>
-                    <div class="data-row">
-                        <label>Divisa Registrada:</label> 
-                        <span id="m-currency" class="badge-currency-db" style="background: #0ea5e9; color: #fff; padding: 2px 8px; border-radius: 4px; font-weight: 600;"></span>
-                    </div>
-                    <div class="data-row"><label>Ubicación Nodo:</label> <span>Infraestructura Dominicana (AST)</span></div>
+                    <div class="data-row"><label>Impuesto:</label> <span id="m-tax"></span></div>
+                    <div class="data-row"><label>Divisa:</label> <span id="m-currency" class="badge-currency-db"></span></div>
                 </div>
 
                 <div class="info-section full-width">
                     <h4><i class="bi bi-shield-check"></i> Registro Administrativo</h4>
-                    <div class="data-row"><label>Email de Contacto:</label> <span id="m-email"></span></div>
-                    <div class="data-row"><label>Teléfono:</label> <span id="m-phone"></span></div>
+                    <div class="data-row"><label>Email:</label> <span id="m-email"></span></div>
                     <div class="data-row"><label>Dirección:</label> <span id="m-address"></span></div>
                 </div>
-            </div>
-            
-            <div class="modal-footer-info">
-                <i class="bi bi-info-circle"></i> 
-                La divisa mostrada es la primera detectada en la tabla <code>exchange_rates</code> para este nodo.
             </div>
         </div>
     </div>
@@ -225,16 +227,11 @@
            document.getElementById('m-tax').innerText = data.tax_name + ' (' + data.tax_percent + '%)';
            document.getElementById('m-currency').innerText = data.currency_display;
            document.getElementById('m-email').innerText = data.email || 'N/A';
-           document.getElementById('m-phone').innerText = data.phone || 'N/A';
            document.getElementById('m-address').innerText = data.address || 'N/A';
 
-           const reqBox = document.getElementById('m-requested-box');
-           if (data.requested_plan) {
-               reqBox.style.display = 'flex';
-               document.getElementById('m-requested').innerText = data.requested_plan;
-           } else {
-               reqBox.style.display = 'none';
-           }
+           // DINAMISMO: Actualizar la acción del formulario de renovación con el ID correcto
+           const renewForm = document.getElementById('renewForm');
+           renewForm.action = "/superadmin/renew_plan/" + data.id;
 
            document.getElementById('companyModal').style.display = 'flex';
        }
@@ -248,21 +245,13 @@
            if (event.target == modal) closeMasterModal();
        }
 
-       // Buscador en tiempo real
        document.getElementById('masterSearch').addEventListener('input', function(e) {
            const term = e.target.value.toLowerCase();
-           const cards = document.querySelectorAll('.company-card-premium');
-           
-           cards.forEach(card => {
+           document.querySelectorAll('.company-card-premium').forEach(card => {
                const name = card.getAttribute('data-name');
                const rnc = card.getAttribute('data-rnc') || '';
                const admin = card.getAttribute('data-admin').toLowerCase();
-               
-               if (name.includes(term) || rnc.includes(term) || admin.includes(term)) {
-                   card.style.display = 'block';
-               } else {
-                   card.style.display = 'none';
-               }
+               card.style.display = (name.includes(term) || rnc.includes(term) || admin.includes(term)) ? 'block' : 'none';
            });
        });
    </script>
