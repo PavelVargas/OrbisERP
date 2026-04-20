@@ -372,7 +372,6 @@
 }
 
 .nav-item:hover {
-    background: var(--bg-hover);
     color: var(--text-primary);
 }
 
