@@ -149,7 +149,7 @@ body {
 
 .card-inner {
     background: var(--bg-card);
-    border-radius: 30px;
+    border-radius: 8px;
     padding: 25px;
     border: 1px solid var(--border);
     transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -215,4 +215,3 @@ body {
     width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
     border-radius: 10px; text-decoration: none; color: var(--text-dim); transition: 0.2s; border: none; cursor: pointer;
 }
-.act-btn:hover { background: var(--bg-card); color: var(--primary); transform: scale(1.1); }

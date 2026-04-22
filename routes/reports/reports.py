@@ -7,6 +7,7 @@ from flask import (
     url_for, Response, send_file, request, flash
 )
 from sqlalchemy import func, extract, and_, or_
+from sqlalchemy.orm import joinedload
 from fpdf import FPDF
 
 from db import db
@@ -16,14 +17,14 @@ from models.products.products import Product
 from models.user.user import User
 from models.divisas.divisas import ExchangeRate
 
-# Configuración de Logging para Auditoría
+# Configuración de Logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 reports_bp = Blueprint('reports_bp', __name__, url_prefix='/reports')
 
 # ==============================================================================
-# CLASE BASE PARA PDF CORPORATIVO (ESTILO ORBIS)
+# CLASE BASE PARA PDF CORPORATIVO (MEJORADA)
 # ==============================================================================
 
 class OrbisPDF(FPDF):
@@ -33,8 +34,13 @@ class OrbisPDF(FPDF):
         self.report_type = "Reporte General"
 
     def header(self):
+        # Color de fondo superior decorativo
+        self.set_fill_color(250, 162, 0) # Naranja Orbis
+        self.rect(0, 0, 210, 10, 'F')
+        
+        self.set_y(15)
         self.set_font("helvetica", "B", 18)
-        self.set_text_color(250, 162, 0) # Naranja Orbis
+        self.set_text_color(40, 40, 40)
         self.cell(0, 12, "ORBIS ERP", ln=True, align="L")
         
         self.set_font("helvetica", "B", 10)
@@ -49,8 +55,8 @@ class OrbisPDF(FPDF):
         
         self.set_draw_color(250, 162, 0)
         self.set_line_width(0.5)
-        self.line(10, 35, 200, 35)
-        self.ln(12)
+        self.line(10, 42, 200, 42)
+        self.ln(15)
 
     def footer(self):
         self.set_y(-15)
@@ -64,7 +70,7 @@ class OrbisPDF(FPDF):
         return str(text).encode('latin-1', 'ignore').decode('latin-1')
 
 # ==============================================================================
-# UTILIDADES DE SOPORTE
+# UTILIDADES DE SOPORTE (TU LÓGICA ORIGINAL)
 # ==============================================================================
 
 def get_company_context():
@@ -73,8 +79,6 @@ def get_company_context():
         return None, None, Decimal('1.0')
 
     selected_currency = session.get('selected_currency', 'DOP')
-
-    # Búsqueda corregida: sin 'is_active' para evitar InvalidRequestError
     exchange = db.session.query(ExchangeRate).filter_by(
         company_id=company_id,
         currency_code=selected_currency
@@ -109,7 +113,7 @@ def build_pdf_response(pdf_obj, filename_prefix):
         return redirect(url_for('reports_bp.index'))
 
 # ==============================================================================
-# VISTAS (ROUTES)
+# VISTAS (RESTABLECIDAS Y MEJORADAS)
 # ==============================================================================
 
 @reports_bp.route('/')
@@ -122,7 +126,6 @@ def index():
     start_date = today.replace(day=1, hour=0, minute=0, second=0)
 
     try:
-        # Ventas Netas convertidas
         raw_sales = db.session.query(func.sum(Sale.total)).filter(
             Sale.company_id == company_id,
             Sale.status == 'COMPLETED',
@@ -132,7 +135,8 @@ def index():
 
         low_stock_count = Product.query.filter(Product.company_id == company_id, Product.stocks <= 5).count()
 
-        recent_closings = CashClosing.query.filter_by(company_id=company_id)\
+        # Mejora: joinedload para cargar el usuario de una vez
+        recent_closings = CashClosing.query.options(joinedload(CashClosing.user)).filter_by(company_id=company_id)\
             .order_by(CashClosing.closing_date.desc()).limit(8).all()
 
         chart_data, chart_labels = [], []
@@ -148,7 +152,7 @@ def index():
             ).scalar() or 0
             
             chart_data.append(float(Decimal(str(daily_sum_raw)) / conversion_rate))
-            chart_labels.append(day.strftime('%a'))
+            chart_labels.append(day.strftime('%a %d'))
 
     except Exception as e:
         logger.error(f"Error Dashboard: {e}")
@@ -171,7 +175,7 @@ def export_sales_pdf():
     company_id, sym, rate = get_company_context()
     if not company_id: return redirect(url_for('login_bp.login'))
 
-    sales = Sale.query.filter_by(company_id=company_id, status='COMPLETED')\
+    sales = Sale.query.options(joinedload(Sale.client)).filter_by(company_id=company_id, status='COMPLETED')\
         .order_by(Sale.created_at.desc()).all()
 
     pdf = OrbisPDF()
@@ -179,7 +183,6 @@ def export_sales_pdf():
     pdf.report_type = f"Ventas y Clientes ({sym})"
     pdf.add_page()
 
-    # Tabla Header
     pdf.set_fill_color(240, 240, 240)
     pdf.set_font("helvetica", "B", 9)
     cols = [(30, "Fecha"), (70, "Cliente"), (30, "Metodo"), (30, f"Total {sym}")]
@@ -202,15 +205,17 @@ def export_sales_pdf():
 
     pdf.ln(2)
     pdf.set_font("helvetica", "B", 10)
-    pdf.cell(130, 10, "TOTAL ACUMULADO", 1, 0, 'R')
-    pdf.cell(30, 10, f"{float(grand_total):,.2f}", 1, 1, 'R')
+    pdf.set_fill_color(250, 162, 0)
+    pdf.set_text_color(255, 255, 255)
+    pdf.cell(130, 10, " TOTAL ACUMULADO DEL PERIODO ", 0, 0, 'R', True)
+    pdf.cell(30, 10, f" {float(grand_total):,.2f} ", 0, 1, 'R', True)
 
     return build_pdf_response(pdf, "Auditoria_Ventas")
 
 @reports_bp.route('/export/pdf/cash')
 def export_cash_pdf():
     company_id, sym, _ = get_company_context()
-    closings = CashClosing.query.filter_by(company_id=company_id).order_by(CashClosing.closing_date.desc()).all()
+    closings = CashClosing.query.options(joinedload(CashClosing.user)).filter_by(company_id=company_id).order_by(CashClosing.closing_date.desc()).all()
 
     pdf = OrbisPDF()
     pdf.alias_nb_pages()
@@ -239,8 +244,14 @@ def export_cash_pdf():
         pdf.cell(40, 8, f"{sys_amt:,.2f}", 1, 0, 'R')
         pdf.cell(40, 8, f"{real_amt:,.2f}", 1, 0, 'R')
         
-        pdf.set_text_color(200, 0, 0) if abs(diff) > 0.01 else pdf.set_text_color(0, 150, 0)
-        pdf.cell(35, 8, f"{diff:,.2f}" if abs(diff) > 0.01 else "OK", 1, 0, 'R')
+        if abs(diff) > 0.01:
+            pdf.set_text_color(200, 0, 0)
+            diff_text = f"{diff:,.2f}"
+        else:
+            pdf.set_text_color(0, 150, 0)
+            diff_text = "OK"
+            
+        pdf.cell(35, 8, diff_text, 1, 0, 'R')
         pdf.set_text_color(0)
         pdf.cell(35, 8, f" {pdf.safe_text(user[:15])}", 1, 1)
 
@@ -249,7 +260,7 @@ def export_cash_pdf():
 @reports_bp.route('/export/csv')
 def export_csv():
     company_id, sym, rate = get_company_context()
-    sales = Sale.query.filter_by(company_id=company_id).all()
+    sales = Sale.query.options(joinedload(Sale.client)).filter_by(company_id=company_id).all()
 
     def generate():
         yield '\ufeffID_VENTA,FECHA,CLIENTE,MONEDA,TOTAL_ORIGINAL,TOTAL_CONVERTIDO,ESTADO\n'
@@ -284,21 +295,17 @@ def monthly_history():
 def inventory_health():
     company_id, _, _ = get_company_context()
     products = Product.query.filter_by(company_id=company_id).all()
-    total_value = sum((p.stocks * p.purchase_price) for p in products if p.purchase_price)
+    total_value = sum((p.stocks * (p.purchase_price or 0)) for p in products)
     return render_template('reports/inventory_health.html', products=products, total_value=total_value)
 
 @reports_bp.route('/closings-history')
 def closings_history():
     company_id, currency_symbol, rate = get_company_context()
-    
-    if not company_id:
-        return redirect(url_for('login_bp.login'))
+    if not company_id: return redirect(url_for('login_bp.login'))
 
-    # 2. Buscamos los cierres
-    closings = CashClosing.query.filter_by(company_id=company_id)\
+    closings = CashClosing.query.options(joinedload(CashClosing.user)).filter_by(company_id=company_id)\
         .order_by(CashClosing.closing_date.desc()).all()
 
-    # 3. Pasamos TODO al HTML
     return render_template(
         'reports/closings_history.html', 
         closings=closings, 

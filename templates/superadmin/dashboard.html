@@ -1,259 +1,257 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="dark" class="dark">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Oracle | OrbisERP Infrastructure</title>
-    
+    <title>Master Oracle | OrbisERP</title>
+    <script>
+        (function() {
+            const t = localStorage.getItem('orbis-theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/base_css/base.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/superadmin_css/superadmin.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body class="master-theme">
+<body>
 
-    <header class="auth-nav">
-        <a href="/" class="nav-logo">
-            <div class="logo-icon"><i class="bi bi-intersect"></i></div>
-            <span>Orbis<strong>ERP</strong> <small>Master Node</small></span>
+<nav class="topbar">
+    <a href="/" class="brand">
+        <div class="brand-icon"><i class="bi bi-intersect"></i></div>
+        <div class="brand-name">OrbisERP <strong>Master</strong><small>Master Node · System Level 0</small></div>
+    </a>
+    <div class="tb-right">
+        <div class="live-badge"><div class="live-dot"></div>Infraestructura Online · AST</div>
+        <button id="themeBtn" class="btn-sm">
+            <i id="themeIco"></i>
+            <span id="themeTxt"></span>
+        </button>
+        <a href="{{ url_for('login_bp.logout') }}" class="btn-sm"><i class="bi bi-box-arrow-right"></i> Salir</a>
+    </div>
+</nav>
+
+<div class="hero">
+    <div>
+        <div class="hero-eyebrow">PANEL MAESTRO</div>
+        <h1>Control de nodos</h1>
+        <p>Gestión centralizada de empresas · Auditoría de suscripciones</p>
+    </div>
+    <div class="kpis">
+        <a href="{{ url_for('superadmin_bp.view_payments') }}" class="kpi-link" title="Ver pagos pendientes">
+            <div class="kpi">
+                <label>PAGOS</label>
+                <div class="v kpi-icon"><i class="bi bi-wallet2"></i></div>
+                {% set pc = companies|selectattr('receipt_status','equalto','PENDING')|list|length %}
+                {% if pc > 0 %}<span class="notif">{{ pc }}</span>{% endif %}
+            </div>
         </a>
-        <div class="nav-actions">
-            <div class="server-status">
-                <span class="pulse-dot"></span>
-                <small>Infraestructura Online (Dominicana - AST)</small>
+        <div class="kpi">
+            <label>NODOS</label>
+            <div class="v">{{ companies|length }}</div>
+        </div>
+        <div class="kpi">
+            <label>USUARIOS</label>
+            <div class="v">{{ total_users }}</div>
+        </div>
+        <a href="{{ url_for('login_bp.logout') }}" class="btn-exit" title="Cerrar sesión master">
+            <i class="bi bi-power"></i>
+        </a>
+    </div>
+</div>
+
+<div class="toolbar">
+    <div class="searchbar">
+        <i class="bi bi-terminal"></i>
+        <input type="text" id="srch" placeholder="Filtrar por RNC, nombre o email administrativo...">
+    </div>
+</div>
+
+<div class="grid" id="grid">
+    {% for c in companies %}
+    <article class="nc"
+             data-name="{{ c.name|lower }}"
+             data-rnc="{{ c.rnc }}"
+             data-admin="{{ c.email }}">
+
+        <div class="nc-head">
+            <div class="nc-logo">
+                {% if c.logo %}
+                    <img src="{{ url_for('static', filename=c.logo) }}" alt="">
+                {% else %}
+                    <i class="bi bi-building" style="font-size:18px;color:var(--tx3)"></i>
+                {% endif %}
             </div>
-            <button id="themeToggle" class="theme-switch">
-                <i class="bi bi-sun-fill" id="themeIcon"></i>
-                <span id="themeText">Modo Claro</span>
+            <div class="nc-meta">
+                <div class="nc-nodeid">#NODE-{{ '%03d' % c.id }}</div>
+                <div class="nc-name">{{ c.name }}</div>
+            </div>
+            <div class="nc-badges">
+                <span class="pill {{ 'pill-online' if c.status else 'pill-offline' }}">
+                    {{ 'Online' if c.status else 'Offline' }}
+                </span>
+                <span class="pill {{ 'pill-ultra' if c.plan_name == 'ULTRA' else 'pill-pro' if c.plan_name == 'PRO' else 'pill-basic' }}">
+                    {{ c.plan_name }}
+                </span>
+            </div>
+        </div>
+
+        <div class="nc-body">
+            <div class="rnc-tag"><i class="bi bi-qr-code" style="font-size:11px"></i> RNC: {{ c.rnc or 'N/A' }}</div>
+            <div class="nc-data">
+                <div class="nd">
+                    <label>MONEDA</label>
+                    <span>{{ c.display_currency_code or 'N/A' }}</span>
+                </div>
+                <div class="nd">
+                    <label>VENCIMIENTO</label>
+                    <span>{{ c.expiration_date.strftime("%d/%m/%Y") if c.expiration_date else "N/A" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="nc-foot">
+            <a href="{{ url_for('superadmin_bp.impersonate', company_id=c.id) }}" class="btn-tech">
+                <i class="bi bi-shield-lock-fill" style="font-size:12px"></i> ACCESO TÉCNICO
+            </a>
+
+            {% if not c.status %}
+            <form action="{{ url_for('superadmin_bp.renew_plan', id=c.id) }}" method="POST" style="display:contents">
+                <button type="submit" class="bic ok" title="Renovar plan"><i class="bi bi-arrow-repeat"></i></button>
+            </form>
+            {% endif %}
+
+            <button type="button" class="bic inf"
+                onclick='openModal({{ {
+                    "id": c.id, "name": c.name, "rnc": c.rnc, "status": c.status,
+                    "email": c.email, "address": c.address,
+                    "tax_name": c.tax_name, "tax_percent": c.tax_percent,
+                    "currency": c.display_currency_code + " (" + c.display_currency_symbol + ")",
+                    "expiry": c.expiration_date.strftime("%d/%m/%Y") if c.expiration_date else "N/A",
+                    "plan": c.plan_name
+                }|tojson }})'
+                title="Inspeccionar">
+                <i class="bi bi-eye"></i>
             </button>
+
+            <form action="{{ url_for('superadmin_bp.toggle_status', id=c.id) }}" method="POST" style="display:contents">
+                <button type="submit" class="bic" title="Toggle estado"><i class="bi bi-power"></i></button>
+            </form>
+
+            <form action="{{ url_for('superadmin_bp.delete_company', id=c.id) }}" method="POST"
+                  onsubmit="return confirm('¿Eliminar #NODE-{{ '%03d' % c.id }} permanentemente?')"
+                  style="display:contents">
+                <button type="submit" class="bic del" title="Eliminar"><i class="bi bi-trash3"></i></button>
+            </form>
         </div>
-    </header>
+    </article>
+    {% endfor %}
 
-    <main class="content-container">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, message in messages %}
-              <div class="alert alert-{{ category }} flash-msg" style="padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid;">
-                {{ message }}
-              </div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
+    <div class="empty-state" id="empty">
+        <i class="bi bi-search"></i>
+        <p>Ningún nodo coincide con la búsqueda</p>
+    </div>
+</div>
 
-        <div class="master-header-grid">
-            <div class="welcome-box">
-                <span class="badge-root">System Level: 0</span>
-                <h2>Panel Maestro de Control</h2>
-                <p>Gestión centralizada de nodos empresariales y auditoría de suscripciones.</p>
+<!-- MODAL -->
+<div id="modalBg" class="modal-bg">
+    <div class="modal">
+        <div class="mhead">
+            <div>
+                <div class="ey">AUDIT LOG VIEWER</div>
+                <h2 id="m-name">—</h2>
             </div>
-            
-            <div class="stats-mini-grid">
-                <a href="{{ url_for('superadmin_bp.view_payments') }}" class="stat-mini btn-payment-hub" title="Ver Solicitudes de Pago">
-                    <label>Pagos Pendientes</label>
-                    <div class="value">
-                        <i class="bi bi-wallet2"></i>
-                        {% set pending_count = companies|selectattr('receipt_status', 'equalto', 'PENDING')|list|length %}
-                        {% if pending_count > 0 %}
-                            <span class="payment-badge">{{ pending_count }}</span>
-                        {% endif %}
-                    </div>
-                </a>
-
-                <div class="stat-mini">
-                    <label>Nodos Activos</label>
-                    <div class="value">{{ companies|length }}</div>
-                </div>
-                
-                <div class="stat-mini">
-                    <label>Usuarios Totales</label>
-                    <div class="value">{{ total_users }}</div>
-                </div>
-
-                <a href="{{ url_for('login_bp.logout') }}" class="exit-gate" title="Cerrar Sesión Master">
-                    <i class="bi bi-power"></i>
-                </a>
-            </div>
+            <button class="close-m" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
         </div>
-
-        <div class="search-command-bar">
-            <i class="bi bi-terminal"></i>
-            <input type="text" id="masterSearch" placeholder="Filtrar por RNC, Nombre o Email Administrativo...">
-        </div>
-
-        <section class="company-bento-grid" id="masterGrid">
-            {% for company in companies %}
-            <article class="company-card-premium" 
-                     data-name="{{ company.name|lower }}" 
-                     data-rnc="{{ company.rnc }}" 
-                     data-admin="{{ company.email }}">
-                
-                <div class="card-inner">
-                    <div class="plan-badge-mini {{ 'ultra' if company.plan_name == 'ULTRA' else '' }}">
-                        <i class="bi bi-gem"></i> {{ company.plan_name }}
-                    </div>
-
-                    <div class="card-top">
-                        <div class="logo-box">
-                            {% if company.logo %}
-                                <img src="{{ url_for('static', filename=company.logo) }}" alt="Logo">
-                            {% else %}
-                                <i class="bi bi-building"></i>
-                            {% endif %}
-                        </div>
-                        <div class="status-indicator {{ 'active' if company.status else 'inactive' }}">
-                            <div class="dot"></div>
-                            <span>{{ 'Online' if company.status else 'Suspended' }}</span>
-                        </div>
-                    </div>
-
-                    <div class="card-middle">
-                        <div class="id-tag">#NODE-{{ company.id }}</div>
-                        <h3>{{ company.name }}</h3>
-                        <div class="rnc-pill"><i class="bi bi-qr-code"></i> RNC: {{ company.rnc or 'N/A' }}</div>
-                    </div>
-
-                    <div class="card-data-grid">
-                        <div class="data-cell">
-                            <label>Moneda DB</label>
-                            <span class="currency-highlight">
-                                <i class="bi bi-cash-stack"></i> {{ company.display_currency_code }}
-                            </span>
-                        </div>
-                        <div class="data-cell">
-                            <label>Vencimiento</label>
-                            <span style="font-weight: 700;">{{ company.expiration_date.strftime("%d/%m/%Y") if company.expiration_date else "N/A" }}</span>
-                        </div>
-                    </div>
-
-                    <div class="card-footer">
-                        <a href="{{ url_for('superadmin_bp.impersonate', company_id=company.id) }}" class="btn-main-action">
-                            <i class="bi bi-shield-lock-fill"></i> ACCESO TÉCNICO
-                        </a>
-                        
-                        <div class="mini-actions">
-                            {% if not company.status %}
-                            <form action="{{ url_for('superadmin_bp.renew_plan', id=company.id) }}" method="POST">
-                                <button type="submit" class="btn-icon-alt success" title="Renovar Plan Ahora">
-                                    <i class="bi bi-arrow-repeat"></i>
-                                </button>
-                            </form>
-                            {% endif %}
-
-                            <button type="button" class="btn-icon-alt info" 
-                                    onclick='openMasterModal({{ {
-                                        "id": company.id,
-                                        "name": company.name,
-                                        "rnc": company.rnc,
-                                        "status": company.status,
-                                        "email": company.email,
-                                        "phone": company.phone,
-                                        "address": company.address,
-                                        "tax_name": company.tax_name,
-                                        "tax_percent": company.tax_percent,
-                                        "currency_display": company.display_currency_code + " (" + company.display_currency_symbol + ")",
-                                        "expiration_date": company.expiration_date.strftime("%d/%m/%Y") if company.expiration_date else "N/A",
-                                        "plan_name": company.plan_name,
-                                        "requested_plan": company.requested_plan
-                                    }|tojson }})'
-                                    title="Inspeccionar">
-                                <i class="bi bi-eye"></i>
-                            </button>
-
-                            <form action="{{ url_for('superadmin_bp.toggle_status', id=company.id) }}" method="POST">
-                                <button type="submit" class="btn-icon-alt" title="Toggle Power"><i class="bi bi-power"></i></button>
-                            </form>
-                            
-                            <form action="{{ url_for('superadmin_bp.delete_company', id=company.id) }}" method="POST" onsubmit="return confirm('¿Eliminar nodo permanentemente?')">
-                                <button type="submit" class="btn-icon-alt danger"><i class="bi bi-trash3"></i></button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </article>
-            {% endfor %}
-        </section>
-    </main>
-
-    <div id="companyModal" class="master-modal">
-        <div class="modal-content-premium">
-            <div class="modal-header">
-                <div>
-                    <span class="badge-root">Audit Log Viewer</span>
-                    <h2 id="m-name">Cargando...</h2>
-                </div>
-                <button class="close-modal" onclick="closeMasterModal()">&times;</button>
+        <div class="mbody">
+            <div class="mp">
+                <h4>NODO Y SUSCRIPCIÓN</h4>
+                <div class="dr"><label>ID interno</label><span id="m-id"></span></div>
+                <div class="dr"><label>Estado</label><span id="m-status"></span></div>
+                <div class="dr"><label>Vencimiento</label><span id="m-expiry"></span></div>
+                <div class="dr"><label>Plan activo</label><span class="tag-p" id="m-plan"></span></div>
+                <form id="renewForm" method="POST">
+                    <button type="submit" class="btn-renew"><i class="bi bi-arrow-repeat"></i> Renovar plan (30 días)</button>
+                </form>
             </div>
-            
-            <div class="modal-body-grid">
-                <div class="info-section">
-                    <h4><i class="bi bi-cpu"></i> Nodo & Suscripción</h4>
-                    <div class="data-row"><label>ID Interno:</label> <span id="m-id"></span></div>
-                    <div class="data-row"><label>Estatus:</label> <span id="m-status"></span></div>
-                    <div class="data-row"><label>Vencimiento:</label> <span id="m-expiry"></span></div>
-                    <div class="data-row"><label>Plan:</label> <span id="m-plan" style="color: #faa200; font-weight: 800;"></span></div>
-                    
-                    <form id="renewForm" method="POST" style="margin-top: 15px;">
-                        <button type="submit" class="btn-main-action" style="background: #10b981; border: none; width: 100%; justify-content: center;">
-                            <i class="bi bi-arrow-repeat"></i> RENOVAR PLAN (30 DÍAS)
-                        </button>
-                    </form>
-                </div>
-
-                <div class="info-section">
-                    <h4><i class="bi bi-globe-americas"></i> Contexto Regional</h4>
-                    <div class="data-row"><label>RNC Fiscal:</label> <span id="m-rnc"></span></div>
-                    <div class="data-row"><label>Impuesto:</label> <span id="m-tax"></span></div>
-                    <div class="data-row"><label>Divisa:</label> <span id="m-currency" class="badge-currency-db"></span></div>
-                </div>
-
-                <div class="info-section full-width">
-                    <h4><i class="bi bi-shield-check"></i> Registro Administrativo</h4>
-                    <div class="data-row"><label>Email:</label> <span id="m-email"></span></div>
-                    <div class="data-row"><label>Dirección:</label> <span id="m-address"></span></div>
-                </div>
+            <div class="mp">
+                <h4>CONTEXTO REGIONAL</h4>
+                <div class="dr"><label>RNC fiscal</label><span id="m-rnc"></span></div>
+                <div class="dr"><label>Impuesto</label><span id="m-tax"></span></div>
+                <div class="dr"><label>Divisa</label><span class="tag-c" id="m-currency"></span></div>
+            </div>
+            <div class="mp full">
+                <h4>REGISTRO ADMINISTRATIVO</h4>
+                <div class="dr"><label>Email</label><span id="m-email"></span></div>
+                <div class="dr"><label>Dirección</label><span id="m-address"></span></div>
             </div>
         </div>
     </div>
+</div>
 
-   <script src="/static/js/superadmin.js"></script>
-   <script>
-       function openMasterModal(data) {
-           document.getElementById('m-name').innerText = data.name;
-           document.getElementById('m-id').innerText = data.id;
-           document.getElementById('m-status').innerText = data.status ? 'Activo' : 'Suspendido';
-           document.getElementById('m-expiry').innerText = data.expiration_date;
-           document.getElementById('m-plan').innerText = data.plan_name;
-           document.getElementById('m-rnc').innerText = data.rnc || 'N/A';
-           document.getElementById('m-tax').innerText = data.tax_name + ' (' + data.tax_percent + '%)';
-           document.getElementById('m-currency').innerText = data.currency_display;
-           document.getElementById('m-email').innerText = data.email || 'N/A';
-           document.getElementById('m-address').innerText = data.address || 'N/A';
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-wrap">
+    {% for cat, msg in messages %}
+    <div class="flash {{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
 
-           // DINAMISMO: Actualizar la acción del formulario de renovación con el ID correcto
-           const renewForm = document.getElementById('renewForm');
-           renewForm.action = "/superadmin/renew_plan/" + data.id;
+<script>
+    // ── TEMA ──────────────────────────────────────────────────────────────
+    // El snippet del <head> ya aplicó el tema al HTML antes de pintar.
+    // Aquí solo sincronizamos el botón y manejamos el click.
+    function applyThemeUI(isDark) {
+        document.getElementById('themeIco').className = isDark ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
+        document.getElementById('themeTxt').textContent = isDark ? 'Modo claro' : 'Modo oscuro';
+    }
 
-           document.getElementById('companyModal').style.display = 'flex';
-       }
+    let dark = (localStorage.getItem('orbis-theme') || 'dark') === 'dark';
+    applyThemeUI(dark);
 
-       function closeMasterModal() {
-           document.getElementById('companyModal').style.display = 'none';
-       }
+    document.getElementById('themeBtn').addEventListener('click', () => {
+        dark = !dark;
+        const theme = dark ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('orbis-theme', theme);
+        applyThemeUI(dark);
+    });
 
-       window.onclick = function(event) {
-           const modal = document.getElementById('companyModal');
-           if (event.target == modal) closeMasterModal();
-       }
+    // ── MODAL ─────────────────────────────────────────────────────────────
+    function openModal(d) {
+        document.getElementById('m-name').textContent = d.name;
+        document.getElementById('m-id').textContent = '#NODE-' + String(d.id).padStart(3, '0');
+        document.getElementById('m-status').textContent = d.status ? 'Activo' : 'Suspendido';
+        document.getElementById('m-expiry').textContent = d.expiry;
+        document.getElementById('m-plan').textContent = d.plan;
+        document.getElementById('m-rnc').textContent = d.rnc || 'N/A';
+        document.getElementById('m-tax').textContent = d.tax_name + ' (' + d.tax_percent + '%)';
+        document.getElementById('m-currency').textContent = d.currency;
+        document.getElementById('m-email').textContent = d.email || 'N/A';
+        document.getElementById('m-address').textContent = d.address || 'N/A';
+        document.getElementById('renewForm').action = '/superadmin/renew_plan/' + d.id;
+        document.getElementById('modalBg').classList.add('open');
+    }
+    function closeModal() { document.getElementById('modalBg').classList.remove('open'); }
+    document.getElementById('modalBg').addEventListener('click', e => {
+        if (e.target === e.currentTarget) closeModal();
+    });
 
-       document.getElementById('masterSearch').addEventListener('input', function(e) {
-           const term = e.target.value.toLowerCase();
-           document.querySelectorAll('.company-card-premium').forEach(card => {
-               const name = card.getAttribute('data-name');
-               const rnc = card.getAttribute('data-rnc') || '';
-               const admin = card.getAttribute('data-admin').toLowerCase();
-               card.style.display = (name.includes(term) || rnc.includes(term) || admin.includes(term)) ? 'block' : 'none';
-           });
-       });
-   </script>
+    // ── BÚSQUEDA ──────────────────────────────────────────────────────────
+    document.getElementById('srch').addEventListener('input', function() {
+        const t = this.value.toLowerCase();
+        let n = 0;
+        document.querySelectorAll('.nc').forEach(c => {
+            const ok = (c.dataset.name || '').includes(t) ||
+                       (c.dataset.rnc || '').includes(t) ||
+                       (c.dataset.admin || '').toLowerCase().includes(t);
+            c.style.display = ok ? '' : 'none';
+            if (ok) n++;
+        });
+        document.getElementById('empty').style.display = n ? 'none' : 'block';
+    });
+</script>
 </body>
 </html>

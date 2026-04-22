@@ -254,7 +254,7 @@ main.dashboard {
 }
 
 .kpi-value {
-    font-size: 20px;
+    font-size: 17px;
     font-weight: 600;
     letter-spacing: -.025em;
     color: var(--text-main);
@@ -501,8 +501,6 @@ main.dashboard {
 .data-table tbody tr {
     transition: background .15s;
 }
-
-.data-table tbody tr:hover { background: var(--bg-hover); }
 
 .data-table tbody td {
     padding: 13px 10px;

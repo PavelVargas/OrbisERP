@@ -1,163 +1,263 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="dark" class="dark">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Pagos | OrbisERP</title>
+    
+    <script>
+        (function() {
+            const t = localStorage.getItem('orbis-theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', t);
+            if(t === 'dark') document.documentElement.classList.add('dark');
+        })();
+    </script>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/base_css/base.css">
-    <link rel="stylesheet" href="/static/css/superadmin_css/superadmin.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        .payments-table { width: 100%; border-collapse: separate; border-spacing: 0 10px; margin-top: 2rem; }
-        .payments-table tr { background: var(--card-bg, #151b2c); border: 1px solid var(--border-color, #222d45); transition: 0.3s; }
-        .payments-table td, .payments-table th { padding: 1.2rem; text-align: left; color: #94a3b8; }
-        .payments-table th { text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; color: #64748b; }
-        
-        .status-pill { padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
-        .status-PENDING { background: rgba(250, 162, 0, 0.1); color: #faa200; border: 1px solid #faa200; }
-        .status-APPROVED { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid #22c55e; }
-        
-        .plan-badge { 
-            padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; 
-            background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid rgba(255,255,255,0.1);
-        }
-        .upgrade-indicator { color: #10b981; font-size: 0.9rem; margin: 0 5px; }
-        
-        .receipt-link { color: #38bdf8; text-decoration: none; display: flex; align-items: center; gap: 5px; font-weight: 600; }
-        .receipt-link:hover { filter: brightness(1.2); text-decoration: underline; }
+        /* ── RESET AGRESIVO PARA CENTRADO ABSOLUTO ── */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        /* Estilos para etiquetas de tipo de operación */
-        .op-tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 800; text-transform: uppercase; margin-left: 8px; }
-        .tag-upgrade { background: #10b981; color: #000; }
-        .tag-renewal { background: #3b82f6; color: #fff; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-main) !important;
+            color: var(--text-main);
+            min-height: 100vh;
+            /* Forzamos al body a ser un contenedor que centra a sus hijos */
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+        }
+
+        /* ── TOPBAR (FULL WIDTH) ── */
+        .topbar {
+            height: 64px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100% !important;
+            padding: 0 28px;
+            flex-shrink: 0;
+        }
+        .topbar-content {
+            width: 100%;
+            max-width: 1100px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text-main); font-weight: 700; }
+        .nav-logo i { color: var(--primary); font-size: 1.3rem; }
+
+        /* ── MAIN: ANULACIÓN DE BASE.CSS ── */
+        main {
+            /* Matamos cualquier restricción de base.css */
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            /* Centrado interno */
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            flex-grow: 1;
+        }
+
+        /* ── HERO ── */
+        .hero {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 60px 20px;
+            width: 100% !important;
+            display: flex;
+            justify-content: center;
+        }
+        .hero-inner {
+            width: 100%;
+            max-width: 1100px;
+            text-align: center;
+        }
+        .hero h2 { font-size: 32px; font-weight: 800; margin-bottom: 12px; }
+        .hero p { color: var(--text-muted); font-size: 15px; max-width: 600px; margin: 0 auto; }
+
+        /* ── CONTENEDOR DE TABLA (EL "ANCLA" DEL CENTRADO) ── */
+        .content-container { 
+            width: 100% !important;
+            max-width: 1100px !important;
+            padding: 40px 20px !important;
+            box-sizing: border-box;
+        }
         
-        [data-theme="light"] .payments-table tr { background: #ffffff; border-color: #e2e8f0; }
-        [data-theme="light"] .company-name-text { color: #1e293b !important; }
-        [data-theme="light"] .plan-badge { background: #f1f5f9; color: #475569; }
+        .payments-table { 
+            width: 100%; 
+            border-collapse: separate; 
+            border-spacing: 0 10px; 
+        }
+        .payments-table th { 
+            padding: 10px 20px;
+            text-align: left; 
+            font-size: 11px; 
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        /* ── FILAS ESTILO CARD ── */
+        .payments-table tr td { 
+            background: var(--bg-card); 
+            padding: 18px 20px;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.2s ease;
+        }
+        .payments-table tr td:first-child { border-left: 1px solid var(--border); border-radius: 14px 0 0 14px; }
+        .payments-table tr td:last-child { border-right: 1px solid var(--border); border-radius: 0 14px 14px 0; }
+
+        .payments-table tr:hover td {
+            border-color: var(--primary);
+            background: var(--bg-hover);
+            transform: translateY(-1px);
+        }
+
+        /* ── ELEMENTOS DE INTERFAZ ── */
+        .pill { font-size: 11px; font-weight: 700; padding: 6px 14px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; }
+        .status-PENDING { background: rgba(250, 162, 0, 0.1); color: var(--warning); border: 1px solid rgba(250, 162, 0, 0.2); }
+        .status-APPROVED { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.2); }
+
+        .btn-approve {
+            background: var(--success); color: white; border: none; padding: 10px 20px; border-radius: 8px;
+            font-weight: 700; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+        }
+
+        .btn-theme {
+            background: var(--bg-input); border: 1px solid var(--border); color: var(--text-main);
+            padding: 8px 14px; border-radius: 10px; cursor: pointer; font-size: 12px; 
+            display: flex; align-items: center; gap: 8px;
+        }
     </style>
 </head>
 <body class="master-theme">
-    <header class="auth-nav">
-        <a href="{{ url_for('superadmin_bp.admin_dashboard') }}" class="nav-logo" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px;">
-            <i class="bi bi-arrow-left-circle-fill" style="font-size: 1.5rem; color: #faa200;"></i>
-            <span>Volver al <strong>Panel Maestro</strong></span>
-        </a>
-        <div class="nav-actions">
-            <button id="themeToggle" class="theme-switch">
-                <i class="bi bi-sun-fill" id="themeIcon"></i>
-                <span id="themeText">Modo Oscuro</span>
+    <header class="topbar">
+        <div class="topbar-content">
+            <a href="{{ url_for('superadmin_bp.admin_dashboard') }}" class="nav-logo">
+                <i class="bi bi-arrow-left-circle-fill"></i>
+                <span>Panel Maestro</span>
+            </a>
+            <button id="themeBtn" class="btn-theme">
+                <i id="themeIco"></i>
+                <span id="themeTxt"></span>
             </button>
         </div>
     </header>
 
-    <main class="content-container">
-        <div class="welcome-box">
-            <span class="badge-root">Financial Audit</span>
-            <h2>Solicitudes de Pago</h2>
-            <p>Valida los comprobantes para aplicar cambios de plan y extensiones de licencia.</p>
-        </div>
+    <main>
+        <section class="hero">
+            <div class="hero-inner">
+                <div style="font-size: 10px; font-weight: 800; color: var(--primary); letter-spacing: 1.5px; margin-bottom: 10px;">AUDITORÍA DE PAGOS</div>
+                <h2>Solicitudes Pendientes</h2>
+                <p>Valida los comprobantes para aplicar renovaciones automáticas en los nodos.</p>
+            </div>
+        </section>
 
-        <table class="payments-table">
-            <thead>
-                <tr>
-                    <th>Empresa</th>
-                    <th>Operación / Plan</th>
-                    <th>Estado</th>
-                    <th>Vencimiento Actual</th>
-                    <th>Comprobante</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for company in payments %}
-                <tr>
-                    <td>
-                        <strong class="company-name-text" style="color: white; display: block; font-size: 1.1rem;">{{ company.name }}</strong>
-                        <small style="color: #64748b;">ID: #NODE-{{ company.id }}</small>
-                    </td>
-                    <td>
-                        <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 5px;">
-                            <span class="plan-badge">{{ company.plan_name }}</span>
-                            
-                            {% if company.requested_plan and company.requested_plan != company.plan_name %}
-                                <i class="bi bi-arrow-right upgrade-indicator"></i>
-                                <span class="plan-badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border-color: #10b981;">
-                                    {{ company.requested_plan }}
+        <div class="content-container">
+            <table class="payments-table">
+                <thead>
+                    <tr>
+                        <th>Empresa</th>
+                        <th>Plan / Operación</th>
+                        <th>Estado</th>
+                        <th>Vencimiento</th>
+                        <th>Comprobante</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for company in payments %}
+                    <tr>
+                        <td>
+                            <div style="display: flex; flex-direction: column;">
+                                <strong style="font-size: 15px;">{{ company.name }}</strong>
+                                <span style="color: var(--text-muted); font-size: 11px; font-family: monospace;">#NODE-{{ company.id }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="background: var(--bg-input); border: 1px solid var(--border); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;">
+                                    {{ company.plan_name }}
                                 </span>
-                                <span class="op-tag tag-upgrade">Upgrade</span>
-                            {% else %}
-                                <span class="op-tag tag-renewal">Renovación</span>
-                            {% endif %}
-                        </div>
-                    </td>
-                    <td>
-                        <span class="status-pill status-{{ company.receipt_status }}">
-                            {{ 'PENDIENTE' if company.receipt_status == 'PENDING' else 'APROBADO' }}
-                        </span>
-                    </td>
-                    <td>
-                        <div style="font-size: 0.85rem;">
-                            <i class="bi bi-calendar-event"></i> 
-                            {{ company.expiration_date.strftime('%d/%m/%Y') if company.expiration_date else 'Sin fecha' }}
-                        </div>
-                    </td>
-                    <td>
-                        {% if company.last_receipt_path %}
-                            <a href="{{ url_for('static', filename=company.last_receipt_path) }}" target="_blank" class="receipt-link">
-                                <i class="bi bi-file-earmark-arrow-down-fill"></i> Ver Recibo
+                                {% if company.requested_plan and company.requested_plan != company.plan_name %}
+                                    <i class="bi bi-arrow-right" style="color: var(--success); font-size: 12px;"></i>
+                                    <span style="border: 1px solid var(--success); color: var(--success); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;">
+                                        {{ company.requested_plan }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="pill status-{{ company.receipt_status }}">
+                                <i class="bi {{ 'bi-clock-history' if company.receipt_status == 'PENDING' else 'bi-check-circle-fill' }}"></i>
+                                {{ 'PENDIENTE' if company.receipt_status == 'PENDING' else 'APROBADO' }}
+                            </span>
+                        </td>
+                        <td>
+                            <div style="font-size: 13px;">
+                                <i class="bi bi-calendar-event" style="color: var(--primary); margin-right: 6px;"></i>
+                                {{ company.expiration_date.strftime('%d/%m/%Y') if company.expiration_date else 'N/A' }}
+                            </div>
+                        </td>
+                        <td>
+                            {% if company.last_receipt_path %}
+                            <a href="{{ url_for('static', filename=company.last_receipt_path) }}" target="_blank" style="color: #38bdf8; text-decoration: none; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                                <i class="bi bi-file-earmark-image"></i> Ver Recibo
                             </a>
-                        {% else %}
-                            <span style="color: #475569;"><i class="bi bi-x-circle"></i> Sin archivo</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if company.receipt_status == 'PENDING' %}
-                        <form action="{{ url_for('superadmin_bp.approve_payment', id=company.id) }}" method="POST" onsubmit="return confirm('¿Confirmar aprobación de pago para {{ company.name }}?')">
-                            <button type="submit" class="btn-main-action" style="padding: 10px 20px; font-size: 0.8rem; background: #22c55e; border: none; cursor: pointer; color: white; border-radius: 8px; font-weight: 800;">
-                                <i class="bi bi-check-lg"></i> APROBAR PAGO
-                            </button>
-                        </form>
-                        {% else %}
-                        <span style="color: #22c55e; font-weight: 700;"><i class="bi bi-shield-fill-check"></i> PROCESADO</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                            {% else %}
+                            <span style="color: var(--text-muted); font-size: 12px;">Sin archivo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if company.receipt_status == 'PENDING' %}
+                            <form action="{{ url_for('superadmin_bp.approve_payment', id=company.id) }}" method="POST">
+                                <button type="submit" class="btn-approve">
+                                    <i class="bi bi-check-lg"></i> APROBAR
+                                </button>
+                            </form>
+                            {% else %}
+                            <span style="color: var(--success); font-weight: 800; font-size: 11px; display: flex; align-items: center; gap: 4px;">
+                                <i class="bi bi-shield-fill-check"></i> PROCESADO
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </main>
 
     <script>
-        const html = document.documentElement;
-        const themeBtn = document.getElementById('themeToggle');
-        const themeIcon = document.getElementById('themeIcon');
-        const themeText = document.getElementById('themeText');
-        
-        const updateUI = (isDark) => {
-            if (isDark) {
-                html.classList.add('dark');
-                html.setAttribute('data-theme', 'dark');
-                themeIcon.className = 'bi bi-sun-fill';
-                themeText.innerText = 'Modo Claro';
-            } else {
-                html.classList.remove('dark');
-                html.setAttribute('data-theme', 'light');
-                themeIcon.className = 'bi bi-moon-stars-fill';
-                themeText.innerText = 'Modo Oscuro';
-            }
-        };
+        function applyThemeUI(isDark) {
+            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            if(isDark) document.documentElement.classList.add('dark');
+            else document.documentElement.classList.remove('dark');
+            
+            document.getElementById('themeIco').className = isDark ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
+            document.getElementById('themeTxt').textContent = isDark ? 'Modo claro' : 'Modo oscuro';
+        }
 
-        themeBtn.onclick = () => {
-            const isDark = !html.classList.contains('dark');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            updateUI(isDark);
-        };
+        let dark = (localStorage.getItem('orbis-theme') || 'dark') === 'dark';
+        applyThemeUI(dark);
 
-        window.onload = () => {
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            updateUI(savedTheme === 'dark');
-        };
+        document.getElementById('themeBtn').addEventListener('click', () => {
+            dark = !dark;
+            const theme = dark ? 'dark' : 'light';
+            localStorage.setItem('orbis-theme', theme);
+            applyThemeUI(dark);
+        });
     </script>
 </body>
 </html>

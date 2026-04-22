@@ -20,13 +20,15 @@
     <style>
         :root {
             --ease: cubic-bezier(0.22, 1, 0.36, 1);
+            /* Definimos el tamaño base de la caja aquí para facil ajuste */
+            --icon-box-size: 75px; /* Antes 95px */
         }
 
         /* Reset para pantalla completa */
         main.launchpad-wrapper {
             margin-left: 0 !important;
             width: 100% !important;
-            padding: 40px 20px !important;
+            padding: 20px 15px !important; /* Reducido padding vertical */
             min-height: 100vh !important;
             display: flex !important;
             flex-direction: column !important;
@@ -35,7 +37,7 @@
             flex: 1 !important;
             box-sizing: border-box !important;
             overflow-y: auto;
-            background: radial-gradient(circle at center, rgba(255,255,255,0.02) 0%, transparent 80%);
+            background: radial-gradient(circle at center, rgba(255,255,255,0.015) 0%, transparent 80%);
         }
 
         body {
@@ -47,35 +49,36 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: scale(1.05); }
+            from { opacity: 0; transform: scale(1.03); } /* Escala de animacion menor */
             to { opacity: 1; transform: scale(1); }
         }
 
         .lp-header {
             text-align: center;
-            margin-bottom: 60px;
+            margin-bottom: 35px; /* Reducido de 60px */
             animation: fadeIn 0.5s var(--ease);
         }
 
         .lp-header h1 {
-            font-size: 3.2rem;
+            font-size: 2.4rem; /* Reducido de 3.2rem */
             font-weight: 900;
-            letter-spacing: -3px;
+            letter-spacing: -2px; /* Ajustado tracking */
             margin: 0;
         }
 
         .lp-header h1 span { 
             color: var(--primary); 
-            text-shadow: 0 0 20px rgba(var(--primary-rgb), 0.4);
+            text-shadow: 0 0 15px rgba(var(--primary-rgb), 0.3); /* Brillo más sutil */
         }
 
         /* --- GRID DE APLICACIONES --- */
         .app-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(147px, 1fr));
-            gap: 40px 30px;
+            /* Ajuste de columnas para tamaño más pequeño */
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); /* Antes minmax(147px) */
+            gap: 37px 27px;
             justify-content: center;
-            max-width: 1100px;
+            max-width: 900px; /* Reducido de 1100px */
             width: 100%;
             margin: 0 auto;
             animation: fadeIn 0.6s var(--ease);
@@ -91,16 +94,16 @@
         }
 
         .app-icon-box {
-            width: 95px;
-            height: 95px;
+            width: var(--icon-box-size);
+            height: var(--icon-box-size);
             background-color: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 34px;
+            border-radius: 26px; /* Ajustado proporcionalmente de 34px */
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.8rem;
-            margin-bottom: 12px;
+            font-size: 2.2rem; /* Reducido de 2.8rem */
+            margin-bottom: 8px; /* Reducido de 12px */
             box-shadow: var(--shadow);
             position: relative;
             transition: all 0.4s var(--ease);
@@ -112,40 +115,42 @@
             transition: 0.3s;
         }
 
-        /* Hover dinámico e intenso */
+        /* Hover dinámico e intenso (Mantenido igual) */
         .app-item:hover .app-icon-box {
             border-color: var(--app-color, var(--primary));
             background-color: var(--bg-hover);
-            transform: translateY(-10px) scale(1.05);
+            transform: translateY(-8px) scale(1.04); /* Offset y escala menor */
         }
 
         .app-item:hover .app-icon-box i {
-            filter: drop-shadow(0 0 15px var(--app-color));
-            transform: scale(1.1);
+            filter: drop-shadow(0 0 12px var(--app-color)); /* Brillo ajustado */
+            transform: scale(1.08); /* Escala menor */
         }
 
         .app-label {
-            font-size: 0.85rem;
+            font-size: 0.7rem; /* Reducido de 0.85rem */
             font-weight: 800;
             color: var(--text-muted);
             text-align: center;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             transition: 0.3s;
+            line-height: 1.2; /* Ajuste de línea */
+            max-width: var(--icon-box-size); /* No más ancho que la caja */
         }
 
         .app-item:hover .app-label { 
             color: var(--text-main); 
-            text-shadow: 0 0 8px rgba(255,255,255,0.2);
+            text-shadow: 0 0 5px rgba(255,255,255,0.15);
         }
 
-        /* Controles Superiores */
+        /* Controles Superiores (Más compactos) */
         .top-nav {
             position: fixed;
-            top: 30px;
-            right: 30px;
+            top: 20px; /* Reducido de 30px */
+            right: 20px;
             display: flex;
-            gap: 12px;
+            gap: 10px; /* Reducido de 12px */
             z-index: 999;
         }
 
@@ -153,40 +158,43 @@
             background: var(--bg-card);
             border: 1px solid var(--border);
             color: var(--text-main);
-            width: 45px;
-            height: 45px;
-            border-radius: 14px;
+            width: 38px; /* Reducido de 45px */
+            height: 38px;
+            border-radius: 12px; /* Ajustado */
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: 0.3s;
+            font-size: 0.9rem; /* Icono más pequeño */
         }
 
         .btn-exit {
-            margin: 60px 0;
+            margin: 40px 0; /* Reducido de 60px */
             background: var(--bg-input);
             border: 1px solid var(--border);
             color: var(--text-main);
-            padding: 14px 32px;
+            padding: 10px 24px; /* Reducido de 14px 32px */
             border-radius: 100px;
             text-decoration: none;
             font-weight: 800;
-            font-size: 0.8rem;
+            font-size: 0.7rem; /* Reducido de 0.8rem */
             text-transform: uppercase;
-            letter-spacing: 1.5px;
+            letter-spacing: 1.2px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             transition: 0.3s;
         }
 
-        .btn-exit:hover { background: var(--danger); color: white; border-color: var(--danger); box-shadow: 0 0 20px rgba(var(--danger-rgb), 0.4); }
+        .btn-exit:hover { background: var(--danger); color: white; border-color: var(--danger); box-shadow: 0 0 15px rgba(var(--danger-rgb), 0.3); }
 
+        /* Media queries ajustados */
         @media (max-width: 600px) {
-            .app-grid { grid-template-columns: repeat(2, 1fr); gap: 25px; }
-            .app-icon-box { width: 85px; height: 85px; font-size: 2.2rem; }
-            .lp-header h1 { font-size: 2.2rem; }
+            .app-grid { grid-template-columns: repeat(3, 1fr); gap: 20px 10px; } /* 3 columnas en móvil ahora */
+            .app-icon-box { --icon-box-size: 65px; border-radius: 20px; font-size: 1.8rem; }
+            .lp-header h1 { font-size: 1.8rem; }
+            .app-label { font-size: 0.65rem; }
         }
     </style>
 </head>
@@ -204,7 +212,7 @@
     <main class="launchpad-wrapper">
         <div class="lp-header">
             <h1>Orbis<span>OS</span></h1>
-            <p style="color: var(--text-muted); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; font-size: 0.75rem;">Centro de Operaciones Digitales</p>
+            <p style="color: var(--text-muted); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; font-size: 0.6rem; margin-top: 5px;">Centro de Operaciones Digitales</p>
         </div>
 
         <div class="app-grid" id="mainGrid">
@@ -340,10 +348,10 @@
             }
         });
 
-        // Parallax sutil
+        // Parallax sutil (Ajustado para movimiento menor)
         document.addEventListener('mousemove', (e) => {
-            const moveX = (e.clientX - window.innerWidth / 2) * 0.008;
-            const moveY = (e.clientY - window.innerHeight / 2) * 0.008;
+            const moveX = (e.clientX - window.innerWidth / 2) * 0.004; /* Reducido de 0.008 */
+            const moveY = (e.clientY - window.innerHeight / 2) * 0.004; /* Reducido de 0.008 */
             document.getElementById('mainGrid').style.transform = `translate(${moveX}px, ${moveY}px)`;
         });
     </script>
