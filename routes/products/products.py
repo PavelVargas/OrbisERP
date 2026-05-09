@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, jsonify
-from models.products.products import Product
+from models.products.products import Product, ProductType # <--- Importar ProductType
 from models.category.category import Category
 from models.user.user import User
 from models.warehouse_stock.warehouse_stock import WarehouseStock
@@ -42,10 +42,9 @@ def list_products():
 
     products = query.order_by(Product.created_at.desc()).all()
 
-    # Asegurar que los precios sean float para cálculos en el template
     for p in products:
         p.price = float(p.price)
-        p.cost = float(getattr(p, 'cost', 0.0))
+        p.cost = float(p.cost if p.cost else 0.0)
 
     return render_template(
         'products/products.html',
@@ -56,7 +55,8 @@ def list_products():
         user=user,
         currency_symbol=currency_symbol,
         selected_currency=selected_currency,
-        conversion_rate=conversion_rate
+        conversion_rate=conversion_rate,
+        ProductType=ProductType
     )
 
 @products_bp.route('/create_product', methods=['GET', 'POST'])
@@ -76,20 +76,23 @@ def create_product():
         sku = request.form.get('sku')
         description = request.form.get('description')
         category_id = request.form.get('category_id')
-        stock_inicial = int(request.form.get('stock', 0))
+        
+        # --- NUEVO: Capturar tipo de producto ---
+        type_str = request.form.get('product_type', 'STOCKED')
+        product_type = ProductType[type_str]
+
+        # Solo pedimos stock inicial si NO es un servicio
+        stock_inicial = int(request.form.get('stock', 0)) if product_type != ProductType.SERVICE else 0
 
         try:
-            # Moneda actual y tasa
             selected_currency = session.get('selected_currency', 'DOP')
             rate = float(ExchangeRate.get_rate(selected_currency, company_id) or 1.0)
 
-            # Recibimos valores de la vista (ej. 1.50 USD) y convertimos a base DB (DOP)
             input_price = float(request.form.get('price', 0))
             input_cost = float(request.form.get('cost', 0))
             
             base_price = input_price * rate
             base_cost = input_cost * rate
-
         except (ValueError, TypeError):
             base_price = 0.0
             base_cost = 0.0
@@ -106,25 +109,30 @@ def create_product():
             cost=base_cost, 
             category_id=category_id if category_id else None,
             company_id=company_id,
+            product_type=product_type, # <--- Guardar el tipo
             status=True
         )
 
         db.session.add(product)
         db.session.flush()
 
-        stock = WarehouseStock(
-            product_id=product.id,
-            warehouse_id=warehouse_id,
-            company_id=company_id,
-            quantity=stock_inicial
-        )
-        db.session.add(stock)
+        # --- Lógica de Stock ---
+        # Solo creamos el registro de WarehouseStock si el producto es almacenable
+        if product_type != ProductType.SERVICE:
+            stock = WarehouseStock(
+                product_id=product.id,
+                warehouse_id=warehouse_id,
+                company_id=company_id,
+                quantity=stock_inicial
+            )
+            db.session.add(stock)
+            
         db.session.commit()
 
-        flash(f'Producto "{name}" creado correctamente', 'success')
+        flash(f'Item "{name}" creado correctamente', 'success')
         return redirect(url_for('products_bp.list_products'))
 
-    return render_template('products/create.html', categories=categories, user=user)
+    return render_template('products/create.html', categories=categories, user=user, ProductType=ProductType)
 
 @products_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 def edit_product(id):
@@ -135,7 +143,6 @@ def edit_product(id):
     product = Product.query.filter_by(id=id, company_id=company_id).first_or_404()
     categories = Category.query.filter_by(status=True, company_id=company_id).all()
 
-    # --- LÓGICA DE DIVISA ---
     selected_currency = session.get('selected_currency', 'DOP')
     currency_symbol = session.get('currency_symbol', 'RD$')
     rate = float(ExchangeRate.get_rate(selected_currency, company_id) or 1.0)
@@ -145,25 +152,26 @@ def edit_product(id):
         product.sku = request.form.get('sku')
         product.description = request.form.get('description')
         product.category_id = request.form.get('category_id') or None
+        
+        # Actualizar tipo de producto
+        type_str = request.form.get('product_type')
+        if type_str:
+            product.product_type = ProductType[type_str]
 
         try:
-            # Convertimos lo que entra por el form a la moneda base
             input_price = float(request.form.get('price', 0))
             input_cost = float(request.form.get('cost', 0))
-
             product.price = input_price * rate
             product.cost = input_cost * rate
-        except (ValueError, TypeError, AttributeError):
+        except (ValueError, TypeError):
             pass
 
         db.session.commit()
         flash('Producto actualizado correctamente', 'success')
         return redirect(url_for('products_bp.list_products'))
 
-    # --- PREPARACIÓN PARA LA VISTA (GET) ---
-    # Convertimos los valores de la DB (base) a la moneda de la sesión
     display_price = float(product.price or 0) / rate
-    display_cost = float(getattr(product, 'cost', 0.0) or 0) / rate
+    display_cost = float(product.cost or 0) / rate
 
     return render_template(
         'products/edit.html',
@@ -173,7 +181,8 @@ def edit_product(id):
         currency_symbol=currency_symbol,
         selected_currency=selected_currency,
         display_price=display_price,
-        display_cost=display_cost
+        display_cost=display_cost,
+        ProductType=ProductType
     )
 
 @products_bp.route('/delete_product/<int:id>', methods=['POST'])
@@ -199,11 +208,11 @@ def view_product(id):
     currency_symbol = session.get('currency_symbol', 'RD$')
     rate = float(ExchangeRate.get_rate(selected_currency, company_id) or 1.0)
 
+    # Si es servicio, los stocks estarán vacíos
     stocks = WarehouseStock.query.filter_by(product_id=id, company_id=company_id).all()
 
-    # Conversión para la vista detalle
     display_price = float(product.price or 0) / rate
-    display_cost = float(getattr(product, 'cost', 0.0) or 0) / rate
+    display_cost = float(product.cost or 0) / rate
 
     return render_template(
         'products/detail.html',
@@ -214,7 +223,8 @@ def view_product(id):
         selected_currency=selected_currency,
         display_price=display_price,
         display_cost=display_cost,
-        conversion_rate=rate
+        conversion_rate=rate,
+        ProductType=ProductType
     )
 
 @products_bp.route('/api/get-stock')
@@ -225,6 +235,11 @@ def get_product_stock_api():
 
     if not company_id or not product_id or not warehouse_id:
         return jsonify({'error': 'Faltan parámetros'}), 400
+    
+    # Verificar si el producto es un servicio (los servicios no tienen stock)
+    product = Product.query.get(product_id)
+    if product and product.product_type == ProductType.SERVICE:
+        return jsonify({'product_id': product_id, 'warehouse_id': warehouse_id, 'stock': 0})
 
     stock_record = WarehouseStock.query.filter_by(
         product_id=product_id,
@@ -247,6 +262,8 @@ def product_stock_detail(id):
 
     user = User.query.get_or_404(user_id)
     product = Product.query.filter_by(id=id, company_id=company_id).first_or_404()
+    
+    # Si es un servicio, podrías redirigir o mostrar un mensaje de que no aplica
     stocks = WarehouseStock.query.filter_by(product_id=id, company_id=company_id).all()
 
     return render_template(

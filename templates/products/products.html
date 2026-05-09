@@ -8,6 +8,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/products_css/products.css">
     <style>
+        /* Estilos adicionales para los tipos */
+        .type-tag {
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 50px;
+            text-transform: uppercase;
+            margin-right: 5px;
+        }
+        .type-stocked { background: rgba(52, 152, 219, 0.1); color: #3498db; border: 1px solid #3498db; }
+        .type-service { background: rgba(155, 89, 182, 0.1); color: #9b59b6; border: 1px solid #9b59b6; }
+        .type-consumable { background: rgba(243, 156, 18, 0.1); color: #f39c12; border: 1px solid #f39c12; }
+
         .rate-info-badge {
             background: rgba(52, 152, 219, 0.1);
             border: 1px solid rgba(52, 152, 219, 0.2);
@@ -57,7 +70,7 @@
         <header class="page-header">
             <div class="title-group">
                 <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
-                    <h2 style="margin: 0; font-family: 'Plus Jakarta Sans'; font-weight: 800;">Productos</h2>
+                    <h2 style="margin: 0; font-family: 'Plus Jakarta Sans'; font-weight: 800;">Catálogo de Items</h2>
                     <div class="rate-info-badge">
                         <i class="bi bi-info-circle-fill"></i>
                         <span class="rate-text">
@@ -69,10 +82,10 @@
                         </span>
                     </div>
                 </div>
-                <p>Gestiona los precios, SKU y existencias globales en tiempo real.</p>
+                <p>Gestione productos físicos, servicios y consumibles de su empresa.</p>
             </div>
             <a href="{{ url_for('products_bp.create_product') }}" class="btn-primary">
-                <i class="bi bi-plus-lg"></i> Nuevo Producto
+                <i class="bi bi-plus-lg"></i> Nuevo Registro
             </a>
         </header>
 
@@ -104,9 +117,20 @@
             <div class="product-card">
                 <a href="{{ url_for('products_bp.view_product', id=product.id) }}" class="card-link-wrapper">
                     <div class="card-top">
-                        <span class="sku-tag">#{{ product.sku }}</span>
+                        <div style="display: flex; gap: 5px; align-items: center;">
+                            <!-- Etiqueta de Tipo -->
+                            {% if product.product_type.name == 'SERVICE' %}
+                                <span class="type-tag type-service">Servicio</span>
+                            {% elif product.product_type.name == 'CONSUMABLE' %}
+                                <span class="type-tag type-consumable">Consumible</span>
+                            {% else %}
+                                <span class="type-tag type-stocked">Stock</span>
+                            {% endif %}
+                            <span class="sku-tag">#{{ product.sku }}</span>
+                        </div>
                         <span class="cat-tag">{{ product.category.name if product.category else "Sin categoría" }}</span>
                     </div>
+                    
                     <div class="card-body">
                         <div class="product-name">{{ product.name }}</div>
                         
@@ -115,7 +139,6 @@
                                 <span class="currency" style="color: #faa200; font-weight: 800; font-size: 0.8rem;">
                                     {{ currency_symbol }}
                                 </span>
-                                
                                 <span class="amount" style="font-size: 1.4rem; font-weight: 800; color: var(--text-main, #ffffff);">
                                     {{ "{:,.2f}".format(product.price / conversion_rate) }}
                                 </span>
@@ -127,19 +150,18 @@
                                 Margen: {{ currency_symbol }} {{ "{:,.2f}".format((product.price - product.cost) / conversion_rate) }}
                             </div>
                             {% endif %}
-
-                            <span class="conversion-note">
-                                {% if selected_currency != 'DOP' %}
-                                    <i class="bi bi-arrow-repeat"></i> {{ selected_currency }} (Tasa: {{ conversion_rate }})
-                                {% else %}
-                                    Precio Base (Pesos)
-                                {% endif %}
-                            </span>
                         </div>
 
-                        <div class="stock-status {% if product.total_stock > 10 %}st-ok{% elif product.total_stock > 0 %}st-low{% else %}st-out{% endif %}">
-                            <i class="bi bi-archive"></i> Stock: {{ product.total_stock }}
-                        </div>
+                        <!-- Lógica de Stock condicional -->
+                        {% if product.product_type.name == 'SERVICE' %}
+                            <div class="stock-status" style="background: rgba(155, 89, 182, 0.1); color: #9b59b6; border: none;">
+                                <i class="bi bi-tools"></i> Servicio Activo
+                            </div>
+                        {% else %}
+                            <div class="stock-status {% if product.total_stock > 10 %}st-ok{% elif product.total_stock > 0 %}st-low{% else %}st-out{% endif %}">
+                                <i class="bi bi-archive"></i> Stock: {{ product.total_stock }}
+                            </div>
+                        {% endif %}
                     </div>
                 </a>
             </div>
