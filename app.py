@@ -4,11 +4,12 @@ import os
 from datetime import datetime
 from flask_mail import Mail
 from itsdangerous import URLSafeTimedSerializer
-
+from flask_migrate import Migrate
 # MODELS 
 from models.user.user import User
 from models.divisas.divisas import ExchangeRate 
 from models.company.company import Company
+from models.company.company import GlobalAnnouncement
 
 # BLUEPRINTS
 from routes.registro.registro import registrar_bp
@@ -82,9 +83,8 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # INIT DB
 db.init_app(app)
 
-# =========================
-# 🔥 CREATE SUPERADMIN
-# =========================
+migrate = Migrate(app, db)
+
 def create_superadmin():
     try:
         admin = User.query.filter_by(email='admin@orbis.com').first()
@@ -111,9 +111,6 @@ def create_superadmin():
     except Exception as e:
         print("⚠️ Error creando superadmin:", e)
 
-# =========================
-# 🔥 CREATE TABLES SAFE
-# =========================
 try:
     with app.app_context():
         db.create_all()
@@ -151,6 +148,13 @@ app.register_blueprint(launchpad_bp)
 # =========================
 # ROUTES
 # =========================
+
+@app.context_processor
+def inject_global_announcements():
+    # Buscamos si hay algún anuncio activo en la DB
+    active = GlobalAnnouncement.query.filter_by(is_active=True).first()
+    return dict(active_announcement=active)
+
 @app.route('/')
 def index():
     user_id = session.get('user_id')

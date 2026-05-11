@@ -171,17 +171,21 @@
         .flash.info    { background: rgba(55,138,221,.08); color: #378ADD; border-color: #378ADD; }
 
         /* ── GRID ── */
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; padding: 22px 28px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px;
+             /* padding: 22px 28px;  */
+            }
 
         /* ── CARD ── */
         .nc {
             background: var(--sur);
-            border: 0.5px solid var(--bd);
-            border-radius: 14px;
+            /* border: 0.5px solid var(--bd); */
+            /* border-radius: 14px; */
             overflow: hidden;
             transition: border-color .15s, transform .15s;
         }
-        .nc:hover { border-color: var(--bdh); transform: translateY(-1px); }
+        .nc:hover { border-color: var(--bdh); 
+            /* transform: translateY(-1px); */
+         }
 
         .nc-head {
             padding: 15px 16px 13px;
@@ -298,7 +302,9 @@
         .mhead h2 { font-size: 17px; font-weight: 700; }
         .close-m { width: 28px; height: 28px; border: 0.5px solid var(--bd); border-radius: 7px; background: transparent; color: var(--tx2); cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; }
         .close-m:hover { background: var(--sur2); color: var(--tx); }
-        .mbody { padding: 18px 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .mbody { padding: 18px 22px; display: grid; 
+            /* grid-template-columns: 1fr 1fr;  */
+            gap: 12px; }
         .mp {
             border: 0.5px solid var(--bd);
             border-radius: 11px;
@@ -322,3 +328,57 @@
             font-family: inherit; transition: background .12s;
         }
         .btn-renew:hover { background: var(--teal-d); }
+
+  /* Estilos integrados para la sección de salud */
+        .infra-health {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1px;
+            background: var(--bd);
+            border: 1px solid var(--bd);
+        }
+        .health-card {
+            background: var(--sur2);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .health-card label {
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--tx3);
+            letter-spacing: 1.5px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        .h-val { font-size: 28px; font-weight: 800; color: var(--tx); margin: 5px 0; }
+        .h-val small { font-size: 14px; color: var(--tx3); font-weight: 400; }
+        
+        .h-bar-bg { 
+            height: 6px; background: rgba(0,0,0,0.2); 
+            border-radius: 10px; margin: 12px 0; overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+        .h-bar-fill { 
+            height: 100%; background: var(--purple); 
+            transition: 1.5s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .h-bar-fill.warn { background: #ff4757; box-shadow: 0 0 10px rgba(255, 71, 87, 0.3); }
+        
+        .plan-dist { display: flex; gap: 20px; margin-top: 15px; }
+        .pd-item { font-size: 13px; font-weight: 600; color: var(--tx); display: flex; align-items: center; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .dot.basic { background: #3498db; }
+        .dot.pro { background: #9b59b6; }
+        .dot.ultra { background: #f1c40f; }
+
+        .critical-list { list-style: none; padding: 0; margin: 10px 0 0 0; }
+        .critical-item { 
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 12px; color: var(--tx2);
+        }
+        .critical-item:last-child { border: none; }
+        .critical-item span { color: #ff4757; font-weight: 700; font-family: monospace; }
+        .all-good { color: var(--success); font-size: 12px; display: flex; align-items: center; gap: 8px; }

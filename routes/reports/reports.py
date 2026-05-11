@@ -115,47 +115,67 @@ def build_pdf_response(pdf_obj, filename_prefix):
 # ==============================================================================
 # VISTAS (RESTABLECIDAS Y MEJORADAS)
 # ==============================================================================
-
 @reports_bp.route('/')
 def index():
+    # 1. Limpiar caché de la sesión para leer datos reales recién guardados
+    db.session.expire_all()
+    
     company_id, currency_symbol, conversion_rate = get_company_context()
     if not company_id:
         return redirect(url_for('login_bp.login'))
 
+    conv_rate = Decimal(str(conversion_rate)) if conversion_rate else Decimal('1.0')
+    
+    # Usamos fechas sin zona horaria para comparar directamente si la DB es naive
     today = datetime.now()
-    start_date = today.replace(day=1, hour=0, minute=0, second=0)
+    
+    # Rango del mes: desde el día 1 hasta el final de hoy
+    start_month = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    # Expandimos el final del día un poco más por si acaso hay desfase de segundos
+    end_today = today.replace(hour=23, minute=59, second=59, microsecond=999999)
 
     try:
+        # VENTAS DEL MES: Quitamos el límite superior para ver si aparecen
+        # Así tomamos todo desde el día 1 hasta el futuro cercano
         raw_sales = db.session.query(func.sum(Sale.total)).filter(
             Sale.company_id == company_id,
             Sale.status == 'COMPLETED',
-            Sale.created_at >= start_date
-        ).scalar() or 0
-        total_sales_month = float(Decimal(str(raw_sales)) / conversion_rate)
+            Sale.created_at >= start_month
+        ).scalar() or Decimal('0.00')
+        
+        total_sales_month = float(raw_sales / conv_rate)
 
-        low_stock_count = Product.query.filter(Product.company_id == company_id, Product.stocks <= 5).count()
+        # ALERTAS DE STOCK
+        low_stock_count = Product.query.filter(
+            Product.company_id == company_id, 
+            Product.stocks <= 5
+        ).count()
 
-        # Mejora: joinedload para cargar el usuario de una vez
-        recent_closings = CashClosing.query.options(joinedload(CashClosing.user)).filter_by(company_id=company_id)\
-            .order_by(CashClosing.closing_date.desc()).limit(8).all()
+        # CIERRES: Asegúrate de que el cierre de caja se guardó con status correcto
+        recent_closings = CashClosing.query.options(joinedload(CashClosing.user))\
+            .filter_by(company_id=company_id)\
+            .order_by(CashClosing.closing_date.desc())\
+            .limit(5).all()
 
+        # DATOS GRÁFICO
         chart_data, chart_labels = [], []
         for i in range(6, -1, -1):
             day = today - timedelta(days=i)
-            d_start = day.replace(hour=0, minute=0, second=0)
-            d_end = day.replace(hour=23, minute=59, second=59)
+            d_start = day.replace(hour=0, minute=0, second=0, microsecond=0)
+            d_end = day.replace(hour=23, minute=59, second=59, microsecond=999999)
             
-            daily_sum_raw = db.session.query(func.sum(Sale.total)).filter(
+            # Usamos BETWEEN que es más eficiente para índices
+            daily_sum = db.session.query(func.sum(Sale.total)).filter(
                 Sale.company_id == company_id,
                 Sale.status == 'COMPLETED',
                 Sale.created_at.between(d_start, d_end)
-            ).scalar() or 0
+            ).scalar() or Decimal('0.00')
             
-            chart_data.append(float(Decimal(str(daily_sum_raw)) / conversion_rate))
+            chart_data.append(float(daily_sum / conv_rate))
             chart_labels.append(day.strftime('%a %d'))
 
     except Exception as e:
-        logger.error(f"Error Dashboard: {e}")
+        logger.error(f"❌ Error en Auditoría: {e}")
         total_sales_month, low_stock_count, recent_closings = 0, 0, []
         chart_data, chart_labels = [0]*7, ["N/A"]*7
 

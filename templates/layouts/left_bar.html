@@ -87,6 +87,21 @@
         });
     </script>
 
+    {% if active_announcement %}
+    <div class="global-broadcast-banner announcement-{{ active_announcement.type }}">
+        {% if active_announcement.type == 'info' %}
+            <i class="bi bi-info-circle-fill"></i>
+        {% elif active_announcement.type == 'warning' %}
+            <i class="bi bi-exclamation-triangle-fill"></i>
+        {% elif active_announcement.type == 'danger' %}
+            <i class="bi bi-radioactive"></i>
+        {% endif %}
+        
+        <div class="banner-content">
+            {{ active_announcement.message }}
+        </div>
+    </div>
+    {% endif %}
 
 <!-- Botón Mobile -->
 <button id="sidebar-toggle" class="sidebar-mobile-trigger" aria-label="Menu">

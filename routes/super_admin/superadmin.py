@@ -1,12 +1,14 @@
+import os
+import logging
 from flask import Blueprint, render_template, session, redirect, url_for, flash, request
 from models.user.user import User
-from models.company.company import Company
+from models.company.company import Company, GlobalAnnouncement, SuperadminLog # Importados
 from models.divisas.divisas import ExchangeRate
 from models.warehouse.warehouse import Warehouse
 from db import db
 from functools import wraps
 from datetime import datetime, timedelta
-import logging
+from sqlalchemy import func
 
 # Configuración de logs para rastrear cambios de contexto
 logger = logging.getLogger(__name__)
@@ -22,6 +24,22 @@ def superadmin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# --- UTILIDADES DE INFRAESTRUCTURA ---
+
+def get_dir_size(company_id):
+    """Calcula el tamaño real en disco de los archivos de una empresa para Railway."""
+    path = os.path.join('static', 'uploads', f'company_{company_id}')
+    total_size = 0
+    if os.path.exists(path):
+        for dirpath, dirnames, filenames in os.walk(path):
+            for f in filenames:
+                fp = os.path.join(dirpath, f)
+                if not os.path.islink(fp):
+                    total_size += os.path.getsize(fp)
+    return total_size
+
+# --- RUTAS DEL DASHBOARD MAESTRO ---
+
 @superadmin_bp.route('/superadmin/dashboard')
 @superadmin_required
 def admin_dashboard():
@@ -32,13 +50,51 @@ def admin_dashboard():
 
     companies = Company.query.all()
     total_users = User.query.count()
+    ahora = datetime.utcnow()
+    limite_vencimiento = ahora + timedelta(days=3)
 
-    # LÓGICA DE DIVISA BASADA ESTRICTAMENTE EN DB
+    # --- LÓGICA DE INFRAESTRUCTURA REAL (RAILWAY) ---
+    try:
+        disk_limit_gb = float(os.getenv('TOTAL_DISK_LIMIT_GB', 0.5))
+    except (ValueError, TypeError):
+        disk_limit_gb = 0.5
+
+    railway_limit_bytes = disk_limit_gb * 1024 * 1024 * 1024
+    total_disk_mb_display = int(disk_limit_gb * 1024)
+
+    raw_usage = db.session.query(func.sum(Company.current_storage_usage)).scalar() or 0
+    total_used_bytes = float(raw_usage)
+
+    total_used_mb = round(total_used_bytes / 1024 / 1024, 2)
+    infra_perc = (total_used_bytes / railway_limit_bytes * 100) if railway_limit_bytes > 0 else 0
+
+    # --- SEGMENTACIÓN Y ALERTAS ---
+    plan_counts = {
+        'BASIC': Company.query.filter_by(plan_name='BASIC').count(),
+        'PRO': Company.query.filter_by(plan_name='PRO').count(),
+        'ULTRA': Company.query.filter_by(plan_name='ULTRA').count()
+    }
+
+    critical_nodes = Company.query.filter(
+        Company.expiration_date <= limite_vencimiento,
+        Company.status == True
+    ).all()
+
+    # --- KPI FINANCIERO (MRR) ---
+    # Ajusta estos valores a tus precios reales en RD$
+    plan_prices = {
+        'BASIC': 1500.0,
+        'PRO': 3500.0,
+        'ULTRA': 8000.0
+    }
+    total_mrr = sum(plan_counts[p] * plan_prices[p] for p in plan_prices)
+
+    # --- ANUNCIO ACTIVO ---
+    active_announcement = GlobalAnnouncement.query.filter_by(is_active=True).first()
+
+    # LÓGICA DE DIVISA Y PREPARACIÓN DE EMPRESAS
     for company in companies:
-        # 1. Intentamos buscar la moneda base (rate 1.0)
         db_currency = ExchangeRate.query.filter_by(company_id=company.id, rate=1.0).first()
-        
-        # 2. Si no hay 1.0 (como en tu imagen), tomamos la primera disponible para ese nodo
         if not db_currency:
             db_currency = ExchangeRate.query.filter_by(company_id=company.id).first()
 
@@ -46,69 +102,178 @@ def admin_dashboard():
             company.display_currency_code = db_currency.currency_code
             company.display_currency_symbol = db_currency.symbol
         else:
-            # Fallback visual solo si la tabla está vacía para este ID
             company.display_currency_code = "N/A"
             company.display_currency_symbol = "—"
 
     return render_template('superadmin/dashboard.html', 
                            companies=companies, 
-                           total_users=total_users)
+                           total_users=total_users,
+                           total_used_mb=total_used_mb,
+                           total_disk_mb=total_disk_mb_display,
+                           infra_perc=int(infra_perc),
+                           plan_counts=plan_counts,
+                           critical_nodes=critical_nodes,
+                           total_mrr=total_mrr,
+                           active_announcement=active_announcement,
+                           ahora=ahora)
 
 @superadmin_bp.route('/superadmin/impersonate/<int:company_id>')
 @superadmin_required
 def impersonate(company_id):
     company = Company.query.get_or_404(company_id)
     
-    # Limpieza total de sesión antes de entrar al nodo
+    # --- REGISTRO DE AUDITORÍA MASTER ---
+    new_log = SuperadminLog(
+        admin_id=session.get('user_id'),
+        company_id=company.id,
+        action="Impersonate",
+        description=f"Acceso de soporte iniciado para el nodo {company.name}",
+        ip_address=request.remote_addr
+    )
+    db.session.add(new_log)
+    
     session.pop('selected_currency', None)
     session.pop('currency_symbol', None)
     
-    # Establecer contexto de empresa
     session['company_id'] = company.id
     session['impersonating'] = True 
     
-    # LEALTAD A LA BASE DE DATOS (Sincronización con imagen SQL)
-    # Buscamos la moneda que el cliente tiene registrada, sin importar el rate
     db_exchange = ExchangeRate.query.filter_by(company_id=company.id, rate=1.0).first()
-    
     if not db_exchange:
-        # Si no hay base 1.0, agarramos la primera fila que exista (EUR o USD según tu tabla)
         db_exchange = ExchangeRate.query.filter_by(company_id=company.id).first()
     
     if db_exchange:
         session['selected_currency'] = db_exchange.currency_code
         session['currency_symbol'] = db_exchange.symbol 
-        logger.info(f"Soporte: Accediendo a {company.name} en moneda: {db_exchange.currency_code}")
     else:
-        # Si la empresa no tiene NADA en la tabla divisas, avisamos
-        flash(f'Advertencia: El nodo {company.name} no tiene divisas configuradas en DB.', 'warning')
         session['selected_currency'] = '???'
         session['currency_symbol'] = '?'
 
-    # Asignar almacén del nodo
     w = Warehouse.query.filter_by(company_id=company.id).first()
     if w:
         session['warehouse_id'] = w.id
     
-    flash(f'Soporte Técnico: Contexto {company.name} activado ({session.get("selected_currency")})', 'info')
+    db.session.commit() # Guardamos el log y los cambios
+    flash(f'Soporte Técnico: Contexto {company.name} activado', 'info')
     return redirect(url_for('dashboard_bp.dashboard'))
+
+# --- ACCIONES DE BROADCAST (ANUNCIOS GLOBALES) ---
+
+@superadmin_bp.route('/superadmin/broadcast', methods=['POST'])
+@superadmin_required
+def create_broadcast():
+    msg = request.form.get('message')
+    alert_type = request.form.get('type', 'info')
+    
+    if msg:
+        # Desactivamos anuncios previos antes de crear el nuevo
+        GlobalAnnouncement.query.update({GlobalAnnouncement.is_active: False})
+        
+        new_ann = GlobalAnnouncement(message=msg, type=alert_type)
+        db.session.add(new_ann)
+        
+        # Log de la acción
+        db.session.add(SuperadminLog(
+            admin_id=session.get('user_id'),
+            action="Create Broadcast",
+            description=f"Nuevo anuncio global: {msg[:50]}..."
+        ))
+        
+        db.session.commit()
+        flash("Anuncio global publicado exitosamente.", "success")
+    return redirect(url_for('superadmin_bp.admin_dashboard'))
+
+@superadmin_bp.route('/superadmin/broadcast/clear', methods=['POST'])
+@superadmin_required
+def clear_broadcast():
+    GlobalAnnouncement.query.update({GlobalAnnouncement.is_active: False})
+    db.session.commit()
+    flash("Anuncios globales desactivados.", "info")
+    return redirect(url_for('superadmin_bp.admin_dashboard'))
+
+# --- ACCIONES DE CONTROL ---
 
 @superadmin_bp.route('/superadmin/toggle_status/<int:id>', methods=['POST'])
 @superadmin_required
 def toggle_status(id):
     company = Company.query.get_or_404(id)
     company.status = not company.status
+    
+    db.session.add(SuperadminLog(
+        admin_id=session.get('user_id'),
+        company_id=id,
+        action="Toggle Status",
+        description=f"Estado del nodo cambiado a {'Online' if company.status else 'Offline'}"
+    ))
+    
     db.session.commit()
+    return redirect(url_for('superadmin_bp.admin_dashboard'))
+
+@superadmin_bp.route('/superadmin/toggle_readonly/<int:id>', methods=['POST'])
+@superadmin_required
+def toggle_readonly(id):
+    company = Company.query.get_or_404(id)
+    company.is_readonly = not company.is_readonly
+    
+    db.session.add(SuperadminLog(
+        admin_id=session.get('user_id'),
+        company_id=id,
+        action="Toggle ReadOnly",
+        description=f"Modo solo lectura: {company.is_readonly}"
+    ))
+    
+    db.session.commit()
+    estado = "SÓLO LECTURA" if company.is_readonly else "ACCESO TOTAL"
+    flash(f"Nodo {company.name} puesto en modo {estado}", "info")
+    return redirect(url_for('superadmin_bp.admin_dashboard'))
+
+@superadmin_bp.route('/superadmin/refresh_storage/<int:id>', methods=['POST'])
+@superadmin_required
+def refresh_storage(id):
+    company = Company.query.get_or_404(id)
+    usage = get_dir_size(id)
+    company.current_storage_usage = usage
+    db.session.commit()
+    flash(f"Almacenamiento actualizado para {company.name}", "success")
     return redirect(url_for('superadmin_bp.admin_dashboard'))
 
 @superadmin_bp.route('/superadmin/delete_company/<int:id>', methods=['POST'])
 @superadmin_required
 def delete_company(id):
     company = Company.query.get_or_404(id)
+    name = company.name
+    
+    db.session.add(SuperadminLog(
+        admin_id=session.get('user_id'),
+        action="Delete Company",
+        description=f"Nodo eliminado permanentemente: {name}"
+    ))
+    
     db.session.delete(company)
     db.session.commit()
-    flash(f'Empresa {company.name} borrada permanentemente', 'danger')
+    flash(f'Empresa {name} borrada permanentemente', 'danger')
     return redirect(url_for('superadmin_bp.admin_dashboard'))
+
+# --- CRON ---
+
+@superadmin_bp.route('/superadmin/cron/check-expirations')
+def cron_check_expirations():
+    ahora = datetime.utcnow()
+    expired_companies = Company.query.filter(
+        Company.expiration_date < ahora,
+        Company.status == True,
+        (Company.grace_period_until == None) | (Company.grace_period_until < ahora)
+    ).all()
+
+    count = 0
+    for c in expired_companies:
+        c.status = False
+        count += 1
+    
+    db.session.commit()
+    return f"Cron ejecutado: {count} nodos suspendidos automáticamente.", 200
+
+# --- PAGOS ---
 
 @superadmin_bp.route('/superadmin/payments')
 @superadmin_required
@@ -127,22 +292,31 @@ def approve_payment(id):
     if is_plan_change:
         company.plan_name = company.requested_plan
         company.expiration_date = ahora + timedelta(days=30)
-        msg = f"Plan actualizado a {company.plan_name}. 30 días iniciados."
+        msg = f"Plan actualizado a {company.plan_name}."
     else:
         if company.expiration_date and company.expiration_date > ahora:
             company.expiration_date += timedelta(days=30)
         else:
             company.expiration_date = ahora + timedelta(days=30)
-        msg = f"Suscripción {company.plan_name} extendida por 30 días."
+        msg = f"Suscripción extendida 30 días."
+
+    limits = company.get_plan_limits()
+    company.storage_limit = limits.get('storage_bytes', 524288000)
 
     company.requested_plan = None
     company.plan_status = 'ACTIVE'
     company.receipt_status = 'APPROVED'
     company.grace_period_until = None
     company.status = True 
+
+    db.session.add(SuperadminLog(
+        admin_id=session.get('user_id'),
+        company_id=id,
+        action="Approve Payment",
+        description=f"Pago aprobado. Plan: {company.plan_name}"
+    ))
     
     db.session.commit()
-    
     flash(msg, "success")
     return redirect(url_for('superadmin_bp.admin_dashboard'))
 
@@ -161,7 +335,16 @@ def renew_plan(id):
     company.plan_status = 'ACTIVE'
     company.receipt_status = 'APPROVED'
     
-    db.session.commit()
+    limits = company.get_plan_limits()
+    company.storage_limit = limits.get('storage_bytes', 524288000)
     
-    flash(f'Plan de {company.name} renovado exitosamente por 30 días.', 'success')
+    db.session.add(SuperadminLog(
+        admin_id=session.get('user_id'),
+        company_id=id,
+        action="Manual Renew",
+        description="Renovación manual de 30 días ejecutada por superadmin"
+    ))
+    
+    db.session.commit()
+    flash(f'Plan de {company.name} renovado exitosamente.', 'success')
     return redirect(url_for('superadmin_bp.admin_dashboard'))

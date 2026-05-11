@@ -68,6 +68,15 @@ def finish_sale():
         
     # Procesamiento de Inventario
     for item in sale.items:
+        # Detectar tipo de producto (Normalizado a mayúsculas)
+        p_type = str(item.product.product_type.value if hasattr(item.product.product_type, 'value') else item.product.product_type).upper()
+        is_service = p_type in ['SERVICE', 'SERVICIO']
+
+        # Si es un servicio, saltamos la lógica de stock
+        if is_service:
+            continue
+
+        # Lógica para productos físicos
         stock = WarehouseStock.query.filter_by(
             product_id=item.product_id, 
             warehouse_id=item.warehouse_id

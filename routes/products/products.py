@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, jsonify
-from models.products.products import Product, ProductType # <--- Importar ProductType
+from models.products.products import Product, ProductType 
 from models.category.category import Category
 from models.user.user import User
 from models.warehouse_stock.warehouse_stock import WarehouseStock

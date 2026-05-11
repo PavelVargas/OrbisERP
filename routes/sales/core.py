@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, flash, session, current_app
+from flask import render_template, request, redirect, url_for, flash, session, current_app, jsonify
 from db import db
 from models.sales.sales import Sale
 from models.sales.sale_item import SaleItem
@@ -15,10 +15,12 @@ from sqlalchemy import or_
 from .sales import sales_bp
 
 def recalc_sale(sale):
+    """Recalcula subtotales, ITBIS (18%) y total de la venta."""
     total_base = sum(item.quantity * item.price for item in sale.items)
     sale.total = Decimal(total_base).quantize(Decimal('0.01'))
     
     if sale.total > 0:
+        # Cálculo basado en tasa estándar del 18%
         base_imponible = sale.total / Decimal('1.18')
         sale.itbis = (sale.total - base_imponible).quantize(Decimal('0.01'))
     else:
@@ -41,8 +43,6 @@ def create_sale():
     plan_limits = company.get_plan_limits()
     current_usage = company.get_current_month_usage()
 
-    user_warehouse_id = user.warehouse_id if user else None
-
     # --- LÓGICA DE VENTA PENDIENTE ---
     current_id = session.get('current_sale_id')
     sale = None
@@ -62,23 +62,31 @@ def create_sale():
 
     session['current_sale_id'] = sale.id
 
+    # --- LÓGICA DE ESCANEO / AGREGAR (POST) ---
     search_query = request.form.get('search', '').strip()
     if search_query:
-        # Búsqueda Híbrida: 1. SKU exacto, 2. Nombre parcial
-        product = Product.query.filter(
-            Product.company_id == company_id,
-            Product.status == True,
-            or_(
-                Product.sku == search_query,
-                Product.name.ilike(f"%{search_query}%")
-            )
-        ).first()
+        product = Product.query.filter_by(sku=search_query, company_id=company_id, status=True).first()
+        
+        if not product:
+            product = Product.query.filter_by(name=search_query, company_id=company_id, status=True).first()
 
         if product:
-            # Seleccionar almacén (del usuario o el primero de la empresa)
-            w_id = user_warehouse_id or (Warehouse.query.filter_by(company_id=company_id, status=True).first().id if Warehouse.query.filter_by(company_id=company_id, status=True).first() else None)
+            # Detectar si es servicio (Normalizamos a mayúsculas para evitar errores de escritura)
+            p_type = str(product.product_type.value if hasattr(product.product_type, 'value') else product.product_type).upper()
+            is_service = p_type in ['SERVICE', 'SERVICIO']
+
+            # Definir almacén de referencia (Incluso servicios necesitan un ID de almacén por estructura de BD)
+            w_id = user.warehouse_id or (Warehouse.query.filter_by(company_id=company_id, status=True).first().id if Warehouse.query.filter_by(company_id=company_id, status=True).first() else None)
             
             if w_id:
+                # Si NO es servicio, validamos que exista stock físico
+                if not is_service:
+                    stock = WarehouseStock.query.filter_by(product_id=product.id, warehouse_id=w_id).first()
+                    if not stock or stock.quantity < 1:
+                        flash(f'Sin stock disponible para {product.name}', 'danger')
+                        return redirect(url_for('sales_bp.create_sale'))
+
+                # Lógica de agregado al carrito
                 item = SaleItem.query.filter_by(sale_id=sale.id, product_id=product.id, warehouse_id=w_id).first()
                 if item:
                     item.quantity += 1
@@ -88,16 +96,17 @@ def create_sale():
                 
                 recalc_sale(sale)
                 db.session.commit()
+                flash(f'{product.name} agregado.', 'success')
             else:
-                flash('Error: No hay almacenes configurados', 'danger')
+                flash('No hay almacenes configurados', 'danger')
         else:
-            flash(f'No se encontró "{search_query}"', 'warning')
+            flash(f'No se encontró el producto "{search_query}"', 'warning')
             
+    # --- DATOS PARA EL TEMPLATE ---
     selected_currency = session.get('selected_currency', 'DOP')
     rate_row = ExchangeRate.query.filter_by(currency_code=selected_currency).first()
     
     currency_symbol = rate_row.symbol if rate_row else 'RD$'
-    # Aseguramos que conversion_rate sea Decimal para evitar errores de tipo con sale.total
     conversion_rate = Decimal(str(rate_row.rate)) if rate_row else Decimal('1.0')
 
     categories = Category.query.filter_by(company_id=company_id).order_by(Category.name.asc()).all()
@@ -115,6 +124,48 @@ def create_sale():
         currency_symbol=currency_symbol,
         conversion_rate=conversion_rate
     )
+
+@sales_bp.route('/add/<int:product_id>', methods=['POST'])
+def add_to_cart(product_id):
+    """Ruta para agregar productos/servicios con cantidad específica."""
+    company_id = session.get('company_id')
+    sale_id = session.get('current_sale_id')
+    user_id = session.get('user_id')
+
+    sale = Sale.query.filter_by(id=sale_id, company_id=company_id).first_or_404()
+    
+    if sale.user_id != user_id:
+        flash('No tienes permiso para modificar esta venta', 'danger')
+        return redirect(url_for('sales_bp.list_sales'))
+
+    qty = int(request.form.get('qty', 1))
+    warehouse_id = int(request.form.get('warehouse_id'))
+    
+    product = Product.query.filter_by(id=product_id, company_id=company_id).first_or_404()
+    
+    # Validación de tipo
+    p_type = str(product.product_type.value if hasattr(product.product_type, 'value') else product.product_type).upper()
+    is_service = p_type in ['SERVICE', 'SERVICIO']
+
+    # Solo validar stock si es un producto físico
+    if not is_service:
+        warehouse = Warehouse.query.filter_by(id=warehouse_id, company_id=company_id).first_or_404()
+        stock = WarehouseStock.query.filter_by(product_id=product.id, warehouse_id=warehouse.id).first()
+        if not stock or stock.quantity < qty:
+            flash(f'Stock insuficiente en {warehouse.name}', 'danger')
+            return redirect(url_for('sales_bp.create_sale'))
+
+    item = SaleItem.query.filter_by(sale_id=sale.id, product_id=product.id, warehouse_id=warehouse_id).first()
+
+    if item:
+        item.quantity += qty
+    else:
+        item = SaleItem(sale_id=sale.id, product_id=product.id, warehouse_id=warehouse_id, quantity=qty, price=product.price)
+        db.session.add(item)
+
+    recalc_sale(sale)
+    db.session.commit()
+    return redirect(url_for('sales_bp.create_sale'))
 
 @sales_bp.route('/assign-client', methods=['POST'])
 def assign_client():
@@ -135,41 +186,6 @@ def assign_client():
     flash(f'Cliente "{client.name}" asignado', 'success')
     return redirect(url_for('sales_bp.create_sale'))
 
-@sales_bp.route('/add/<int:product_id>', methods=['POST'])
-def add_to_cart(product_id):
-    company_id = session.get('company_id')
-    sale_id = session.get('current_sale_id')
-    user_id = session.get('user_id')
-
-    sale = Sale.query.filter_by(id=sale_id, company_id=company_id).first_or_404()
-    
-    if sale.user_id != user_id:
-        flash('No tienes permiso para modificar esta venta', 'danger')
-        return redirect(url_for('sales_bp.list_sales'))
-
-    qty = int(request.form['qty'])
-    warehouse_id = int(request.form['warehouse_id'])
-    
-    product = Product.query.filter_by(id=product_id, company_id=company_id).first_or_404()
-    warehouse = Warehouse.query.filter_by(id=warehouse_id, company_id=company_id).first_or_404()
-
-    stock = WarehouseStock.query.filter_by(product_id=product.id, warehouse_id=warehouse.id).first()
-    if not stock or stock.quantity < qty:
-        flash(f'Stock insuficiente en {warehouse.name}', 'danger')
-        return redirect(url_for('sales_bp.create_sale'))
-
-    item = SaleItem.query.filter_by(sale_id=sale.id, product_id=product.id, warehouse_id=warehouse.id).first()
-
-    if item:
-        item.quantity += qty
-    else:
-        item = SaleItem(sale_id=sale.id, product_id=product.id, warehouse_id=warehouse.id, quantity=qty, price=product.price)
-        db.session.add(item)
-
-    recalc_sale(sale)
-    db.session.commit()
-    return redirect(url_for('sales_bp.create_sale'))
-
 @sales_bp.route('/remove-item/<int:item_id>', methods=['POST'])
 def remove_item(item_id):
     company_id = session.get('company_id')
@@ -184,3 +200,35 @@ def remove_item(item_id):
     
     flash('Producto eliminado', 'info')
     return redirect(url_for('sales_bp.create_sale'))
+
+@sales_bp.route('/get_products')
+def get_products():
+    company_id = session.get('company_id')
+    if not company_id:
+        return jsonify([]), 401
+
+    search_query = request.args.get('search', '').strip()
+    query = Product.query.filter_by(company_id=company_id, status=True)
+
+    if search_query:
+        query = query.filter(
+            (Product.name.ilike(f'%{search_query}%')) |
+            (Product.sku.ilike(f'%{search_query}%'))
+        )
+    
+    products = query.limit(50).all()
+    
+    results = []
+    for p in products:
+        p_type = str(p.product_type.value if hasattr(p.product_type, 'value') else p.product_type).upper()
+        
+        results.append({
+            'id': p.id,
+            'name': p.name,
+            'price': float(p.price),
+            'sku': p.sku,
+            'category': p.category.name if p.category else 'General',
+            'type': p_type 
+        })
+    
+    return jsonify(results)

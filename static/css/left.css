@@ -197,7 +197,7 @@
     height: 32px;
     min-width: 32px;
     background: linear-gradient(135deg, var(--accent));
-    border-radius: 8px;
+    border-radius: 100px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -593,3 +593,69 @@ main, .main-content {
 .nav-section:nth-child(4) { animation-delay: 150ms; }
 .nav-section:nth-child(5) { animation-delay: 200ms; }
 .nav-section:nth-child(6) { animation-delay: 250ms; }
+
+/* --- SISTEMA DE ANUNCIOS GLOBALES (BROADCAST) --- */
+
+.global-broadcast-banner {
+    position: fixed;        /* Flota sobre el contenido */
+    top: 20px;             /* Espacio desde arriba */
+    right: 20px;           /* Espacio desde la derecha */
+    width: auto;           /* Ya no ocupa el 100% */
+    max-width: 400px;      /* Para que no se vea gigante */
+    border-radius: 12px;   /* Bordes redondeados tipo "burbuja" */
+    padding: 16px 24px;
+    z-index: 10000;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3); /* Sombra más profunda */
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Ajuste para iconos de bootstrap */
+.global-broadcast-banner i {
+    font-size: 16px;
+}
+
+/* --- ESTILOS ESPECÍFICOS POR TIPO DE ANUNCIO --- */
+
+/* 1. Informativo (Azul Premium) */
+.global-broadcast-banner.announcement-info {
+    background: linear-gradient(135deg, #0984e3, #1e3799);
+    color: white;
+    border-color: #0984e3;
+}
+.global-broadcast-banner.announcement-info i {
+    color: rgba(255,255,255,0.8);
+}
+
+/* 2. Mantenimiento / Aviso (Amarillo/Naranja) */
+.global-broadcast-banner.announcement-warning {
+    background: linear-gradient(135deg, #f1c40f, #e67e22);
+    color: #1a1a1a; /* Texto oscuro para contraste */
+    border-color: #f1c40f;
+}
+.global-broadcast-banner.announcement-warning i {
+    color: #2c3e50;
+}
+
+/* 3. Crítico / Caída / Urgencia (Rojo Carmesí) */
+.global-broadcast-banner.announcement-danger {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    border-color: #e74c3c;
+    animation: criticalPulse 2s infinite; /* Animación sutil */
+}
+.global-broadcast-banner.announcement-danger i {
+    color: rgba(255,255,255,0.9);
+}
+
+/* --- ANIMACIÓN SUTIL PARA ANUNCIOS CRÍTICOS --- */
+@keyframes criticalPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(231, 76, 60, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
+    }
+}
