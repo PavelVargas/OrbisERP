@@ -22,8 +22,8 @@ main { flex: 1; margin-left: 290px; padding: 33px; min-height: 100vh; }
 
 /* --- TABLAS (LISTA Y DETALLE) --- */
 .table-container { 
-    background: var(--card); border-radius: 20px;
-    overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.03); 
+    border-radius: 20px;
+    overflow: hidden; 
 }
 .modern-table { width: 100%; border-collapse: collapse; }
 .modern-table th { 

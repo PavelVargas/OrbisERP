@@ -19,11 +19,7 @@ def list_sales():
     user = User.query.get(user_id)
     status_filter = request.args.get('status')
     
-    # --- LÓGICA DE DIVISAS (IGUAL AL DASHBOARD) ---
-    # 1. Intentamos obtener la moneda de la sesión, si no, usamos DOP
     selected_currency_code = session.get('selected_currency', 'DOP')
-    
-    # 2. Buscamos la tasa de esa moneda específica para esta empresa
     rate_row = ExchangeRate.query.filter_by(
         currency_code=selected_currency_code, 
         company_id=company_id
@@ -33,7 +29,6 @@ def list_sales():
         currency_symbol = rate_row.symbol
         conversion_rate = Decimal(str(rate_row.rate))
     else:
-        # Si la moneda de la sesión no existe para esta empresa, buscamos la primera disponible
         rate_row = ExchangeRate.query.filter_by(company_id=company_id).first()
         if rate_row:
             selected_currency_code = rate_row.currency_code
@@ -44,10 +39,8 @@ def list_sales():
             currency_symbol = 'RD$'
             conversion_rate = Decimal('1.0')
 
-    # Obtenemos todas las divisas de la empresa para el dropdown/filtros
     currencies = ExchangeRate.query.filter_by(company_id=company_id).all()
 
-    # --- LÓGICA DE LÍMITES Y PLAN ---
     if user.company:
         limits = user.company.get_plan_limits()
         usage = user.company.get_current_month_usage()
@@ -57,7 +50,6 @@ def list_sales():
         usage = 0
         plan_name = "Sin Plan"
     
-    # Filtro de Ventas
     query = Sale.query.filter_by(company_id=company_id)
     if user.role != 'admin' and user.company_id:
         query = query.filter_by(user_id=user_id)
@@ -90,7 +82,6 @@ def sale_detail(sale_id):
     user = User.query.get(user_id)
     sale = Sale.query.filter_by(id=sale_id, company_id=company_id).first_or_404()
     
-    # Misma lógica de divisa para el detalle
     selected_currency = session.get('selected_currency', 'DOP')
     rate_row = ExchangeRate.query.filter_by(currency_code=selected_currency, company_id=company_id).first()
     
@@ -133,12 +124,25 @@ def pending_sales():
 
     return render_template('sales/pending.html', sales=sales, user=user)
 
+# ==========================================================
+# RETOMAR VENTA FIJANDO CONTEXTO DE ITEMS DE BASE DE DATOS
+# ==========================================================
 @sales_bp.route('/resume/<int:sale_id>')
 def resume_sale(sale_id):
     company_id = session.get('company_id')
     sale = Sale.query.filter_by(id=sale_id, company_id=company_id).first_or_404()
+    
+    # Permitir retomar si está en estados editables
     if sale.status not in ['PENDING', 'QUOTATION', 'DRAFT']:
-        flash('No se puede reanudar', 'warning')
+        flash('Esta orden ya fue procesada o anulada y no puede modificarse.', 'warning')
         return redirect(url_for('sales_bp.list_sales'))
+        
+    # Cambiamos temporalmente el estado a 'DRAFT' o lo mantenemos para que la pantalla de facturación 
+    # sepa que estamos modificando una venta existente con registros reales en la tabla interna de ítems.
     session['current_sale_id'] = sale.id
+    
+    # Forzar expiración o refresco en la sesión de SQLALchemy para evitar cargas cacheadas vacías
+    db.session.refresh(sale)
+    
+    flash(f'Cargando registros de la Venta #{sale.id}', 'info')
     return redirect(url_for('sales_bp.create_sale'))

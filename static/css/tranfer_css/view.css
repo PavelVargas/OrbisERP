@@ -1,169 +1,163 @@
-* {
-    box-sizing: border-box;
-}
+/* --- AJUSTES DE DISEÑO PREMIUM (ORBIS-ODOO) --- */
+        :root {
+            --odoo-purple: #faa200;
+            --primary: #faa200;
+            --bg-card: #151b2c;
+            --border: #222d45;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --bg-input: #1e2538;
+            --shadow: 0 1px 3px rgba(0,0,0,0.12);
+            --success: #10b981;
+        }
 
-body {
-    margin: 0;
-    font-family: 'Montserrat', sans-serif;
-    background-color: var(--bg-main);
-    color: var(--fg-main);
-    overflow-x: hidden;
-}
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            margin: 0;
+            padding: 16px 24px; /* Margen optimizado sin espacios excesivos */
+        }
 
-main {
-    padding: 33px;
-    margin-left: 280px; 
-    width: calc(100% - 280px); 
-    min-height: 100vh;
-    transition: all 0.3s ease;
-}
+        .main-content { width: 100%; max-width: 100%; margin: 0 auto; }
 
-/* Navegación */
-.top-nav { margin-bottom: 24px; }
-.back-link {
-    text-decoration: none;
-    color: var(--text-dim);
-    font-size: 14px;
-    font-weight: 600;
+        .top-nav { margin-bottom: 15px; }
+        .back-link { 
+            text-decoration: none; color: var(--text-muted); font-size: 11px; 
+            font-weight: 700; display: flex; align-items: center; gap: 6px;
+            text-transform: uppercase; letter-spacing: 0.5px; transition: 0.2s;
+        }
+        .back-link:hover { color: var(--primary); }
+
+        /* --- ODOO CONTROL PANEL --- */
+        .o_control_panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 16px 24px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+        .o_breadcrumb h2 { font-size: 20px; font-weight: 700; margin: 0; color: var(--text-main); }
+        .o_breadcrumb p { color: var(--text-muted); font-size: 12px; margin: 4px 0 0 0; }
+
+        /* Statusbar dinámico estilo Odoo */
+        .o_statusbar { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--bg-input); }
+        .o_status_item { padding: 6px 14px; font-size: 12px; font-weight: 700; color: var(--text-muted); background: var(--bg-input); }
+        .o_status_item.active { background: var(--odoo-purple); color: #ffffff; }
+        .o_status_item.done { background: var(--success); color: #ffffff; }
+
+        /* --- HOJA DE FORMULARIO / DOCUMENTO --- */
+        .o_sheet {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        /* Bloque superior de información */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            background: var(--border);
+            gap: 1px;
+        }
+        .info-box { background: var(--bg-card); padding: 20px; }
+        .info-box label { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 6px; letter-spacing: 0.5px; }
+        .info-box p { margin: 0; font-weight: 700; font-size: 14px; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+        .info-box p i { color: var(--text-muted); }
+
+        /* Sección de Tabla de Artículos */
+        .items-section { padding: 24px; }
+        .items-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .items-table th { 
+            padding: 12px 16px; font-size: 11px; font-weight: 800;
+            color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border); background: rgba(0,0,0,0.05);
+        }
+        .items-table td { padding: 16px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        .product-name { color: var(--text-main); font-weight: 700; font-size: 14px; }
+        .product-sku { font-family: monospace; color: var(--text-muted); font-size: 13px; }
+        .p-qty { font-weight: 800; font-size: 15px; color: var(--primary); }
+
+        /* Footer de Acciones */
+        .footer-actions { padding: 24px; background: rgba(0,0,0,0.05); border-top: 1px solid var(--border); }
+        
+        .helper-text {
+            display: flex; align-items: center; gap: 12px; background: rgba(250, 162, 0, 0.08); 
+            padding: 14px 18px; border-radius: 8px; margin-bottom: 16px; border: 1px solid rgba(250, 162, 0, 0.15);
+            font-size: 13px; font-weight: 600; color: var(--text-main);
+        }
+
+        .btn-confirm-main {
+            width: 100%; background: var(--success); color: white; border: none; padding: 14px; 
+            border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; 
+            align-items: center; justify-content: center; gap: 8px; transition: 0.2s;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .btn-confirm-main:hover { background: #0ca673; transform: translateY(-1px); }
+
+        .status-success-text {
+            text-align: center; background: rgba(16, 185, 129, 0.08); padding: 16px; 
+            border-radius: 8px; color: var(--success); font-weight: 700; font-size: 14px;
+            border: 1px solid rgba(16, 185, 129, 0.15); letter-spacing: 0.5px;
+        }
+
+        /* --- BOTONERA DE ACCIONES DEL PANEL DE CONTROL --- */
+.o_cp_buttons {
     display: flex;
+    gap: 8px;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 12px;
+    margin-top: 12px;
+}
+
+/* Botón base de acción estilo ERP Moderno */
+.btn-cp-action {
+    display: inline-flex;
     align-items: center;
     gap: 8px;
-}
-
-.back-link:hover { color: var(--fg-main); }
-
-/* Header */
-.page-header { margin-bottom: 32px; }
-.page-header h2 { font-size: 24px; font-weight: 800; margin: 0; }
-.subtitle { color: var(--text-dim); font-size: 14px; margin: 4px 0 0 0; }
-
-/* Contenedor del Comprobante */
-.detail-container {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    box-shadow: var(--shadow);
-    margin: 0;
-    overflow: hidden;
-}
-
-.shipment-info-bar {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    border-bottom: 1px solid var(--border);
-    background: rgba(255,255,255,0.01);
-}
-
-.info-box {
-    padding: 20px 25px;
-    border-right: 1px solid var(--border);
-}
-
-.info-box:last-child { border-right: none; }
-
-.info-box label {
-    display: block;
-    font-size: 10px;
+    padding: 8px 16px;
+    font-size: 12px;
     font-weight: 700;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
     text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 6px;
     letter-spacing: 0.5px;
 }
 
-.info-box p {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+/* Variante secundaria (Gris Carbón Neutro) */
+.btn-cp-secondary {
+    background: var(--bg-input, #1e2538);
+    border: 1px solid var(--border, rgba(34, 45, 69, 0.8));
+    color: var(--text-main, #f8fafc);
 }
 
-/* Tabla de Productos */
-.items-section { padding: 0; }
-
-.table-wrapper { width: 100%; overflow-x: auto; }
-
-.items-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.items-table th {
-    background: var(--accent-soft);
-    padding: 12px 25px;
-    text-align: left;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    border-bottom: 1px solid var(--border);
-}
-
-.items-table td {
-    padding: 18px 25px;
-    border-bottom: 1px solid var(--border);
-    font-size: 14px;
-}
-
-.product-name { font-weight: 700; display: block; }
-.product-sku { color: var(--text-dim); font-size: 12px; font-family: monospace; }
-
-.p-qty {
-    background: var(--fg-main);
-    color: var(--text-main);
-    padding: 4px 12px;
-    border-radius: 6px;
-    font-weight: 800;
-}
-
-/* Footer y Acciones */
-.footer-actions {
-    padding: 24px 30px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--bg-card);
-}
-
-.helper-text {
-    font-size: 12px;
-    color: var(--text-dim);
-    max-width: 400px;
-    line-height: 1.5;
-}
-
-.btn-confirm-main {
-    background: var(--fg-main); 
-    color: var(--bg-main);
-    border: none;
-    padding: 14px 28px;
-    border-radius: 8px;
-    font-weight: 700;
-    font-size: 14px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: 0.2s ease;
-}
-
-.btn-confirm-main:hover {
-    opacity: 0.9;
+/* Efectos Interactivos Premium */
+.btn-cp-secondary:hover {
+    background: var(--border, rgba(34, 45, 69, 0.8));
+    border-color: var(--text-muted, #94a3b8);
+    color: var(--primary, #faa200); /* El icono y texto cambian sutilmente al color ámbar de Orbis */
     transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-.status-badge {
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 700;
+.btn-cp-secondary:active {
+    transform: translateY(0);
+    box-shadow: none;
 }
 
-.status-success-text { color: var(--success); font-weight: 800; display: flex; align-items: center; gap: 8px; }
+/* Ajuste fino para el icono de Bootstrap incorporado */
+.btn-cp-action i {
+    font-size: 14px;
+    transition: transform 0.2s ease;
+}
 
-@media (max-width: 1024px) {
-    main { margin-left: 0; width: 100%; padding: 20px; }
-    .shipment-info-bar { grid-template-columns: 1fr 1fr; }
+.btn-cp-secondary:hover i {
+    transform: scale(1.05);
 }

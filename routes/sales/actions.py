@@ -4,7 +4,7 @@ from models.sales.sales import Sale
 from models.company.company import Company
 from models.warehouse_stock.warehouse_stock import WarehouseStock
 from models.stock_movement.stock_movement import StockMovement
-from datetime import datetime, timezone
+from datetime import datetime
 from decimal import Decimal
 from .core import recalc_sale 
 
@@ -28,7 +28,6 @@ def finish_sale():
         flash('Error de consistencia de empresa', 'danger')
         return redirect(url_for('login_bp.login'))
 
-    # Validación de límites del plan
     limits = company.get_plan_limits()
     current_usage = company.get_current_month_usage()
 
@@ -59,24 +58,21 @@ def finish_sale():
         sale.payment_method = 'CREDIT'
         sale.amount_paid = Decimal('0.00')
         sale.balance = sale.total  
-        sale.status = 'PENDING' 
     else:
         sale.payment_method = 'CASH'
         sale.amount_paid = sale.total
         sale.balance = Decimal('0.00')
-        sale.status = 'COMPLETED'
         
-    # Procesamiento de Inventario
+    sale.status = 'COMPLETED'
+    sale.created_at = datetime.now() 
+
     for item in sale.items:
-        # Detectar tipo de producto (Normalizado a mayúsculas)
         p_type = str(item.product.product_type.value if hasattr(item.product.product_type, 'value') else item.product.product_type).upper()
         is_service = p_type in ['SERVICE', 'SERVICIO']
 
-        # Si es un servicio, saltamos la lógica de stock
         if is_service:
             continue
 
-        # Lógica para productos físicos
         stock = WarehouseStock.query.filter_by(
             product_id=item.product_id, 
             warehouse_id=item.warehouse_id
@@ -96,7 +92,7 @@ def finish_sale():
             movement_type='OUT',
             quantity=item.quantity,
             reason=f'Venta #{sale.id}',
-            created_at=datetime.now(timezone.utc) 
+            created_at=datetime.now()
         )
         db.session.add(movement)
     
@@ -113,9 +109,9 @@ def finish_sale():
         flash(f'Error crítico: {str(e)}', 'danger')
         return redirect(url_for('sales_bp.create_sale'))
 
-# =========================
+# ==========================================================
 # CANCELAR VENTA
-# =========================
+# ==========================================================
 @sales_bp.route('/cancel/<int:sale_id>', methods=['POST'])
 def cancel_sale(sale_id):
     company_id = session.get('company_id')
@@ -140,9 +136,9 @@ def cancel_sale(sale_id):
     flash(f'Venta #{sale.id} cancelada', 'info')
     return redirect(url_for('sales_bp.list_sales'))
 
-# =========================
-# CONVERTIR EN COTIZACIÓN
-# =========================
+# ==========================================================
+# CONVERTIR EN COTIZACIÓN (MANTENIENDO RELACIONES DE OBJETOS)
+# ==========================================================
 @sales_bp.route('/quote/<int:sale_id>', methods=['POST'])
 def convert_to_quote(sale_id):
     company_id = session.get('company_id')
@@ -159,8 +155,19 @@ def convert_to_quote(sale_id):
         return redirect(url_for('sales_bp.create_sale'))
     
     sale.status = 'QUOTATION'
-    db.session.commit()
-    session.pop('current_sale_id', None)
     
-    flash(f'Venta #{sale.id} guardada como Cotización', 'success')
-    return redirect(url_for('sales_bp.list_sales'))
+    # Recalculamos totales antes de asentar el estado intermedio
+    recalc_sale(sale)
+    
+    try:
+        db.session.commit()
+        # Remover de la sesión activa de creación de manera segura
+        if session.get('current_sale_id') == sale.id:
+            session.pop('current_sale_id', None)
+        
+        flash(f'Venta #{sale.id} guardada como Cotización con {len(sale.items)} ítems vinculados', 'success')
+        return redirect(url_for('sales_bp.list_sales'))
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al guardar cotización: {str(e)}', 'danger')
+        return redirect(url_for('sales_bp.create_sale'))

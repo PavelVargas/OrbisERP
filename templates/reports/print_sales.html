@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte_Ventas_{{ company_id }}</title>
+    <style>
+        /* Estilos base corporativos (Estilo Orbis Premium) */
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #2c3e50;
+            margin: 20px;
+            font-size: 12px;
+        }
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        .brand-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #faa200; /* Naranja Orbis */
+            margin: 0;
+        }
+        .report-type {
+            font-size: 14px;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 1px;
+            color: #7f8c8d;
+        }
+        .meta-text {
+            font-size: 10px;
+            color: #95a5a6;
+            text-align: right;
+            vertical-align: bottom;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .data-table th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #faa200;
+            color: #34495e;
+            text-transform: uppercase;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 10px;
+            text-align: left;
+        }
+        .data-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        
+        .total-box {
+            margin-top: 20px;
+            float: right;
+            width: 40%;
+            border-collapse: collapse;
+        }
+        .total-box td {
+            padding: 10px;
+            font-size: 14px;
+        }
+        .total-highlight {
+            background-color: #faa200;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Reglas cruciales de impresión física */
+        @media print {
+            body { margin: 15mm 10mm 15mm 10mm; }
+            .no-print { display: none !important; }
+            tr { page-break-inside: avoid; }
+            thead { display: table-header-group; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print" style="margin-bottom: 20px; padding: 10px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 6px;">
+        <button onclick="window.print()" style="background: #faa200; color: white; border: none; padding: 8px 15px; border-radius: 4px; font-weight: bold; cursor: pointer;">Imprimir Documento</button>
+        <button onclick="window.close()" style="background: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 4px; margin-left: 10px; cursor: pointer;">Cerrar Vista</button>
+        <span style="margin-left: 15px; font-size: 11px; color: #856404;">Tip: Asegúrate de habilitar "Gráficos de fondo" en la configuración de la impresora.</span>
+    </div>
+
+    <table class="header-table">
+        <tr>
+            <td>
+                <h1 class="brand-title">ORBIS ERP</h1>
+                <div class="report-type">Libro de Ventas y Clientes</div>
+            </td>
+            <td class="meta-text">
+                <strong>Empresa ID:</strong> {{ company_id }}<br>
+                <strong>Fecha Impresión:</strong> {{ gen_date }}<br>
+                <strong>Moneda Base:</strong> {{ currency_symbol }}
+            </td>
+        </tr>
+    </table>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 20%;">Fecha</th>
+                <th style="width: 45%;">Cliente</th>
+                <th style="width: 15%; text-center">Método</th>
+                <th style="width: 20%;" class="text-right">Total ({{ currency_symbol }})</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in sales %}
+            <tr>
+                <td>{{ s.date.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td style="font-weight: 500;">{{ s.client }}</td>
+                <td class="text-center">{{ s.payment_method }}</td>
+                <td class="text-right" style="font-weight: bold;">{{ "{:,.2f}".format(s.total_converted) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <table class="total-box">
+        <tr class="total-highlight">
+            <td>TOTAL ACUMULADO</td>
+            <td class="text-right">{{ currency_symbol }} {{ "{:,.2f}".format(grand_total) }}</td>
+        </tr>
+    </table>
+
+    <script>
+        // Disparador automático de la cola de impresión del sistema al terminar de cargar el DOM
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => { window.print(); }, 500);
+        });
+    </script>
+</body>
+</html>

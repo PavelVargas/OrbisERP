@@ -163,7 +163,7 @@
         }
 
         .summary-table {
-            width: 250px;
+            width: 280px;
         }
 
         .summary-line {
@@ -175,6 +175,14 @@
         }
 
         .summary-line.tax { color: #888; font-weight: 500; }
+        
+        .summary-line.total-final { 
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px double #eee;
+            font-size: 18px;
+            font-weight: 800;
+        }
 
         .notes-footer {
             margin-top: 100px;
@@ -252,13 +260,20 @@
 
         <section class="summary">
             <div class="summary-table">
+                <!-- 1. Dinero (Subtotal) -->
                 <div class="summary-line">
                     <span>Subtotal</span>
                     <span>{{ currency_symbol }}{{ "{:,.2f}".format(sale.subtotal / conversion_rate) }}</span>
                 </div>
+                <!-- 2. ITBIS -->
                 <div class="summary-line tax">
                     <span>ITBIS ({{ company.tax_percent or 18 }}%)</span>
                     <span>{{ currency_symbol }}{{ "{:,.2f}".format(sale.itbis / conversion_rate) }}</span>
+                </div>
+                <!-- 3. Total -->
+                <div class="summary-line total-final">
+                    <span>Total</span>
+                    <span>{{ currency_symbol }}{{ "{:,.2f}".format(sale.total / conversion_rate) }}</span>
                 </div>
             </div>
         </section>

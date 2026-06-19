@@ -23,10 +23,6 @@ logger = logging.getLogger(__name__)
 
 reports_bp = Blueprint('reports_bp', __name__, url_prefix='/reports')
 
-# ==============================================================================
-# CLASE BASE PARA PDF CORPORATIVO (MEJORADA)
-# ==============================================================================
-
 class OrbisPDF(FPDF):
     def __init__(self, orientation='P', unit='mm', format='A4'):
         super().__init__(orientation, unit, format)
@@ -34,7 +30,6 @@ class OrbisPDF(FPDF):
         self.report_type = "Reporte General"
 
     def header(self):
-        # Color de fondo superior decorativo
         self.set_fill_color(250, 162, 0) # Naranja Orbis
         self.rect(0, 0, 210, 10, 'F')
         
@@ -69,9 +64,6 @@ class OrbisPDF(FPDF):
         if not text: return ""
         return str(text).encode('latin-1', 'ignore').decode('latin-1')
 
-# ==============================================================================
-# UTILIDADES DE SOPORTE (TU LÓGICA ORIGINAL)
-# ==============================================================================
 
 def get_company_context():
     company_id = session.get('company_id')
@@ -93,6 +85,7 @@ def get_company_context():
 
     return company_id, symbol, rate
 
+
 def build_pdf_response(pdf_obj, filename_prefix):
     try:
         pdf_bytes = pdf_obj.output(dest='S')
@@ -112,12 +105,10 @@ def build_pdf_response(pdf_obj, filename_prefix):
         flash("Error al generar el documento.", "danger")
         return redirect(url_for('reports_bp.index'))
 
-# ==============================================================================
-# VISTAS (RESTABLECIDAS Y MEJORADAS)
-# ==============================================================================
+
 @reports_bp.route('/')
 def index():
-    # 1. Limpiar caché de la sesión para leer datos reales recién guardados
+    # 1. Forzar limpieza de la caché de SQLAlchemy
     db.session.expire_all()
     
     company_id, currency_symbol, conversion_rate = get_company_context()
@@ -125,59 +116,84 @@ def index():
         return redirect(url_for('login_bp.login'))
 
     conv_rate = Decimal(str(conversion_rate)) if conversion_rate else Decimal('1.0')
-    
-    # Usamos fechas sin zona horaria para comparar directamente si la DB es naive
     today = datetime.now()
     
-    # Rango del mes: desde el día 1 hasta el final de hoy
-    start_month = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    # Expandimos el final del día un poco más por si acaso hay desfase de segundos
-    end_today = today.replace(hour=23, minute=59, second=59, microsecond=999999)
+    # Valores por defecto para evitar caídas en cascada
+    total_sales_month = 0.0
+    low_stock_count = 0
+    recent_closings = []
+    chart_data = [0]*7
+    chart_labels = []
 
+    # ==========================================
+    # BLOQUE 1: INGRESO MENSUAL (Filtrado por Mes/Año truncado)
+    # ==========================================
     try:
-        # VENTAS DEL MES: Quitamos el límite superior para ver si aparecen
-        # Así tomamos todo desde el día 1 hasta el futuro cercano
+        current_year = today.year
+        current_month = today.month
+
         raw_sales = db.session.query(func.sum(Sale.total)).filter(
             Sale.company_id == company_id,
             Sale.status == 'COMPLETED',
-            Sale.created_at >= start_month
+            extract('year', Sale.created_at) == current_year,
+            extract('month', Sale.created_at) == current_month
         ).scalar() or Decimal('0.00')
         
         total_sales_month = float(raw_sales / conv_rate)
+    except Exception as e:
+        logger.error(f"❌ Error calculando ingresos mensuales: {e}")
 
-        # ALERTAS DE STOCK
-        low_stock_count = Product.query.filter(
-            Product.company_id == company_id, 
-            Product.stocks <= 5
-        ).count()
+    # ==========================================
+    # BLOQUE 2: ALERTAS DE STOCK (Consulta sobre existencias reales en almacén)
+    # ==========================================
+    try:
+        # Importamos dinámicamente el modelo de existencias por almacén si no está arriba
+        from models.warehouse_stock.warehouse_stock import WarehouseStock
+        
+        # Contamos cuántos productos tienen existencias bajas (<= 5) en cualquiera de tus almacenes
+        low_stock_count = db.session.query(func.count(func.distinct(WarehouseStock.product_id))).filter(
+            WarehouseStock.company_id == company_id,
+            WarehouseStock.quantity <= 5
+        ).scalar() or 0
+    except Exception as e:
+        logger.error(f"❌ Error calculando alertas de stock: {e}")
+        # Si falla el método por almacén, usamos el fallback de la tabla de productos
+        try:
+            low_stock_count = Product.query.filter(Product.company_id == company_id, Product.stocks <= 5).count()
+        except : low_stock_count = 0
 
-        # CIERRES: Asegúrate de que el cierre de caja se guardó con status correcto
+    # ==========================================
+    # BLOQUE 3: ÚLTIMO CIERRE DE CAJA
+    # ==========================================
+    try:
         recent_closings = CashClosing.query.options(joinedload(CashClosing.user))\
             .filter_by(company_id=company_id)\
             .order_by(CashClosing.closing_date.desc())\
             .limit(5).all()
+    except Exception as e:
+        logger.error(f"❌ Error consultando cierres de caja: {e}")
 
-        # DATOS GRÁFICO
-        chart_data, chart_labels = [], []
+    # ==========================================
+    # BLOQUE 4: DATOS GRÁFICO (Últimos 7 días ignorando horas con CAST a DATE)
+    # ==========================================
+    try:
         for i in range(6, -1, -1):
             day = today - timedelta(days=i)
-            d_start = day.replace(hour=0, minute=0, second=0, microsecond=0)
-            d_end = day.replace(hour=23, minute=59, second=59, microsecond=999999)
+            target_date = day.date() # Obtenemos solo YYYY-MM-DD
             
-            # Usamos BETWEEN que es más eficiente para índices
+            # Comparamos usando la función cast/date de la base de datos para evitar problemas de huso horario
             daily_sum = db.session.query(func.sum(Sale.total)).filter(
                 Sale.company_id == company_id,
                 Sale.status == 'COMPLETED',
-                Sale.created_at.between(d_start, d_end)
+                func.cast(Sale.created_at, db.Date) == target_date
             ).scalar() or Decimal('0.00')
             
             chart_data.append(float(daily_sum / conv_rate))
             chart_labels.append(day.strftime('%a %d'))
-
     except Exception as e:
-        logger.error(f"❌ Error en Auditoría: {e}")
-        total_sales_month, low_stock_count, recent_closings = 0, 0, []
-        chart_data, chart_labels = [0]*7, ["N/A"]*7
+        logger.error(f"❌ Error generando gráfico lineal: {e}")
+        chart_data = [0]*7
+        chart_labels = ["N/A"]*7
 
     return render_template(
         'reports/index.html',
@@ -189,146 +205,119 @@ def index():
         chart_labels=chart_labels,
         now=today
     )
-
-@reports_bp.route('/export/pdf/sales')
-def export_sales_pdf():
+@reports_bp.route('/export/print/sales')
+def export_sales_print():
     company_id, sym, rate = get_company_context()
-    if not company_id: return redirect(url_for('login_bp.login'))
-
-    sales = Sale.query.options(joinedload(Sale.client)).filter_by(company_id=company_id, status='COMPLETED')\
+    if not company_id: 
+        return redirect(url_for('login_bp.login'))
+        
+    sales = Sale.query.options(joinedload(Sale.client))\
+        .filter_by(company_id=company_id, status='COMPLETED')\
         .order_by(Sale.created_at.desc()).all()
-
-    pdf = OrbisPDF()
-    pdf.alias_nb_pages()
-    pdf.report_type = f"Ventas y Clientes ({sym})"
-    pdf.add_page()
-
-    pdf.set_fill_color(240, 240, 240)
-    pdf.set_font("helvetica", "B", 9)
-    cols = [(30, "Fecha"), (70, "Cliente"), (30, "Metodo"), (30, f"Total {sym}")]
-    for w, txt in cols:
-        pdf.cell(w, 10, txt, 1, 0, 'C', True)
-    pdf.ln()
-
-    pdf.set_font("helvetica", "", 9)
+        
     grand_total = Decimal('0')
-
+    processed_sales = []
+    
     for s in sales:
         val_conv = Decimal(str(s.total or 0)) / rate
         grand_total += val_conv
-        client = s.client.name if s.client else "Consumidor Final"
-
-        pdf.cell(30, 8, s.created_at.strftime('%d/%m/%Y'), 1)
-        pdf.cell(70, 8, f" {pdf.safe_text(client[:32])}", 1)
-        pdf.cell(30, 8, f" {s.payment_method}", 1, 0, 'C')
-        pdf.cell(30, 8, f"{float(val_conv):,.2f}", 1, 1, 'R')
-
-    pdf.ln(2)
-    pdf.set_font("helvetica", "B", 10)
-    pdf.set_fill_color(250, 162, 0)
-    pdf.set_text_color(255, 255, 255)
-    pdf.cell(130, 10, " TOTAL ACUMULADO DEL PERIODO ", 0, 0, 'R', True)
-    pdf.cell(30, 10, f" {float(grand_total):,.2f} ", 0, 1, 'R', True)
-
-    return build_pdf_response(pdf, "Auditoria_Ventas")
-
-@reports_bp.route('/export/pdf/cash')
-def export_cash_pdf():
-    company_id, sym, _ = get_company_context()
-    closings = CashClosing.query.options(joinedload(CashClosing.user)).filter_by(company_id=company_id).order_by(CashClosing.closing_date.desc()).all()
-
-    pdf = OrbisPDF()
-    pdf.alias_nb_pages()
-    pdf.report_type = "Auditoria de Cierres de Caja"
-    pdf.add_page()
-
-    pdf.set_fill_color(30, 41, 59)
-    pdf.set_text_color(255, 255, 255)
-    pdf.set_font("helvetica", "B", 8)
-    
-    headers = [("Fecha/Hora", 40), ("Sistema", 40), ("Fisico", 40), ("Diferencia", 35), ("Usuario", 35)]
-    for txt, w in headers:
-        pdf.cell(w, 10, txt, 1, 0, 'C', True)
-    pdf.ln()
-
-    pdf.set_text_color(0)
-    pdf.set_font("helvetica", "", 9)
-
-    for c in closings:
-        sys_amt = float(c.system_amount or 0)
-        real_amt = float(c.reported_amount or 0)
-        diff = real_amt - sys_amt
-        user = c.user.name if c.user else "Sist."
-
-        pdf.cell(40, 8, c.closing_date.strftime('%d/%m/%y %H:%M'), 1)
-        pdf.cell(40, 8, f"{sys_amt:,.2f}", 1, 0, 'R')
-        pdf.cell(40, 8, f"{real_amt:,.2f}", 1, 0, 'R')
+        processed_sales.append({
+            'date': s.created_at,
+            'client': s.client.name if s.client else "Consumidor Final",
+            'payment_method': s.payment_method,
+            'total_converted': val_conv
+        })
         
-        if abs(diff) > 0.01:
-            pdf.set_text_color(200, 0, 0)
-            diff_text = f"{diff:,.2f}"
-        else:
-            pdf.set_text_color(0, 150, 0)
-            diff_text = "OK"
-            
-        pdf.cell(35, 8, diff_text, 1, 0, 'R')
-        pdf.set_text_color(0)
-        pdf.cell(35, 8, f" {pdf.safe_text(user[:15])}", 1, 1)
+    return render_template(
+        'reports/print_sales.html',
+        sales=processed_sales,
+        grand_total=grand_total,
+        currency_symbol=sym,
+        gen_date=datetime.now().strftime('%d/%m/%Y %H:%M:%S'),
+        company_id=company_id
+    )
 
-    return build_pdf_response(pdf, "Auditoria_Cajas")
-
+@reports_bp.route('/export/print/cash')
+def export_cash_print():
+    company_id, sym, _ = get_company_context()
+    if not company_id: 
+        return redirect(url_for('login_bp.login'))
+        
+    closings = CashClosing.query.options(joinedload(CashClosing.user))\
+        .filter_by(company_id=company_id)\
+        .order_by(CashClosing.closing_date.desc()).all()
+        
+    return render_template(
+        'reports/print_cash.html',
+        closings=closings,
+        currency_symbol=sym,
+        gen_date=datetime.now().strftime('%d/%m/%Y %H:%M:%S'),
+        company_id=company_id
+    )
+    
 @reports_bp.route('/export/csv')
 def export_csv():
     company_id, sym, rate = get_company_context()
     sales = Sale.query.options(joinedload(Sale.client)).filter_by(company_id=company_id).all()
-
     def generate():
         yield '\ufeffID_VENTA,FECHA,CLIENTE,MONEDA,TOTAL_ORIGINAL,TOTAL_CONVERTIDO,ESTADO\n'
         for s in sales:
             client = s.client.name if s.client else "Consumidor Final"
             val_conv = float(Decimal(str(s.total or 0)) / rate)
             yield f"{s.id},{s.created_at},{client},{sym},{s.total},{val_conv},{s.status}\n"
-
-    return Response(generate(), mimetype='text/csv', 
-                    headers={"Content-Disposition": "attachment;filename=data_export_orbis.csv"})
+    return Response(generate(), mimetype='text/csv', headers={"Content-Disposition": "attachment;filename=data_export_orbis.csv"})
 
 @reports_bp.route('/monthly-history')
 def monthly_history():
     company_id, currency_symbol, rate = get_company_context()
     if not company_id: return redirect(url_for('login_bp.login'))
-
     month_format = func.to_char(Sale.created_at, 'YYYY-MM').label('month')
-    query = db.session.query(
-        month_format,
-        User.name.label('seller_name'),
-        func.sum(Sale.total).label('revenue'),
-        func.count(Sale.id).label('transactions')
-    ).join(User, Sale.user_id == User.id).filter(
-        Sale.company_id == company_id,
-        Sale.status == 'COMPLETED'
-    ).group_by('month', User.name).order_by('month')
-
+    query = db.session.query(month_format, User.name.label('seller_name'), func.sum(Sale.total).label('revenue'), func.count(Sale.id).label('transactions')).join(User, Sale.user_id == User.id).filter(Sale.company_id == company_id, Sale.status == 'COMPLETED').group_by('month', User.name).order_by('month')
     results = query.all()
     return render_template('reports/monthly_history.html', results=results, sym=currency_symbol, rate=rate)
 
 @reports_bp.route('/inventory-health')
 def inventory_health():
-    company_id, _, _ = get_company_context()
+    company_id, currency_symbol, _ = get_company_context()
+    if not company_id:
+        return redirect(url_for('login_bp.login'))
+        
     products = Product.query.filter_by(company_id=company_id).all()
-    total_value = sum((p.stocks * (p.purchase_price or 0)) for p in products)
-    return render_template('reports/inventory_health.html', products=products, total_value=total_value)
+    
+    # Importamos el modelo de stock por almacén para hacer la consulta limpia
+    from models.warehouse_stock.warehouse_stock import WarehouseStock
+    
+    total_value = Decimal('0.00')
+    for p in products:
+        # 1. Obtener el costo de forma segura
+        cost = getattr(p, 'purchase_price', None) or getattr(p, 'cost', None) or Decimal('0.00')
+        if not isinstance(cost, Decimal):
+            cost = Decimal(str(cost))
 
+        # 2. SOLUCIÓN: Sumar explícitamente la columna .quantity filtrando por el ID del producto
+        stock_qty = db.session.query(
+            func.coalesce(func.sum(WarehouseStock.quantity), 0)
+        ).filter(
+            WarehouseStock.product_id == p.id,
+            WarehouseStock.company_id == company_id
+        ).scalar() or 0
+
+        # Guardamos el entero en el objeto para el HTML
+        p.calculated_stock = int(stock_qty)
+        
+        # Calcular valor total acumulado del almacén
+        total_value += (Decimal(str(p.calculated_stock)) * cost)
+        
+    return render_template(
+        'reports/inventory_health.html', 
+        products=products, 
+        total_value=float(total_value),
+        currency_symbol=currency_symbol
+    )
+    
 @reports_bp.route('/closings-history')
 def closings_history():
     company_id, currency_symbol, rate = get_company_context()
     if not company_id: return redirect(url_for('login_bp.login'))
-
-    closings = CashClosing.query.options(joinedload(CashClosing.user)).filter_by(company_id=company_id)\
-        .order_by(CashClosing.closing_date.desc()).all()
-
-    return render_template(
-        'reports/closings_history.html', 
-        closings=closings, 
-        currency_symbol=currency_symbol, 
-        conversion_rate=rate
-    )
+    closings = CashClosing.query.options(joinedload(CashClosing.user)).filter_by(company_id=company_id).order_by(CashClosing.closing_date.desc()).all()
+    return render_template('reports/closings_history.html', closings=closings, currency_symbol=currency_symbol, conversion_rate=rate)

@@ -7,7 +7,6 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- El CSS se mantiene externo según tu estructura -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/sales_css/create_sales.css') }}">
 </head>
 <body>
@@ -54,7 +53,6 @@
             </div>
 
             <div class="product-area" id="product-grid">
-                <!-- Se llena mediante JavaScript -->
                 <div class="empty-product-state">
                     <div class="spinner-border text-dark" role="status"></div>
                     <p style="margin-top: 15px;">Cargando catálogo...</p>
@@ -119,27 +117,38 @@
                 </div>
 
                 <div class="checkout-section">
-                    <select name="payment_method" form="finish-sale-form" class="method-select">
-                        <option value="CASH">💵 Efectivo</option>
-                        <option value="CREDIT">📋 Crédito</option>
-                        <option value="TRANSFER">🏦 Transferencia</option>
-                    </select>
+                    <div class="payment-method-row">
+                        <select name="payment_method" form="finish-sale-form" class="method-select">
+                            <option value="CASH">💵 Efectivo</option>
+                            <option value="CREDIT">📋 Crédito</option>
+                            <option value="TRANSFER">🏦 Transferencia</option>
+                        </select>
+                    </div>
 
-                    <form action="{{ url_for('sales_bp.finish_sale') }}" method="POST" id="finish-sale-form">
-                        <button type="submit" class="btn-checkout" {{ 'disabled' if not sale or not sale.items or not sale.client_id else '' }}>
-                            Confirmar Venta
-                        </button>
-                    </form>
+                    <div class="action-buttons-stack">
+                        <form action="{{ url_for('sales_bp.finish_sale') }}" method="POST" id="finish-sale-form">
+                            <button type="submit" class="btn-checkout" {{ 'disabled' if not sale or not sale.items or not sale.client_id else '' }}>
+                                <i class="bi bi-check-circle"></i> Confirmar Venta
+                            </button>
+                        </form>
+
+                        {% if sale and sale.id %}
+                        <form action="{{ url_for('sales_bp.convert_to_quote', sale_id=sale.id) }}" method="POST" id="quote-sale-form">
+                            <button type="submit" class="btn-quote" {{ 'disabled' if not sale.items else '' }}>
+                                <i class="bi bi-file-earmark-text"></i> Guardar Cotización
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </aside>
     </div>
 
-    <!-- Overlay de éxito -->
     <div id="success-overlay" class="success-overlay" style="display: none;">
         <div class="success-card">
             <div class="success-check"><i class="bi bi-check-lg"></i></div>
-            <h2>¡Venta Registrada!</h2>
+            <h2 id="overlay-msg">¡Venta Registrada!</h2>
             <p>Procesando...</p>
         </div>
     </div>
@@ -150,7 +159,6 @@
         const conversionRate = parseFloat("{{ conversion_rate }}") || 1;
         const currencySymbol = "{{ currency_symbol }}";
 
-        // 1. Reloj en tiempo real
         function updateClock() {
             const now = new Date();
             document.getElementById('live-clock').textContent = now.toLocaleTimeString('es-DO', { hour12: false });
@@ -158,7 +166,6 @@
         setInterval(updateClock, 1000);
         updateClock();
 
-        // 2. Obtener productos de la API
         async function fetchProducts(query = '') {
             try {
                 const response = await fetch(`/sales/get_products?search=${encodeURIComponent(query)}`);
@@ -170,7 +177,6 @@
             }
         }
 
-        // 3. Renderizar cuadrícula con validación de tipo
         function renderProducts(products) {
             if (products.length === 0) {
                 productGrid.innerHTML = `
@@ -183,10 +189,8 @@
             }
 
             productGrid.innerHTML = products.map(p => {
-                // Normalización estricta para evitar errores de detección
                 const rawType = String(p.type || '').trim().toUpperCase();
                 const isService = (rawType === 'SERVICE' || rawType === 'SERVICIO');
-                
                 const typeClass = isService ? 'badge-type-service' : 'badge-type-product';
                 const typeLabel = isService ? 'Servicio' : 'Producto';
                 
@@ -210,7 +214,6 @@
             `}).join('');
         }
 
-        // Eventos
         barcodeInput.addEventListener('input', (e) => fetchProducts(e.target.value));
 
         function addProductToSale(sku) {
@@ -226,14 +229,57 @@
             form.submit();
         }
 
+        // Manejo de Envíos con Overlay
         document.getElementById('finish-sale-form').addEventListener('submit', function(e) {
             e.preventDefault();
+            document.getElementById('overlay-msg').innerText = "¡Venta Registrada!";
             document.getElementById('success-overlay').style.display = 'grid';
-            setTimeout(() => this.submit(), 1000);
+            setTimeout(() => this.submit(), 800);
         });
 
-        // Carga inicial
+        const quoteForm = document.getElementById('quote-sale-form');
+        if(quoteForm) {
+            quoteForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                document.getElementById('overlay-msg').innerText = "¡Cotización Guardada!";
+                document.getElementById('success-overlay').style.display = 'grid';
+                setTimeout(() => this.submit(), 800);
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', () => fetchProducts());
     </script>
+
+    <style>
+        /* Estilos adicionales para los botones nuevos */
+        .action-buttons-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .btn-quote {
+            width: 100%;
+            padding: 12px;
+            background-color: #f8f9fa;
+            color: #333;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-quote:hover:not(:disabled) {
+            background-color: #e9ecef;
+            border-color: #ccc;
+        }
+        .btn-quote:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .payment-method-row {
+            margin-bottom: 10px;
+        }
+    </style>
 </body>
 </html>

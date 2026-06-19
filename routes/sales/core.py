@@ -43,12 +43,12 @@ def create_sale():
     plan_limits = company.get_plan_limits()
     current_usage = company.get_current_month_usage()
 
-    # --- LÓGICA DE VENTA PENDIENTE ---
     current_id = session.get('current_sale_id')
     sale = None
+    
     if current_id:
         sale = Sale.query.filter_by(id=current_id, company_id=company_id, user_id=user_id).first()
-        if sale and sale.status not in ['PENDING']:
+        if sale and sale.status not in ['PENDING', 'QUOTATION', 'DRAFT']:
             sale = None
             session.pop('current_sale_id', None)
 
@@ -61,6 +61,8 @@ def create_sale():
         db.session.commit()
 
     session['current_sale_id'] = sale.id
+    
+    db.session.refresh(sale)
 
     # --- LÓGICA DE ESCANEO / AGREGAR (POST) ---
     search_query = request.form.get('search', '').strip()
@@ -71,22 +73,18 @@ def create_sale():
             product = Product.query.filter_by(name=search_query, company_id=company_id, status=True).first()
 
         if product:
-            # Detectar si es servicio (Normalizamos a mayúsculas para evitar errores de escritura)
             p_type = str(product.product_type.value if hasattr(product.product_type, 'value') else product.product_type).upper()
             is_service = p_type in ['SERVICE', 'SERVICIO']
 
-            # Definir almacén de referencia (Incluso servicios necesitan un ID de almacén por estructura de BD)
             w_id = user.warehouse_id or (Warehouse.query.filter_by(company_id=company_id, status=True).first().id if Warehouse.query.filter_by(company_id=company_id, status=True).first() else None)
             
             if w_id:
-                # Si NO es servicio, validamos que exista stock físico
                 if not is_service:
                     stock = WarehouseStock.query.filter_by(product_id=product.id, warehouse_id=w_id).first()
                     if not stock or stock.quantity < 1:
                         flash(f'Sin stock disponible para {product.name}', 'danger')
                         return redirect(url_for('sales_bp.create_sale'))
 
-                # Lógica de agregado al carrito
                 item = SaleItem.query.filter_by(sale_id=sale.id, product_id=product.id, warehouse_id=w_id).first()
                 if item:
                     item.quantity += 1
@@ -127,7 +125,6 @@ def create_sale():
 
 @sales_bp.route('/add/<int:product_id>', methods=['POST'])
 def add_to_cart(product_id):
-    """Ruta para agregar productos/servicios con cantidad específica."""
     company_id = session.get('company_id')
     sale_id = session.get('current_sale_id')
     user_id = session.get('user_id')
@@ -143,11 +140,9 @@ def add_to_cart(product_id):
     
     product = Product.query.filter_by(id=product_id, company_id=company_id).first_or_404()
     
-    # Validación de tipo
     p_type = str(product.product_type.value if hasattr(product.product_type, 'value') else product.product_type).upper()
     is_service = p_type in ['SERVICE', 'SERVICIO']
 
-    # Solo validar stock si es un producto físico
     if not is_service:
         warehouse = Warehouse.query.filter_by(id=warehouse_id, company_id=company_id).first_or_404()
         stock = WarehouseStock.query.filter_by(product_id=product.id, warehouse_id=warehouse.id).first()

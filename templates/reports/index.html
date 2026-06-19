@@ -19,7 +19,11 @@
                     fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
                     colors: {
                         orbis: { DEFAULT: '#faa200', dark: '#d98c00' },
-                        carbon: { 800: '#1a1d21', 900: '#111315' }
+                        carbon: {
+                            700: '#1e2328',
+                            800: '#16191c', 
+                            900: '#0f1113'
+                        }
                     }
                 }
             }
@@ -27,49 +31,45 @@
     </script>
 
     <style>
-        :root { --primary-rgb: 250, 162, 0; }
         body {
-            background-color: #f8fafc;
-            color: #1e293b;
+            background-color: #f3f4f6;
+            color: #111827;
             font-family: 'Plus Jakarta Sans', sans-serif;
             overflow-x: hidden;
         }
-        .dark body { background-color: #0f1113; color: #f1f5f9; }
-
-        /* Scrollbar Premium */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-
-        /* Efecto Glass en Botones de Exportación */
-        .glass-export {
-            position: relative;
-            overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.2, 0, 0, 1);
-        }
-        .glass-export:hover {
-            transform: translateY(-4px);
-            filter: brightness(1.1);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
-        }
-        .icon-bg-blur {
-            position: absolute;
-            right: -10px;
-            bottom: -15px;
-            font-size: 5rem;
-            opacity: 0.1;
-            transform: rotate(-12deg);
+        .dark body { 
+            background-color: #0f1113; 
+            color: #e5e7eb; 
         }
 
-        /* Bento Cards Estilo Odoo 18 */
-        .bento-card {
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #1e2328; }
+
+        /* Tarjetas de Control Estilo Odoo 18 Analytics */
+        .odoo-card {
             background: #ffffff;
-            border: 1px solid #e2e8f0;
-            transition: border-color 0.3s ease;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease-in-out;
         }
-        .dark .bento-card {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+        .dark .odoo-card {
+            background: #16191c;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+        .odoo-card:hover {
+            border-color: #faa200;
+        }
+
+        /* Botones de Acción Rápida (Obsidian Glass Effect) */
+        .odoo-btn-action {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .odoo-btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px -10px rgba(250, 162, 0, 0.3);
         }
     </style>
 </head>
@@ -78,173 +78,224 @@
 
     {% include 'layouts/left_bar.html' %}
 
-    <main class="flex-grow h-screen overflow-y-auto p-4 lg:p-8 space-y-6">
+    <main class="flex-grow h-screen overflow-y-auto p-4 lg:p-6 space-y-6">
         
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-2">
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-gray-200 dark:border-white/5">
             <div>
-                <h1 class="text-3xl font-800 tracking-tight text-slate-900 dark:text-white">
-                    Auditoría <span class="text-orbis">Fiscal</span>
+                <div class="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    <span>Informes</span>
+                    <i class="bi bi-chevron-right text-[10px]"></i>
+                    <span class="text-orbis">Panel Fiscal</span>
+                </div>
+                <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white mt-1">
+                    Auditoría Tributaria
                 </h1>
-                <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Monitoreo de rendimiento y control tributario.</p>
             </div>
 
-            <div class="flex gap-3">
-                <a href="{{ url_for('reports_bp.monthly_history') }}" class="flex items-center gap-2 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-orbis px-4 py-2 rounded-xl text-sm font-bold transition-all">
-                    <i class="bi bi-archive"></i> Historial
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <a href="{{ url_for('reports_bp.monthly_history') }}" class="flex items-center justify-center gap-2 bg-white dark:bg-carbon-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-carbon-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors w-full sm:w-auto shadow-sm">
+                    <i class="bi bi-clock-history"></i> Historial
                 </a>
-                <a href="{{ url_for('dashboard_bp.dashboard') }}" class="flex items-center gap-2 bg-orbis text-white px-5 py-2 rounded-xl text-sm font-bold shadow-lg shadow-orbis/20 hover:scale-105 active:scale-95 transition-all">
-                    <i class="bi bi-house"></i> Panel
+                <a href="{{ url_for('dashboard_bp.dashboard') }}" class="flex items-center justify-center gap-2 bg-orbis text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm hover:bg-orbis-dark transition-colors w-full sm:w-auto">
+                    <i class="bi bi-speedometer2"></i> Dashboard
                 </a>
             </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
-            <!-- Gráfico Principal -->
-            <div class="lg:col-span-8 bento-card rounded-3xl p-6 shadow-sm">
-                <div class="flex justify-between items-start mb-8">
-                    <div>
-                        <p class="text-[10px] font-black text-orbis uppercase tracking-[2px] mb-1">Ingresos Mensuales Netos</p>
-                        <h2 class="text-4xl font-800 text-slate-900 dark:text-white">
-                            {{ currency_symbol }} {{ "{:,.2f}".format(total_sales_month | default(0)) }}
-                        </h2>
+            <div class="lg:col-span-8 odoo-card rounded-xl p-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Ingresos Netos del Mes Actual</p>
+                            <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white mt-1 tracking-tight">
+                                {{ currency_symbol }} {{ "{:,.2f}".format(total_sales_month | default(0)) }}
+                            </h2>
+                        </div>
+                        {% if total_sales_month and total_sales_month > 0 %}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Sincronizado
+                        </span>
+                        {% endif %}
                     </div>
-                    {% if total_sales_month > 0 %}
-                    <div class="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-3 py-1 rounded-full text-xs font-bold">
-                        <i class="bi bi-graph-up-arrow mr-1"></i> Activo
-                    </div>
-                    {% endif %}
                 </div>
                 
-                <div class="h-72 w-full">
+                <div class="h-64 w-full mt-4">
                     <canvas id="mainChart"></canvas>
                 </div>
             </div>
 
-            <!-- Columna Lateral -->
-            <div class="lg:col-span-4 space-y-5">
-                <!-- Alertas Stock -->
-                <div class="bento-card rounded-3xl p-6 relative overflow-hidden group shadow-sm">
-                    <div class="relative z-10">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-[2px] mb-2">Alertas Críticas</p>
-                        <div class="flex items-end gap-2">
-                            <span class="text-5xl font-800 {% if low_stock_count > 0 %}text-red-500{% else %}text-emerald-500{% endif %}">
+            <div class="lg:col-span-4 flex flex-col gap-6">
+                
+                <div class="odoo-card rounded-xl p-5 flex items-center justify-between relative overflow-hidden">
+                    <div class="space-y-2">
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Stock Mínimo Comprometido</p>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-4xl font-black {% if low_stock_count and low_stock_count > 0 %}text-red-500{% else %}text-emerald-500{% endif %}">
                                 {{ low_stock_count | default(0) }}
                             </span>
-                            <span class="text-slate-500 text-xs font-bold mb-2">Productos sin stock</span>
+                            <span class="text-xs font-medium text-gray-500 dark:text-gray-400">ítems detectados</span>
                         </div>
-                        <a href="{{ url_for('reports_bp.inventory_health') }}" class="mt-4 inline-flex items-center text-xs font-black text-orbis uppercase tracking-wider hover:translate-x-1 transition-all">
-                            Analizar Inventario <i class="bi bi-chevron-right ml-1"></i>
+                        <a href="{{ url_for('reports_bp.inventory_health') }}" class="inline-flex items-center text-xs font-semibold text-orbis hover:text-orbis-dark gap-1 transition-colors pt-2">
+                            Ver Almacenes <i class="bi bi-arrow-right text-[10px]"></i>
                         </a>
                     </div>
-                    <i class="bi bi-box-seam absolute -right-4 -bottom-4 text-7xl opacity-5 dark:opacity-10 text-slate-400"></i>
+                    <div class="p-3 bg-gray-100 dark:bg-white/5 rounded-lg text-gray-400 dark:text-gray-500">
+                        <i class="bi bi-exclamation-octagon text-2xl"></i>
+                    </div>
                 </div>
 
-                <!-- Último Cierre -->
-                <div class="bento-card rounded-3xl p-6 shadow-sm">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-[2px] mb-4">Último Cierre de Caja</p>
-                    
-                    {% if recent_closings %}
-                    <div class="flex justify-between items-center">
-                        <div class="space-y-1">
-                            <p class="text-sm font-bold text-slate-900 dark:text-slate-200">
-                                {{ recent_closings[0].closing_date.strftime('%d %b, %H:%M') }}
-                            </p>
-                            <p class="text-[10px] text-slate-500 uppercase font-bold">Responsable: {{ recent_closings[0].user.name[:15] }}</p>
+                <div class="odoo-card rounded-xl p-5 flex flex-col justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Último Cierre de Caja Activo</p>
+                        
+                        {% if recent_closings %}
+                        <div class="bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 p-3 rounded-lg flex justify-between items-center">
+                            <div class="space-y-1">
+                                <p class="text-xs font-bold text-gray-700 dark:text-gray-200">
+                                    {% if recent_closings[0].closing_date.strftime %}
+                                        {{ recent_closings[0].closing_date.strftime('%d %b, %H:%M') }}
+                                    {% else %}
+                                        {{ recent_closings[0].closing_date }}
+                                    {% endif %}
+                                </p>
+                                <p class="text-[11px] font-medium text-gray-400">Cajero: {{ recent_closings[0].user.name[:18] }}</p>
+                            </div>
+                            <span class="text-base font-extrabold text-emerald-500">
+                                {{ currency_symbol }}{{ "{:,.0f}".format(recent_closings[0].reported_amount) }}
+                            </span>
                         </div>
-                        <div class="text-right">
-                            <p class="text-xl font-800 text-emerald-500">
-                                {{ currency_symbol }} {{ "{:,.0f}".format(recent_closings[0].reported_amount) }}
-                            </p>
+                        {% else %}
+                        <div class="p-4 border border-dashed border-gray-300 dark:border-white/10 rounded-lg text-center">
+                            <p class="text-xs text-gray-400 italic">No se registran cierres de caja hoy.</p>
                         </div>
+                        {% endif %}
                     </div>
-                    {% else %}
-                    <p class="text-xs text-slate-400 italic">No hay cierres registrados recientemente.</p>
-                    {% endif %}
                     
-                    <div class="mt-6 pt-4 border-t border-slate-100 dark:border-white/5">
-                        <a href="{{ url_for('reports_bp.closings_history') }}" class="text-[10px] font-black text-slate-400 hover:text-orbis uppercase tracking-widest transition-colors">
-                            Ver historial completo
+                    <div class="mt-4 pt-3 border-t border-gray-200 dark:border-white/5">
+                        <a href="{{ url_for('reports_bp.closings_history') }}" class="text-xs font-semibold text-gray-400 hover:text-orbis dark:hover:text-orbis transition-colors flex items-center gap-1">
+                            Auditar arqueos históricos <i class="bi bi-chevron-right text-[9px]"></i>
                         </a>
                     </div>
                 </div>
             </div>
 
-            <!-- Fila de Exportación -->
-            <div class="lg:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <a href="{{ url_for('reports_bp.export_sales_pdf') }}" class="glass-export bg-gradient-to-br from-blue-600 to-indigo-700 p-6 rounded-2xl text-white">
-                    <p class="text-[10px] font-black opacity-60 uppercase tracking-[2px] mb-1">Contabilidad</p>
-                    <p class="text-lg font-bold">Ventas Totales PDF</p>
-                    <i class="bi bi-file-earmark-pdf icon-bg-blur"></i>
-                </a>
+            <div class="lg:col-span-12">
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">Acciones Generales de Exportación</p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    
+                    <a href="{{ url_for('reports_bp.export_sales_print') }}" target="_blank" class="odoo-btn-action group flex items-center justify-between p-4 bg-white dark:bg-carbon-800 border border-gray-200 dark:border-white/5 rounded-xl shadow-sm hover:border-blue-500/50">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-lg">
+                                <i class="bi bi-printer text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100">Libro de Ventas</h3>
+                                <p class="text-[11px] text-gray-400">Ver e imprimir balance formal</p>
+                            </div>
+                        </div>
+                        <i class="bi bi-arrow-up-right-square text-gray-300 dark:text-gray-600 group-hover:text-blue-500 transition-colors text-sm"></i>
+                    </a>
 
-                <a href="{{ url_for('reports_bp.export_cash_pdf') }}" class="glass-export bg-gradient-to-br from-emerald-600 to-teal-700 p-6 rounded-2xl text-white">
-                    <p class="text-[10px] font-black opacity-60 uppercase tracking-[2px] mb-1">Caja Chica</p>
-                    <p class="text-lg font-bold">Auditoría de Cierres</p>
-                    <i class="bi bi-safe2 icon-bg-blur"></i>
-                </a>
+                    <a href="{{ url_for('reports_bp.export_cash_print') }}" target="_blank" class="odoo-btn-action group flex items-center justify-between p-4 bg-white dark:bg-carbon-800 border border-gray-200 dark:border-white/5 rounded-xl shadow-sm hover:border-emerald-500/50">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg">
+                                <i class="bi bi-shield-check text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100">Auditoría de Cajas</h3>
+                                <p class="text-[11px] text-gray-400">Imprimir arqueos y control de descuadres</p>
+                            </div>
+                        </div>
+                        <i class="bi bi-arrow-up-right-square text-gray-300 dark:text-gray-600 group-hover:text-emerald-500 transition-colors text-sm"></i>
+                    </a>
 
-                <a href="{{ url_for('reports_bp.export_csv') }}" class="glass-export bg-slate-800 p-6 rounded-2xl text-white border-slate-700">
-                    <p class="text-[10px] font-black opacity-60 uppercase tracking-[2px] mb-1">Data Engine</p>
-                    <p class="text-lg font-bold">Exportar CSV (Excel)</p>
-                    <i class="bi bi-file-spreadsheet icon-bg-blur"></i>
-                </a>
+                    <a href="{{ url_for('reports_bp.export_csv') }}" class="odoo-btn-action group flex items-center justify-between p-4 bg-white dark:bg-carbon-800 border border-gray-200 dark:border-white/5 rounded-xl shadow-sm hover:border-orbis/50">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-amber-50 dark:bg-orbis/10 text-orbis rounded-lg">
+                                <i class="bi bi-filetype-csv text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100">Estructura de Datos</h3>
+                                <p class="text-[11px] text-gray-400">Descarga masiva de registros (CSV)</p>
+                            </div>
+                        </div>
+                        <i class="bi bi-download text-gray-300 dark:text-gray-600 group-hover:text-orbis transition-colors"></i>
+                    </a>
+                </div>
             </div>
         </div>
     </main>
 
     <script>
-    const ctx = document.getElementById('mainChart').getContext('2d');
-    const isDark = document.documentElement.classList.contains('dark');
+        document.addEventListener("DOMContentLoaded", function() {
+            const canvas = document.getElementById('mainChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const isDark = document.documentElement.classList.contains('dark');
 
-    // Debug: Revisa esto en la consola F12 del navegador
-    console.log("Labels:", {{ chart_labels | tojson | safe }});
-    console.log("Data:", {{ chart_data | tojson | safe }});
+            const rawLabels = {{ chart_labels | tojson | safe }};
+            const rawData = {{ chart_data | tojson | safe }};
+            
+            const chartLabels = Array.isArray(rawLabels) ? rawLabels : [];
+            const chartData = Array.isArray(rawData) ? rawData : [];
 
-    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-    gradient.addColorStop(0, 'rgba(250, 162, 0, 0.25)');
-    gradient.addColorStop(1, 'rgba(250, 162, 0, 0)');
-
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: {{ chart_labels | tojson | safe }},
-            datasets: [{
-                data: {{ chart_data | tojson | safe }},
-                borderColor: '#faa200',
-                backgroundColor: gradient,
-                borderWidth: 3,
-                fill: true,
-                tension: 0.4,
-                pointRadius: 4, // Aumentado para que se vea aunque sea un solo punto
-                pointBackgroundColor: '#faa200',
-                pointHoverRadius: 6,
-                pointHoverBackgroundColor: '#fff',
-                pointHoverBorderWidth: 3
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                x: {
-                    grid: { display: false },
-                    ticks: { color: '#64748b', font: { size: 10, weight: '600' } }
-                },
-                y: {
-                    beginAtZero: true, // ESENCIAL: Si no, el gráfico puede colapsar en 0
-                    grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
-                    ticks: { 
-                        color: '#64748b', 
-                        font: { size: 10 },
-                        callback: value => '{{ currency_symbol }}' + value.toLocaleString()
-                    },
-                    border: { display: false }
-                }
+            const gradient = ctx.createLinearGradient(0, 0, 0, 240);
+            if (isDark) {
+                gradient.addColorStop(0, 'rgba(250, 162, 0, 0.15)');
+                gradient.addColorStop(1, 'rgba(250, 162, 0, 0.0)');
+            } else {
+                gradient.addColorStop(0, 'rgba(250, 162, 0, 0.12)');
+                gradient.addColorStop(1, 'rgba(250, 162, 0, 0.01)');
             }
-        }
-    });
-</script>
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        data: chartData,
+                        borderColor: '#faa200',
+                        backgroundColor: gradient,
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.2,
+                        pointRadius: chartLabels.length === 1 ? 4 : 1, 
+                        pointBackgroundColor: '#faa200',
+                        pointBorderColor: isDark ? '#16191c' : '#fff',
+                        pointBorderWidth: 1,
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: '#faa200',
+                        pointHoverBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { 
+                                color: isDark ? '#9ca3af' : '#6b7280', 
+                                font: { size: 11, weight: '500', family: 'Plus Jakarta Sans' } 
+                            }
+                        },
+                        y: {
+                            beginAtZero: true, 
+                            grid: { color: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.05)' },
+                            ticks: { 
+                                color: isDark ? '#9ca3af' : '#6b7280', 
+                                font: { size: 11, family: 'Plus Jakarta Sans' },
+                                callback: value => '{{ currency_symbol }}' + value.toLocaleString('en-US', { minimumFractionDigits: 0 })
+                            },
+                            border: { display: false }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 </html>
