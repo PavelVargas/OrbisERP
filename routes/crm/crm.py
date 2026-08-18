@@ -26,12 +26,26 @@ def crm_index():
     
     stmt = select(Client).filter_by(company_id=company_id).order_by(Client.name.asc())
     clientes = db.session.execute(stmt).scalars().all()
-
-    return render_template('crm/index.html', clientes=clientes, user=user)
+    tasks_due = db.session.execute(
+        select(Task).join(Client).where(
+            Client.company_id == company_id,
+            Task.is_completed.is_(False),
+        ).order_by(Task.due_date.asc()).limit(8)
+    ).scalars().all()
+    stats = {
+        'clients': len(clientes),
+        'leads': sum(1 for c in clientes if (c.status or 'Lead') == 'Lead'),
+        'negotiation': sum(1 for c in clientes if c.status == 'Negociacion'),
+        'won': sum(1 for c in clientes if c.status == 'Ganado'),
+        'pending_tasks': len(tasks_due),
+    }
+    return render_template('crm/index.html', clientes=clientes, user=user, stats=stats, tasks_due=tasks_due)
 
 @crm_bp.route('/crm/api/client/<int:client_id>')
 def get_client_details(client_id):
     company_id = session.get('company_id')
+    if not session.get('user_id') or not company_id:
+        return jsonify({"status": "error", "message": "Autenticación requerida"}), 401
     
     # --- LÓGICA DE DIVISAS ---
     selected_currency = session.get('selected_currency', 'DOP')
@@ -51,7 +65,7 @@ def get_client_details(client_id):
     if not cliente:
         return jsonify({"status": "error", "message": "No encontrado"}), 404
 
-    stmt_tasks = select(Task).filter_by(client_id=client_id, is_completed=False)
+    stmt_tasks = select(Task).filter_by(client_id=client_id, is_completed=False).order_by(Task.due_date.asc())
     tareas = db.session.execute(stmt_tasks).scalars().all()
 
     # Cálculo de montos convertidos
@@ -88,7 +102,8 @@ def get_client_details(client_id):
         "tasks": [{
             "id": t.id,
             "title": t.title,
-            "due": t.due_date.strftime('%d %b'),
+            "due": t.due_date.strftime('%d %b %Y'),
+            "due_iso": t.due_date.strftime('%Y-%m-%d'),
             "priority": t.priority
         } for t in tareas]
     })
@@ -100,7 +115,12 @@ def get_client_details(client_id):
 def add_interaction():
     user_id = session.get('user_id')
     company_id = session.get('company_id')
-    data = request.json
+    data = request.get_json(silent=True) or {}
+    if not user_id or not company_id:
+        return jsonify({"status": "error", "message": "Autenticación requerida"}), 401
+    content = (data.get('content') or '').strip()
+    if not content or len(content) > 2000:
+        return jsonify({"status": "error", "message": "La nota debe tener entre 1 y 2000 caracteres"}), 400
     
     try:
         client_id = int(data.get('client_id'))
@@ -114,7 +134,7 @@ def add_interaction():
         return jsonify({"status": "error", "message": "Acceso denegado"}), 403
 
     nueva_nota = Interaction(
-        content=data.get('content'),
+        content=content,
         client_id=client_id,
         user_id=user_id,
         type=data.get('type', 'Nota'),
@@ -133,9 +153,15 @@ def add_interaction():
 def update_status():
     company_id = session.get('company_id')
     user_id = session.get('user_id')
-    data = request.json
+    data = request.get_json(silent=True) or {}
+    if not user_id or not company_id:
+        return jsonify({"status": "error", "message": "Autenticación requerida"}), 401
+    try:
+        client_id = int(data.get('client_id'))
+    except (ValueError, TypeError):
+        return jsonify({"status": "error", "message": "ID de cliente inválido"}), 400
     
-    stmt = select(Client).filter_by(id=data.get('client_id'), company_id=company_id)
+    stmt = select(Client).filter_by(id=client_id, company_id=company_id)
     cliente = db.session.execute(stmt).scalar_one_or_none()
     
     if not cliente: 
@@ -143,6 +169,8 @@ def update_status():
 
     old_status = cliente.status
     new_status = data.get('status')
+    if new_status not in {'Lead', 'Negociacion', 'Ganado', 'Perdido'}:
+        return jsonify({"status": "error", "message": "Fase no válida"}), 400
     cliente.status = new_status
 
     log = Interaction(
@@ -165,21 +193,33 @@ def update_status():
 def add_task():
     user_id = session.get('user_id')
     company_id = session.get('company_id')
-    data = request.json
+    data = request.get_json(silent=True) or {}
+    if not user_id or not company_id:
+        return jsonify({"status": "error", "message": "Autenticación requerida"}), 401
+    try:
+        client_id = int(data.get('client_id'))
+    except (ValueError, TypeError):
+        return jsonify({"status": "error", "message": "ID de cliente inválido"}), 400
     
-    stmt = select(Client).filter_by(id=data.get('client_id'), company_id=company_id)
+    stmt = select(Client).filter_by(id=client_id, company_id=company_id)
     cliente = db.session.execute(stmt).scalar_one_or_none()
     
     if not cliente:
         return jsonify({"status": "error", "message": "Cliente no válido"}), 403
 
     try:
+        title = (data.get('title') or '').strip()
+        if not title or len(title) > 200:
+            return jsonify({"status": "error", "message": "Escribe un título válido"}), 400
+        priority = data.get('priority', 'Media')
+        if priority not in {'Baja', 'Media', 'Alta'}:
+            priority = 'Media'
         nueva_tarea = Task(
-            title=data.get('title'),
+            title=title,
             due_date=datetime.strptime(data.get('due_date'), '%Y-%m-%d'),
             client_id=cliente.id,
             user_id=user_id,
-            priority=data.get('priority', 'Media'),
+            priority=priority,
             is_completed=False,
             created_at=datetime.now(timezone.utc)
         )
@@ -195,7 +235,13 @@ def add_task():
 # ==========================================================
 @crm_bp.route('/crm/api/complete_task/<int:task_id>', methods=['POST'])
 def complete_task(task_id):
-    task = db.session.get(Task, task_id)
+    company_id = session.get('company_id')
+    user_id = session.get('user_id')
+    if not user_id or not company_id:
+        return jsonify({"status": "error", "message": "Autenticación requerida"}), 401
+    task = db.session.execute(
+        select(Task).join(Client).where(Task.id == task_id, Client.company_id == company_id)
+    ).scalar_one_or_none()
     if not task:
         return jsonify({"status": "error"}), 404
     

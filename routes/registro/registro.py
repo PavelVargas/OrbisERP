@@ -8,8 +8,8 @@ registrar_bp = Blueprint('registrar', __name__)
 def register():
 
     if request.method == 'POST':
-        email = request.form.get('email')
-        name = request.form.get('name')
+        email = (request.form.get('email') or '').strip().lower()
+        name = (request.form.get('name') or '').strip()
         password = request.form.get('password')
         cedula = request.form.get('cedula')
 
@@ -24,10 +24,11 @@ def register():
         new_user = User(
             email=email,
             name=name,
-            password=password,
+            password='pending-hash',
             cedula=cedula,
             role='admin'  
         )
+        new_user.set_password(password)
 
         db.session.add(new_user)
         db.session.commit()

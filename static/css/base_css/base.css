@@ -1,13 +1,14 @@
-/* OrbisERP - Master Base CSS 
-    Optimizado para: Modo Oscuro Nativo, Cero Flashazos, Alto Rendimiento
-*/
+/* ==========================================================================
+   ORBISERP - MASTER BASE CSS (PRODUCTION READY)
+   Optimizado para: Modo Oscuro Nativo, Cero Flashazos, Alto Rendimiento
+   ========================================================================== */
 
 /* --- VARIABLES MAESTRAS --- */
 :root {
-    --primary: #faa200;
-    --accent: #faa200;
+    --primary: #f36b21;
+    --accent: #f36b21;
     --success: #10b981;
-    --warning: #f59e0b;
+    --warning: #e36a23;
     --danger: #ef4444;
     --sidebar-width: 290px;
     --sidebar-collapsed: 68px;
@@ -20,55 +21,52 @@
     --text-muted: #64748b;
     --border: #e2e8f0;
     --shadow: 0 1px 3px rgba(0,0,0,0.05);
-    --radius: 22px;
+    --radius: 14px;
     
     color-scheme: light;
 }
 
 html.dark {
-    /* Fondo base: Gris carbón muy oscuro (No es negro puro, es más suave) */
-    --bg-main:      #121417; 
+    /* Fondo base: Gris carbón muy oscuro */
+    --bg-main:      #0e0f11;
     
     /* Superficies: Elevación táctil de Odoo */
-    --bg-card:      #1c1f23; 
-    --bg-input:     #25292e;
-    --bg-hover:     #2a2e34;
+    --bg-card:      #17191c;
+    --bg-input:     #202328;
+    --bg-hover:     #25292e;
 
-    /* Tipografía: Blanco humo para legibilidad perfecta */
-    --text-main:    #e7e9ed;
-    --text-muted:   #9ca3af;
+    /* Tipografía */
+    --text-main:    #f5f5f4;
+    --text-muted:   #999da6;
     
-    /* Bordes: La clave de Odoo, sutiles y definidos */
-    --border:       #32373e; 
-    --accent:       #faa200; /* El icónico color púrpura de Odoo */
+    /* Bordes y Acentos */
+    --border:       #2c3036;
+    --accent:       #ff7a2f; 
     
-    /* Sombras de profundidad de UI empresarial */
+    /* Sombras de profundidad empresarial */
     --shadow:       0 4px 6px -1px rgba(0, 0, 0, 0.3), 
                     0 2px 4px -1px rgba(0, 0, 0, 0.1);
 
-    background-color: #121417 !important;
+    background-color: #0e0f11 !important;
     color-scheme: dark;
 }
 
 /* --- RESET Y ESTRUCTURA MAESTRA --- */
-* { 
+*, *::before, *::after { 
     box-sizing: border-box; 
     -webkit-font-smoothing: antialiased;
     margin: 0;
     padding: 0;
-        font-family: 'Plus Jakarta Sans', sans-serif;
-
+    font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 body {
-    font-family: 'Plus Jakarta Sans', sans-serif;
     background-color: var(--bg-main);
     color: var(--text-main);
     display: flex;
     min-height: 100vh;
     width: 100%;
     overflow-x: hidden;
-    /* Transición suave solo después de carga inicial */
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -77,7 +75,6 @@ body.no-transition {
     transition: none !important;
 }
 
-/* --- MAIN: CONTROL DINÁMICO DE ESPACIOS --- */
 main {
     flex: 1;
     min-width: 0;
@@ -85,22 +82,22 @@ main {
     padding: 90px 16px 30px 16px; 
     display: flex;
     flex-direction: column;
-    align-items: stretch;
+    align-items: stretch; /* Vuelve a stretch para heredar estructuras estándar */
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
 }
 
-/* Contenedor interno que limita el ancho máximo */
+/* Contenedor interno estándar para el resto del ERP */
 .content-container {
     width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
+    max-width: 1200px; /* Protege las demás vistas de estirarse al infinito */
+    margin: 0 auto;    /* Centrado perfecto estándar */
     display: flex;
     flex-direction: column;
     gap: 25px;
 }
 
-/* --- LÓGICA DE ESCRITORIO --- */
+/* --- LÓGICA DE ESCRITORIO (Sidebar integration) --- */
 @media (min-width: 1025px) {
     main {
         padding: 40px;
@@ -119,11 +116,11 @@ main {
     main {
         margin-left: 0 !important;
         width: 100% !important;
-        padding: 80px 15px 30px 15px;
+        padding: 80px 16px 30px 16px;
     }
 }
 
-/* --- SCROLLBARS (Modernos y sutiles) --- */
+/* --- SCROLLBARS --- */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { 
@@ -132,7 +129,6 @@ main {
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
-/* Para esconder el scrollbar si prefieres la estética limpia total */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; }
 
@@ -143,6 +139,7 @@ main {
     gap: 10px;
     width: 100%;
     margin-bottom: 10px;
+    text-align: left;
 }
 
 .page-header h2 {
@@ -252,7 +249,7 @@ input:-webkit-autofill:focus {
 .table-card, .glass-form, .bento-item {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 20px;
+    border-radius: 18px;
     padding: 24px;
     box-shadow: var(--shadow);
     width: 100%;
@@ -284,7 +281,7 @@ input:-webkit-autofill:focus {
 
 .table-enterprise tr:last-child td { border-bottom: none; }
 
-/* --- BADGES (Indicadores) --- */
+/* --- BADGES --- */
 .badge {
     padding: 6px 14px;
     border-radius: 50px;
@@ -298,10 +295,10 @@ input:-webkit-autofill:focus {
 }
 
 .badge-success { background: rgba(16, 185, 129, 0.12); color: #10b981; }
-.badge-warning { background: rgba(245, 158, 11, 0.12); color: #f59e0b; }
+.badge-warning { background: rgba(243, 107, 33, 0.12); color: #f36b21; }
 .badge-danger { background: rgba(239, 68, 68, 0.12); color: #ef4444; }
 
-/* --- NAV ICONS (Sidebar & Menu) --- */
+/* --- NAV ICONS --- */
 .nav-icon {
     display: flex;
     align-items: center;
@@ -328,11 +325,12 @@ html.dark .nav-icon { background: rgba(255, 255, 255, 0.05); }
     transform: scale(1.05);
 }
 
-/* --- BENTO GRID --- */
+/* --- BENTO GRID SYSTEM --- */
 .bento-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 20px;
+    width: 100%;
 }
 
 .main-feature { 

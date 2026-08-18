@@ -38,7 +38,7 @@
             text-transform: uppercase;
             font-weight: 800;
         }
-        .status-pill.warning { background: rgba(250, 162, 0, 0.1); color: #faa200; }
+        .status-pill.warning { background: rgba(243, 107, 33, 0.12); color: #d94f0d; }
         .status-pill.danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
 
         .kpi-footer {

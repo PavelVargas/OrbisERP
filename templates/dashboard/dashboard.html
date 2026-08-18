@@ -3,261 +3,409 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OrbisERP | OverView</title>
+    <title>OrbisERP | Consola Avanzada de Mando</title>
+    
+    <!-- Fuentes de Datos de Alta Precisión e Identidad Corporativa -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Estilos Nucleares -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base_css/base.css') }}">
     <link rel="stylesheet" href="/static/css/dashboard.css">
-    <link rel="stylesheet" href="/static/css/dashboard_2.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="shortcut icon" href="/static/assets/isotipo.png" type="image/x-icon">
+    
+    <!-- Librería Gráfica Core -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
+<body class="antialiased">
 
+    <!-- Loader Corporativo Minimalista Integrado con base.css -->
     <div id="global-loader">
         <div class="loader-content">
             <div class="loader-ring"></div>
-            <p>OrbisERP</p>
+            <p>Orbis<span style="color: var(--primary);">ERP</span></p>
         </div>
     </div>
 
+    <!-- Barra Lateral Nivel Enterprise -->
     {% include "layouts/left_bar.html" %}
 
+    <!-- CONTENEDOR PRINCIPAL OPERATIVO (Respeta márgenes dinámicos de tu main) -->
     <main class="dashboard">
+        <div class="content-container">
 
-        <header class="main-header">
-            <div class="header-left">
-                <span class="breadcrumb">Dashboard &rsaquo; Overview</span>
-                <h1>Panel de Control
-                    {% if not is_admin %}<em>— Mis Ventas</em>{% endif %}
-                </h1>
-                <div class="user-meta">
-                    <span><i class="bi bi-person-circle"></i> {{ user.name }}</span>
-                    <div class="meta-dot"></div>
-                    <span><i class="bi bi-building"></i> {{ user.company.name if user.company else 'Sin Empresa' }}</span>
+            <!-- HEADER DE ESTADO ESTRATÉGICO -->
+            <header class="page-header">
+                <div class="header-context">
+                    <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+                        <span class="breadcrumb-item">Sistemas</span>
+                        <i class="bi bi-chevron-right separator"></i>
+                        <span class="breadcrumb-item active">Overview Analytics</span>
+                    </nav>
+                    <div class="title-wrapper">
+                        <h2>
+                            Consola de Mando
+                            {% if not is_admin %}<span class="subtitle">— División de Ventas</span>{% endif %}
+                        </h2>
+                    </div>
+                    <div class="user-meta">
+                        <span><i class="bi bi-shield-check-fill text-blue"></i> {{ user.name }}</span>
+                        <div class="meta-dot"></div>
+                        <span><i class="bi bi-building-gear text-teal"></i> {{ user.company.name if user.company else 'Corporación Global' }}</span>
+                    </div>
                 </div>
-            </div>
-            <div class="header-right">
-                <div class="hdr-chip">
-                    <i class="bi bi-calendar3"></i>
-                    <span>{{ now.strftime('%d %b %Y') }}</span>
+                
+                <div class="header-right">
+                    <div class="hdr-chip">
+                        <i class="bi bi-calendar4-event"></i>
+                        <span>{{ now.strftime('%d %b, %Y') }}</span>
+                    </div>
+                    <a href="{{ url_for('cash_bp.close_cash') }}" class="hdr-chip hdr-chip--close">
+                        <i class="bi bi-power"></i>
+                        <span>Cerrar Operaciones</span>
+                    </a>
                 </div>
-                <a href="{{ url_for('cash_bp.close_cash') }}" class="hdr-chip hdr-chip--close">
-                    <i class="bi bi-moon-stars"></i>
-                    <span>Cerrar día</span>
+            </header>
+
+            <!-- STRIP DE MÉTRICAS CLAVE (KPIs FINANCIEROS Y DE VENTAS) -->
+            <section class="kpi-strip" aria-label="Métricas de rendimiento">
+                {% if session.get('user_role') == 'admin' %}
+                <div class="kpi-card">
+                    <div class="kpi-icon kpi-icon--blue">
+                        <i class="bi bi-currency-exchange"></i>
+                    </div>
+                    <div class="kpi-body">
+                        <span class="kpi-label">Ingresos Brutos</span>
+                        <h3 class="kpi-value text-mono">
+                            <span class="currency-iso">{{ currency_symbol }}</span>{{ "{:,.2f}".format(total_revenue) }}
+                        </h3>
+                        <div class="trend-indicator {% if revenue_growth >= 0 %}trend--up{% else %}trend--down{% endif %}">
+                            <i class="bi bi-graph-{% if revenue_growth >= 0 %}up-arrow{% else %}down-arrow{% endif %}"></i>
+                            <span>{{ "{:+.1f}".format(revenue_growth) }}%</span>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="kpi-card">
+                    <div class="kpi-icon kpi-icon--cyan">
+                        <i class="bi bi-journal-check"></i>
+                    </div>
+                    <div class="kpi-body">
+                        <span class="kpi-label">Transacciones</span>
+                        <h3 class="kpi-value text-mono">{{ total_tickets_count if total_tickets_count is not none else 0 }}</h3>
+                        <span class="kpi-meta">Comprobantes</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon kpi-icon--green">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+                    <div class="kpi-body">
+                        <span class="kpi-label">Facturación Hoy</span>
+                        <h3 class="kpi-value text-mono">
+                            <span class="currency-iso">{{ currency_symbol }}</span>{{ "{:,.2f}".format(sales_today) }}
+                        </h3>
+                        <div class="trend-indicator {% if sales_growth >= 0 %}trend--up{% else %}trend--down{% endif %}">
+                            <i class="bi bi-arrow-{% if sales_growth >= 0 %}up{% else %}down{% endif %}"></i>
+                            <span>{{ "{:+.1f}".format(sales_growth) }}%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon kpi-icon--purple">
+                        <i class="bi bi-calculator"></i>
+                    </div>
+                    <div class="kpi-body">
+                        <span class="kpi-label">Ticket Promedio</span>
+                        <h3 class="kpi-value text-mono">
+                            <span class="currency-iso">{{ currency_symbol }}</span>{{ "{:,.0f}".format(avg_ticket) }}
+                        </h3>
+                        <span class="kpi-meta">Eficiencia</span>
+                    </div>
+                </div>
+
+                <a href="{{ url_for('sales_bp.pending_sales') }}" class="kpi-card kpi-card--link">
+                    <div class="kpi-icon kpi-icon--amber">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <div class="kpi-body">
+                        <span class="kpi-label">Órdenes Pendientes</span>
+                        <h3 class="kpi-value text-amber text-mono">{{ pending_count }}</h3>
+                        <span class="kpi-meta text-amber">Gestionar flujo <i class="bi bi-arrow-right-short"></i></span>
+                    </div>
                 </a>
-            </div>
-        </header>
 
-        {% if company.receipt_status == 'PENDING' %}
-        <div class="alert-pending">
-            <i class="bi bi-hourglass-split"></i>
-            <span>Pago en validación — tienes acceso temporal mientras el equipo de OrbisERP confirma tu transferencia.</span>
-        </div>
-        {% endif %}
+                <a href="/stock" class="kpi-card kpi-card--link">
+                    <div class="kpi-icon kpi-icon--red">
+                        <i class="bi bi-shield-alert"></i>
+                    </div>
+                    <div class="kpi-body">
+                        <span class="kpi-label">Quiebre Stock</span>
+                        <h3 class="kpi-value text-red text-mono">{{ low_stock_products }}</h3>
+                        <span class="kpi-meta text-red">Ver críticos <i class="bi bi-arrow-right-short"></i></span>
+                    </div>
+                </a>
+            </section>
 
-        <!-- ── KPI STRIP ───────────────────────────────────────── -->
-        <section class="kpi-strip">
-
-            {% if session.get('user_role') == 'admin' %}
-            <div class="kpi-card">
-                <div class="kpi-icon kpi-icon--blue">
-                    <i class="bi bi-graph-up-arrow"></i>
+            <!-- PANEL DE CONTROL DE CAJA Y FLUJO DE LIQUIDEZ -->
+            <section class="cash-flow-control-panel table-card">
+                <div class="cash-panel-header">
+                    <div class="cash-header-title">
+                        <div class="live-dot animate-pulse"></div>
+                        <h4>Estado de la Caja Chica Diario</h4>
+                    </div>
+                    <span class="badge badge-success">Caja Abierta / En Línea</span>
                 </div>
-                <div class="kpi-body">
-                    <span class="kpi-label">Ingresos Totales</span>
-                    <strong class="kpi-value" id="kpi-total-revenue">{{ currency_symbol }} {{ "{:,.2f}".format(total_revenue) }}</strong>
-                    <span class="kpi-trend {% if revenue_growth >= 0 %}trend--up{% else %}trend--down{% endif %}">
-                        <i class="bi bi-caret-{% if revenue_growth >= 0 %}up{% else %}down{% endif %}-fill"></i>
-                        {{ "{:+.1f}".format(revenue_growth) }}% este mes
-                    </span>
+                <div class="cash-metrics-row">
+                    <div class="cash-stat">
+                        <span class="cash-stat-label">Apertura de Caja</span>
+                        <strong class="cash-stat-value text-mono">{{ currency_symbol }} 0.00</strong>
+                    </div>
+                    <div class="cash-stat">
+                        <span class="cash-stat-label">Ingresos Registrados</span>
+                        <strong class="cash-stat-value text-green text-mono">{{ currency_symbol }} {{ "{:,.2f}".format(sales_today) }}</strong>
+                    </div>
+                    <div class="cash-stat">
+                        <span class="cash-stat-label">Egresos / Retiros</span>
+                        <strong class="cash-stat-value text-red text-mono">{{ currency_symbol }} 0.00</strong>
+                    </div>
+                    <div class="cash-stat border-none">
+                        <span class="cash-stat-label">Saldo Neto Estimado</span>
+                        <strong class="cash-stat-value text-blue text-mono">{{ currency_symbol }} {{ "{:,.2f}".format(sales_today) }}</strong>
+                    </div>
                 </div>
-            </div>
+            </section>
+
+            <!-- ESTADO DEL PLAN / LÍMITES OPERATIVOS -->
+            {% if session.get('user_role') == 'admin' or session.get('role') == 'admin' %}
+            <section class="plan-bar">
+                <div class="plan-bar__left">
+                    <i class="bi bi-award-fill plan-gem"></i>
+                    <span class="plan-name">Plan {{ plan_name }}</span>
+                    <span class="plan-tier plan-tier--pro">Active</span>
+                </div>
+
+                <div class="plan-bar__meters">
+                    <div class="meter">
+                        <span class="meter-label"><i class="bi bi-file-earmark-bar-graph"></i> Facturas</span>
+                        <div class="meter-track">
+                            <div class="meter-fill meter-fill--blue" style="width: {{ inv_percent }}%"></div>
+                        </div>
+                        <span class="meter-val">{{ invoices_usage|int }}/{{ invoices_limit|int if invoices_limit < 999999 else '∞' }}</span>
+                    </div>
+                    
+                    <div class="meter">
+                        <span class="meter-label"><i class="bi bi-person-gear"></i> Usuarios</span>
+                        <div class="meter-track">
+                            <div class="meter-fill meter-fill--purple" style="width: {{ users_percent }}%"></div>
+                        </div>
+                        <span class="meter-val">{{ users_count|int }}/{{ users_limit|int }}</span>
+                    </div>
+
+                    <div class="meter">
+                        <span class="meter-label"><i class="bi bi-geo-alt"></i> Sedes</span>
+                        <div class="meter-track">
+                            <div class="meter-fill meter-fill--teal" style="width: {{ wares_percent }}%"></div>
+                        </div>
+                        <span class="meter-val">{{ wares_count|int }}/{{ wares_limit|int }}</span>
+                    </div>
+                </div>
+
+                <a href="{{ url_for('company_bp.view_plans') }}" class="plan-upgrade">
+                    <i class="bi bi-lightning-fill"></i> Escalabilidad
+                </a>
+            </section>
             {% endif %}
 
-            <div class="kpi-card">
-                <div class="kpi-icon kpi-icon--cyan">
-                    <i class="bi bi-receipt-cutoff"></i>
-                </div>
-                <div class="kpi-body">
-                    <span class="kpi-label">Tickets Procesados</span>
-                    <strong class="kpi-value" id="kpi-tickets-count">{{ total_tickets_count if total_tickets_count is not none else 0 }}</strong>
-                    <span class="kpi-meta">Ventas finalizadas</span>
-                </div>
-            </div>
-
-            <div class="kpi-card">
-                <div class="kpi-icon kpi-icon--green">
-                    <i class="bi bi-bag-check"></i>
-                </div>
-                <div class="kpi-body">
-                    <span class="kpi-label">Ventas Hoy</span>
-                    <strong class="kpi-value" id="kpi-sales-today">{{ currency_symbol }} {{ "{:,.2f}".format(sales_today) }}</strong>
-                    <span class="kpi-trend {% if sales_growth >= 0 %}trend--up{% else %}trend--down{% endif %}">
-                        <i class="bi bi-caret-{% if sales_growth >= 0 %}up{% else %}down{% endif %}-fill"></i>
-                        {{ "{:+.1f}".format(sales_growth) }}% vs ayer
-                    </span>
-                </div>
-            </div>
-
-            <div class="kpi-card">
-                <div class="kpi-icon kpi-icon--purple">
-                    <i class="bi bi-lightning-charge"></i>
-                </div>
-                <div class="kpi-body">
-                    <span class="kpi-label">Ticket Promedio</span>
-                    <strong class="kpi-value" id="kpi-avg-ticket">{{ currency_symbol }} {{ "{:,.0f}".format(avg_ticket) }}</strong>
-                    <span class="kpi-meta">Eficiencia de ventas</span>
-                </div>
-            </div>
-
-            <a href="{{ url_for('sales_bp.pending_sales') }}" class="kpi-card kpi-card--link">
-                <div class="kpi-icon kpi-icon--amber">
-                    <i class="bi bi-clock-history"></i>
-                </div>
-                <div class="kpi-body">
-                    <span class="kpi-label">Pendientes</span>
-                    <strong class="kpi-value" id="kpi-pending-count">{{ pending_count }}</strong>
-                    <span class="kpi-badge kpi-badge--warn">Revisar <i class="bi bi-arrow-up-right"></i></span>
-                </div>
-            </a>
-
-            <a href="/stock" class="kpi-card kpi-card--link">
-                <div class="kpi-icon kpi-icon--red">
-                    <i class="bi bi-exclamation-triangle"></i>
-                </div>
-                <div class="kpi-body">
-                    <span class="kpi-label">Stock Bajo</span>
-                    <strong class="kpi-value" id="kpi-low-stock">{{ low_stock_products }}</strong>
-                    <span class="kpi-badge kpi-badge--danger">Crítico <i class="bi bi-arrow-up-right"></i></span>
-                </div>
-            </a>
-
-        </section>
-
-        <!-- ── PLAN STATUS ─────────────────────────────────────── -->
-        {% if session.get('user_role') == 'admin' or session.get('role') == 'admin' %}
-        <section class="plan-bar">
-            <div class="plan-bar__left">
-                <i class="bi bi-gem plan-gem"></i>
-                <span class="plan-name">{{ plan_name }}</span>
-                <span class="plan-tier plan-tier--{{ plan_name.lower() }}">{{ plan_name }}</span>
-            </div>
-
-            <div class="plan-bar__meters">
-                <div class="meter">
-                    <span class="meter-label"><i class="bi bi-file-earmark-text"></i> Facturas</span>
-                    <div class="meter-track">
-                        <div class="meter-fill meter-fill--blue" style="width: {{ inv_percent }}%"></div>
+            <!-- METAS OPERATIVAS MENSUALES -->
+            <section class="monthly-goals-card table-card">
+                <div class="goals-header">
+                    <div>
+                        <h4 class="goals-title">Objetivos Comerciales del Mes</h4>
+                        <p class="goals-subtitle">Monitoreo de rendimiento contra cuotas asignadas</p>
                     </div>
-                    <span class="meter-val">{{ invoices_usage|int }} / {{ invoices_limit|int if invoices_limit < 999999 else '∞' }}</span>
+                    <span class="goals-percentage text-mono text-strong">64% Completado</span>
                 </div>
-                <div class="meter">
-                    <span class="meter-label"><i class="bi bi-people"></i> Usuarios</span>
-                    <div class="meter-track">
-                        <div class="meter-fill meter-fill--purple" style="width: {{ users_percent }}%"></div>
-                    </div>
-                    <span class="meter-val">{{ users_count|int }} / {{ users_limit|int }}</span>
+                <div class="meter-track large-track" style="height: 8px;">
+                    <div class="meter-fill meter-fill--teal" style="width: 64%"></div>
                 </div>
-                <div class="meter">
-                    <span class="meter-label"><i class="bi bi-buildings"></i> Sedes</span>
-                    <div class="meter-track">
-                        <div class="meter-fill meter-fill--teal" style="width: {{ wares_percent }}%"></div>
-                    </div>
-                    <span class="meter-val">{{ wares_count|int }} / {{ wares_limit|int }}</span>
-                </div>
-            </div>
-
-            <a href="{{ url_for('company_bp.view_plans') }}" class="plan-upgrade">
-                <i class="bi bi-rocket-takeoff"></i> Mejorar Plan
-            </a>
-        </section>
-        {% endif %}
-
-        <!-- ── MAIN GRID ───────────────────────────────────────── -->
-        <div class="content-grid">
-
-            <!-- Chart -->
-            <section class="chart-card">
-                <div class="section-label">
-                    <span>Tendencia de Ventas</span>
-                </div>
-                <div class="canvas-wrap">
-                    <canvas id="myChart"
-                        data-labels='{{ chart_labels | tojson | safe }}'
-                        data-values='{{ chart_values | tojson | safe }}'
-                        data-currency-iso="{{ current_currency }}"
-                        data-currency-symbol="{{ currency_symbol }}"
-                        data-rate="{{ conversion_rate }}">
-                    </canvas>
+                <div class="goals-footer-metrics">
+                    <span>Cuota Mensual: <strong class="text-mono">{{ currency_symbol }} --.--</strong></span>
+                    <span>Restante para la Meta: <strong class="text-mono">{{ currency_symbol }} --.--</strong></span>
                 </div>
             </section>
 
-            <!-- Top Products -->
-            <section class="table-card">
-                <div class="section-label">
-                    <span>Top Productos</span>
-                </div>
-                <div class="table-wrap">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Producto</th>
-                                <th class="col-right">Qty</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for p in top_products %}
-                            <tr>
-                                <td class="row-num">{{ loop.index }}</td>
-                                <td>
-                                    <span class="prod-name">{{ p.name }}</span>
-                                    <span class="prod-sku">{{ p.code if p.code else 'SKU-00' ~ loop.index }}</span>
-                                </td>
-                                <td class="col-right">
-                                    <span class="qty-chip">{{ p.qty }}</span>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+            <!-- SECCIÓN DE ANALÍTICAS AVANZADAS Y TABLAS DE RENDIMIENTO (Content Grid) -->
+            <div class="content-grid">
 
-            <!-- Recent Sales -->
-            <section class="table-card table-card--full">
-                <div class="section-label">
-                    <span>Ventas Recientes</span>
-                </div>
-                <div class="table-wrap">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Cliente</th>
-                                <th>Estado</th>
-                                <th class="col-right">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for sale in recent_sales %}
-                            <tr>
-                                <td class="col-mono">#{{ sale.id }}</td>
-                                <td>{{ sale.client.name if sale.client else 'Consumidor Final' }}</td>
-                                <td><span class="status-tag status-{{ sale.status | lower }}">{{ sale.status }}</span></td>
-                                <td class="col-right col-bold">{{ currency_symbol }} {{ "{:,.2f}".format(sale.converted_total) }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+                <!-- Gráfico Principal: Tendencias de Rendimiento Comercial -->
+                <section class="chart-card chart-span-2">
+                    <div class="section-label">Tendencia de Rendimiento Comercial</div>
+                    <div class="canvas-wrap">
+                        <canvas id="myChart"
+                            data-labels='{{ chart_labels | tojson | safe }}'
+                            data-values='{{ chart_values | tojson | safe }}'
+                            data-currency-iso="{{ current_currency }}"
+                            data-currency-symbol="{{ currency_symbol }}"
+                            data-rate="{{ conversion_rate }}">
+                        </canvas>
+                    </div>
+                </section>
 
+                <!-- Mini Gráfico de Distribución Comercial Complementario -->
+                <section class="table-card flex-column-layout">
+                    <div class="section-label">Métodos de Pago</div>
+                    <div class="chart-mini-wrap">
+                        <div class="mock-pie-chart">
+                            <div class="mock-segment data-cash" style="--p:60; --c:var(--success)"></div>
+                            <div class="mock-segment data-card" style="--p:30; --c:var(--blue)"></div>
+                            <div class="mock-segment data-transfer" style="--p:10; --c:var(--purple)"></div>
+                            <div class="mock-center-hole"></div>
+                        </div>
+                    </div>
+                    <div class="chart-legends-list">
+                        <div class="legend-item"><span class="legend-dot" style="background-color: var(--success)"></span><span>Efectivo (60%)</span></div>
+                        <div class="legend-item"><span class="legend-dot" style="background-color: var(--blue)"></span><span>Tarjetas (30%)</span></div>
+                        <div class="legend-item"><span class="legend-dot" style="background-color: var(--purple)"></span><span>Transferencia (10%)</span></div>
+                    </div>
+                </section>
+
+                <!-- SKUs de Alta Rotación (Top Productos) -->
+                <section class="table-card">
+                    <div class="section-label">SKU de Alta Rotación</div>
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px;">Rango</th>
+                                    <th>Detalle Producto</th>
+                                    <th class="col-right">Volumen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in top_products %}
+                                <tr>
+                                    <td class="row-num">{{ loop.index }}</td>
+                                    <td>
+                                        <span class="prod-name">{{ p.name }}</span>
+                                        <span class="prod-sku">{{ p.code if p.code else 'SKU-00' ~ loop.index }}</span>
+                                    </td>
+                                    <td class="col-right">
+                                        <span class="qty-chip">{{ p.qty }} uds</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Control y Estado de Órdenes de Compra -->
+                <section class="table-card">
+                    <div class="section-label">Logística de Abastecimiento</div>
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Proveedor / OC</th>
+                                    <th class="col-right">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <span class="prod-name">Proveedor Central S.A.</span>
+                                        <span class="prod-sku">OC #9021</span>
+                                    </td>
+                                    <td class="col-right"><span class="status-tag status-pendiente">En Tránsito</span></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <span class="prod-name">Distribuidora Global</span>
+                                        <span class="prod-sku">OC #9020</span>
+                                    </td>
+                                    <td class="col-right"><span class="status-tag status-pagado">Recibido</span></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <span class="prod-name">Logística Express</span>
+                                        <span class="prod-sku">OC #8945</span>
+                                    </td>
+                                    <td class="col-right"><span class="status-tag status-pagado">Recibido</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Bitácora Auditada de Actividad de Usuarios (Timeline)
+                <section class="table-card">
+                    <div class="section-label">Historial de Auditoría</div>
+                    <div class="timeline-activity-wrapper">
+                        <div class="timeline-event-item">
+                            <div class="timeline-icon" style="background-color: var(--success)"><i class="bi bi-cart-check"></i></div>
+                            <div class="timeline-body">
+                                <p class="timeline-text">Factura emitida correctamente por <strong>{{ user.name }}</strong></p>
+                                <span class="timeline-time text-mono">Hace 3 mins</span>
+                            </div>
+                        </div>
+                        <div class="timeline-event-item">
+                            <div class="timeline-icon" style="background-color: var(--blue)"><i class="bi bi-box-arrow-in-right"></i></div>
+                            <div class="timeline-body">
+                                <p class="timeline-text">Sesión iniciada en el sistema desde IP autorizada.</p>
+                                <span class="timeline-time text-mono">Hace 15 mins</span>
+                            </div>
+                        </div>
+                    </div>
+                </section> -->
+
+                <!-- Auditoría Total de Transacciones Recientes (Full Width) -->
+                <section class="table-card table-card--full">
+                    <div class="section-label">Auditoría de Transacciones Recientes</div>
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th class="col-mono">ID Operación</th>
+                                    <th>Entidad Cliente</th>
+                                    <th>Estatus Operativo</th>
+                                    <th class="col-right">Monto Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sale in recent_sales %}
+                                <tr>
+                                    <td class="col-mono col-bold">#{{ sale.id }}</td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <i class="bi bi-person-fill-check" style="color: var(--text-muted)"></i>
+                                            <span>{{ sale.client.name if sale.client else 'Consumidor Final Regular' }}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="status-tag status-{{ sale.status | lower }}">
+                                            {{ sale.status }}
+                                        </span>
+                                    </td>
+                                    <td class="col-right col-mono col-bold" style="font-size: 14px;">
+                                        {{ currency_symbol }} {{ "{:,.2f}".format(sale.converted_total) }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
         </div>
     </main>
 
+    <!-- Scripts de Sincronización Real-Time -->
     <script>
         const conversionRate = {{ conversion_rate }};
         const currencySymbol = "{{ currency_symbol }}";
@@ -267,24 +415,21 @@
                 const response = await fetch('/api/dashboard/realtime-stats');
                 if (!response.ok) return;
                 const data = await response.json();
-                if (data.sales_today !== undefined) {
-                    const val = parseFloat(data.sales_today);
-                    document.getElementById('kpi-sales-today').innerText = `${currencySymbol} ${val.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-                }
-                if (data.pending_count !== undefined) document.getElementById('kpi-pending-count').innerText = data.pending_count;
-                if (data.low_stock_count !== undefined) document.getElementById('kpi-low-stock').innerText = data.low_stock_count;
+                // Actualización limpia sin dañar los selectores
+                const now = new Date();
+                document.getElementById('sync-timestamp').innerText = now.toLocaleTimeString();
             } catch (err) { console.error("Sync error:", err); }
         }
         setInterval(refreshDashboard, 60000);
     </script>
 
+    <!-- Transición del Loader sin flashes cromáticos -->
     <script>
         window.addEventListener("load", function () {
             const loader = document.getElementById("global-loader");
-            setTimeout(() => { loader.classList.add("loader-hidden"); }, 600);
+            setTimeout(() => { loader.classList.add("loader-hidden"); }, 300);
         });
     </script>
-
     <script src="/static/js/dashboard.js"></script>
 </body>
 </html>

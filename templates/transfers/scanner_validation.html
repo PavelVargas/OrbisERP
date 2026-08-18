@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Validator Pro | OrbisERP</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -57,7 +57,7 @@
             border: 1px solid var(--glass-border);
         }
 
-        .status-active { color: #ffc107; border-color: rgba(255, 193, 7, 0.3); }
+        .status-active { color: #ff7a2f; border-color: rgba(255, 122, 47, 0.3); }
         .status-complete { color: var(--primary); border-color: var(--primary); }
 
         .product-node {
@@ -141,6 +141,11 @@
         }
 
         .error-flash { animation: flashRed 0.2s; }
+        .scan-guide { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:15px; }
+        .scan-step { border:1px solid var(--glass-border); background:var(--glass); border-radius:14px; padding:12px; color:var(--text-muted); display:flex; align-items:center; gap:9px; font-size:.72rem; font-weight:800; }
+        .scan-step i { font-size:1.15rem; }.scan-step.active{border-color:#ff7a2f;color:#ff7a2f}.scan-step.done{border-color:var(--primary);color:var(--primary)}
+        .scanner-help{color:var(--text-muted);font-size:.78rem;text-align:center;margin:10px 0}.scanner-help strong{color:var(--text-main)}
+        @media(max-width:700px){main{padding:10px}.scan-guide{grid-template-columns:1fr}.qty-now{font-size:4.5rem}.route-path{align-items:stretch;gap:8px}.product-node{padding:18px}}
         @keyframes flashRed { 
             50% { background-color: #450a0a; } 
         }
@@ -156,6 +161,12 @@
         </div>
 
         <input type="text" id="master-scanner" autofocus autocomplete="off" inputmode="none">
+
+        <div class="scan-guide">
+            <div class="scan-step active" id="step-transfer"><i class="bi bi-file-earmark-bar-graph"></i><span>1. Conduce</span></div>
+            <div class="scan-step" id="step-location"><i class="bi bi-geo-alt"></i><span>2. Ubicación destino</span></div>
+            <div class="scan-step" id="step-product"><i class="bi bi-box-seam"></i><span>3. Productos</span></div>
+        </div>
 
         <div id="transfer-details" style="display: none; flex-direction: column;">
             <div class="route-path">
@@ -183,6 +194,7 @@
                     <span class="qty-total">/<span id="val-expected">0</span></span>
                 </div>
             </div>
+            <p class="scanner-help" id="scanner-help">Escanea el código solicitado para continuar.</p>
 
             <form id="confirm-form" method="POST">
                 <button type="submit" class="btn-validate" id="btn-final">
@@ -231,13 +243,24 @@
                     if (data.success) {
                         currentTransfer = data.transfer;
                         renderUI();
-                        mode = 'WAITING_PRODUCT';
+                        mode = currentTransfer.destination_location_barcode ? 'WAITING_LOCATION' : 'WAITING_PRODUCT';
                         statusBadge.innerText = "EN CURSO";
                         statusBadge.classList.add('status-active');
+                        setStep(mode === 'WAITING_LOCATION' ? 'location' : 'product');
+                        document.getElementById('scanner-help').innerHTML = mode === 'WAITING_LOCATION' ? '<strong>Escanea ahora la etiqueta de la ubicación destino.</strong>' : '<strong>Escanea cada unidad del producto.</strong>';
                         beep(600, 0.1);
                     } else { triggerError(); }
                 } catch (e) { triggerError(); }
             } 
+            else if (mode === 'WAITING_LOCATION') {
+                const expectedLocation = (currentTransfer.destination_location_barcode || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+                if (cleanCode === expectedLocation) {
+                    mode = 'WAITING_PRODUCT';
+                    setStep('product');
+                    document.getElementById('scanner-help').innerHTML = '<strong>Ubicación validada.</strong> Escanea cada unidad del producto.';
+                    beep(720, 0.08);
+                } else { triggerError('La ubicación escaneada no es el destino de este traslado.'); }
+            }
             else if (mode === 'WAITING_PRODUCT') {
                 const cleanSku = (currentTransfer.product_sku || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
                 const isMatch = (cleanCode === cleanSku || cleanCode === String(currentTransfer.product_id));
@@ -250,7 +273,7 @@
                     beep(800, 0.05);
                 } else {
                     // Si intenta escanear más de la cuenta o el código está mal
-                    triggerError(); 
+                    triggerError('El producto no coincide o la cantidad ya está completa.'); 
                 }
             }
         }
@@ -259,8 +282,8 @@
             emptyState.style.display = 'none';
             transferDetails.style.display = 'flex';
             document.getElementById('display-ref').innerText = "REF: " + currentTransfer.ref_code;
-            document.getElementById('orig').innerText = currentTransfer.origin;
-            document.getElementById('dest').innerText = currentTransfer.destination;
+            document.getElementById('orig').innerText = currentTransfer.origin_location ? `${currentTransfer.origin} · ${currentTransfer.origin_location}` : currentTransfer.origin;
+            document.getElementById('dest').innerText = currentTransfer.destination_location ? `${currentTransfer.destination} · ${currentTransfer.destination_location}` : currentTransfer.destination;
             document.getElementById('prod-name').innerText = currentTransfer.product_name;
             document.getElementById('val-expected').innerText = currentTransfer.expected_qty;
         }
@@ -277,7 +300,18 @@
                 document.getElementById('confirm-form').action = `/transfers/receive/${currentTransfer.id}`;
                 statusBadge.innerText = "COMPLETO";
                 statusBadge.className = "status-badge status-complete";
+                document.getElementById('scanner-help').innerHTML = '<strong>Conteo completo.</strong> Confirma para registrar el stock y la trazabilidad.';
             }
+        }
+
+        function setStep(active) {
+            ['transfer','location','product'].forEach((name, index) => {
+                const el = document.getElementById(`step-${name}`);
+                el.classList.toggle('active', name === active);
+                const order = {transfer:0,location:1,product:2};
+                el.classList.toggle('done', order[name] < order[active] || (name === 'location' && !currentTransfer?.destination_location_barcode));
+            });
+            document.getElementById('mode-text').innerText = active === 'location' ? 'VALIDAR UBICACIÓN' : active === 'product' ? 'CONTAR PRODUCTOS' : 'ESPERANDO CONDUCE';
         }
 
         function bumpEffect() {
@@ -285,11 +319,13 @@
             setTimeout(() => productCard.classList.remove('bump'), 100);
         }
 
-        function triggerError() {
+        function triggerError(message = 'Código no reconocido.') {
             mainFrame.classList.add('error-flash');
             setTimeout(() => mainFrame.classList.remove('error-flash'), 200);
             beep(150, 0.4); // Sonido de error más grave
             if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            const help = document.getElementById('scanner-help');
+            if (help) { const previous = help.innerHTML; help.innerHTML = `<strong style="color:var(--danger)">${message}</strong>`; setTimeout(() => help.innerHTML = previous, 1800); }
         }
 
         function beep(freq, duration) {

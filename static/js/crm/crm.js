@@ -1,151 +1,16 @@
-let ACTIVE_CLIENT = null;
-
-        async function loadClientDetails(id, el) {
-            ACTIVE_CLIENT = id;
-            
-            // UI Feedback
-            document.querySelectorAll('.client-card').forEach(c => c.classList.remove('active'));
-            if(el) el.classList.add('active');
-            
-            document.getElementById('emptyState').style.display = 'none';
-            document.getElementById('clientView').style.display = 'flex';
-            document.getElementById('loader').style.display = 'grid';
-
-            try {
-                const res = await fetch(`/crm/api/client/${id}`);
-                const data = await res.json();
-
-                // El símbolo viene dinámico desde el servidor
-                const symbol = data.currency_symbol;
-
-                // Renderizar Datos Básicos
-                document.getElementById('vName').textContent = data.name;
-                document.getElementById('vID').textContent = `#REF-${String(data.id).padStart(4, '0')}`;
-                
-                // El LTV ya viene con el símbolo correcto desde Python
-                document.getElementById('vLTV').textContent = data.ltv;
-                document.getElementById('vAvatar').textContent = data.name.charAt(0).toUpperCase();
-
-                // Lógica de Banner de Deuda
-                const banner = document.getElementById('vDebtBanner');
-                if (data.has_debt) {
-                    banner.style.display = 'flex';
-                    // Usamos el formato convertido que viene de la API
-                    document.getElementById('vDebtAmount').textContent = data.total_debt_format;
-                } else {
-                    banner.style.display = 'none';
-                }
-
-                // Renderizar componentes restantes
-                updatePipelineUI(data.status);
-                renderTasks(data.tasks);
-                renderTimeline(data.interactions);
-
-            } catch(e) {
-                console.error("Error cargando CRM:", e);
-            } finally {
-                document.getElementById('loader').style.display = 'none';
-            }
-        }
-
-        function updatePipelineUI(status) {
-            document.querySelectorAll('.pipe-step').forEach(s => s.classList.remove('active'));
-            const current = document.getElementById(`step-${status}`);
-            if(current) current.classList.add('active');
-        }
-
-        // 3. RENDER DE TAREAS
-        function renderTasks(tasks) {
-            const container = document.getElementById('taskList');
-            if(!tasks.length) {
-                container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted); padding:10px;">Sin tareas pendientes.</p>`;
-                return;
-            }
-            container.innerHTML = tasks.map(t => `
-                <div class="task-item" style="background: var(--bg-main); padding: 12px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid ${t.priority === 'Alta' ? '#ef4444' : 'var(--primary)'};">
-                    <div style="font-weight:700; font-size:0.85rem;">${t.title}</div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
-                        <small style="color:var(--text-muted); font-weight:600;">${t.due}</small>
-                        <span style="font-size: 0.6rem; background: rgba(0,0,0,0.05); padding: 2px 6px; border-radius: 4px;">${t.priority}</span>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // 4. RENDER DE TIMELINE
-        function renderTimeline(logs) {
-            const container = document.getElementById('vTimeline');
-            if(!logs.length) {
-                container.innerHTML = `<p style="color:var(--text-muted);">No hay actividad registrada.</p>`;
-                return;
-            }
-            container.innerHTML = logs.map(l => `
-                <div class="timeline-node">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                        <strong style="font-size:0.8rem; color: var(--primary);">${l.user}</strong>
-                        <small style="color:var(--text-muted); font-size:0.7rem;">${l.date}</small>
-                    </div>
-                    <div style="font-size:0.95rem; color:var(--text-main); line-height:1.5;">${l.content}</div>
-                    <div style="margin-top:8px;">
-                        <span style="font-size:0.6rem; background:var(--bg-main); padding:3px 8px; border-radius:5px; text-transform:uppercase; font-weight:800; border: 1px solid var(--border);">${l.type}</span>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // 5. GUARDAR NOTA
-        async function saveNote() {
-            const text = document.getElementById('noteInput').value;
-            if(!text || !ACTIVE_CLIENT) return;
-
-            const btn = document.getElementById('btnSave');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
-
-            try {
-                const res = await fetch('/crm/api/add_interaction', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        client_id: ACTIVE_CLIENT,
-                        content: text,
-                        type: 'Nota'
-                    })
-                });
-
-                if(res.ok) {
-                    document.getElementById('noteInput').value = "";
-                    loadClientDetails(ACTIVE_CLIENT); // Recargar timeline
-                }
-            } catch(e) { console.error(e); }
-            finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-send-fill"></i> Registrar Nota';
-            }
-        }
-
-        // 6. CAMBIO DE FASE
-        async function updateStatus(newStatus) {
-            if(!ACTIVE_CLIENT) return;
-            updatePipelineUI(newStatus);
-
-            await fetch('/crm/api/update_status', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    client_id: ACTIVE_CLIENT,
-                    status: newStatus
-                })
-            });
-            // Recargamos detalles para ver el log del sistema en el timeline
-            loadClientDetails(ACTIVE_CLIENT);
-        }
-
-        // 7. BUSCADOR
-        function filterClients() {
-            const q = document.getElementById('searchClient').value.toLowerCase();
-            document.querySelectorAll('.client-card').forEach(card => {
-                const name = card.querySelector('div div').textContent.toLowerCase();
-                card.style.display = name.includes(q) ? 'flex' : 'none';
-            });
-        }
+let activeClient=null;const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const escapeHtml=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+function toast(message,error=false){const el=$('#crmToast');el.textContent=message;el.className=`toast visible${error?' error':''}`;clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove('visible'),2800)}
+async function api(url,options={}){const response=await fetch(url,options),data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.message||data.error||'No se pudo completar la acción.');return data}
+async function loadClientDetails(id,element){activeClient=Number(id);$$('.client-card').forEach(card=>card.classList.toggle('active',card===element));$('#emptyState').hidden=true;$('#clientView').hidden=false;$('#loader').classList.add('visible');try{const data=await api(`/crm/api/client/${id}`);$('#vName').textContent=data.name;$('#vID').textContent=`#REF-${String(data.id).padStart(4,'0')}`;$('#vAvatar').textContent=data.name.charAt(0).toUpperCase();$('#vLTV').textContent=data.ltv;$('#vPhone').textContent=data.phone;$('#vEmail').textContent=data.email;$('#vDebtBanner').hidden=!data.has_debt;$('#vDebtAmount').textContent=data.total_debt_format;updatePipelineUI(data.status);renderTasks(data.tasks);renderTimeline(data.interactions);$('#crmWrapper').classList.add('viewing-client')}catch(error){toast(error.message,true)}finally{$('#loader').classList.remove('visible')}}
+function updatePipelineUI(status){$$('.pipeline-nav button').forEach(button=>button.classList.toggle('active',button.dataset.status===status))}
+function renderTasks(tasks){$('#taskList').innerHTML=tasks.length?tasks.map(task=>`<article class="task-item priority-${escapeHtml(task.priority.toLowerCase())}"><button type="button" class="complete-task" data-task-id="${task.id}" title="Completar"><i class="bi bi-check"></i></button><div><strong>${escapeHtml(task.title)}</strong><small><i class="bi bi-calendar3"></i> ${escapeHtml(task.due)}</small></div><span>${escapeHtml(task.priority)}</span></article>`).join(''):'<div class="inline-empty"><i class="bi bi-check2-circle"></i><p>Sin tareas pendientes</p></div>'}
+function renderTimeline(logs){$('#vTimeline').innerHTML=logs.length?logs.map(log=>`<article class="timeline-node"><span class="timeline-icon"><i class="bi bi-${log.type==='Llamada'?'telephone':log.type==='Correo'?'envelope':log.type==='Reunión'?'people':'chat-left-text'}"></i></span><div><header><strong>${escapeHtml(log.user)}</strong><time>${escapeHtml(log.date)}</time></header><p>${escapeHtml(log.content)}</p><small>${escapeHtml(log.type)}</small></div></article>`).join(''):'<div class="inline-empty"><i class="bi bi-clock-history"></i><p>No hay actividad registrada</p></div>'}
+async function saveNote(){const content=$('#noteInput').value.trim();if(!activeClient)return toast('Selecciona un cliente.',true);if(!content)return toast('Escribe una nota.',true);const button=$('#btnSave');button.disabled=true;try{await api('/crm/api/add_interaction',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_id:activeClient,content,type:$('#noteType').value})});$('#noteInput').value='';await loadClientDetails(activeClient,$(`.client-card[data-client-id="${activeClient}"]`));toast('Actividad registrada.')}catch(error){toast(error.message,true)}finally{button.disabled=false}}
+async function updateStatus(status){if(!activeClient)return toast('Selecciona un cliente.',true);const previous=$('.pipeline-nav button.active')?.dataset.status;updatePipelineUI(status);try{await api('/crm/api/update_status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_id:activeClient,status})});const card=$(`.client-card[data-client-id="${activeClient}"]`);if(card){card.dataset.stage=status;$('.stage',card).textContent=status}await loadClientDetails(activeClient,card);toast('Fase actualizada.')}catch(error){updatePipelineUI(previous);toast(error.message,true)}}
+function openTaskModal(){if(!activeClient)return toast('Selecciona un cliente.',true);$('#taskDate').min=new Date().toISOString().slice(0,10);$('#taskDate').value=$('#taskDate').min;$('#taskModal').hidden=false;setTimeout(()=>$('#taskName').focus(),50)}
+function closeTaskModal(){$('#taskModal').hidden=true;$('#taskForm').reset();$('#taskError').textContent=''}
+async function createTask(event){event.preventDefault();try{await api('/crm/api/add_task',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_id:activeClient,title:$('#taskName').value,due_date:$('#taskDate').value,priority:$('#taskPriority').value})});closeTaskModal();await loadClientDetails(activeClient,$(`.client-card[data-client-id="${activeClient}"]`));toast('Tarea programada.')}catch(error){$('#taskError').textContent=error.message}}
+async function completeTask(id){try{await api(`/crm/api/complete_task/${id}`,{method:'POST'});await loadClientDetails(activeClient,$(`.client-card[data-client-id="${activeClient}"]`));toast('Tarea completada.')}catch(error){toast(error.message,true)}}
+function filterClients(){const term=$('#searchClient').value.toLowerCase().trim(),stage=$('.stage-filters .active').dataset.stage;$$('.client-card').forEach(card=>{card.hidden=!(card.dataset.name.includes(term)&&(stage==='all'||card.dataset.stage===stage))})}
+$$('.client-card').forEach(card=>card.addEventListener('click',()=>loadClientDetails(card.dataset.clientId,card)));$$('.pipeline-nav button').forEach(button=>button.addEventListener('click',()=>updateStatus(button.dataset.status)));$('#btnSave').addEventListener('click',saveNote);$('#openTaskModal').addEventListener('click',openTaskModal);$('#taskForm').addEventListener('submit',createTask);$$('[data-close-task]').forEach(button=>button.addEventListener('click',closeTaskModal));$('#taskModal').addEventListener('click',event=>{if(event.target===$('#taskModal'))closeTaskModal()});$('#taskList').addEventListener('click',event=>{const button=event.target.closest('[data-task-id]');if(button)completeTask(button.dataset.taskId)});$('#searchClient').addEventListener('input',filterClients);$$('.stage-filters button').forEach(button=>button.addEventListener('click',()=>{$$('.stage-filters button').forEach(x=>x.classList.remove('active'));button.classList.add('active');filterClients()}));$('#mobileClientsBtn').addEventListener('click',()=>$('#crmWrapper').classList.remove('viewing-client'));$('#closeClients').addEventListener('click',()=>$('#crmWrapper').classList.add('viewing-client'));document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('#taskModal').hidden)closeTaskModal()});

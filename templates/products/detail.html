@@ -2,12 +2,11 @@
 <html lang="es" class="{% if session.get('theme') == 'dark' %}dark{% endif %}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ product.name }} | OrbisERP</title>
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         :root {
@@ -141,8 +140,7 @@
 <body>
     {% include "layouts/left_bar.html" %}
 
-    <div class="app-wrapper">
-        <main class="main-content">
+    <main class="main-content product-detail-page">
             <nav class="top-nav">
                 <div class="back-btn-area">
                     <a href="javascript:history.back()" class="btn-circle-back">
@@ -162,7 +160,7 @@
                 <div class="glass-card col-4">
                     <div class="card-label"><i class="bi bi-currency-dollar"></i> Venta</div>
                     <span class="card-value">RD${{ "{:,.2f}".format(display_price) }}</span>
-                    <span class="card-sub">Costo: RD${{ display_cost }}</span>
+                    {% if can('products.costs') %}<span class="card-sub">Costo: RD${{ display_cost }}</span>{% endif %}
                 </div>
 
                 <div class="glass-card col-4">
@@ -179,65 +177,45 @@
                     <span class="card-sub">Utilidad calculada</span>
                 </div>
 
-                <div class="glass-card col-8 row-2">
-                    <div class="card-label"><i class="bi bi-activity"></i> Rendimiento Semanal</div>
-                    <div class="chart-box">
-                        <canvas id="inventoryChart"></canvas>
+                <div class="glass-card col-8 row-2 product-overview-card">
+                    <div class="product-detail-media">
+                        {% if product.image_path %}
+                        <img src="{{ url_for('static', filename=product.image_path) }}" alt="{{ product.name }}">
+                        {% else %}
+                        <div class="product-image-placeholder"><i class="bi bi-box-seam"></i><span>Este producto todavía no tiene foto</span></div>
+                        {% endif %}
+                    </div>
+                    <div class="product-detail-copy">
+                        <div class="card-label"><i class="bi bi-card-text"></i> Información del producto</div>
+                        <dl class="product-facts">
+                            <div><dt>SKU</dt><dd>{{ product.sku }}</dd></div>
+                            <div><dt>Categoría</dt><dd>{{ product.category.name if product.category else 'Sin categoría' }}</dd></div>
+                            <div><dt>Tipo</dt><dd>{{ 'Servicio' if product.product_type.name == 'SERVICE' else 'Consumible' if product.product_type.name == 'CONSUMABLE' else 'Producto con inventario' }}</dd></div>
+                        </dl>
+                        <p class="product-description">{{ product.description or 'No se ha agregado una descripción para este producto.' }}</p>
                     </div>
                 </div>
 
                 <div class="glass-card col-4 row-2">
                     <div class="card-label"><i class="bi bi-sliders"></i> Acciones</div>
                     <div class="action-list">
-                        <a href="{{ url_for('products_bp.edit_product', id=product.id) }}" class="action-item">
+                        {% if can('products.edit') %}<a href="{{ url_for('products_bp.edit_product', id=product.id) }}" class="action-item">
                             <span>Editar Datos</span> <i class="bi bi-pencil-square"></i>
-                        </a>
+                        </a>{% endif %}
                         <a href="{{ url_for('products_bp.product_stock_detail', id=product.id) }}" class="action-item">
                             <span>Stock Físico</span> <i class="bi bi-arrow-left-right"></i>
                         </a>
                         {% if session.get('user_role') == 'admin' %}
-                        <form action="{{ url_for('products_bp.delete_product', id=product.id) }}" method="POST">
+                        {% if can('products.delete') %}<form action="{{ url_for('products_bp.delete_product', id=product.id) }}" method="POST">
                             <button type="submit" class="action-item danger" style="width: 100%; border: none; font-family: inherit; cursor: pointer;" onclick="return confirm('¿Eliminar producto?')">
                                 <span>Eliminar Registro</span> <i class="bi bi-trash3"></i>
                             </button>
-                        </form>
+                        </form>{% endif %}
                         {% endif %}
                     </div>
                 </div>
             </div>
-        </main>
-    </div>
+    </main>
 
-    <script>
-        const ctx = document.getElementById('inventoryChart').getContext('2d');
-        const grad = ctx.createLinearGradient(0, 0, 0, 250);
-        grad.addColorStop(0, 'rgba(250, 162, 0, 0.2)');
-        grad.addColorStop(1, 'rgba(250, 162, 0, 0)');
-
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['L', 'M', 'X', 'J', 'V', 'S', 'D'],
-                datasets: [{
-                    data: [120, 150, 140, 190, 170, 210, {{ product.total_stock }}],
-                    borderColor: '#faa200',
-                    borderWidth: 3,
-                    tension: 0.4,
-                    fill: true,
-                    backgroundColor: grad,
-                    pointRadius: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { display: false }, ticks: { color: '#525866' } },
-                    y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#525866' } }
-                }
-            }
-        });
-    </script>
 </body>
 </html>

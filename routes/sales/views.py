@@ -1,10 +1,14 @@
 from flask import render_template, request, redirect, url_for, session, flash
 from models.sales.sales import Sale
+from models.sales.sale_item import SaleItem
+from models.products.products import Product
+from models.client.client import Client
 from models.user.user import User
 from models.divisas.divisas import ExchangeRate
 from datetime import datetime, timedelta
 from decimal import Decimal
 from db import db
+from sqlalchemy import String, cast, or_
 
 from .sales import sales_bp
 
@@ -17,7 +21,14 @@ def list_sales():
         return redirect(url_for('login_bp.login'))
 
     user = User.query.get(user_id)
-    status_filter = request.args.get('status')
+    status_filter = (request.args.get('status') or '').strip().upper()
+    search_query = (request.args.get('search') or '').strip()
+    seller_id = request.args.get('seller_id', type=int)
+    payment_method = (request.args.get('payment_method') or '').strip().upper()
+    date_from = (request.args.get('date_from') or '').strip()
+    date_to = (request.args.get('date_to') or '').strip()
+    min_total = request.args.get('min_total', type=float)
+    max_total = request.args.get('max_total', type=float)
     
     selected_currency_code = session.get('selected_currency', 'DOP')
     rate_row = ExchangeRate.query.filter_by(
@@ -53,11 +64,44 @@ def list_sales():
     query = Sale.query.filter_by(company_id=company_id)
     if user.role != 'admin' and user.company_id:
         query = query.filter_by(user_id=user_id)
+        seller_id = user_id
+    elif seller_id:
+        query = query.filter_by(user_id=seller_id)
         
-    if status_filter:
+    valid_statuses = {'COMPLETED', 'QUOTATION', 'PENDING', 'CANCELLED', 'DRAFT'}
+    if status_filter in valid_statuses:
         query = query.filter_by(status=status_filter)
+    elif status_filter:
+        status_filter = ''
+    if payment_method in {'CASH', 'CARD', 'TRANSFER', 'CREDIT'}:
+        query = query.filter_by(payment_method=payment_method)
+    elif payment_method:
+        payment_method = ''
+    if search_query:
+        term = f'%{search_query}%'
+        query = query.filter(or_(
+            cast(Sale.id, String).ilike(term),
+            Sale.customer_name.ilike(term),
+            Sale.client.has(Client.name.ilike(term)),
+            Sale.user.has(User.name.ilike(term)),
+            Sale.items.any(SaleItem.product.has(or_(Product.name.ilike(term), Product.sku.ilike(term)))),
+        ))
+    try:
+        if date_from:
+            query = query.filter(Sale.created_at >= datetime.strptime(date_from, '%Y-%m-%d'))
+        if date_to:
+            query = query.filter(Sale.created_at < datetime.strptime(date_to, '%Y-%m-%d') + timedelta(days=1))
+    except ValueError:
+        flash('El rango de fechas no es válido.', 'warning')
+        date_from = date_to = ''
+    if min_total is not None:
+        query = query.filter(Sale.total >= Decimal(str(min_total)) * conversion_rate)
+    if max_total is not None:
+        query = query.filter(Sale.total <= Decimal(str(max_total)) * conversion_rate)
         
     sales = query.order_by(Sale.created_at.desc()).all()
+    sellers = User.query.filter_by(company_id=company_id).order_by(User.name.asc()).all()
+    filtered_total = sum((sale.total or Decimal('0')) for sale in sales) / conversion_rate
     
     return render_template('sales/list.html', 
                            sales=sales, 
@@ -70,7 +114,16 @@ def list_sales():
                            currencies=currencies,
                            selected_currency=selected_currency_code,
                            currency_symbol=currency_symbol,
-                           conversion_rate=conversion_rate)
+                           conversion_rate=conversion_rate,
+                           sellers=sellers,
+                           search_query=search_query,
+                           selected_seller=seller_id,
+                           selected_payment=payment_method,
+                           date_from=date_from,
+                           date_to=date_to,
+                           min_total=min_total,
+                           max_total=max_total,
+                           filtered_total=filtered_total)
 
 @sales_bp.route('/<int:sale_id>')
 def sale_detail(sale_id):

@@ -1,0 +1,190 @@
+"""Central permission catalogue and endpoint policy for OrbisERP."""
+
+PERMISSION_GROUPS = [
+    ('general', 'General', 'bi-grid-1x2', [
+        ('dashboard.view', 'Ver resumen', 'Acceder al dashboard e indicadores generales.'),
+        ('tablet.use', 'Usar modo tablet', 'Abrir y utilizar el lanzador para tablet.'),
+    ]),
+    ('sales', 'Ventas y cotizaciones', 'bi-receipt', [
+        ('sales.view', 'Ver ventas', 'Consultar listado, detalles e historial de ventas.'),
+        ('sales.create', 'Crear y editar ventas', 'Abrir caja de venta, añadir artículos y clientes.'),
+        ('sales.complete', 'Finalizar y cobrar', 'Confirmar ventas y descontar inventario.'),
+        ('sales.quote', 'Crear cotizaciones', 'Convertir una operación en cotización.'),
+        ('sales.resume', 'Retomar pendientes', 'Editar ventas pendientes o borradores.'),
+        ('sales.cancel', 'Anular ventas', 'Cancelar ventas ya registradas.'),
+        ('sales.print', 'Imprimir comprobantes', 'Descargar o imprimir facturas y cotizaciones.'),
+    ]),
+    ('clients', 'Clientes y CRM', 'bi-people', [
+        ('clients.view', 'Ver clientes', 'Consultar directorio y fichas de clientes.'),
+        ('clients.create', 'Crear clientes', 'Registrar nuevos clientes.'),
+        ('clients.edit', 'Editar clientes', 'Modificar información de clientes.'),
+        ('clients.delete', 'Eliminar clientes', 'Eliminar registros de clientes.'),
+        ('crm.view', 'Ver CRM', 'Acceder al seguimiento comercial.'),
+        ('crm.manage', 'Gestionar CRM', 'Crear tareas, interacciones y cambiar estados.'),
+    ]),
+    ('catalog', 'Productos y catálogo', 'bi-box-seam', [
+        ('products.view', 'Ver productos', 'Consultar catálogo, detalles, imágenes y stock.'),
+        ('products.create', 'Crear productos', 'Registrar productos y servicios.'),
+        ('products.edit', 'Editar productos', 'Modificar productos, precios e imágenes.'),
+        ('products.delete', 'Eliminar productos', 'Desactivar o eliminar productos.'),
+        ('products.costs', 'Ver costos y márgenes', 'Consultar costo unitario y rentabilidad.'),
+        ('categories.view', 'Ver categorías', 'Consultar categorías del catálogo.'),
+        ('categories.manage', 'Gestionar categorías', 'Crear, editar y eliminar categorías.'),
+    ]),
+    ('inventory', 'Inventario y almacenes', 'bi-building', [
+        ('warehouses.view', 'Ver almacenes', 'Consultar almacenes y existencias generales.'),
+        ('warehouses.create', 'Crear almacenes', 'Crear almacenes o sedes.'),
+        ('warehouses.edit', 'Editar almacenes', 'Modificar datos de almacenes.'),
+        ('locations.view', 'Ver ubicaciones', 'Consultar pasillos, tramos y su stock.'),
+        ('locations.manage', 'Gestionar ubicaciones', 'Crear ubicaciones y sububicaciones.'),
+        ('locations.allocate', 'Asignar stock a tramos', 'Distribuir existencias entre ubicaciones.'),
+        ('locations.traceability', 'Ver trazabilidad de tramos', 'Consultar kardex y transferencias por ubicación.'),
+        ('stock.view', 'Ver existencias', 'Consultar stock actual y detalle por producto.'),
+        ('stock.adjust', 'Ajustar existencias', 'Realizar ajustes manuales de inventario.'),
+        ('stock.kardex', 'Ver kardex', 'Consultar entradas, salidas e historial general.'),
+        ('movements.view', 'Ver movimientos', 'Consultar entradas y salidas de inventario.'),
+    ]),
+    ('transfers', 'Transferencias y escáner', 'bi-arrow-left-right', [
+        ('transfers.view', 'Ver transferencias', 'Consultar operaciones y detalles.'),
+        ('transfers.create', 'Crear transferencias', 'Mover productos entre almacenes o tramos.'),
+        ('transfers.receive', 'Validar recepciones', 'Recibir y cerrar transferencias pendientes.'),
+        ('transfers.scanner', 'Usar módulo escáner', 'Validar ubicación y productos por código de barras.'),
+        ('transfers.print', 'Imprimir conduces', 'Generar documentos de transferencia.'),
+    ]),
+    ('purchases', 'Compras y proveedores', 'bi-bag-check', [
+        ('purchases.view', 'Ver compras', 'Consultar órdenes y sus detalles.'),
+        ('purchases.create', 'Crear compras', 'Registrar órdenes de compra.'),
+        ('purchases.edit', 'Editar compras', 'Añadir o retirar líneas de una orden.'),
+        ('purchases.receive', 'Recibir compras', 'Confirmar recepción y aumentar inventario.'),
+        ('purchases.cancel', 'Cancelar compras', 'Cancelar órdenes de compra.'),
+        ('suppliers.view', 'Ver proveedores', 'Consultar proveedores e historial.'),
+        ('suppliers.manage', 'Gestionar proveedores', 'Crear, editar y eliminar proveedores.'),
+    ]),
+    ('finance', 'Caja y finanzas', 'bi-cash-coin', [
+        ('cash.view', 'Ver caja', 'Consultar el estado y resumen de caja.'),
+        ('cash.close', 'Cerrar caja', 'Registrar cierres y diferencias de caja.'),
+        ('currencies.view', 'Ver divisas', 'Consultar monedas y tasas.'),
+        ('currencies.manage', 'Gestionar divisas', 'Crear, editar o eliminar tasas.'),
+    ]),
+    ('reports', 'Reportes y auditoría', 'bi-bar-chart', [
+        ('reports.view', 'Ver reportes', 'Acceder a reportes comerciales e inventario.'),
+        ('reports.export', 'Exportar reportes', 'Descargar CSV e imprimir reportes.'),
+        ('audits.view', 'Ver auditorías', 'Consultar cierres, kardex y trazabilidad operativa.'),
+    ]),
+    ('administration', 'Administración', 'bi-shield-lock', [
+        ('users.view', 'Ver usuarios', 'Consultar el directorio y perfiles.'),
+        ('users.create', 'Crear usuarios', 'Registrar nuevos usuarios.'),
+        ('users.edit', 'Editar usuarios y permisos', 'Modificar perfiles, permisos y asignaciones.'),
+        ('users.delete', 'Eliminar usuarios', 'Eliminar cuentas de usuario.'),
+        ('users.reset_password', 'Restablecer contraseñas', 'Enviar enlaces de cambio de contraseña.'),
+        ('company.settings', 'Configurar empresa', 'Editar información fiscal y comercial.'),
+    ]),
+]
+
+ALL_PERMISSIONS = {key for _, _, _, items in PERMISSION_GROUPS for key, _, _ in items}
+
+PROFILE_PRESETS = {
+    'minimal': {'dashboard.view'},
+    'seller': {
+        'dashboard.view', 'sales.view', 'sales.create', 'sales.complete', 'sales.quote',
+        'sales.resume', 'sales.print', 'clients.view', 'clients.create', 'products.view',
+        'stock.view', 'cash.view', 'tablet.use',
+    },
+    'warehouse': {
+        'dashboard.view', 'products.view', 'warehouses.view', 'locations.view',
+        'locations.traceability', 'stock.view', 'stock.kardex', 'movements.view',
+        'transfers.view', 'transfers.create', 'transfers.receive', 'transfers.scanner',
+        'transfers.print', 'purchases.view', 'purchases.receive', 'suppliers.view',
+    },
+    'supervisor': ALL_PERMISSIONS - {'users.delete', 'company.settings', 'currencies.manage'},
+    'auditor': {
+        'dashboard.view', 'sales.view', 'clients.view', 'products.view', 'warehouses.view',
+        'locations.view', 'locations.traceability', 'stock.view', 'stock.kardex',
+        'movements.view', 'transfers.view', 'transfers.print', 'purchases.view',
+        'suppliers.view', 'cash.view', 'currencies.view', 'reports.view',
+        'reports.export', 'audits.view', 'users.view',
+    },
+    'operational': {
+        'dashboard.view', 'tablet.use', 'sales.view', 'sales.create', 'sales.complete',
+        'sales.quote', 'sales.resume', 'sales.print', 'clients.view', 'clients.create',
+        'clients.edit', 'crm.view', 'crm.manage', 'products.view', 'categories.view',
+        'warehouses.view', 'locations.view', 'locations.traceability', 'stock.view',
+        'movements.view', 'transfers.view', 'transfers.create', 'transfers.receive',
+        'transfers.scanner', 'transfers.print', 'suppliers.view', 'cash.view',
+    },
+}
+
+ENDPOINT_PERMISSIONS = {
+    'dashboard_bp.dashboard': ('dashboard.view',), 'dashboard_bp.realtime_stats': ('dashboard.view',),
+    'dashboard_bp.enable_tablet_mode': ('tablet.use',), 'dashboard_bp.disable_tablet_mode': ('tablet.use',),
+    'launchpad_bp.launchpad': ('tablet.use',), 'launchpad_bp.exit_tablet': ('tablet.use',),
+    'sales_bp.list_sales': ('sales.view',), 'sales_bp.pending_sales': ('sales.view',),
+    'sales_bp.sale_detail': ('sales.view',), 'sales_bp.create_sale': ('sales.create',),
+    'sales_bp.get_products': ('sales.create',), 'sales_bp.add_to_cart': ('sales.create',),
+    'sales_bp.remove_item': ('sales.create',), 'sales_bp.assign_client': ('sales.create',),
+    'sales_bp.finish_sale': ('sales.complete',), 'sales_bp.convert_to_quote': ('sales.quote',),
+    'sales_bp.resume_sale': ('sales.resume',), 'sales_bp.cancel_sale': ('sales.cancel',),
+    'sales_bp.export_pdf': ('sales.print',), 'sales_bp.set_currency': ('sales.view', 'sales.create'),
+    'client_bp.list_clients': ('clients.view',), 'client_bp.client_detail': ('clients.view',),
+    'client_bp.create_client': ('clients.create',), 'client_bp.edit_client': ('clients.edit',),
+    'client_bp.delete_client': ('clients.delete',), 'crm_bp.crm_index': ('crm.view',),
+    'crm_bp.get_client_details': ('crm.view',), 'crm_bp.add_interaction': ('crm.manage',),
+    'crm_bp.add_task': ('crm.manage',), 'crm_bp.complete_task': ('crm.manage',),
+    'crm_bp.update_status': ('crm.manage',), 'products_bp.list_products': ('products.view',),
+    'products_bp.view_product': ('products.view',), 'products_bp.product_stock_detail': ('products.view', 'stock.view'),
+    'products_bp.get_product_stock_api': ('products.view', 'sales.create', 'transfers.create'),
+    'products_bp.create_product': ('products.create',), 'products_bp.edit_product': ('products.edit',),
+    'products_bp.delete_product': ('products.delete',), 'category_bp.list_categories': ('categories.view',),
+    'category_bp.create_category': ('categories.manage',), 'category_bp.create_category_api': ('categories.manage',),
+    'category_bp.edit_category': ('categories.manage',), 'category_bp.delete_category': ('categories.manage',),
+    'warehouse_bp.list_warehouses': ('warehouses.view',), 'warehouse_bp.warehouse_stock': ('warehouses.view', 'stock.view'),
+    'warehouse_bp.create_warehouse': ('warehouses.create',), 'warehouse_bp.edit_warehouse': ('warehouses.edit',),
+    'warehouse_bp.warehouse_locations': ('locations.view',), 'warehouse_bp.location_barcode': ('locations.view',),
+    'warehouse_bp.allocate_location_stock': ('locations.allocate',),
+    'warehouse_bp.location_traceability': ('locations.traceability',),
+    'stock_bp.stock_actual': ('stock.view',), 'stock_bp.stock_history': ('stock.kardex',),
+    'stock_bp.kardex_general': ('stock.kardex', 'audits.view'), 'stock_bp.adjust_stock': ('stock.adjust',),
+    'movements_bp.movements_in': ('movements.view',), 'movements_bp.movements_out': ('movements.view',),
+    'transfer_bp.transfers': ('transfers.view',), 'transfer_bp.view_transfer': ('transfers.view',),
+    'transfer_bp.transfers_by_warehouse': ('transfers.view',), 'transfer_bp.create_transfer': ('transfers.create',),
+    'transfer_bp.receive_transfer': ('transfers.receive',), 'transfer_bp.scanner_mode': ('transfers.scanner',),
+    'transfer_bp.api_get_transfer': ('transfers.scanner',), 'transfer_bp.api_location_by_barcode': ('transfers.scanner', 'transfers.create'),
+    'transfer_bp.api_locations': ('transfers.scanner', 'transfers.create'), 'transfer_bp.print_transfer': ('transfers.print',),
+    'purchase_bp.purchase_list': ('purchases.view',), 'purchase_bp.purchase_detail': ('purchases.view', 'purchases.edit'),
+    'purchase_bp.create_purchase': ('purchases.create',), 'purchase_bp.delete_purchase_item': ('purchases.edit',),
+    'purchase_bp.receive_purchase': ('purchases.receive',), 'purchase_bp.cancel_purchase': ('purchases.cancel',),
+    'purchase_bp.save_purchase': ('purchases.edit',), 'purchase_bp.update_purchase_supplier': ('purchases.edit',),
+    'purchase_bp.create_purchase_tax': ('purchases.edit',),
+    'purchase_bp.apply_order_tax': ('purchases.edit',),
+    'supplier_bp.supplier_list': ('suppliers.view',), 'supplier_bp.supplier_purchase_history': ('suppliers.view',),
+    'supplier_bp.supplier_create': ('suppliers.manage',), 'supplier_bp.supplier_edit': ('suppliers.manage',),
+    'supplier_bp.supplier_create_api': ('suppliers.manage', 'purchases.create'),
+    'supplier_bp.supplier_update_api': ('suppliers.manage', 'purchases.edit'),
+    'supplier_bp.supplier_delete': ('suppliers.manage',), 'cash_bp.close_cash': ('cash.view', 'cash.close'),
+    'reports_bp.index': ('reports.view',), 'reports_bp.inventory_health': ('reports.view',),
+    'reports_bp.monthly_history': ('reports.view',), 'reports_bp.closings_history': ('reports.view', 'audits.view'),
+    'reports_bp.export_csv': ('reports.export',), 'reports_bp.export_cash_print': ('reports.export',),
+    'reports_bp.export_sales_print': ('reports.export',), 'divisas_bp.listar_divisas': ('currencies.view',),
+    'divisas_bp.crear_divisa': ('currencies.manage',), 'divisas_bp.editar_divisa': ('currencies.manage',),
+    'divisas_bp.eliminar_divisa': ('currencies.manage',), 'users_bp.users': ('users.view',),
+    'users_bp.users_api': ('users.view',), 'users_bp.user_profile': ('users.view',),
+    'users_bp.permission_audit': ('audits.view',),
+    'users_bp.entrada_user': ('users.view',), 'users_bp.create_user': ('users.create',),
+    'users_bp.edit_user': ('users.edit',), 'users_bp.delete_user': ('users.delete',),
+    'users_bp.request_password_reset': ('users.reset_password',), 'company_bp.settings': ('company.settings',),
+}
+
+
+METHOD_OVERRIDES = {
+    ('cash_bp.close_cash', 'POST'): ('cash.close',),
+    ('warehouse_bp.warehouse_locations', 'POST'): ('locations.manage',),
+    ('purchase_bp.purchase_detail', 'POST'): ('purchases.edit',),
+    ('company_bp.settings', 'POST'): ('company.settings',),
+}
+
+
+def required_permissions(endpoint, method='GET'):
+    override = METHOD_OVERRIDES.get((endpoint, method.upper()))
+    if override:
+        return override
+    return ENDPOINT_PERMISSIONS.get(endpoint)

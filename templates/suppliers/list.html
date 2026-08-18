@@ -26,9 +26,9 @@
                 <h2>Proveedores</h2>
                 <p>Base de datos de socios comerciales y proveedores de servicios.</p>
             </div>
-            <a href="{{ url_for('supplier_bp.supplier_create') }}" class="btn-primary">
+            {% if can('suppliers.manage') %}<a href="{{ url_for('supplier_bp.supplier_create') }}" class="btn-primary">
                 <i class="bi bi-plus-circle"></i> Nuevo proveedor
-            </a>
+            </a>{% endif %}
         </header>
 
         <section class="table-container">

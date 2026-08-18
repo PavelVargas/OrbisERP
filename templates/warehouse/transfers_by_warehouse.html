@@ -86,11 +86,11 @@
                     </td>
                     <td style="padding: 20px 25px; text-align: center;">
                         {% if t.status == 'PENDING' and t.to_warehouse.id == warehouse.id %}
-                            <form method="POST" action="{{ url_for('transfer_bp.receive_transfer', transfer_id=t.id) }}">
+                            {% if can('transfers.receive') %}<form method="POST" action="{{ url_for('transfer_bp.receive_transfer', transfer_id=t.id) }}">
                                 <button class="act-btn highlight" style="border: none; cursor: pointer; height: 36px; padding: 0 15px; font-size: 12px; width: auto;">
                                     <i class="bi bi-box-arrow-in-down"></i> Recibir
                                 </button>
-                            </form>
+                            </form>{% endif %}
                         {% else %}
                             <span style="color: var(--border);">---</span>
                         {% endif %}

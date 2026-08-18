@@ -17,8 +17,8 @@ def listar_divisas():
 
     user = User.query.get(user_id)
 
-    if user.role not in ['admin', 'superadmin']:
-        flash('No tienes permisos para gestionar divisas', 'danger')
+    if not user.has_permission('currencies.view'):
+        flash('No tienes permisos para ver divisas', 'danger')
         return redirect(url_for('dashboard_bp.dashboard'))
 
     # SOLO DIVISAS DE LA EMPRESA
@@ -75,7 +75,7 @@ def editar_divisa(id):
     if not user_id:
         return redirect(url_for('login_bp.login'))
 
-    divisa = ExchangeRate.query.get_or_404(id)
+    divisa = ExchangeRate.query.filter_by(id=id, company_id=company_id).first_or_404()
 
     nuevo_codigo = request.form.get('currency_code').upper()
     nuevo_simbolo = request.form.get('symbol')
@@ -106,15 +106,19 @@ def editar_divisa(id):
     return redirect(url_for('divisas_bp.listar_divisas'))
 
 
-@divisas_bp.route('/divisas/eliminar/<int:id>')
+@divisas_bp.route('/divisas/eliminar/<int:id>', methods=['POST'])
 def eliminar_divisa(id):
 
     user_id = session.get('user_id')
+    company_id = session.get('company_id')
 
     if not user_id:
         return redirect(url_for('login_bp.login'))
 
-    divisa = ExchangeRate.query.get_or_404(id)
+    user = User.query.get_or_404(user_id)
+    if not user.has_permission('currencies.manage'):
+        return redirect(url_for('dashboard_bp.dashboard'))
+    divisa = ExchangeRate.query.filter_by(id=id, company_id=company_id).first_or_404()
 
     if divisa.currency_code == 'DOP':
         flash('No se puede eliminar la moneda base del sistema.', 'warning')

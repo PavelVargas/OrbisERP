@@ -161,11 +161,11 @@
     <div class="info-section">
         <div class="info-box">
             <span class="label">Almacén Origen</span>
-            <span class="content">{{ transfer.from_warehouse.name }}</span>
+            <span class="content">{{ transfer.from_warehouse.name }}{% if transfer.from_location %} / {{ transfer.from_location.full_path }}{% endif %}</span>
         </div>
         <div class="info-box">
             <span class="label">Almacén Destino</span>
-            <span class="content">{{ transfer.to_warehouse.name }}</span>
+            <span class="content">{{ transfer.to_warehouse.name }}{% if transfer.to_location %} / {{ transfer.to_location.full_path }}{% endif %}</span>
         </div>
     </div>
 

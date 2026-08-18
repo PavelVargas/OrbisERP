@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from decimal import Decimal
 from models.supplier.supplier import Supplier
 from models.purchase.purchase_order import PurchaseOrder
@@ -57,6 +57,56 @@ def supplier_create():
 
     user = User.query.get(user_id)
     return render_template('suppliers/create.html', user=user)
+
+@supplier_bp.route('/api/create', methods=['POST'])
+def supplier_create_api():
+    company_id = session.get('company_id')
+    if not session.get('user_id') or not company_id:
+        return jsonify({'error': 'Autenticación requerida'}), 401
+    data = request.get_json(silent=True) or {}
+    name = (data.get('name') or '').strip()
+    email = (data.get('email') or '').strip() or None
+    phone = (data.get('phone') or '').strip() or None
+    if len(name) < 2 or len(name) > 150:
+        return jsonify({'error': 'Escribe un nombre de 2 a 150 caracteres.'}), 400
+    if email and ('@' not in email or len(email) > 120):
+        return jsonify({'error': 'El correo no es válido.'}), 400
+    existing = Supplier.query.filter(
+        Supplier.company_id == company_id,
+        db.func.lower(Supplier.name) == name.lower(),
+    ).first()
+    if existing:
+        return jsonify({'id': existing.id, 'name': existing.name, 'existing': True})
+    supplier = Supplier(name=name, email=email, phone=phone, company_id=company_id)
+    db.session.add(supplier)
+    db.session.commit()
+    return jsonify({'id': supplier.id, 'name': supplier.name, 'existing': False}), 201
+
+
+@supplier_bp.route('/api/<int:supplier_id>', methods=['PATCH'])
+def supplier_update_api(supplier_id):
+    company_id = session.get('company_id')
+    if not session.get('user_id') or not company_id:
+        return jsonify({'error': 'Autenticación requerida'}), 401
+    supplier = Supplier.query.filter_by(id=supplier_id, company_id=company_id).first_or_404()
+    data = request.get_json(silent=True) or {}
+    name = (data.get('name') or '').strip()
+    email = (data.get('email') or '').strip() or None
+    phone = (data.get('phone') or '').strip() or None
+    if len(name) < 2 or len(name) > 150:
+        return jsonify({'error': 'Escribe un nombre de 2 a 150 caracteres.'}), 400
+    if email and ('@' not in email or len(email) > 120):
+        return jsonify({'error': 'El correo no es válido.'}), 400
+    duplicate = Supplier.query.filter(
+        Supplier.company_id == company_id,
+        Supplier.id != supplier.id,
+        db.func.lower(Supplier.name) == name.lower(),
+    ).first()
+    if duplicate:
+        return jsonify({'error': 'Ya existe otro proveedor con ese nombre.'}), 409
+    supplier.name, supplier.email, supplier.phone = name, email, phone
+    db.session.commit()
+    return jsonify({'id': supplier.id, 'name': supplier.name, 'email': supplier.email, 'phone': supplier.phone})
 
 
 # =========================

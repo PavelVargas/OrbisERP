@@ -1,345 +1,45 @@
 <!DOCTYPE html>
 <html lang="es" class="{% if session.get('theme') == 'dark' %}dark{% endif %}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orden #{{ order.id }} | OrbisERP</title>
-    
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Orden #{{ order.id }} · OrbisERP</title><link rel="stylesheet" href="{{ url_for('static', filename='css/base_css/base.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='css/order_css/purchase_detail.css') }}"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"></head>
+<body>{% include 'layouts/left_bar.html' %}
+<main class="purchase-page">
+<nav class="purchase-breadcrumb"><a href="{{ url_for('purchase_bp.purchase_list') }}"><i class="bi bi-arrow-left"></i> Órdenes de compra</a><span>OC-{{ '%05d'|format(order.id) }}</span></nav>
+{% with messages=get_flashed_messages(with_categories=true) %}{% if messages %}<div class="purchase-flashes">{% for category,message in messages %}<div class="flash flash-{{ category }}"><i class="bi bi-{% if category=='success' %}check-circle{% elif category in ['danger','error'] %}exclamation-circle{% else %}info-circle{% endif %}"></i><span>{{ message }}</span></div>{% endfor %}</div>{% endif %}{% endwith %}
 
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
-                    colors: {
-                        orbis: { 
-                            DEFAULT: '#faa200', 
-                            dark: '#d98c00',
-                            surface: 'rgba(250, 162, 0, 0.05)'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+<header class="order-header"><div><span class="eyebrow">Compras y abastecimiento</span><div class="order-title-row"><h1>Orden de compra <b>#{{ order.id }}</b></h1><span class="order-status status-{{ order.status|lower }}"><i class="bi bi-circle-fill"></i>{{ {'PENDING':'Pendiente','RECEIVED':'Recibida','CANCELLED':'Cancelada'}.get(order.status, order.status|title) }}</span></div><p>Construye la orden, revisa sus impuestos y confirma la entrada al inventario.</p></div>{% if order.status=='PENDING' %}<div class="header-actions">{% if can('purchases.cancel') %}<form method="post" action="{{ url_for('purchase_bp.cancel_purchase',order_id=order.id) }}" onsubmit="return confirm('¿Descartar esta orden?')"><button class="btn-discard"><i class="bi bi-x-lg"></i> Descartar</button></form>{% endif %}{% if can('purchases.edit') %}<form method="post" action="{{ url_for('purchase_bp.save_purchase',order_id=order.id) }}"><button class="btn-save"><i class="bi bi-check2"></i> Guardar orden</button></form>{% endif %}</div>{% endif %}</header>
 
-    <style>
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            overflow: hidden;
-        }
+<section class="order-overview">
+<article><span class="overview-icon"><i class="bi bi-truck"></i></span><div><small>PROVEEDOR</small><strong>{{ order.supplier_name }}</strong><span>{{ order.supplier.email or 'Sin correo registrado' if order.supplier else 'Proveedor asignado' }}</span></div>{% if order.status=='PENDING' and can('purchases.edit') %}<button type="button" class="overview-edit" id="openSupplierEditor"><i class="bi bi-pencil"></i></button>{% endif %}</article>
+<article><span class="overview-icon"><i class="bi bi-calendar3"></i></span><div><small>FECHA</small><strong>{{ order.created_at.strftime('%d/%m/%Y') if order.created_at else 'Sin fecha' }}</strong><span>{{ order.created_at.strftime('%I:%M %p') if order.created_at else '' }}</span></div></article>
+<article><span class="overview-icon"><i class="bi bi-building"></i></span><div><small>DESTINO</small><strong>{{ main_warehouse.name if main_warehouse else 'Sin almacén principal' }}</strong><span>Recepción de inventario</span></div></article>
+<article><span class="overview-icon"><i class="bi bi-boxes"></i></span><div><small>CONTENIDO</small><strong>{{ items|length }} productos</strong><span>{{ order.total_items or 0 }} unidades</span></div></article>
+</section>
 
-        /* Scrollbars adaptables al tema */
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        .dark ::webkit-scrollbar-thumb { background: #1e2328; border-radius: 4px; }
-        .dark ::webkit-scrollbar-thumb:hover { background: #2a3138; }
-        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+{% if order.status=='PENDING' and can('purchases.edit') %}<article class="add-product-card"><div class="section-title"><div><span class="eyebrow">Nueva línea</span><h2>Agregar producto</h2><p>Busca el artículo y define cantidad, costo e ITBIS en una sola fila.</p></div><span class="step-badge">Paso 2 de 2</span></div><form method="post" action="{{ url_for('purchase_bp.purchase_detail', order_id=order.id) }}" id="purchaseItemForm" class="add-product-form">
+<label class="product-picker"><span>Producto *</span><div><i class="bi bi-search"></i><input type="search" id="productSearch" placeholder="Buscar por nombre o SKU…" autocomplete="off"><select name="product_id" id="productSelect" required><option value="">Seleccionar producto…</option>{% for p in products %}<option value="{{ p.id }}" data-search="{{ p.name|lower }} {{ (p.sku or '')|lower }}" data-cost="{{ p.cost or '' }}">{{ p.name }} · {{ p.sku or 'Sin SKU' }}</option>{% endfor %}</select></div><small id="productHint">Selecciona una coincidencia del catálogo.</small></label>
+<label><span>Cantidad *</span><div class="field-with-suffix"><input type="number" name="quantity" min="1" step="1" value="1" required><b>uds</b></div></label>
+<label><span>Costo unitario *</span><div class="field-with-prefix"><b>RD$</b><input type="number" name="unit_cost" id="unitCostInput" min="0.01" step="0.01" placeholder="0.00" required></div></label>
+<label class="tax-picker"><span>ITBIS *</span><div><select name="tax_id" id="taxSelect" required>{% for tax in taxes %}<option value="{{ tax.id }}">{{ tax.name }}</option>{% endfor %}</select><button type="button" id="openTaxModal"><i class="bi bi-plus-lg"></i></button></div><small>Aplicado solo a esta línea.</small></label>
+<button type="submit" class="btn-add-line"><i class="bi bi-plus-lg"></i><span>Agregar</span></button></form></article>{% endif %}
 
-        /* Reset de inputs numéricos nativos */
-        input[type="number"]::-webkit-outer-spin-button,
-        input[type="number"]::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        input[type="number"] {
-            -moz-appearance: textfield;
-        }
+<article class="lines-card"><div class="section-title lines-heading"><div><span class="eyebrow">Detalle</span><h2>Productos de la orden</h2><p>Productos compactos, legibles y siempre con su imagen.</p></div><div class="line-counters"><span><b>{{ items|length }}</b> productos</span><span><b>{{ order.total_items or 0 }}</b> unidades</span></div></div>
+{% if items %}<div class="lines-table-wrap"><table class="lines-table"><thead><tr><th>Producto</th><th>Cantidad</th><th>Costo</th><th>ITBIS</th><th>Total línea</th><th></th></tr></thead><tbody>{% for item in items %}<tr>
+<td data-label="Producto"><div class="product-cell"><span>{% if item.product and item.product.image_path %}<img src="{{ url_for('static',filename=item.product.image_path) }}" alt="{{ item.product.name }}">{% else %}<i class="bi bi-box-seam"></i>{% endif %}</span><div><strong>{{ item.product.name if item.product else 'Producto no disponible' }}</strong><small>{{ item.product.sku if item.product and item.product.sku else 'Sin SKU' }}</small></div></div></td>
+<td data-label="Cantidad"><strong>{{ item.quantity }}</strong> <small>uds</small>{% if item.quantity_received %}<span class="received-note">{{ item.quantity_received }} recibidas</span>{% endif %}</td><td data-label="Costo"><span class="money">RD$ {{ '{:,.2f}'.format(item.unit_cost|float) }}</span></td>
+<td data-label="ITBIS"><span class="tax-chip {% if item.tax_rate|float == 0 %}tax-exempt{% endif %}">{{ item.tax_name }}</span><small class="tax-amount">RD$ {{ '{:,.2f}'.format(item.tax_amount|float) }}</small></td><td data-label="Total"><strong class="money">RD$ {{ '{:,.2f}'.format(item.line_total|float) }}</strong></td>
+<td>{% if order.status=='PENDING' and can('purchases.edit') %}<form method="post" action="{{ url_for('purchase_bp.delete_purchase_item',item_id=item.id) }}" onsubmit="return confirm('¿Quitar este producto?')"><button class="btn-delete-line"><i class="bi bi-trash3"></i></button></form>{% endif %}</td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="order-empty"><span><i class="bi bi-bag-plus"></i></span><h3>La orden todavía está vacía</h3><p>Agrega el primer producto con su costo e impuesto.</p></div>{% endif %}</article>
 
-        /* Inputs ultra-compactos reactivos al tema */
-        .compact-input {
-            background: transparent;
-            border: none;
-            outline: none;
-            transition: all 0.15s ease;
-            padding: 2px 4px;
-        }
+<section class="order-bottom"><article class="order-notes"><span><i class="bi bi-shield-check"></i></span><div><strong>Revisión antes de recibir</strong><p>El costo puede incluir o excluir ITBIS según cada línea. La recepción conservará la composición fiscal y actualizará el almacén principal.</p>{% if order.status=='PENDING' and items and can('purchases.edit') %}<form class="order-tax-form" method="post" action="{{ url_for('purchase_bp.apply_order_tax',order_id=order.id) }}"><select name="tax_id" required>{% for tax in taxes %}<option value="{{ tax.id }}">{{ tax.name }}</option>{% endfor %}</select><button type="submit">Aplicar a toda la orden</button></form>{% endif %}</div></article><article class="summary-card"><div class="section-title"><div><span class="eyebrow">Resumen fiscal</span><h2>Total de la orden</h2></div></div><div class="summary-row"><span>Productos diferentes</span><strong>{{ items|length }}</strong></div><div class="summary-row"><span>Unidades solicitadas</span><strong>{{ order.total_items or 0 }}</strong></div><div class="summary-row"><span>Subtotal de líneas</span><strong>RD$ {{ '{:,.2f}'.format((order.subtotal or 0)|float) }}</strong></div><div class="summary-row"><span>ITBIS total</span><strong>RD$ {{ '{:,.2f}'.format((order.tax_total or 0)|float) }}</strong></div><div class="summary-total"><span>Total general</span><strong>RD$ {{ '{:,.2f}'.format((order.total_cost or 0)|float) }}</strong></div>{% if order.status=='PENDING' and items and can('purchases.receive') %}<button type="button" class="btn-receive" id="openReceive"><i class="bi bi-box-arrow-in-down"></i> Recibir mercancía</button>{% elif order.status=='RECEIVED' %}<div class="complete-banner"><i class="bi bi-check-circle-fill"></i><span><strong>Orden recibida</strong><small>Inventario actualizado.</small></span></div>{% endif %}</article></section>
+</main>
 
-        /* Eje del Chatter */
-        .activity-timeline {
-            position: relative;
-        }
-        .activity-timeline::before {
-            content: '';
-            position: absolute;
-            left: 22px;
-            top: 20px;
-            bottom: 20px;
-            width: 1px;
-        }
-    </style>
-</head>
-<body class="h-screen w-screen overflow-hidden bg-slate-50 dark:bg-[#0f1113] text-slate-900 dark:text-gray-200 antialiased relative">
+{% if order.status=='PENDING' and can('purchases.edit') %}<div class="modal-backdrop" id="supplierModal" hidden><section class="editor-modal"><header><div><span class="eyebrow">Proveedor de la orden</span><h2>Cambiar o editar proveedor</h2><p>Corrige la selección o sus datos sin salir de la orden.</p></div><button type="button" data-close="supplierModal"><i class="bi bi-x-lg"></i></button></header><form method="post" action="{{ url_for('purchase_bp.update_purchase_supplier',order_id=order.id) }}"><label><span>Proveedor seleccionado</span><select name="supplier_id" id="supplierEditorSelect" required>{% for s in suppliers %}<option value="{{ s.id }}" data-name="{{ s.name }}" data-email="{{ s.email or '' }}" data-phone="{{ s.phone or '' }}" {% if s.id==order.supplier_id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}</select></label><div class="modal-grid"><label><span>Nombre *</span><input id="editSupplierName" maxlength="150" required></label><label><span>Teléfono</span><input id="editSupplierPhone" maxlength="50"></label></div><label><span>Correo</span><input id="editSupplierEmail" type="email" maxlength="120"></label><p class="modal-error" id="supplierError"></p><footer><button type="button" class="btn-secondary" id="saveSupplierData"><i class="bi bi-pencil"></i> Actualizar datos</button><button type="submit" class="btn-primary-modal"><i class="bi bi-check2"></i> Usar en la orden</button></footer></form></section></div>
+<div class="modal-backdrop" id="taxModal" hidden><section class="editor-modal"><header><div><span class="eyebrow">Configuración fiscal</span><h2>Crear tipo de ITBIS</h2><p>Quedará disponible para futuras compras.</p></div><button type="button" data-close="taxModal"><i class="bi bi-x-lg"></i></button></header><form id="taxForm"><label><span>Nombre *</span><input id="taxName" maxlength="80" placeholder="Ej. ITBIS 16% incluido" required></label><div class="modal-grid"><label><span>Porcentaje *</span><div class="field-with-suffix"><input id="taxRate" type="number" min="0" max="100" step="0.01" required><b>%</b></div></label><label class="check-label"><input id="taxIncluded" type="checkbox"><span><strong>Incluido en el costo</strong><small>El importe digitado ya contiene el impuesto.</small></span></label></div><p class="modal-error" id="taxError"></p><footer><button type="button" class="btn-secondary" data-close="taxModal">Cancelar</button><button type="submit" class="btn-primary-modal"><i class="bi bi-plus-lg"></i> Crear y seleccionar</button></footer></form></section></div>{% endif %}
 
-    {% include 'layouts/left_bar.html' %}
-
-    <div class="absolute inset-y-0 left-0 right-0 pl-0 lg:pl-[260px] grid grid-cols-1 xl:grid-cols-[1fr_300px] h-full w-full overflow-hidden">
-        
-        <section class="h-full flex flex-col overflow-y-auto space-y-5 min-w-0" style="padding: 3.25rem;">
-            
-            <div class="flex items-center justify-between border-b border-slate-200 dark:border-white/[0.03] pb-3">
-                <div>
-                    <span class="text-[10px] font-bold text-slate-400 dark:text-[#8a8f9d] uppercase tracking-wider block">Logística & Abastecimiento</span>
-                    <div class="flex items-center gap-2 mt-0.5">
-                        <i class="bi bi-star text-slate-400 dark:text-[#8a8f9d] cursor-pointer hover:text-orbis transition-colors text-xs"></i>
-                        <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
-                            {% if order.status == 'PENDING' %}Orden de Compra #{{ order.id }}{% else %}Nueva Solicitud{% endif %}
-                        </h1>
-                    </div>
-                </div>
-                
-                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 tracking-wide uppercase">
-                    Borrador Pendiente
-                </span>
-            </div>
-
-            <div class="bg-white dark:bg-[#15181b] rounded-xl p-4 border border-slate-200 dark:border-white/[0.05] grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-[12px] shadow-sm dark:shadow-none">
-                <div class="space-y-2">
-                    <div class="grid grid-cols-3 items-center">
-                        <span class="text-slate-500 dark:text-[#8a8f9d] font-medium">Proveedor</span>
-                        <span class="col-span-2 text-slate-900 dark:text-white font-bold flex items-center gap-1.5">
-                            <i class="bi bi-building text-orbis text-xs"></i> {{ order.supplier_name }}
-                        </span>
-                    </div>
-                    <div class="grid grid-cols-3 items-center">
-                        <span class="text-slate-500 dark:text-[#8a8f9d] font-medium">Doc. Referencia</span>
-                        <div class="col-span-2">
-                            <input type="text" placeholder="e.j. REF-{{ order.id if order.id else '001' }}" class="compact-input w-full text-slate-900 dark:text-white font-medium text-[12px] border-b border-slate-200 dark:border-white/5 focus:border-orbis dark:focus:border-orbis">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-3 items-center">
-                        <span class="text-slate-500 dark:text-[#8a8f9d] font-medium">Moneda Base</span>
-                        <span class="col-span-2 text-slate-700 dark:text-white font-semibold font-mono text-[11px]">DOP ($)</span>
-                    </div>
-                </div>
-
-                <div class="space-y-2">
-                    <div class="grid grid-cols-3 items-center">
-                        <span class="text-slate-500 dark:text-[#8a8f9d] font-medium">Fecha Emisión</span>
-                        <span class="col-span-2 text-slate-600 dark:text-gray-300 font-mono text-[11px]">21/05/2026 09:26:58 a. m.</span>
-                    </div>
-                    <div class="grid grid-cols-3 items-center">
-                        <span class="text-slate-500 dark:text-[#8a8f9d] font-medium">Entregar a</span>
-                        <span class="col-span-2 text-orbis font-bold flex items-center gap-1">
-                            <i class="bi bi-geo-alt-fill text-xs"></i> Almacén Central (IMP)
-                        </span>
-                    </div>
-                    <div class="grid grid-cols-3 items-center">
-                        <span class="text-slate-500 dark:text-[#8a8f9d] font-medium">Planificación</span>
-                        <label class="col-span-2 flex items-center gap-1.5 text-slate-500 dark:text-[#8a8f9d] cursor-pointer select-none text-[11px]">
-                            <input type="checkbox" checked class="rounded bg-transparent border-slate-300 dark:border-white/10 text-orbis focus:ring-0 w-3 h-3">
-                            Requerir confirmación de arribo
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex flex-col flex-grow min-h-0">
-                <div class="flex items-center border-b border-slate-200 dark:border-white/5 text-[10px] font-bold tracking-wide uppercase">
-                    <button type="button" class="px-3 py-1.5 border-b-2 border-orbis text-orbis bg-orbis/5 rounded-t-md">Líneas de Carga</button>
-                </div>
-
-                <form method="post" action="{{ url_for('purchase_bp.purchase_detail', order_id=order.id) }}" id="purchaseItemForm" class="flex flex-col flex-grow min-h-0">
-                    <div class="w-full overflow-x-auto pt-2">
-                        <table class="w-full text-left border-collapse text-[12px] min-w-[650px]">
-                            <thead>
-                                <tr class="text-slate-500 dark:text-[#8a8f9d] border-b border-slate-200 dark:border-white/5 font-semibold bg-slate-100 dark:bg-[#15181b]/30">
-                                    <th class="py-2 px-3 w-5/12">Item / Descripción</th>
-                                    <th class="py-2 px-3 text-right w-20">Cantidad</th>
-                                    <th class="py-2 px-3 text-center w-16">UdM</th>
-                                    <th class="py-2 px-3 text-right w-24">Costo Unitario</th>
-                                    <th class="py-2 px-3 text-right w-20">Impuestos</th>
-                                    <th class="py-2 px-3 text-right w-28">Subtotal Neto</th>
-                                    <th class="py-2 px-2 text-center w-8"></th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100 dark:divide-white/[0.01] text-slate-700 dark:text-gray-200">
-                                {% set total_order = namespace(sum=0, qty=0) %}
-                                {% for item in items %}
-                                {% set total_order.sum = total_order.sum + (item.quantity * (item.unit_cost | default(0) | float)) %}
-                                {% set total_order.qty = total_order.qty + item.quantity %}
-                                <tr class="hover:bg-slate-100/50 dark:hover:bg-white/[0.01] transition-colors group">
-                                    <td class="py-2 px-3 font-medium text-slate-900 dark:text-white">
-                                        {{ item.product.name if item.product else 'Producto sin indexar' }}
-                                        <span class="block text-[9.5px] text-slate-400 dark:text-[#8a8f9d] font-mono mt-0.5">SKU: {{ item.product.sku if item.product.sku else 'S/N' }}</span>
-                                    </td>
-                                    <td class="py-2 px-3 text-right font-mono text-slate-600 dark:text-gray-300">{{ "{:,.2f}".format(item.quantity | float) }}</td>
-                                    <td class="py-2 px-3 text-center text-slate-400 dark:text-[#8a8f9d] text-[11px]">Uds</td>
-                                    <td class="py-2 px-3 text-right font-mono text-slate-500 dark:text-gray-400">${{ "{:,.2f}".format(item.unit_cost | default(0) | float) }}</td>
-                                    <td class="py-2 px-3 text-right text-[11px] text-slate-400 dark:text-[#8a8f9d]">—</td>
-                                    <td class="py-2 px-3 text-right font-bold font-mono text-slate-900 dark:text-white">${{ "{:,.2f}".format(item.quantity * (item.unit_cost | default(0) | float)) }}</td>
-                                    <td class="py-2 px-2 text-center">
-                                        {% if order.status == 'PENDING' %}
-                                        <a href="{{ url_for('purchase_bp.delete_purchase_item', item_id=item.id) }}" class="text-slate-400 dark:text-[#8a8f9d] hover:text-red-500 dark:hover:text-red-400 transition-all opacity-0 group-hover:opacity-100">
-                                            <i class="bi bi-trash text-xs"></i>
-                                        </a>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-
-                                {% if order.status == 'PENDING' %}
-                                <tr class="bg-slate-50 dark:bg-[#15181b]/20 border-b border-slate-200 dark:border-white/5">
-                                    <td class="py-1.5 px-3">
-                                        <input type="text" id="productSearchInput" list="productsDatalist" placeholder="Escriba SKU o Nombre..." autocomplete="off" required class="w-full compact-input text-slate-900 dark:text-white text-[12px] placeholder-slate-400 dark:placeholder-gray-600 font-medium border-b border-slate-200 dark:border-white/5 focus:border-orbis dark:focus:border-orbis">
-                                        <datalist id="productsDatalist">
-                                            {% for p in products %}
-                                                <option data-id="{{ p.id }}" value="[{{ p.sku if p.sku else 'S/N' }}] {{ p.name }}"></option>
-                                            {% endfor %}
-                                        </datalist>
-                                        <input type="hidden" name="product_id" id="hiddenProductId">
-                                    </td>
-                                    <td class="py-1.5 px-3">
-                                        <input type="number" name="quantity" min="1" value="1.00" step="0.01" required class="w-full bg-transparent text-right compact-input font-mono text-slate-900 dark:text-white text-[12px] border-b border-slate-200 dark:border-white/5 focus:border-orbis dark:focus:border-orbis">
-                                    </td>
-                                    <td class="py-1.5 px-3 text-center text-[11px] text-slate-400 dark:text-[#8a8f9d]">Uds</td>
-                                    <td class="py-1.5 px-3">
-                                        <input type="number" name="unit_cost" step="0.01" min="0" placeholder="0.00" required class="w-full bg-transparent text-right compact-input font-mono text-slate-900 dark:text-white text-[12px] border-b border-slate-200 dark:border-white/5 focus:border-orbis dark:focus:border-orbis">
-                                    </td>
-                                    <td class="py-1.5 px-3 text-right text-[11px] text-slate-400 dark:text-[#8a8f9d]">—</td>
-                                    <td colspan="2" class="py-1.5 px-3 text-right">
-                                        <button type="submit" class="bg-orbis hover:bg-orbis-dark text-slate-900 dark:text-[#0f1113] text-[10px] font-bold px-3 py-1 rounded transition-all shadow-sm flex items-center gap-1 ml-auto">
-                                            <i class="bi bi-plus"></i> Añadir línea
-                                        </button>
-                                    </td>
-                                </tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
-                    </div>
-                </form>
-
-                {% if order.status == 'PENDING' %}
-                <div class="flex items-center gap-3 text-[10px] font-bold text-orbis pt-2.5 px-3">
-                    <button type="button" onclick="document.getElementById('productSearchInput').focus();" class="hover:underline flex items-center gap-0.5"><i class="bi bi-plus-circle"></i> Agregar producto</button>
-                    <span class="text-slate-200 dark:text-white/5">|</span>
-                    <button type="button" class="text-slate-300 dark:text-[#8a8f9d]/40 cursor-not-allowed" disabled>Agregar sección</button>
-                    <span class="text-slate-200 dark:text-white/5">|</span>
-                    <button type="button" class="text-slate-300 dark:text-[#8a8f9d]/40 cursor-not-allowed" disabled>Añadir nota de lote</button>
-                </div>
-                {% endif %}
-
-                <div class="mt-auto pt-5 flex flex-col sm:flex-row justify-between items-start gap-4 border-t border-slate-200 dark:border-white/5">
-                    <div class="w-full sm:w-1/2">
-                        <p class="text-[9px] font-bold text-slate-400 dark:text-[#8a8f9d] uppercase tracking-wider mb-1">Términos del Documento</p>
-                        <textarea placeholder="Establecer condiciones de compra..." class="w-full bg-transparent border-none text-[11px] text-slate-600 dark:text-gray-400 flex-grow resize-none outline-none h-12 placeholder-slate-300 dark:placeholder-gray-700"></textarea>
-                    </div>
-                    <div class="w-full sm:w-1/3 flex flex-col items-end justify-center px-1">
-                        <div class="w-full space-y-0.5 text-[10.5px] text-slate-500 dark:text-[#8a8f9d] border-b border-slate-200 dark:border-white/5 pb-1.5">
-                            <div class="flex justify-between">
-                                <span>Unidades totales:</span>
-                                <span class="font-mono text-slate-700 dark:text-gray-300 font-semibold">{{ total_order.qty }} Ud.</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>Impuestos aplicados:</span>
-                                <span class="font-mono text-slate-700 dark:text-gray-300 font-semibold">$0.00</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between pt-2 w-full">
-                            <span class="text-slate-900 dark:text-white font-bold text-[10.5px] uppercase tracking-wide">Total General:</span>
-                            <span class="text-base font-extrabold text-orbis font-mono">RD$ {{ "{:,.2f}".format(total_order.sum) }}</span>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </section>
-
-        <section class="hidden xl:flex h-full bg-white dark:bg-[#111315] flex-col justify-between border-l border-slate-200 dark:border-white/5 overflow-hidden shadow-sm dark:shadow-none">
-            
-            <div class="flex-grow flex flex-col min-h-0">
-                <div class="p-3.5 border-b border-slate-200 dark:border-white/5 flex items-center justify-between bg-slate-50 dark:bg-[#15181b]/20">
-                    <span class="text-[10.5px] font-bold text-slate-500 dark:text-[#8a8f9d] uppercase tracking-wider flex items-center gap-1.5">
-                        <i class="bi bi-clock-history"></i> Historial de Actividad
-                    </span>
-                    <span class="text-[9px] bg-slate-200 dark:bg-white/5 text-slate-700 dark:text-amber-400 px-1.5 py-0.5 rounded font-mono font-bold">Orbis</span>
-                </div>
-
-                <div class="flex-grow overflow-y-auto p-4 space-y-4 activity-timeline before:bg-slate-200 dark:before:bg-white/[0.04]">
-                    
-                    <div class="flex items-start gap-2 relative z-10">
-                        <div class="w-6.5 h-6.5 rounded bg-orbis text-white dark:text-[#0f1113] font-extrabold flex items-center justify-center text-[8.5px] shrink-0 border border-orbis/10 shadow-sm">
-                            EP
-                        </div>
-                        <div class="bg-slate-50 dark:bg-[#15181b]/50 border border-slate-200 dark:border-white/5 rounded-xl p-2.5 flex-grow space-y-0.5">
-                            <div class="flex items-center justify-between text-[10px]">
-                                <span class="font-bold text-slate-900 dark:text-white">Erik Pavel Vargas G.</span>
-                                <span class="text-[9px] text-slate-400 dark:text-[#8a8f9d]">ahora</span>
-                            </div>
-                            <p class="text-[11px] text-slate-500 dark:text-[#8a8f9d] leading-relaxed">Creando y parametrizando el registro maestro de la orden.</p>
-                        </div>
-                    </div>
-
-                    <div class="flex items-start gap-2 relative z-10">
-                        <div class="w-6.5 h-6.5 rounded bg-slate-100 dark:bg-[#1e2227] text-blue-600 dark:text-blue-400 font-bold flex items-center justify-center text-[10px] shrink-0 border border-slate-200 dark:border-white/5">
-                            <i class="bi bi-hdd-rack"></i>
-                        </div>
-                        <div class="bg-slate-50 dark:bg-[#15181b]/30 border border-slate-200 dark:border-white/5 rounded-xl p-2.5 flex-grow space-y-0.5">
-                            <div class="flex items-center justify-between text-[10px]">
-                                <span class="font-semibold text-slate-700 dark:text-gray-300">Logística Orbis</span>
-                                <span class="text-[9px] text-slate-400 dark:text-[#8a8f9d]">10 min</span>
-                            </div>
-                            <p class="text-[11px] text-slate-500 dark:text-[#8a8f9d]">Ruta de abastecimiento fijada automáticamente por el sistema en <span class="text-orbis font-medium">Almacén Central (IMP)</span>.</p>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
-            <div class="p-3.5 border-t border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#15181b]/40">
-                {% if order.status == 'PENDING' and items %}
-                <button type="button" onclick="document.getElementById('receiveFormSubmit').click();" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold py-2 px-3 rounded-lg shadow-md transition-all flex items-center justify-center gap-1.5 hover:scale-[1.01]">
-                    <i class="bi bi-box-seam-fill text-xs"></i> Validar & Recibir Carga
-                </button>
-                {% endif %}
-            </div>
-        </section>
-
-    </div>
-
-    {% if order.status == 'PENDING' and items %}
-    <form action="{{ url_for('purchase_bp.receive_purchase', order_id=order.id) }}" method="POST" class="hidden">
-        <button type="submit" id="receiveFormSubmit"></button>
-    </form>
-    {% endif %}
-
-    <script>
-        const searchInput = document.getElementById('productSearchInput');
-        const hiddenIdInput = document.getElementById('hiddenProductId');
-        const datalist = document.getElementById('productsDatalist');
-        const form = document.getElementById('purchaseItemForm');
-
-        if (searchInput) {
-            searchInput.addEventListener('input', function() {
-                const inputValue = this.value;
-                let found = false;
-
-                Array.from(datalist.options).forEach(option => {
-                    if (option.value === inputValue) {
-                        hiddenIdInput.value = option.getAttribute('data-id');
-                        found = true;
-                    }
-                });
-
-                if (!found) {
-                    hiddenIdInput.value = "";
-                }
-            });
-
-            form.addEventListener('submit', function(e) {
-                if (!hiddenIdInput.value) {
-                    e.preventDefault();
-                    alert('Error de Catálogo: Seleccione un producto válido sugerido de la lista escribiendo su SKU.');
-                    searchInput.focus();
-                }
-            });
-        }
-    </script>
-</body>
-</html>
+{% if order.status=='PENDING' and items and can('purchases.receive') %}<div class="modal-backdrop" id="receiveModal" hidden><section class="editor-modal"><header><div><span class="eyebrow">Entrada de inventario</span><h2>Confirmar recepción</h2><p>Recibe toda la orden o modifica las cantidades.</p></div><button type="button" data-close="receiveModal"><i class="bi bi-x-lg"></i></button></header><form method="post" action="{{ url_for('purchase_bp.receive_purchase',order_id=order.id) }}"><div class="receive-list">{% for item in items %}{% set pending=item.quantity-item.quantity_received %}<label><span><strong>{{ item.product.name }}</strong><small>Pendiente: {{ pending }} unidades</small></span><input type="number" name="receive_{{ item.id }}" min="1" max="{{ pending }}" step="1" value="{{ pending }}" {% if pending<=0 %}disabled{% endif %}></label>{% endfor %}</div><footer><button type="button" class="btn-secondary" data-close="receiveModal">Cancelar</button><button type="submit" class="btn-primary-modal">Confirmar entrada</button></footer></form></section></div>{% endif %}
+<div class="purchase-toast" id="purchaseToast"></div>
+<script>
+const q=id=>document.getElementById(id),open=id=>{if(q(id))q(id).hidden=false},close=id=>{if(q(id))q(id).hidden=true};function notify(t,b=false){const e=q('purchaseToast');e.textContent=t;e.className='purchase-toast visible'+(b?' error':'');setTimeout(()=>e.classList.remove('visible'),2500)}document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>close(b.dataset.close));document.querySelectorAll('.modal-backdrop').forEach(m=>m.onclick=e=>{if(e.target===m)m.hidden=true});
+const search=q('productSearch'),select=q('productSelect'),cost=q('unitCostInput');if(search&&select){const opts=[...select.options].slice(1);search.oninput=()=>{const v=search.value.toLowerCase().trim();opts.forEach(o=>o.hidden=!!v&&!o.dataset.search.includes(v));const shown=opts.filter(o=>!o.hidden);q('productHint').textContent=`${shown.length} coincidencia${shown.length===1?'':'s'}.`;if(shown.length===1&&v.length>1){select.value=shown[0].value;select.dispatchEvent(new Event('change'))}};select.onchange=()=>{const o=select.selectedOptions[0];if(o?.dataset.cost&&!cost.value)cost.value=Number(o.dataset.cost).toFixed(2)}}
+q('openReceive')?.addEventListener('click',()=>open('receiveModal'));q('openTaxModal')?.addEventListener('click',()=>open('taxModal'));q('taxForm')?.addEventListener('submit',async e=>{e.preventDefault();try{const r=await fetch('{{ url_for("purchase_bp.create_purchase_tax") }}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:q('taxName').value,rate:q('taxRate').value,price_included:q('taxIncluded').checked})}),d=await r.json();if(!r.ok)throw Error(d.error);q('taxSelect').add(new Option(d.name,d.id));q('taxSelect').value=String(d.id);e.target.reset();close('taxModal');notify('ITBIS creado y seleccionado.')}catch(x){q('taxError').textContent=x.message}});
+const ss=q('supplierEditorSelect');function loadSupplier(){const o=ss?.selectedOptions[0];if(!o)return;q('editSupplierName').value=o.dataset.name;q('editSupplierEmail').value=o.dataset.email;q('editSupplierPhone').value=o.dataset.phone}q('openSupplierEditor')?.addEventListener('click',()=>{loadSupplier();open('supplierModal')});ss?.addEventListener('change',loadSupplier);q('saveSupplierData')?.addEventListener('click',async()=>{try{const r=await fetch(`{{ url_for('supplier_bp.supplier_update_api',supplier_id=0) }}`.replace('/0',`/${ss.value}`),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:q('editSupplierName').value,email:q('editSupplierEmail').value,phone:q('editSupplierPhone').value})}),d=await r.json();if(!r.ok)throw Error(d.error);const o=ss.selectedOptions[0];o.textContent=d.name;o.dataset.name=d.name;o.dataset.email=d.email||'';o.dataset.phone=d.phone||'';notify('Proveedor actualizado.')}catch(x){q('supplierError').textContent=x.message}});
+</script></body></html>

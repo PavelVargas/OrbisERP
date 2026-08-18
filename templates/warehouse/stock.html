@@ -26,6 +26,7 @@
                 <h2>Disponibilidad de Stock</h2>
                 <p>Vista detallada de productos en este almacén.</p>
             </div>
+            <a class="btn-primary" href="{{ url_for('warehouse_bp.warehouse_locations', warehouse_id=warehouse.id) }}"><i class="bi bi-diagram-3"></i> Ver ubicaciones y tramos</a>
         </header>
 
         <div class="table-container" style="max-width: 900px;">

@@ -27,9 +27,9 @@
                 <h2>Clientes</h2>
                 <p>Gestiona la base de datos de tus compradores y su historial.</p>
             </div>
-            <a href="{{ url_for('client_bp.create_client') }}" class="btn-primary">
+            {% if can('clients.create') %}<a href="{{ url_for('client_bp.create_client') }}" class="btn-primary">
                 <i class="bi bi-person-plus-fill"></i> NUEVO CLIENTE
-            </a>
+            </a>{% endif %}
         </header>
 
         <section class="table-container">

@@ -419,3 +419,16 @@
             padding: 10px 15px;
             border-top: 1px solid #f0f0f0;
         }
+.compact-filter { min-width: 132px; display: grid; gap: 3px; color: var(--text-muted); font-size: 9px; font-weight: 700; text-transform: uppercase; }
+.compact-filter input { min-height: 38px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 9px; color: var(--text-main); background: var(--bg-input); font-size: 11px; }
+.compact-number { min-width: 105px; }
+/* Filtros compactos: el catálogo conserva una sola barra de búsqueda. */
+.filter-bar { position: relative; align-items: center; }
+.filter-popover { position: relative; flex: 0 0 auto; }
+.filter-popover > summary { list-style: none; min-height: 44px; padding: 0 15px; border: 1px solid var(--border-color, #dfe4ea); border-radius: 12px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; background: var(--card-bg, #fff); color: var(--text-main, #17202a); font-weight: 700; }
+.filter-popover > summary::-webkit-details-marker { display: none; }
+.filter-popover > summary b { color: #635bff; font-size: 20px; line-height: 0; }
+.filter-popover-panel { position: absolute; z-index: 40; right: 0; top: calc(100% + 10px); width: min(720px, calc(100vw - 40px)); padding: 16px; border: 1px solid var(--border-color, #dfe4ea); border-radius: 16px; background: var(--card-bg, #fff); box-shadow: 0 20px 55px rgba(15, 23, 42, .18); display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.filter-popover-panel select, .filter-popover-panel input { width: 100%; min-height: 42px; }
+.filter-popover-panel .btn-filter, .filter-popover-panel .btn-clear { min-height: 42px; align-self: end; }
+@media (max-width: 760px) { .filter-bar { flex-wrap: nowrap; } .search-wrapper { min-width: 0; } .filter-popover-panel { position: fixed; left: 12px; right: 12px; top: 90px; width: auto; max-height: calc(100vh - 110px); overflow: auto; grid-template-columns: 1fr; } .filter-popover > summary span { display: none; } }

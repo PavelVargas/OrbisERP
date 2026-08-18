@@ -9,11 +9,15 @@ class ProductType(enum.Enum):
 
 class Product(db.Model):
     __tablename__ = 'products'
+    __table_args__ = (
+        db.UniqueConstraint('company_id', 'sku', name='uq_products_company_sku'),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(150), nullable=False)
-    sku = db.Column(db.String(50), nullable=False, unique=True)
+    sku = db.Column(db.String(50), nullable=False)
     description = db.Column(db.Text)
+    image_path = db.Column(db.String(255), nullable=True)
     
     price = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
     cost = db.Column(db.Numeric(10, 2), nullable=False, default=0.00) 

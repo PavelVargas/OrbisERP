@@ -121,4 +121,3 @@ class Company(db.Model):
     def __repr__(self):
         return f'<Company {self.name} | Plan: {self.plan_name}>'
 
-SuperadminLog.target_company = db.relationship('Company', back_populates='support_logs')

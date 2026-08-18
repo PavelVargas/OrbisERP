@@ -8,11 +8,11 @@ const initDashboardChart = () => {
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
-    
-    // 1. Extraer estilos computados de base.css para mantener coherencia visual
+
+    // 1. Extraer estilos computados de dashboard.css para mantener coherencia visual
     const style = getComputedStyle(document.body);
-    
-    const primaryColor = style.getPropertyValue('--primary').trim() || '#4f46e5';
+
+    const primaryColor = style.getPropertyValue('--accent').trim() || style.getPropertyValue('--primary').trim() || '#faa200';
     const textColor = style.getPropertyValue('--text-muted').trim() || '#94a3b8';
     const gridColor = style.getPropertyValue('--border').trim() || 'rgba(0,0,0,0.1)';
     const cardBg = style.getPropertyValue('--bg-card').trim() || '#ffffff';
@@ -25,10 +25,11 @@ const initDashboardChart = () => {
     const currencyISO = canvas.getAttribute('data-currency-iso') || 'DOP';
     const currencySymbol = canvas.getAttribute('data-currency-symbol') || 'RD$';
 
-    // 3. Crear Gradiente basado en el color primario actual
-    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-    gradient.addColorStop(0, primaryColor + '66'); // 40% opacidad
-    gradient.addColorStop(1, primaryColor + '00'); // Transparente
+    // 3. Crear gradiente vertical basado en el color de acento actual
+    const gradient = ctx.createLinearGradient(0, 0, 0, 320);
+    gradient.addColorStop(0, primaryColor + '55'); // ~33% opacidad arriba
+    gradient.addColorStop(0.6, primaryColor + '14');
+    gradient.addColorStop(1, primaryColor + '00'); // transparente abajo
 
     // Destruir instancia previa si existe (evita solapamiento al redibujar)
     const existingChart = Chart.getChart("myChart");
@@ -48,36 +49,55 @@ const initDashboardChart = () => {
                 backgroundColor: gradient,
                 borderColor: primaryColor,
                 borderWidth: 3,
-                pointBackgroundColor: primaryColor,
-                pointBorderColor: cardBg,
-                pointBorderWidth: 2,
+                pointBackgroundColor: cardBg,
+                pointBorderColor: primaryColor,
+                pointBorderWidth: 2.5,
                 pointRadius: 4,
-                pointHoverRadius: 6,
-                tension: 0.4 
+                pointHoverRadius: 7,
+                pointHoverBackgroundColor: primaryColor,
+                pointHoverBorderColor: cardBg,
+                pointHoverBorderWidth: 3,
+                cubicInterpolationMode: 'monotone',
+                tension: 0.4
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            layout: {
+                padding: { top: 8, right: 4, bottom: 0, left: 0 }
+            },
             plugins: {
                 legend: {
-                    display: false 
+                    display: false
                 },
                 tooltip: {
                     backgroundColor: cardBg,
                     titleColor: mainText,
                     bodyColor: mainText,
-                    padding: 12,
-                    borderColor: primaryColor + '33',
+                    padding: 14,
+                    borderColor: primaryColor + '40',
                     borderWidth: 1,
+                    cornerRadius: 14,
                     displayColors: false,
+                    titleFont: {
+                        family: "'DM Sans', sans-serif",
+                        size: 12,
+                        weight: '600'
+                    },
+                    bodyFont: {
+                        family: "'DM Mono', monospace",
+                        size: 13,
+                        weight: '500'
+                    },
+                    boxPadding: 6,
                     callbacks: {
                         label: function(context) {
                             // FORMATEO DINÁMICO: Fiel a la moneda de la sesión/empresa
                             if (context.parsed.y !== null) {
-                                return new Intl.NumberFormat('en-US', { 
-                                    style: 'currency', 
-                                    currency: currencyISO 
+                                return new Intl.NumberFormat('en-US', {
+                                    style: 'currency',
+                                    currency: currencyISO
                                 }).format(context.parsed.y);
                             }
                             return context.parsed.y;
@@ -88,13 +108,17 @@ const initDashboardChart = () => {
             scales: {
                 x: {
                     grid: {
-                        display: false 
+                        display: false
+                    },
+                    border: {
+                        display: false
                     },
                     ticks: {
                         color: textColor,
                         font: {
-                            family: "'Plus Jakarta Sans', sans-serif",
-                            size: 11
+                            family: "'DM Sans', sans-serif",
+                            size: 11,
+                            weight: '500'
                         }
                     }
                 },
@@ -102,15 +126,20 @@ const initDashboardChart = () => {
                     beginAtZero: true,
                     grid: {
                         color: gridColor,
-                        drawBorder: false
+                        drawBorder: false,
+                        // líneas punteadas: look más limpio que las sólidas en un panel redondeado
+                        dash: [4, 5]
+                    },
+                    border: {
+                        display: false
                     },
                     ticks: {
                         color: textColor,
                         font: {
-                            family: "'Plus Jakarta Sans', sans-serif",
+                            family: "'DM Mono', monospace",
                             size: 11
                         },
-                        // ETIQUETA LATERAL: Usa el símbolo de la base de datos
+                        // ETIQUETA LATERAL: usa el símbolo de la base de datos
                         callback: function(value) {
                             return currencySymbol + ' ' + value.toLocaleString();
                         }

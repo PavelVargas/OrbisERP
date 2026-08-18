@@ -1,7 +1,7 @@
 /* --- AJUSTES DE DISEÑO PREMIUM (ORBIS-ODOO) --- */
         :root {
-            --odoo-purple: #faa200;
-            --primary: #faa200;
+            --odoo-purple: #f36b21;
+            --primary: #f36b21;
             --bg-card: #151b2c;
             --border: #222d45;
             --text-main: #f1f5f9;
@@ -142,7 +142,7 @@
 .btn-cp-secondary:hover {
     background: var(--border, rgba(34, 45, 69, 0.8));
     border-color: var(--text-muted, #94a3b8);
-    color: var(--primary, #faa200); /* El icono y texto cambian sutilmente al color ámbar de Orbis */
+    color: var(--primary, #f36b21);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }

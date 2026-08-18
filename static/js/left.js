@@ -1,115 +1,96 @@
-(function() {
+(() => {
     'use strict';
-    
-    // ==============================
-    // THEME INITIALIZATION
-    // ==============================
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-        document.documentElement.classList.add('dark');
-    }
-    
-    document.addEventListener('DOMContentLoaded', function() {
+
+    const ready = (callback) => document.readyState === 'loading'
+        ? document.addEventListener('DOMContentLoaded', callback, { once: true })
+        : callback();
+
+    ready(() => {
         const sidebar = document.getElementById('app-sidebar');
-        const toggleBtn = document.getElementById('sidebar-toggle');
-        const collapseBtn = document.getElementById('collapse-toggle');
+        const mobileButton = document.getElementById('sidebar-toggle');
+        const collapseButton = document.getElementById('collapse-toggle');
         const overlay = document.getElementById('sidebar-overlay');
-        const themeSwitch = document.getElementById('theme-switch');
-        
-        // ==============================
-        // RESTORE COLLAPSED STATE
-        // ==============================
-        if (localStorage.getItem('sidebar-collapsed') === 'true' && window.innerWidth > 1024) {
-            sidebar.classList.add('collapsed');
-        }
-        
-        // ==============================
-        // DESKTOP COLLAPSE TOGGLE
-        // ==============================
-        if (collapseBtn) {
-            collapseBtn.addEventListener('click', function() {
-                const isCollapsed = sidebar.classList.toggle('collapsed');
-                localStorage.setItem('sidebar-collapsed', isCollapsed);
-                
-                // Trigger resize for charts
-                setTimeout(() => {
-                    window.dispatchEvent(new Event('resize'));
-                }, 300);
-            });
-        }
-        
-        // ==============================
-        // MOBILE SIDEBAR TOGGLE
-        // ==============================
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', function() {
-                sidebar.classList.toggle('mobile-open');
-                overlay.classList.toggle('active');
-            });
-        }
-        
-        // ==============================
-        // OVERLAY CLICK CLOSE
-        // ==============================
-        if (overlay) {
-            overlay.addEventListener('click', function() {
-                sidebar.classList.remove('mobile-open');
-                overlay.classList.remove('active');
-            });
-        }
-        
-        // ==============================
-        // THEME TOGGLE (CORREGIDO)
-        // ==============================
-        if (themeSwitch) {
-            themeSwitch.addEventListener('click', function() {
-                const isDark = document.documentElement.classList.toggle('dark');
-                localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            });
-        }
-        
-        // ==============================
-        // CLOSE MOBILE ON NAV CLICK
-        // ==============================
-        if (sidebar) {
-            const navLinks = sidebar.querySelectorAll('.nav-item');
-            navLinks.forEach(link => {
-                link.addEventListener('click', function() {
-                    if (window.innerWidth <= 1024) {
-                        sidebar.classList.remove('mobile-open');
-                        overlay.classList.remove('active');
-                    }
+        const themeButton = document.getElementById('theme-switch');
+        const search = document.getElementById('nav-search');
+        const navEmpty = document.getElementById('nav-empty');
+        if (!sidebar) return;
+
+        const desktop = () => window.innerWidth > 1024;
+        const setCollapsed = (collapsed) => {
+            const enabled = desktop() && collapsed;
+            sidebar.classList.toggle('collapsed', enabled);
+            document.documentElement.classList.toggle('sidebar-collapsed', enabled);
+            collapseButton?.setAttribute('aria-label', enabled ? 'Expandir menú' : 'Contraer menú');
+        };
+        const closeMobile = () => {
+            sidebar.classList.remove('mobile-open');
+            overlay?.classList.remove('active');
+            mobileButton?.setAttribute('aria-expanded', 'false');
+        };
+
+        setCollapsed(localStorage.getItem('sidebar-collapsed') === 'true');
+
+        collapseButton?.addEventListener('click', () => {
+            const collapsed = !sidebar.classList.contains('collapsed');
+            localStorage.setItem('sidebar-collapsed', String(collapsed));
+            setCollapsed(collapsed);
+            setTimeout(() => dispatchEvent(new Event('resize')), 230);
+        });
+
+        mobileButton?.addEventListener('click', () => {
+            const open = sidebar.classList.toggle('mobile-open');
+            overlay?.classList.toggle('active', open);
+            mobileButton.setAttribute('aria-expanded', String(open));
+        });
+        overlay?.addEventListener('click', closeMobile);
+        sidebar.querySelectorAll('a.nav-item').forEach((item) => item.addEventListener('click', closeMobile));
+
+        themeButton?.addEventListener('click', () => {
+            const dark = !document.documentElement.classList.contains('dark');
+            document.documentElement.classList.toggle('dark', dark);
+            document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+            localStorage.setItem('theme', dark ? 'dark' : 'light');
+        });
+
+        const filterNavigation = () => {
+            const query = (search?.value || '').trim().toLocaleLowerCase('es');
+            let matches = 0;
+            sidebar.querySelectorAll('[data-nav-group]').forEach((group) => {
+                let groupMatches = 0;
+                group.querySelectorAll('[data-nav-label]').forEach((item) => {
+                    const visible = !query || item.dataset.navLabel.includes(query) || item.textContent.toLocaleLowerCase('es').includes(query);
+                    item.hidden = !visible;
+                    if (visible) groupMatches += 1;
                 });
+                group.hidden = groupMatches === 0;
+                matches += groupMatches;
             });
-        }
-        
-        // ==============================
-        // ESC KEY CLOSE
-        // ==============================
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                sidebar.classList.remove('mobile-open');
-                overlay.classList.remove('active');
+            if (navEmpty) navEmpty.hidden = matches !== 0;
+        };
+        search?.addEventListener('input', filterNavigation);
+
+        document.addEventListener('keydown', (event) => {
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+                event.preventDefault();
+                if (sidebar.classList.contains('collapsed')) setCollapsed(false);
+                search?.focus();
+            }
+            if (event.key === 'Escape') {
+                closeMobile();
+                if (document.activeElement === search) {
+                    search.value = '';
+                    filterNavigation();
+                    search.blur();
+                }
             }
         });
-        
-        // ==============================
-        // HANDLE RESIZE
-        // ==============================
+
         let resizeTimer;
-        window.addEventListener('resize', function() {
+        addEventListener('resize', () => {
             clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(function() {
-                if (window.innerWidth > 1024) {
-                    sidebar.classList.remove('mobile-open');
-                    overlay.classList.remove('active');
-                    
-                    if (localStorage.getItem('sidebar-collapsed') === 'true') {
-                        sidebar.classList.add('collapsed');
-                    }
-                } else {
-                    sidebar.classList.remove('collapsed');
-                }
+            resizeTimer = setTimeout(() => {
+                closeMobile();
+                setCollapsed(localStorage.getItem('sidebar-collapsed') === 'true');
             }, 100);
         });
     });

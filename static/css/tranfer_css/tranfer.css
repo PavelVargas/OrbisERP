@@ -318,3 +318,38 @@
         min-width: 250px;
     }
 }
+
+.pending-only-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-top: 0.55rem;
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.pending-only-note i { color: var(--primary); }
+
+.empty-pending-row td {
+    padding: 3.5rem 1.5rem !important;
+    text-align: center !important;
+    color: var(--text-secondary);
+}
+
+.empty-pending-row i,
+.empty-pending-row strong,
+.empty-pending-row span { display: block; }
+
+.empty-pending-row i {
+    margin-bottom: 0.65rem;
+    color: #16a36a;
+    font-size: 2rem;
+}
+
+.empty-pending-row strong {
+    margin-bottom: 0.25rem;
+    color: var(--text-primary);
+}
+
+.empty-pending-row span { font-size: 0.8rem; }

@@ -16,6 +16,12 @@ class Warehouse(db.Model):
         back_populates='warehouse',
         cascade='all, delete-orphan'
     )
+    locations = db.relationship(
+        'WarehouseLocation',
+        back_populates='warehouse',
+        cascade='all, delete-orphan',
+        order_by='WarehouseLocation.name',
+    )
 
     def __repr__(self):
         return f'<Warehouse {self.name}>'

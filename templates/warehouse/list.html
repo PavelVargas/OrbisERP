@@ -60,9 +60,9 @@
                         <i class="bi bi-lock-fill"></i> <span>LÍMITE ALCANZADO</span>
                     </div>
                 {% else %}
-                    <a href="{{ url_for('warehouse_bp.create_warehouse') }}" class="btn-primary-new">
+                    {% if can('warehouses.create') %}<a href="{{ url_for('warehouse_bp.create_warehouse') }}" class="btn-primary-new">
                         <i class="bi bi-plus-lg"></i> <span>Añadir Sede</span>
-                    </a>
+                    </a>{% endif %}
                 {% endif %}
             {% endif %}
         </header>
@@ -105,6 +105,9 @@
                     </div>
 
                     <div class="ware-footer-actions">
+                        <a href="{{ url_for('warehouse_bp.warehouse_locations', warehouse_id=w.id) }}" class="btn-soft">
+                            <i class="bi bi-diagram-3"></i> <span>Ubicaciones</span>
+                        </a>
                         <a href="{{ url_for('transfer_bp.transfers_by_warehouse', warehouse_id=w.id) }}" class="btn-soft">
                             <i class="bi bi-truck"></i> <span>Envíos</span>
                         </a>
@@ -114,9 +117,9 @@
                         </a>
 
                         {% if user.role == 'admin' or user.role == 'superadmin' %}
-                        <a href="{{ url_for('warehouse_bp.edit_warehouse', id=w.id) }}" class="btn-icon-edit" title="Editar">
+                        {% if can('warehouses.edit') %}<a href="{{ url_for('warehouse_bp.edit_warehouse', id=w.id) }}" class="btn-icon-edit" title="Editar">
                             <i class="bi bi-pencil-square"></i>
-                        </a>
+                        </a>{% endif %}
                         {% endif %}
                     </div>
                 </div>

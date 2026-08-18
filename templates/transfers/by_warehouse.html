@@ -10,7 +10,7 @@
         /* --- ESTILOS COMPLEMENTARIOS PARA ALINEAR CON ORBIS-ODOO --- */
         :root {
             --odoo-purple: #714B67;
-            --primary: #faa200;
+            --primary: #f36b21;
             --bg-card: #151b2c;
             --border: #222d45;
             --text-main: #f1f5f9;
@@ -211,7 +211,7 @@
                         <td>
                             <div class="origin-tag">
                                 <i class="bi bi-box-arrow-up-right"></i>
-                                <span>{{ t.from_warehouse.name }}</span>
+                                <span>{{ t.from_warehouse.name }}{% if t.from_location %} · {{ t.from_location.full_path }}{% endif %}</span>
                             </div>
                         </td>
                         <td style="text-align: center;">

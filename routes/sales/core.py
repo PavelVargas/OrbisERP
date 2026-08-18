@@ -7,12 +7,28 @@ from models.category.category import Category
 from models.client.client import Client
 from models.warehouse.warehouse import Warehouse
 from models.warehouse_stock.warehouse_stock import WarehouseStock
+from models.stock_transfer.stock_transfer import StockTransfer
 from models.user.user import User
 from models.divisas.divisas import ExchangeRate
 from decimal import Decimal
 from datetime import datetime
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from .sales import sales_bp
+
+
+def available_sale_stock(product_id, warehouse_id, company_id):
+    stock = WarehouseStock.query.filter_by(
+        product_id=product_id,
+        warehouse_id=warehouse_id,
+        company_id=company_id,
+    ).first()
+    reserved = db.session.query(func.coalesce(func.sum(StockTransfer.quantity), 0)).filter(
+        StockTransfer.product_id == product_id,
+        StockTransfer.from_warehouse_id == warehouse_id,
+        StockTransfer.company_id == company_id,
+        StockTransfer.status == 'PENDING',
+    ).scalar()
+    return max(int(stock.quantity or 0) - int(reserved or 0), 0) if stock else 0
 
 def recalc_sale(sale):
     """Recalcula subtotales, ITBIS (18%) y total de la venta."""
@@ -80,8 +96,7 @@ def create_sale():
             
             if w_id:
                 if not is_service:
-                    stock = WarehouseStock.query.filter_by(product_id=product.id, warehouse_id=w_id).first()
-                    if not stock or stock.quantity < 1:
+                    if available_sale_stock(product.id, w_id, company_id) < 1:
                         flash(f'Sin stock disponible para {product.name}', 'danger')
                         return redirect(url_for('sales_bp.create_sale'))
 
@@ -145,8 +160,7 @@ def add_to_cart(product_id):
 
     if not is_service:
         warehouse = Warehouse.query.filter_by(id=warehouse_id, company_id=company_id).first_or_404()
-        stock = WarehouseStock.query.filter_by(product_id=product.id, warehouse_id=warehouse.id).first()
-        if not stock or stock.quantity < qty:
+        if available_sale_stock(product.id, warehouse.id, company_id) < qty:
             flash(f'Stock insuficiente en {warehouse.name}', 'danger')
             return redirect(url_for('sales_bp.create_sale'))
 
@@ -223,7 +237,8 @@ def get_products():
             'price': float(p.price),
             'sku': p.sku,
             'category': p.category.name if p.category else 'General',
-            'type': p_type 
+            'type': p_type,
+            'image': url_for('static', filename=p.image_path) if p.image_path else None
         })
     
     return jsonify(results)

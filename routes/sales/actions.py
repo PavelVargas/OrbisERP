@@ -3,10 +3,13 @@ from db import db
 from models.sales.sales import Sale
 from models.company.company import Company
 from models.warehouse_stock.warehouse_stock import WarehouseStock
+from models.warehouse_location.warehouse_location import LocationStock, WarehouseLocation
 from models.stock_movement.stock_movement import StockMovement
+from models.stock_transfer.stock_transfer import StockTransfer
 from datetime import datetime
 from decimal import Decimal
 from .core import recalc_sale 
+from sqlalchemy import func
 
 from .sales import sales_bp
 
@@ -75,14 +78,45 @@ def finish_sale():
 
         stock = WarehouseStock.query.filter_by(
             product_id=item.product_id, 
-            warehouse_id=item.warehouse_id
-        ).first()
+            warehouse_id=item.warehouse_id,
+            company_id=company_id,
+        ).with_for_update().first()
         
         if not stock or stock.quantity < item.quantity:
             flash(f'Stock insuficiente para {item.product.name}', 'danger')
             db.session.rollback() 
             return redirect(url_for('sales_bp.create_sale'))
+        reserved = db.session.query(func.coalesce(func.sum(StockTransfer.quantity), 0)).filter(
+            StockTransfer.product_id == item.product_id,
+            StockTransfer.from_warehouse_id == item.warehouse_id,
+            StockTransfer.company_id == company_id,
+            StockTransfer.status == 'PENDING',
+        ).scalar()
+        if int(stock.quantity or 0) - int(reserved or 0) < item.quantity:
+            flash(f'Parte del stock de {item.product.name} está reservado en traslados pendientes.', 'danger')
+            db.session.rollback()
+            return redirect(url_for('sales_bp.create_sale'))
         
+        location_rows = LocationStock.query.join(WarehouseLocation).filter(
+            WarehouseLocation.warehouse_id == item.warehouse_id,
+            LocationStock.product_id == item.product_id,
+            LocationStock.company_id == company_id,
+            LocationStock.quantity > 0,
+        ).order_by(LocationStock.location_id.asc()).with_for_update().all()
+        allocated = sum(int(row.quantity or 0) for row in location_rows)
+        unassigned = max(int(stock.quantity or 0) - allocated, 0)
+        remaining_from_locations = max(int(item.quantity) - unassigned, 0)
+        for location_row in location_rows:
+            if remaining_from_locations <= 0:
+                break
+            taken = min(int(location_row.quantity or 0), remaining_from_locations)
+            location_row.quantity -= taken
+            remaining_from_locations -= taken
+        if remaining_from_locations > 0:
+            flash(f'La distribución física de {item.product.name} no coincide con el stock del almacén.', 'danger')
+            db.session.rollback()
+            return redirect(url_for('sales_bp.create_sale'))
+
         stock.quantity -= item.quantity
 
         movement = StockMovement(

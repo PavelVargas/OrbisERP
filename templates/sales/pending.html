@@ -73,11 +73,11 @@
                                     <i class="bi bi-play-fill"></i>
                                 </a>
 
-                                <form action="{{ url_for('sales_bp.convert_to_quote', sale_id=sale.id) }}" method="POST">
+                                {% if can('sales.quote') %}<form action="{{ url_for('sales_bp.convert_to_quote', sale_id=sale.id) }}" method="POST">
                                     <button type="submit" class="act-btn btn-quote" title="Convertir a Cotización">
                                         <i class="bi bi-file-earmark-text"></i>
                                     </button>
-                                </form>
+                                </form>{% endif %}
                             </div>
                         </td>
                     </tr>

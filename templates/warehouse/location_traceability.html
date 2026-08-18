@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es" class="{% if session.get('theme') == 'dark' %}dark{% endif %}">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>{{ location.full_path }} · Stock y trazabilidad</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ware_css/location_traceability.css') }}">
+</head>
+<body>{% include 'layouts/left_bar.html' %}
+<main class="trace-page">
+    <header class="trace-header">
+        <div><a href="{{ url_for('warehouse_bp.warehouse_locations', warehouse_id=location.warehouse_id) }}" class="back-link"><i class="bi bi-chevron-left"></i> Ubicaciones</a><span class="eyebrow">Stock de ubicación</span><h1>{{ location.full_path }}</h1><p>{{ location.warehouse.name }} · {{ location.barcode }}</p></div>
+        <div class="trace-actions">{% if can('transfers.create') %}<a href="{{ url_for('transfer_bp.create_transfer') }}?from_location={{ location.id }}" class="btn-primary"><i class="bi bi-arrow-left-right"></i> Crear traslado</a>{% endif %}{% if can('transfers.scanner') %}<a href="{{ url_for('transfer_bp.scanner_mode') }}" class="btn-secondary"><i class="bi bi-upc-scan"></i> Abrir escáner</a>{% endif %}</div>
+    </header>
+    <section class="metric-grid">
+        <article><span>Productos distintos</span><strong>{{ stocks|length }}</strong></article>
+        <article><span>Unidades disponibles</span><strong>{{ stocks|sum(attribute='quantity') }}</strong></article>
+        <article><span>Entradas pendientes</span><strong>{{ pending_in|length }}</strong></article>
+        <article><span>Salidas pendientes</span><strong>{{ pending_out|length }}</strong></article>
+    </section>
+    <div class="trace-layout">
+        <section class="trace-card"><div class="card-title"><div><span class="eyebrow">Disponible ahora</span><h2>Stock propio del tramo</h2></div></div>
+            <div class="stock-list">{% for stock in stocks %}<div class="stock-row"><div><strong>{{ stock.product.name }}</strong><span>{{ stock.product.sku or 'Sin SKU' }}</span></div><b>{{ stock.quantity }} uds</b></div>{% else %}<div class="empty-state">Esta ubicación todavía no tiene existencias asignadas.</div>{% endfor %}</div>
+        </section>
+        <section class="trace-card"><div class="card-title"><div><span class="eyebrow">Por validar</span><h2>Transferencias pendientes</h2></div></div>
+            <div class="pending-list">{% for transfer in pending_in %}<a href="{{ url_for('transfer_bp.view_transfer', transfer_id=transfer.id) }}"><span><i class="bi bi-arrow-down-left"></i> Entrada TR{{ '%06d'|format(transfer.id) }}</span><strong>{{ transfer.product.name }} · {{ transfer.quantity }}</strong></a>{% endfor %}{% for transfer in pending_out %}<a href="{{ url_for('transfer_bp.view_transfer', transfer_id=transfer.id) }}"><span><i class="bi bi-arrow-up-right"></i> Salida TR{{ '%06d'|format(transfer.id) }}</span><strong>{{ transfer.product.name }} · {{ transfer.quantity }}</strong></a>{% endfor %}{% if not pending_in and not pending_out %}<div class="empty-state">No hay transferencias pendientes.</div>{% endif %}</div>
+        </section>
+    </div>
+    <section class="trace-card history-card"><div class="card-title"><div><span class="eyebrow">Kardex del tramo</span><h2>Trazabilidad completa</h2></div><span>{{ movements|length }} movimientos</span></div>
+        <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Producto</th><th>Movimiento</th><th>Referencia</th><th>Cantidad</th><th>Saldo</th><th>Responsable</th></tr></thead><tbody>{% for movement in movements %}<tr><td>{{ movement.created_at.strftime('%d/%m/%Y %I:%M %p') }}</td><td><strong>{{ movement.product.name }}</strong><small>{{ movement.product.sku or '' }}</small></td><td><span class="movement-tag movement-{{ movement.movement_type|lower }}">{{ movement.movement_type|replace('_', ' ') }}</span><small>{{ movement.notes or '' }}</small></td><td>{{ movement.reference or '—' }}</td><td class="qty {{ 'positive' if movement.quantity > 0 else 'negative' }}">{{ '+' if movement.quantity > 0 else '' }}{{ movement.quantity }}</td><td><strong>{{ movement.balance_after }}</strong></td><td>{{ movement.user.name if movement.user else 'Sistema' }}</td></tr>{% else %}<tr><td colspan="7" class="empty-state">Aún no hay movimientos registrados.</td></tr>{% endfor %}</tbody></table></div>
+    </section>
+</main></body></html>

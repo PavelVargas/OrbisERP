@@ -126,18 +126,18 @@
                     </div>
 
                     <div class="action-buttons-stack">
-                        <form action="{{ url_for('sales_bp.finish_sale') }}" method="POST" id="finish-sale-form">
+                        {% if can('sales.complete') %}<form action="{{ url_for('sales_bp.finish_sale') }}" method="POST" id="finish-sale-form">
                             <button type="submit" class="btn-checkout" {{ 'disabled' if not sale or not sale.items or not sale.client_id else '' }}>
                                 <i class="bi bi-check-circle"></i> Confirmar Venta
                             </button>
-                        </form>
+                        </form>{% endif %}
 
                         {% if sale and sale.id %}
-                        <form action="{{ url_for('sales_bp.convert_to_quote', sale_id=sale.id) }}" method="POST" id="quote-sale-form">
+                        {% if can('sales.quote') %}<form action="{{ url_for('sales_bp.convert_to_quote', sale_id=sale.id) }}" method="POST" id="quote-sale-form">
                             <button type="submit" class="btn-quote" {{ 'disabled' if not sale.items else '' }}>
                                 <i class="bi bi-file-earmark-text"></i> Guardar Cotización
                             </button>
-                        </form>
+                        </form>{% endif %}
                         {% endif %}
                     </div>
                 </div>
@@ -188,6 +188,10 @@
                 return;
             }
 
+            const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, char => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            })[char]);
+
             productGrid.innerHTML = products.map(p => {
                 const rawType = String(p.type || '').trim().toUpperCase();
                 const isService = (rawType === 'SERVICE' || rawType === 'SERVICIO');
@@ -195,14 +199,17 @@
                 const typeLabel = isService ? 'Servicio' : 'Producto';
                 
                 return `
-                <div class="product-card" onclick="addProductToSale('${p.sku}')">
+                <div class="product-card" onclick="addProductToSale(decodeURIComponent('${encodeURIComponent(p.sku)}'))">
+                    <div class="sale-product-media">
+                        ${p.image ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" loading="lazy">` : `<div class="sale-product-placeholder"><i class="bi bi-box-seam"></i></div>`}
+                    </div>
                     <div class="card-header-tags">
-                        <span class="badge-ui badge-category">${p.category || 'General'}</span>
+                        <span class="badge-ui badge-category">${escapeHtml(p.category || 'General')}</span>
                         <span class="badge-ui ${typeClass}">${typeLabel}</span>
                     </div>
                     <div>
-                        <span class="product-sku">${p.sku}</span>
-                        <div class="product-name">${p.name}</div>
+                        <span class="product-sku">${escapeHtml(p.sku)}</span>
+                        <div class="product-name">${escapeHtml(p.name)}</div>
                     </div>
                     <div class="product-footer">
                         <div class="product-price">
@@ -230,7 +237,8 @@
         }
 
         // Manejo de Envíos con Overlay
-        document.getElementById('finish-sale-form').addEventListener('submit', function(e) {
+        const finishForm = document.getElementById('finish-sale-form');
+        if (finishForm) finishForm.addEventListener('submit', function(e) {
             e.preventDefault();
             document.getElementById('overlay-msg').innerText = "¡Venta Registrada!";
             document.getElementById('success-overlay').style.display = 'grid';

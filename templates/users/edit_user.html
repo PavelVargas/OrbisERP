@@ -100,6 +100,46 @@
                         </div>
                     </div>
 
+                    <div class="form-section permissions-section" id="permissions-section">
+                        <div class="section-header permissions-heading">
+                            <i class="bi bi-shield-lock"></i>
+                            <div><h3>Permisos detallados</h3><p>Decide qué módulos puede ver y qué operaciones puede ejecutar este usuario.</p></div>
+                            <span class="permission-counter"><b id="permission-count">0</b>/{{ permission_total }} activos</span>
+                        </div>
+
+                        {% if target_user.role in ['admin', 'superadmin'] %}
+                        <div class="admin-permission-notice"><i class="bi bi-shield-fill-check"></i><div><strong>Acceso administrativo total</strong><span>Los administradores conservan todos los permisos. Cambia el rol a “User” para aplicar una selección personalizada.</span></div></div>
+                        {% endif %}
+
+                        <div class="permission-toolbar">
+                            <label class="permission-search"><i class="bi bi-search"></i><input id="permission-search" type="search" placeholder="Buscar permiso o módulo…"></label>
+                            <div class="preset-buttons">
+                                <button type="button" class="preset-btn" data-preset="minimal"><i class="bi bi-circle"></i> Mínimo</button>
+                                <button type="button" class="preset-btn" data-preset="seller"><i class="bi bi-receipt"></i> Vendedor</button>
+                                <button type="button" class="preset-btn" data-preset="warehouse"><i class="bi bi-boxes"></i> Almacén</button>
+                                <button type="button" class="preset-btn" data-preset="auditor"><i class="bi bi-clipboard-data"></i> Auditor</button>
+                                <button type="button" class="preset-btn" data-preset="supervisor"><i class="bi bi-person-check"></i> Supervisor</button>
+                            </div>
+                        </div>
+
+                        <div class="permission-groups">
+                            {% for group_key, group_name, group_icon, permissions in permission_groups %}
+                            <section class="permission-group" data-permission-group data-search="{{ group_name|lower }}">
+                                <header><div><span class="permission-group-icon"><i class="bi {{ group_icon }}"></i></span><div><h4>{{ group_name }}</h4><small>{{ permissions|length }} controles</small></div></div><button type="button" class="group-toggle">Seleccionar grupo</button></header>
+                                <div class="permission-grid">
+                                    {% for permission_key, permission_name, permission_description in permissions %}
+                                    <label class="permission-card" data-search="{{ (permission_name ~ ' ' ~ permission_description ~ ' ' ~ permission_key)|lower }}">
+                                        <input type="checkbox" name="permissions" value="{{ permission_key }}" {% if permission_key in selected_permissions %}checked{% endif %} {% if target_user.role in ['admin','superadmin'] %}disabled{% endif %}>
+                                        <span class="permission-switch"><i></i></span>
+                                        <span class="permission-copy"><strong>{{ permission_name }}</strong><small>{{ permission_description }}</small><code>{{ permission_key }}</code></span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </section>
+                            {% endfor %}
+                        </div>
+                    </div>
+
                     <div class="form-section">
                         <div class="section-header">
                             <i class="bi bi-layers"></i>
@@ -188,5 +228,40 @@
             </aside>
         </div>
     </main>
+    <script>
+        const presets = {{ permission_presets|tojson }};
+        const roleSelect = document.querySelector('[name="role"]');
+        const checks = [...document.querySelectorAll('input[name="permissions"]')];
+        const count = document.getElementById('permission-count');
+        const syncCount = () => { count.textContent = checks.filter(input => input.checked).length; };
+        const syncRole = () => {
+            const locked = ['admin', 'superadmin'].includes(roleSelect.value);
+            checks.forEach(input => input.disabled = locked);
+            document.querySelector('.permissions-section')?.classList.toggle('permissions-locked', locked);
+        };
+        document.querySelectorAll('[data-preset]').forEach(button => button.addEventListener('click', () => {
+            const allowed = new Set(presets[button.dataset.preset] || []);
+            checks.forEach(input => input.checked = allowed.has(input.value));
+            syncCount();
+        }));
+        document.querySelectorAll('.group-toggle').forEach(button => button.addEventListener('click', () => {
+            const groupChecks = [...button.closest('[data-permission-group]').querySelectorAll('input[name="permissions"]:not(:disabled)')];
+            const next = !groupChecks.every(input => input.checked);
+            groupChecks.forEach(input => input.checked = next);
+            button.textContent = next ? 'Quitar grupo' : 'Seleccionar grupo';
+            syncCount();
+        }));
+        document.getElementById('permission-search').addEventListener('input', event => {
+            const query = event.target.value.trim().toLowerCase();
+            document.querySelectorAll('[data-permission-group]').forEach(group => {
+                let visible = 0;
+                group.querySelectorAll('.permission-card').forEach(card => { const match = !query || card.dataset.search.includes(query) || group.dataset.search.includes(query); card.hidden = !match; visible += match ? 1 : 0; });
+                group.hidden = visible === 0;
+            });
+        });
+        checks.forEach(input => input.addEventListener('change', syncCount));
+        roleSelect.addEventListener('change', syncRole);
+        syncRole(); syncCount();
+    </script>
 </body>
 </html>

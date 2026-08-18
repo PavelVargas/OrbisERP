@@ -38,7 +38,9 @@
                 </p>
             </div>
 
-            {% if session.get('user_role') == 'admin' %}
+            <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">
+            {% if can('audits.view') %}<a href="{{ url_for('users_bp.permission_audit') }}" class="btn-add-user" style="background:#0f766e"><i class="bi bi-clock-history"></i><span>AUDITORÍA</span></a>{% endif %}
+            {% if can('users.create') %}
                 {% set limits = user.company.get_plan_limits() %}
                 
                 {% if users|length >= limits.max_users %}
@@ -53,6 +55,7 @@
                     </a>
                 {% endif %}
             {% endif %}
+            </div>
         </header>
 
         <div class="action-toolbar">
@@ -113,17 +116,17 @@
                         </div>
                         {% if session.get('user_role') == 'admin'%}
                         <div class="action-group-pill">
-                            <a href="{{ url_for('users_bp.edit_user', id=u.id) }}" class="act-btn edit" title="Editar">
+                            {% if can('users.edit') %}<a href="{{ url_for('users_bp.edit_user', id=u.id) }}" class="act-btn edit" title="Editar">
                                 <i class="bi bi-pencil-fill"></i>
-                            </a>
+                            </a>{% endif %}
                             <a href="{{ url_for('users_bp.entrada_user', id=u.id) }}" class="act-btn view" title="Ver Perfil">
                                 <i class="bi bi-eye-fill"></i>
                             </a>
-                            <form action="{{ url_for('users_bp.delete_user', id=u.id) }}" method="post" onsubmit="return confirm('¿Eliminar?')">
+                            {% if can('users.delete') %}<form action="{{ url_for('users_bp.delete_user', id=u.id) }}" method="post" onsubmit="return confirm('¿Eliminar?')">
                                 <button type="submit" class="act-btn delete">
                                     <i class="bi bi-trash3-fill"></i>
                                 </button>
-                            </form>
+                            </form>{% endif %}
                         </div>
                         {% endif %}
                     </div>

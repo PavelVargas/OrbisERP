@@ -190,7 +190,7 @@ body {
    ========================================================================== */
 .ware-footer-actions {
     display: grid;
-    grid-template-columns: 1fr 1fr 50px;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) 50px;
     gap: 12px;
 }
 
@@ -254,7 +254,7 @@ body {
     align-items: center;
     gap: 15px;
     background: rgba(255, 193, 7, 0.1); /* Amarillo suave transparente */
-    border: 1px dashed #ffc107;
+    border: 1px dashed #f36b21;
     border-radius: 12px;
     padding: 16px 20px;
     margin-bottom: 25px;
@@ -264,7 +264,7 @@ body {
 /* Icono de información */
 .upgrade-alert-box i {
     font-size: 1.4rem;
-    color: #ffc107;
+    color: #d94f0d;
 }
 
 /* Texto de la alerta */
@@ -282,7 +282,7 @@ body {
 
 /* Botón de Subir Plan */
 .btn-upgrade {
-    background: #ffc107;
+    background: #f36b21;
     color: #000 !important;
     text-decoration: none !important;
     padding: 8px 16px;

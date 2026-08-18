@@ -165,7 +165,7 @@ def list_companies():
     if not user:
         return redirect(url_for('login_bp.login'))
 
-    if session.get('user_role') != 'admin':
+    if session.get('user_role') != 'superadmin':
         flash("Acceso denegado", "danger")
         return redirect(url_for('dashboard_bp.dashboard'))
 
@@ -183,7 +183,7 @@ def impersonate_company(company_id):
     if not user:
         return redirect(url_for('login_bp.login'))
 
-    if session.get('user_role') != 'admin':
+    if session.get('user_role') != 'superadmin':
         flash("Acceso denegado", "danger")
         return redirect(url_for('dashboard_bp.dashboard'))
 

@@ -1,7 +1,16 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+import io
+import re
+from uuid import uuid4
+
+from barcode import Code128
+from barcode.writer import ImageWriter
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, send_file
 from db import db
+from models.products.products import Product, ProductType
 from models.warehouse.warehouse import Warehouse
+from models.warehouse_location.warehouse_location import LocationMovement, LocationStock, WarehouseLocation
 from models.warehouse_stock.warehouse_stock import WarehouseStock
+from models.stock_transfer.stock_transfer import StockTransfer
 from models.user.user import User
 
 warehouse_bp = Blueprint('warehouse_bp', __name__, url_prefix='/warehouses')
@@ -70,13 +79,13 @@ def create_warehouse():
     current_wares_count = Warehouse.query.filter_by(company_id=company_id, status=True).count()
 
     # Seguridad: Solo admin o superadmin
-    if user.role not in ['admin', 'superadmin']:
+    if not user.has_permission('warehouses.create'):
         flash('Acceso denegado: Solo administradores', 'danger')
         return redirect(url_for('warehouse_bp.list_warehouses'))
 
     if request.method == 'POST':
         # 3. VALIDACIÓN DE LÍMITE DE PLAN (El Superadmin ignora esta restricción si quieres)
-        if user.role == 'admin':
+        if user.role != 'superadmin':
             if current_wares_count >= plan_limits['max_warehouses']:
                 flash(f"Límite alcanzado para el plan {plan_name}. Máximo: {plan_limits['max_warehouses']}.", 'warning')
                 return redirect(url_for('warehouse_bp.list_warehouses'))
@@ -118,7 +127,7 @@ def edit_warehouse(id):
 
     user = User.query.get_or_404(user_id)
     
-    if user.role not in ['admin', 'superadmin']:
+    if not user.has_permission('warehouses.edit'):
         flash('Acceso denegado', 'danger')
         return redirect(url_for('warehouse_bp.list_warehouses'))
 
@@ -163,3 +172,205 @@ def warehouse_stock(id):
     stocks = WarehouseStock.query.filter_by(warehouse_id=id).all()
     
     return render_template('warehouse/stock.html', warehouse=warehouse, stocks=stocks, user=user)
+
+
+def _location_code(value):
+    return re.sub(r'[^A-Z0-9-]+', '-', (value or '').strip().upper()).strip('-')[:50]
+
+
+@warehouse_bp.route('/<int:warehouse_id>/locations', methods=['GET', 'POST'])
+def warehouse_locations(warehouse_id):
+    user_id = session.get('user_id')
+    company_id = session.get('company_id')
+    if not user_id or not company_id:
+        return redirect(url_for('login_bp.login'))
+
+    user = db.session.get(User, user_id)
+    warehouse = Warehouse.query.filter_by(id=warehouse_id, company_id=company_id, status=True).first_or_404()
+    if user.role not in ['admin', 'superadmin'] and user.warehouse_id != warehouse.id:
+        flash('No tienes permiso para gestionar estas ubicaciones.', 'danger')
+        return redirect(url_for('warehouse_bp.list_warehouses'))
+
+    locations = WarehouseLocation.query.filter_by(
+        warehouse_id=warehouse.id,
+        company_id=company_id,
+        status=True,
+    ).order_by(WarehouseLocation.parent_id.asc().nullsfirst(), WarehouseLocation.name.asc()).all()
+    locations.sort(key=lambda row: row.full_path.casefold())
+
+    if request.method == 'POST':
+        if not user.has_permission('locations.manage'):
+            flash('Solo un administrador puede crear ubicaciones.', 'danger')
+            return redirect(url_for('warehouse_bp.warehouse_locations', warehouse_id=warehouse.id))
+
+        name = (request.form.get('name') or '').strip()
+        code = _location_code(request.form.get('code') or name)
+        description = (request.form.get('description') or '').strip() or None
+        parent_id = request.form.get('parent_id', type=int)
+        if not name or not code:
+            flash('El nombre y el código de la ubicación son obligatorios.', 'danger')
+            return redirect(url_for('warehouse_bp.warehouse_locations', warehouse_id=warehouse.id))
+
+        parent = None
+        if parent_id:
+            parent = WarehouseLocation.query.filter_by(
+                id=parent_id,
+                warehouse_id=warehouse.id,
+                company_id=company_id,
+                status=True,
+            ).first()
+            if not parent:
+                flash('La ubicación superior no es válida.', 'danger')
+                return redirect(url_for('warehouse_bp.warehouse_locations', warehouse_id=warehouse.id))
+
+        if WarehouseLocation.query.filter_by(warehouse_id=warehouse.id, code=code).first():
+            flash('Ese código ya existe dentro del almacén.', 'danger')
+            return redirect(url_for('warehouse_bp.warehouse_locations', warehouse_id=warehouse.id))
+
+        barcode = f'LOC-{company_id}-{warehouse.id}-{code}-{uuid4().hex[:6].upper()}'
+        location = WarehouseLocation(
+            name=name,
+            code=code,
+            barcode=barcode,
+            description=description,
+            parent=parent,
+            warehouse_id=warehouse.id,
+            company_id=company_id,
+            status=True,
+        )
+        try:
+            db.session.add(location)
+            db.session.commit()
+            flash(f'Ubicación “{location.full_path}” creada. Su código ya puede escanearse.', 'success')
+        except Exception:
+            db.session.rollback()
+            flash('No se pudo crear la ubicación. Revisa que el código no esté repetido.', 'danger')
+        return redirect(url_for('warehouse_bp.warehouse_locations', warehouse_id=warehouse.id))
+
+    products = Product.query.filter_by(company_id=company_id, status=True).filter(
+        Product.product_type != ProductType.SERVICE
+    ).order_by(Product.name.asc()).all()
+    aggregate_stocks = {
+        row.product_id: int(row.quantity or 0)
+        for row in WarehouseStock.query.filter_by(warehouse_id=warehouse.id, company_id=company_id).all()
+    }
+    allocated = {}
+    for row in LocationStock.query.join(WarehouseLocation).filter(
+        WarehouseLocation.warehouse_id == warehouse.id,
+        LocationStock.company_id == company_id,
+    ).all():
+        allocated[row.product_id] = allocated.get(row.product_id, 0) + int(row.quantity or 0)
+    reserved = {}
+    reserved_rows = db.session.query(
+        StockTransfer.product_id,
+        db.func.coalesce(db.func.sum(StockTransfer.quantity), 0),
+    ).filter(
+        StockTransfer.company_id == company_id,
+        StockTransfer.from_warehouse_id == warehouse.id,
+        StockTransfer.from_location_id.is_(None),
+        StockTransfer.status == 'PENDING',
+    ).group_by(StockTransfer.product_id).all()
+    for product_id, quantity in reserved_rows:
+        reserved[product_id] = int(quantity or 0)
+    unassigned = {
+        product_id: max(quantity - allocated.get(product_id, 0) - reserved.get(product_id, 0), 0)
+        for product_id, quantity in aggregate_stocks.items()
+    }
+
+    return render_template(
+        'warehouse/locations.html',
+        warehouse=warehouse,
+        locations=locations,
+        products=products,
+        unassigned=unassigned,
+        user=user,
+    )
+
+
+@warehouse_bp.route('/locations/<int:location_id>/allocate', methods=['POST'])
+def allocate_location_stock(location_id):
+    user_id = session.get('user_id')
+    company_id = session.get('company_id')
+    user = db.session.get(User, user_id) if user_id else None
+    if not user or not company_id or not user.has_permission('locations.allocate'):
+        flash('No tienes permiso para distribuir existencias.', 'danger')
+        return redirect(url_for('warehouse_bp.list_warehouses'))
+
+    location = WarehouseLocation.query.filter_by(id=location_id, company_id=company_id, status=True).first_or_404()
+    product_id = request.form.get('product_id', type=int)
+    quantity = request.form.get('quantity', type=int)
+    if not product_id or quantity is None or quantity <= 0:
+        flash('Selecciona un producto y una cantidad mayor que cero.', 'danger')
+        return redirect(url_for('warehouse_bp.warehouse_locations', warehouse_id=location.warehouse_id))
+
+    warehouse_stock = WarehouseStock.query.filter_by(
+        warehouse_id=location.warehouse_id,
+        product_id=product_id,
+        company_id=company_id,
+    ).first()
+    allocated = db.session.query(db.func.coalesce(db.func.sum(LocationStock.quantity), 0)).join(
+        WarehouseLocation, LocationStock.location_id == WarehouseLocation.id
+    ).filter(
+        WarehouseLocation.warehouse_id == location.warehouse_id,
+        LocationStock.product_id == product_id,
+        LocationStock.company_id == company_id,
+    ).scalar()
+    reserved = db.session.query(db.func.coalesce(db.func.sum(StockTransfer.quantity), 0)).filter(
+        StockTransfer.company_id == company_id,
+        StockTransfer.product_id == product_id,
+        StockTransfer.from_warehouse_id == location.warehouse_id,
+        StockTransfer.from_location_id.is_(None),
+        StockTransfer.status == 'PENDING',
+    ).scalar()
+    available = int(warehouse_stock.quantity or 0) - int(allocated or 0) - int(reserved or 0) if warehouse_stock else 0
+    if quantity > available:
+        flash(f'Solo quedan {available} unidades sin ubicación asignada.', 'danger')
+        return redirect(url_for('warehouse_bp.warehouse_locations', warehouse_id=location.warehouse_id))
+
+    row = LocationStock.query.filter_by(location_id=location.id, product_id=product_id).first()
+    if not row:
+        row = LocationStock(location_id=location.id, product_id=product_id, company_id=company_id, quantity=0)
+        db.session.add(row)
+    row.quantity += quantity
+    db.session.add(LocationMovement(
+        movement_type='ALLOCATION', quantity=quantity, balance_after=row.quantity,
+        reference='ASIGNACION', notes='Asignación inicial desde stock general',
+        location_id=location.id, product_id=product_id, company_id=company_id, user_id=user.id,
+    ))
+    db.session.commit()
+    flash(f'{quantity} unidades asignadas a {location.full_path}.', 'success')
+    return redirect(url_for('warehouse_bp.warehouse_locations', warehouse_id=location.warehouse_id))
+
+
+@warehouse_bp.route('/locations/<int:location_id>/barcode.png')
+def location_barcode(location_id):
+    company_id = session.get('company_id')
+    location = WarehouseLocation.query.filter_by(id=location_id, company_id=company_id, status=True).first_or_404()
+    buffer = io.BytesIO()
+    Code128(location.barcode, writer=ImageWriter()).write(
+        buffer,
+        options={'module_height': 12, 'font_size': 9, 'text_distance': 3, 'quiet_zone': 3},
+    )
+    buffer.seek(0)
+    return send_file(buffer, mimetype='image/png', download_name=f'{location.code}.png')
+
+
+@warehouse_bp.route('/locations/<int:location_id>/traceability')
+def location_traceability(location_id):
+    user_id = session.get('user_id')
+    company_id = session.get('company_id')
+    if not user_id or not company_id:
+        return redirect(url_for('login_bp.login'))
+    user = db.session.get(User, user_id)
+    location = WarehouseLocation.query.filter_by(id=location_id, company_id=company_id, status=True).first_or_404()
+    if user.role not in ['admin', 'superadmin'] and user.warehouse_id != location.warehouse_id:
+        flash('No tienes permiso para consultar esta ubicación.', 'danger')
+        return redirect(url_for('warehouse_bp.list_warehouses'))
+    movements = LocationMovement.query.filter_by(
+        location_id=location.id, company_id=company_id
+    ).order_by(LocationMovement.created_at.desc()).all()
+    pending_in = StockTransfer.query.filter_by(to_location_id=location.id, company_id=company_id, status='PENDING').all()
+    pending_out = StockTransfer.query.filter_by(from_location_id=location.id, company_id=company_id, status='PENDING').all()
+    stocks = LocationStock.query.filter_by(location_id=location.id, company_id=company_id).filter(LocationStock.quantity > 0).all()
+    return render_template('warehouse/location_traceability.html', location=location, movements=movements,
+                           pending_in=pending_in, pending_out=pending_out, stocks=stocks, user=user)

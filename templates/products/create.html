@@ -2,7 +2,7 @@
 <html lang="es" class="{% if session.get('theme') == 'dark' %}dark{% endif %}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/css/products_css/create-products.css">
     <link rel="stylesheet" href="/static/css/products_css/editar_producto.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
@@ -13,6 +13,16 @@
     {% include "layouts/left_bar.html" %}
 
     <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="flash-messages" role="status" aria-live="polite">
+                {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        {% endwith %}
+
         <div class="top-nav">
             <a href="{{ url_for('products_bp.list_products') }}" class="back-link">
                 <i class="bi bi-chevron-left"></i> VOLVER AL LISTADO
@@ -26,9 +36,21 @@
             </div>
         </header>
 
-        <form method="POST" id="form" class="edit-grid">
+        <form method="POST" enctype="multipart/form-data" id="product-form" class="edit-grid product-form-grid">
             <div class="card">
                 <div class="section-label"><i class="bi bi-info-circle"></i> Información General</div>
+
+                <div class="product-media-field">
+                    <label class="image-dropzone" for="product-image" id="image-dropzone">
+                        <input type="file" name="image" id="product-image" accept="image/*">
+                        <span class="image-preview" id="image-preview"><i class="bi bi-image"></i></span>
+                        <span class="image-copy">
+                            <strong>Foto del producto <em>Opcional</em></strong>
+                            <small>Selecciona una foto; se valida y optimiza automáticamente.</small>
+                        </span>
+                        <span class="image-action">Elegir foto</span>
+                    </label>
+                </div>
                 
                 <!-- NUEVO: Selector de Tipo de Producto -->
                 <div class="form-group" style="margin-bottom: 1.5rem; padding: 10px; background: var(--bg-secondary); border-radius: 8px;">
@@ -64,11 +86,12 @@
                         <label>Categoría</label>
                         <div class="input-wrapper">
                             <i class="bi bi-tag" style="z-index: 1;"></i>
-                            <select name="category_id">
-                                <option value="">-- Sin categoría --</option>
+                            <select name="category_id" id="category-select">
+                                <option value="">Sin categoría (opcional)</option>
                                 {% for category in categories %}
                                     <option value="{{ category.id }}">{{ category.name }}</option>
                                 {% endfor %}
+                                <option value="__create__">＋ Crear una categoría aquí…</option>
                             </select>
                         </div>
                     </div>
@@ -88,7 +111,7 @@
                         <label>Costo Unitario ({{ session.get('selected_currency', 'DOP') }})</label>
                         <div class="input-wrapper">
                             <i class="bi bi-cart-dash"></i>
-                            <input type="number" step="0.01" name="cost" id="input-cost" placeholder="0.00" required>
+                            <input type="number" step="0.01" min="0.01" name="cost" id="input-cost" placeholder="0.00" required>
                         </div>
                     </div>
                     
@@ -96,7 +119,7 @@
                         <label>Precio de Venta ({{ session.get('selected_currency', 'DOP') }})</label>
                         <div class="input-wrapper">
                             <i class="bi bi-cash-stack"></i>
-                            <input type="number" step="0.01" name="price" id="input-price" placeholder="0.00" required>
+                            <input type="number" step="0.01" min="0.01" name="price" id="input-price" placeholder="0.00" required>
                         </div>
                     </div>
                 </div>
@@ -128,6 +151,25 @@
                 </button>
             </div>
         </form>
+
+        <dialog class="quick-create-dialog" id="category-dialog" aria-labelledby="category-dialog-title">
+            <form method="dialog" id="category-form">
+                <div class="dialog-icon"><i class="bi bi-tag"></i></div>
+                <div>
+                    <h2 id="category-dialog-title">Crear categoría</h2>
+                    <p>La categoría se agregará al selector y tus datos del producto permanecerán intactos.</p>
+                </div>
+                <div class="form-group">
+                    <label for="new-category-name">Nombre de la categoría</label>
+                    <input id="new-category-name" type="text" minlength="2" maxlength="100" placeholder="Ej. Bebidas" required>
+                    <small class="dialog-error" id="category-error" role="alert"></small>
+                </div>
+                <div class="dialog-actions">
+                    <button type="button" class="btn-secondary" id="cancel-category">Cancelar</button>
+                    <button type="submit" class="btn-primary" id="save-category"><i class="bi bi-plus-lg"></i> Crear categoría</button>
+                </div>
+            </form>
+        </dialog>
     </main>
 
     <script>
@@ -139,6 +181,13 @@
         const stockContainer = document.getElementById('stock-container');
         const inputStock = document.getElementById('input-stock');
         const nameIcon = document.getElementById('name-icon');
+        const imageInput = document.getElementById('product-image');
+        const imagePreview = document.getElementById('image-preview');
+        const categorySelect = document.getElementById('category-select');
+        const categoryDialog = document.getElementById('category-dialog');
+        const categoryForm = document.getElementById('category-form');
+        const categoryName = document.getElementById('new-category-name');
+        const categoryError = document.getElementById('category-error');
         
         const currencySymbol = profitOut.getAttribute('data-symbol') || '$';
 
@@ -181,6 +230,50 @@
 
         costIn.addEventListener('input', updateProfitUI);
         priceIn.addEventListener('input', updateProfitUI);
+
+        imageInput.addEventListener('change', () => {
+            const file = imageInput.files[0];
+            if (!file) return;
+            const url = URL.createObjectURL(file);
+            imagePreview.innerHTML = `<img src="${url}" alt="Vista previa">`;
+            imagePreview.querySelector('img').addEventListener('load', () => URL.revokeObjectURL(url), { once: true });
+        });
+
+        categorySelect.addEventListener('change', () => {
+            if (categorySelect.value !== '__create__') return;
+            categorySelect.value = '';
+            categoryError.textContent = '';
+            categoryName.value = '';
+            categoryDialog.showModal();
+            setTimeout(() => categoryName.focus(), 50);
+        });
+        document.getElementById('cancel-category').addEventListener('click', () => categoryDialog.close());
+        categoryForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const name = categoryName.value.trim();
+            if (name.length < 2) return;
+            const button = document.getElementById('save-category');
+            button.disabled = true;
+            categoryError.textContent = '';
+            try {
+                const response = await fetch('{{ url_for("category_bp.create_category_api") }}', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name})
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'No se pudo crear la categoría.');
+                let option = [...categorySelect.options].find(item => item.value === String(data.id));
+                if (!option) {
+                    option = new Option(data.name, data.id, true, true);
+                    categorySelect.insertBefore(option, categorySelect.options[categorySelect.options.length - 1]);
+                }
+                categorySelect.value = String(data.id);
+                categoryDialog.close();
+            } catch (error) {
+                categoryError.textContent = error.message;
+            } finally {
+                button.disabled = false;
+            }
+        });
     </script>
 </body>
 </html>

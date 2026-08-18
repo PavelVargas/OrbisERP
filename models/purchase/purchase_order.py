@@ -16,6 +16,8 @@ class PurchaseOrder(db.Model):
 
     status = db.Column(db.String(20), default='PENDING')
     total_items = db.Column(db.Integer, default=0)
+    subtotal = db.Column(db.Numeric(12, 2), default=0)
+    tax_total = db.Column(db.Numeric(12, 2), default=0)
     total_cost = db.Column(db.Numeric(12, 2), default=0)
     company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)
 

@@ -6,6 +6,7 @@ from models.category.category import Category
 from models.warehouse.warehouse import Warehouse
 from models.warehouse_stock.warehouse_stock import WarehouseStock
 from models.user.user import User
+from sqlalchemy import or_
 
 stock_bp = Blueprint('stock_bp', __name__)
 
@@ -121,29 +122,42 @@ def stock_actual():
 
     user = User.query.get(user_id)
     category_id = request.args.get('category_id', type=int)
-    search = request.args.get('search', '')
+    search = (request.args.get('search') or '').strip()
     warehouse_id = request.args.get('warehouse_id', type=int)
 
     query = Product.query.filter_by(status=True, company_id=company_id)
     if category_id:
         query = query.filter(Product.category_id == category_id)
+    if warehouse_id:
+        query = query.join(WarehouseStock, WarehouseStock.product_id == Product.id).filter(
+            WarehouseStock.warehouse_id == warehouse_id,
+            WarehouseStock.company_id == company_id,
+        )
     if search:
-        query = query.filter(Product.name.ilike(f'%{search}%'))
+        term = f'%{search}%'
+        query = query.filter(or_(Product.name.ilike(term), Product.sku.ilike(term)))
 
     products = query.order_by(Product.name.asc()).all()
     categories = Category.query.filter_by(status=True, company_id=company_id).all()
     warehouses = Warehouse.query.filter_by(status=True, company_id=company_id).all()
 
-    stocks = {}
-    for p in products:
-        stocks[p.id] = {}
-        for w in warehouses:
-            ws = WarehouseStock.query.filter_by(
-                product_id=p.id, 
-                warehouse_id=w.id, 
-                company_id=company_id
-            ).first()
-            stocks[p.id][w.id] = ws.quantity if ws else 0
+    product_ids = [p.id for p in products]
+    warehouse_ids = [w.id for w in warehouses]
+    rows = WarehouseStock.query.filter(
+        WarehouseStock.company_id == company_id,
+        WarehouseStock.product_id.in_(product_ids or [-1]),
+        WarehouseStock.warehouse_id.in_(warehouse_ids or [-1]),
+    ).all()
+    stocks = {p.id: {w.id: 0 for w in warehouses} for p in products}
+    for row in rows:
+        stocks[row.product_id][row.warehouse_id] = row.quantity or 0
+    totals = {p.id: sum(stocks[p.id].values()) for p in products}
+    summary = {
+        'products': len(products),
+        'units': sum(totals.values()),
+        'low': sum(1 for value in totals.values() if 0 < value <= 15),
+        'out': sum(1 for value in totals.values() if value <= 0),
+    }
 
     return render_template(
         'stock/stock_actual.html',
@@ -154,7 +168,9 @@ def stock_actual():
         category_id=category_id,
         search=search,
         warehouse_id=warehouse_id,
-        user=user
+        user=user,
+        totals=totals,
+        summary=summary,
     )
 
 # =========================

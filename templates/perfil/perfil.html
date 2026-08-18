@@ -45,9 +45,9 @@
                     
                     <div class="header-actions">
                         {% if session.get('user_role') == 'admin'%}
-                        <a href="{{ url_for('users_bp.edit_user', id=target_user.id) }}" class="btn-primary-custom">
+                        {% if can('users.edit') %}<a href="{{ url_for('users_bp.edit_user', id=target_user.id) }}" class="btn-primary-custom">
                             <i class="bi bi-pencil-square"></i> EDITAR INFORMACIÓN
-                        </a>
+                        </a>{% endif %}
                         {% endif %}
                     </div>
                 </section>

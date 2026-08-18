@@ -142,8 +142,9 @@
                                         </button>
                                         
                                         {% if d.currency_code != 'DOP' %}
-                                        <button type="button" class="btn-delete" title="Eliminar" 
-                                                onclick="if(confirm('¿Seguro que deseas eliminar esta divisa?')) window.location.href='/divisas/eliminar/{{ d.id }}'">
+                                        <button type="submit" class="btn-delete" title="Eliminar"
+                                                formaction="{{ url_for('divisas_bp.eliminar_divisa', id=d.id) }}" formmethod="post"
+                                                onclick="return confirm('¿Seguro que deseas eliminar esta divisa?')">
                                             <i class="bi bi-trash3"></i>
                                         </button>
                                         {% endif %}

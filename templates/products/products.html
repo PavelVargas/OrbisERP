@@ -70,7 +70,7 @@
         <header class="page-header">
             <div class="title-group">
                 <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
-                    <h2 style="margin: 0; font-family: 'Plus Jakarta Sans'; font-weight: 800;">Catálogo de Items</h2>
+                    <h2 style="margin: 0; font-family: 'Plus Jakarta Sans'; font-weight: 800;">Productos y servicios</h2>
                     <div class="rate-info-badge">
                         <i class="bi bi-info-circle-fill"></i>
                         <span class="rate-text">
@@ -84,9 +84,9 @@
                 </div>
                 <p>Gestione productos físicos, servicios y consumibles de su empresa.</p>
             </div>
-            <a href="{{ url_for('products_bp.create_product') }}" class="btn-primary">
-                <i class="bi bi-plus-lg"></i> Nuevo Registro
-            </a>
+            {% if can('products.create') %}<a href="{{ url_for('products_bp.create_product') }}" class="btn-primary">
+                <i class="bi bi-plus-lg"></i> Nuevo producto
+            </a>{% endif %}
         </header>
 
         <section class="filter-section">
@@ -95,20 +95,46 @@
                     <i class="bi bi-search"></i>
                     <input type="text" name="search" placeholder="Buscar por nombre o SKU..." value="{{ search_query if search_query }}">
                 </div>
-                <div class="filter-controls">
+                <details class="filter-popover" {% if selected_category or selected_product_type or stock_state or created_from or created_to or min_price is not none or max_price is not none or selected_sort != 'recent' %}open{% endif %}>
+                    <summary><i class="bi bi-sliders2"></i><span>Filtros</span>{% if selected_category or selected_product_type or stock_state or created_from or created_to or min_price is not none or max_price is not none or selected_sort != 'recent' %}<b>•</b>{% endif %}</summary>
+                <div class="filter-controls filter-popover-panel">
                     <select name="category_id">
                         <option value="">Todas las Categorías</option>
                         {% for cat in categories %}
                         <option value="{{ cat.id }}" {% if selected_category == cat.id %}selected{% endif %}>{{ cat.name }}</option>
                         {% endfor %}
                     </select>
+                    <select name="product_type" aria-label="Tipo de producto">
+                        <option value="">Todos los tipos</option>
+                        <option value="STOCKED" {% if selected_product_type == 'STOCKED' %}selected{% endif %}>Productos con inventario</option>
+                        <option value="SERVICE" {% if selected_product_type == 'SERVICE' %}selected{% endif %}>Servicios</option>
+                        <option value="CONSUMABLE" {% if selected_product_type == 'CONSUMABLE' %}selected{% endif %}>Consumibles</option>
+                    </select>
+                    <select name="stock_state" aria-label="Disponibilidad">
+                        <option value="">Cualquier disponibilidad</option>
+                        <option value="available" {% if stock_state == 'available' %}selected{% endif %}>Con disponibilidad</option>
+                        <option value="low" {% if stock_state == 'low' %}selected{% endif %}>Stock bajo (1–10)</option>
+                        <option value="out" {% if stock_state == 'out' %}selected{% endif %}>Agotados</option>
+                    </select>
+                    <label class="compact-filter"><span>Creado desde</span><input type="date" name="created_from" value="{{ created_from }}"></label>
+                    <label class="compact-filter"><span>Creado hasta</span><input type="date" name="created_to" value="{{ created_to }}"></label>
+                    <label class="compact-filter compact-number"><span>Precio mín.</span><input type="number" name="min_price" min="0" step="0.01" value="{{ min_price if min_price is not none else '' }}"></label>
+                    <label class="compact-filter compact-number"><span>Precio máx.</span><input type="number" name="max_price" min="0" step="0.01" value="{{ max_price if max_price is not none else '' }}"></label>
+                    <select name="sort" aria-label="Ordenar productos">
+                        <option value="recent" {% if selected_sort == 'recent' %}selected{% endif %}>Más recientes</option>
+                        <option value="name" {% if selected_sort == 'name' %}selected{% endif %}>Nombre A–Z</option>
+                        <option value="price_asc" {% if selected_sort == 'price_asc' %}selected{% endif %}>Menor precio</option>
+                        <option value="price_desc" {% if selected_sort == 'price_desc' %}selected{% endif %}>Mayor precio</option>
+                        <option value="oldest" {% if selected_sort == 'oldest' %}selected{% endif %}>Más antiguos</option>
+                    </select>
                     <button type="submit" class="btn-filter">Filtrar</button>
-                    {% if selected_category or search_query %}
+                    {% if selected_category or search_query or selected_product_type or stock_state or created_from or created_to or min_price is not none or max_price is not none or selected_sort != 'recent' %}
                     <a href="{{ url_for('products_bp.list_products') }}" class="btn-clear">
                         <i class="bi bi-x-circle-fill"></i>
                     </a>
                     {% endif %}
                 </div>
+                </details>
             </form>
         </section>
 
@@ -116,6 +142,13 @@
             {% for product in products %}
             <div class="product-card">
                 <a href="{{ url_for('products_bp.view_product', id=product.id) }}" class="card-link-wrapper">
+                    <div class="product-card-media">
+                        {% if product.image_path %}
+                        <img src="{{ url_for('static', filename=product.image_path) }}" alt="{{ product.name }}" loading="lazy">
+                        {% else %}
+                        <div class="product-image-placeholder"><i class="bi bi-box-seam"></i><span>Sin foto</span></div>
+                        {% endif %}
+                    </div>
                     <div class="card-top">
                         <div style="display: flex; gap: 5px; align-items: center;">
                             <!-- Etiqueta de Tipo -->
@@ -144,7 +177,7 @@
                                 </span>
                             </div>
 
-                            {% if product.cost and product.cost > 0 %}
+                            {% if can('products.costs') and product.cost and product.cost > 0 %}
                             <div class="margin-tag">
                                 <i class="bi bi-lightning-fill"></i> 
                                 Margen: {{ currency_symbol }} {{ "{:,.2f}".format((product.price - product.cost) / conversion_rate) }}
@@ -166,6 +199,15 @@
                 </a>
             </div>
             {% endfor %}
+            {% if not products %}
+            <div class="empty-state product-empty-state">
+                <span class="empty-state-icon"><i class="bi bi-search"></i></span>
+                <h3>No encontramos productos</h3>
+                <p>{% if search_query or selected_category or selected_product_type %}Prueba quitando algún filtro o usando otro término.{% else %}Crea tu primer producto o servicio para comenzar.{% endif %}</p>
+                {% if search_query or selected_category or selected_product_type %}<a href="{{ url_for('products_bp.list_products') }}" class="btn-secondary">Limpiar filtros</a>
+                {% elif can('products.create') %}<a href="{{ url_for('products_bp.create_product') }}" class="btn-primary"><i class="bi bi-plus-lg"></i> Crear producto</a>{% endif %}
+            </div>
+            {% endif %}
         </div>
     </main>
 </body>

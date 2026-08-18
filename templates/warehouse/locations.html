@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es" class="{% if session.get('theme') == 'dark' %}dark{% endif %}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ubicaciones · {{ warehouse.name }} | OrbisERP</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ware_css/locations.css') }}">
+</head>
+<body>
+    {% include 'layouts/left_bar.html' %}
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}<div class="flash-messages" role="status">{% for category, message in messages %}<div class="flash-message flash-{{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+        {% endwith %}
+
+        <nav class="top-nav">
+            <a class="back-link" href="{{ url_for('warehouse_bp.list_warehouses') }}"><i class="bi bi-chevron-left"></i> Almacenes</a>
+            <span class="location-count"><i class="bi bi-diagram-3"></i> {{ locations|length }} ubicaciones activas</span>
+        </nav>
+
+        <header class="page-header location-page-header">
+            <div>
+                <span class="eyebrow">Mapa físico del almacén</span>
+                <h1>{{ warehouse.name }}</h1>
+                <p>Crea zonas, pasillos, tramos y niveles. Cada ubicación genera un código listo para escáner.</p>
+            </div>
+        </header>
+
+        <div class="locations-layout">
+            <section class="location-panel">
+                <div class="panel-heading">
+                    <div><span class="eyebrow">Estructura</span><h2>Ubicaciones y sububicaciones</h2></div>
+                </div>
+                <div class="location-tree">
+                    {% for location in locations %}
+                    <article class="location-row" style="--level: {{ location.depth }}">
+                        <div class="location-icon"><i class="bi {{ 'bi-boxes' if location.parent_id else 'bi-grid-3x3-gap' }}"></i></div>
+                        <div class="location-main">
+                            <strong>{{ location.full_path }}</strong>
+                            <span>{{ location.code }} · <b>{{ location.stocks|sum(attribute='quantity') }} uds en stock propio</b>{% if location.description %} · {{ location.description }}{% endif %}</span>
+                            {% if location.stocks %}<div class="location-stock-chips">{% for stock in location.stocks if stock.quantity > 0 %}<span>{{ stock.product.name }} <b>{{ stock.quantity }}</b></span>{% endfor %}</div>{% endif %}
+                        </div>
+                        <code>{{ location.barcode }}</code>
+                        <a class="barcode-button trace-button" href="{{ url_for('warehouse_bp.location_traceability', location_id=location.id) }}" title="Stock y trazabilidad"><i class="bi bi-clock-history"></i><span>Trazabilidad</span></a>
+                        <a class="barcode-button" href="{{ url_for('warehouse_bp.location_barcode', location_id=location.id) }}" target="_blank" title="Abrir código de barras"><i class="bi bi-upc-scan"></i><span>Etiqueta</span></a>
+                    </article>
+                    {% else %}
+                    <div class="empty-location"><i class="bi bi-signpost-split"></i><h3>Aún no hay ubicaciones</h3><p>Crea primero una zona o pasillo y después añade sus tramos.</p></div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            {% if can('locations.manage') or can('locations.allocate') %}
+            <aside class="location-sidebar">
+                {% if can('locations.manage') %}<section class="location-panel form-panel">
+                    <span class="eyebrow">Nueva estructura</span>
+                    <h2>Crear ubicación</h2>
+                    <form method="POST" class="location-form">
+                        <label>Nombre<input name="name" required maxlength="120" placeholder="Ej. Pasillo A, Tramo 04"></label>
+                        <label>Código<input name="code" maxlength="50" placeholder="Se genera desde el nombre"></label>
+                        <label>Ubicación superior<select name="parent_id"><option value="">Nivel principal</option>{% for location in locations %}<option value="{{ location.id }}">{{ location.full_path }}</option>{% endfor %}</select></label>
+                        <label>Descripción<input name="description" maxlength="255" placeholder="Opcional"></label>
+                        <button class="btn-primary" type="submit"><i class="bi bi-plus-lg"></i> Crear ubicación</button>
+                    </form>
+                </section>{% endif %}
+
+                {% if can('locations.allocate') %}<section class="location-panel form-panel">
+                    <span class="eyebrow">Distribución inicial</span>
+                    <h2>Asignar existencias</h2>
+                    {% if locations %}
+                    <form method="POST" id="allocation-form" class="location-form">
+                        <label>Ubicación<select id="allocation-location" required>{% for location in locations %}<option value="{{ location.id }}">{{ location.full_path }}</option>{% endfor %}</select></label>
+                        <label>Producto<select name="product_id" id="allocation-product" required><option value="">Seleccionar…</option>{% for product in products %}<option value="{{ product.id }}" data-free="{{ unassigned.get(product.id, 0) }}">{{ product.name }} · libres {{ unassigned.get(product.id, 0) }}</option>{% endfor %}</select></label>
+                        <label>Cantidad<input type="number" name="quantity" min="1" required value="1"><small id="free-stock-note">Selecciona un producto para ver disponibilidad.</small></label>
+                        <button class="btn-secondary" type="submit"><i class="bi bi-box-arrow-in-down"></i> Asignar al tramo</button>
+                    </form>
+                    {% else %}<p class="muted-copy">Crea una ubicación antes de distribuir productos.</p>{% endif %}
+                </section>{% endif %}
+            </aside>
+            {% endif %}
+        </div>
+    </main>
+    <script>
+        const allocationForm = document.getElementById('allocation-form');
+        if (allocationForm) {
+            const locationSelect = document.getElementById('allocation-location');
+            const productSelect = document.getElementById('allocation-product');
+            const note = document.getElementById('free-stock-note');
+            const syncAction = () => {
+                allocationForm.action = `/warehouses/locations/${locationSelect.value}/allocate`;
+                const option = productSelect.selectedOptions[0];
+                note.textContent = option?.value ? `${option.dataset.free} unidades sin ubicación.` : 'Selecciona un producto para ver disponibilidad.';
+            };
+            locationSelect.addEventListener('change', syncAction);
+            productSelect.addEventListener('change', syncAction);
+            syncAction();
+        }
+    </script>
+</body>
+</html>

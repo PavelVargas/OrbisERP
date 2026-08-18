@@ -2,7 +2,7 @@
 <html lang="es" class="{% if session.get('theme') == 'dark' %}dark{% endif %}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Producto | OrbisERP</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -12,6 +12,16 @@
     {% include "layouts/left_bar.html" %}
 
     <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="flash-messages" role="status" aria-live="polite">
+                {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        {% endwith %}
+
         <header class="page-header">
             <div>
                 <nav class="breadcrumb">
@@ -26,10 +36,25 @@
             </a>
         </header>
 
-        <form action="{{ url_for('products_bp.edit_product', id=product.id) }}" method="POST" class="edit-grid">
+        <form action="{{ url_for('products_bp.edit_product', id=product.id) }}" method="POST" enctype="multipart/form-data" class="edit-grid product-form-grid">
             
             <div class="card">
                 <div class="section-label"><i class="bi bi-info-circle"></i> Datos del Producto</div>
+
+                <div class="product-media-field">
+                    <label class="image-dropzone" for="product-image">
+                        <input type="file" name="image" id="product-image" accept="image/*">
+                        <span class="image-preview" id="image-preview">
+                            {% if product.image_path %}<img src="{{ url_for('static', filename=product.image_path) }}" alt="{{ product.name }}">
+                            {% else %}<i class="bi bi-image"></i>{% endif %}
+                        </span>
+                        <span class="image-copy"><strong>{{ 'Cambiar foto' if product.image_path else 'Agregar foto' }} <em>Opcional</em></strong><small>Selecciona una foto; se valida y optimiza automáticamente.</small></span>
+                        <span class="image-action">Elegir foto</span>
+                    </label>
+                    {% if product.image_path %}
+                    <label class="remove-image-option"><input type="checkbox" name="remove_image" value="1"> Quitar la foto actual al guardar</label>
+                    {% endif %}
+                </div>
                 
                 <div class="form-group">
                     <label>Nombre Comercial</label>
@@ -76,7 +101,7 @@
                     <label>Costo Unitario ({{ selected_currency }})</label>
                     <div class="input-wrapper">
                         <i class="bi bi-cart-dash"></i>
-                        <input type="number" step="0.01" name="cost" value="{{ "%.2f"|format(display_cost) }}" id="input-cost" placeholder="0.00">
+                        <input type="number" step="0.01" min="0.01" name="cost" value="{{ "%.2f"|format(display_cost) }}" id="input-cost" placeholder="0.00" required>
                     </div>
                 </div>
 
@@ -84,7 +109,7 @@
                     <label>Precio de Venta ({{ selected_currency }})</label>
                     <div class="input-wrapper">
                         <i class="bi bi-cash-stack"></i>
-                        <input type="number" step="0.01" name="price" value="{{ "%.2f"|format(display_price) }}" required id="input-price" placeholder="0.00">
+                        <input type="number" step="0.01" min="0.01" name="price" value="{{ "%.2f"|format(display_price) }}" required id="input-price" placeholder="0.00">
                     </div>
                 </div>
 
@@ -123,6 +148,8 @@
         const profitOut = document.getElementById('profit-val');
         const profitIcon = document.getElementById('profit-icon');
         const currencySymbol = profitOut.getAttribute('data-symbol') || '$';
+        const imageInput = document.getElementById('product-image');
+        const imagePreview = document.getElementById('image-preview');
 
         function updateProfitUI() {
             const cost = parseFloat(costIn.value) || 0;
@@ -153,6 +180,13 @@
 
         costIn.addEventListener('input', updateProfitUI);
         priceIn.addEventListener('input', updateProfitUI);
+        imageInput.addEventListener('change', () => {
+            const file = imageInput.files[0];
+            if (!file) return;
+            const url = URL.createObjectURL(file);
+            imagePreview.innerHTML = `<img src="${url}" alt="Vista previa">`;
+            imagePreview.querySelector('img').addEventListener('load', () => URL.revokeObjectURL(url), { once: true });
+        });
         
         // Inicializar al cargar para mostrar el estado actual
         window.addEventListener('DOMContentLoaded', updateProfitUI);

@@ -50,11 +50,11 @@
             <div class="info-grid">
                 <div class="info-box">
                     <label>Origen</label>
-                    <p><i class="bi bi-building"></i> {{ transfer.from_warehouse.name }}</p>
+                    <p><i class="bi bi-building"></i> {{ transfer.from_warehouse.name }}{% if transfer.from_location %} · {{ transfer.from_location.full_path }}{% endif %}</p>
                 </div>
                 <div class="info-box">
                     <label>Destino</label>
-                    <p style="color: var(--primary);"><i class="bi bi-geo-alt-fill"></i> {{ transfer.to_warehouse.name }}</p>
+                    <p style="color: var(--primary);"><i class="bi bi-geo-alt-fill"></i> {{ transfer.to_warehouse.name }}{% if transfer.to_location %} · {{ transfer.to_location.full_path }}{% endif %}</p>
                 </div>
                 <div class="info-box">
                     <label>Responsable Envío</label>
@@ -92,11 +92,11 @@
                     <span>Verifique detalladamente que la cantidad física en el bulto coincida antes de procesar el ingreso al stock.</span>
                 </div>
                 
-                <form method="POST" action="{{ url_for('transfer_bp.receive_transfer', transfer_id=transfer.id) }}">
+                {% if can('transfers.receive') %}<form method="POST" action="{{ url_for('transfer_bp.receive_transfer', transfer_id=transfer.id) }}">
                     <button type="submit" class="btn-confirm-main">
                         <i class="bi bi-box-seam-fill"></i> Confirmar y Validar Recepción
                     </button>
-                </form>
+                </form>{% endif %}
                 {% else %}
                 <div class="status-success-text">
                     <i class="bi bi-shield-check"></i> TRANSFERENCIA TOTALMENTE RECIBIDA, AUDITADA Y ASENTADA EN KARDEX
