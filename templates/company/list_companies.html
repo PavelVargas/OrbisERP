@@ -83,10 +83,10 @@
 
                     <div class="card-actions">
                         <button class="btn-icon secondary" onclick="window.location.href='/company/settings'"><i class="bi bi-gear"></i></button>
-                        <a href="{{ url_for('company_bp.impersonate_company', company_id=company.id) }}" class="btn-icon manage">
+                        <form method="post" action="{{ url_for('company_bp.impersonate_company', company_id=company.id) }}" style="display:contents"><button class="btn-icon manage">
                             <i class="bi bi-box-arrow-in-right"></i>
                             <span>Acceder como Admin</span>
-                        </a>
+                        </button></form>
                     </div>
                 </div>
             </div>
@@ -104,10 +104,10 @@
                 <span>Cualquier cambio afectará los datos de esta empresa</span>
             </div>
         </div>
-        <a href="{{ url_for('company_bp.stop_impersonate') }}" class="btn-stop-impersonate">
+        <form method="post" action="{{ url_for('company_bp.stop_impersonate') }}" style="display:contents"><button class="btn-stop-impersonate">
             <span>Salir y volver a mi cuenta</span>
             <i class="bi bi-x-circle-fill"></i>
-        </a>
+        </button></form>
     </div>
     {% endif %}
 

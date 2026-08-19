@@ -1,435 +1,231 @@
 <!DOCTYPE html>
-<html lang="es" class="{% if user.dark_mode %}dark{% endif %}">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OrbisERP | Consola Avanzada de Mando</title>
-    
-    <!-- Fuentes de Datos de Alta Precisión e Identidad Corporativa -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    
-    <!-- Estilos Nucleares -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base_css/base.css') }}">
-    <link rel="stylesheet" href="/static/css/dashboard.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="shortcut icon" href="/static/assets/isotipo.png" type="image/x-icon">
-    
-    <!-- Librería Gráfica Core -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f7f7f5">
+    <title>Resumen comercial · OrbisERP</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}" defer></script>
 </head>
-<body class="antialiased">
+<body>
+{% include 'layouts/left_bar.html' %}
 
-    <!-- Loader Corporativo Minimalista Integrado con base.css -->
-    <div id="global-loader">
-        <div class="loader-content">
-            <div class="loader-ring"></div>
-            <p>Orbis<span style="color: var(--primary);">ERP</span></p>
-        </div>
-    </div>
+{% set sale_statuses = {
+    'COMPLETED': 'Completada', 'PENDING': 'Pendiente', 'CANCELLED': 'Anulada',
+    'QUOTATION': 'Cotización', 'DRAFT': 'Borrador'
+} %}
+{% set purchase_statuses = {
+    'DRAFT': 'Borrador', 'PENDING': 'Pendiente', 'RECEIVED': 'Recibida',
+    'CANCELLED': 'Cancelada', 'COMPLETED': 'Completada'
+} %}
 
-    <!-- Barra Lateral Nivel Enterprise -->
-    {% include "layouts/left_bar.html" %}
-
-    <!-- CONTENEDOR PRINCIPAL OPERATIVO (Respeta márgenes dinámicos de tu main) -->
-    <main class="dashboard">
-        <div class="content-container">
-
-            <!-- HEADER DE ESTADO ESTRATÉGICO -->
-            <header class="page-header">
-                <div class="header-context">
-                    <nav class="breadcrumb-nav" aria-label="Breadcrumb">
-                        <span class="breadcrumb-item">Sistemas</span>
-                        <i class="bi bi-chevron-right separator"></i>
-                        <span class="breadcrumb-item active">Overview Analytics</span>
-                    </nav>
-                    <div class="title-wrapper">
-                        <h2>
-                            Consola de Mando
-                            {% if not is_admin %}<span class="subtitle">— División de Ventas</span>{% endif %}
-                        </h2>
-                    </div>
-                    <div class="user-meta">
-                        <span><i class="bi bi-shield-check-fill text-blue"></i> {{ user.name }}</span>
-                        <div class="meta-dot"></div>
-                        <span><i class="bi bi-building-gear text-teal"></i> {{ user.company.name if user.company else 'Corporación Global' }}</span>
-                    </div>
-                </div>
-                
-                <div class="header-right">
-                    <div class="hdr-chip">
-                        <i class="bi bi-calendar4-event"></i>
-                        <span>{{ now.strftime('%d %b, %Y') }}</span>
-                    </div>
-                    <a href="{{ url_for('cash_bp.close_cash') }}" class="hdr-chip hdr-chip--close">
-                        <i class="bi bi-power"></i>
-                        <span>Cerrar Operaciones</span>
-                    </a>
-                </div>
-            </header>
-
-            <!-- STRIP DE MÉTRICAS CLAVE (KPIs FINANCIEROS Y DE VENTAS) -->
-            <section class="kpi-strip" aria-label="Métricas de rendimiento">
-                {% if session.get('user_role') == 'admin' %}
-                <div class="kpi-card">
-                    <div class="kpi-icon kpi-icon--blue">
-                        <i class="bi bi-currency-exchange"></i>
-                    </div>
-                    <div class="kpi-body">
-                        <span class="kpi-label">Ingresos Brutos</span>
-                        <h3 class="kpi-value text-mono">
-                            <span class="currency-iso">{{ currency_symbol }}</span>{{ "{:,.2f}".format(total_revenue) }}
-                        </h3>
-                        <div class="trend-indicator {% if revenue_growth >= 0 %}trend--up{% else %}trend--down{% endif %}">
-                            <i class="bi bi-graph-{% if revenue_growth >= 0 %}up-arrow{% else %}down-arrow{% endif %}"></i>
-                            <span>{{ "{:+.1f}".format(revenue_growth) }}%</span>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-
-                <div class="kpi-card">
-                    <div class="kpi-icon kpi-icon--cyan">
-                        <i class="bi bi-journal-check"></i>
-                    </div>
-                    <div class="kpi-body">
-                        <span class="kpi-label">Transacciones</span>
-                        <h3 class="kpi-value text-mono">{{ total_tickets_count if total_tickets_count is not none else 0 }}</h3>
-                        <span class="kpi-meta">Comprobantes</span>
-                    </div>
-                </div>
-
-                <div class="kpi-card">
-                    <div class="kpi-icon kpi-icon--green">
-                        <i class="bi bi-cash-stack"></i>
-                    </div>
-                    <div class="kpi-body">
-                        <span class="kpi-label">Facturación Hoy</span>
-                        <h3 class="kpi-value text-mono">
-                            <span class="currency-iso">{{ currency_symbol }}</span>{{ "{:,.2f}".format(sales_today) }}
-                        </h3>
-                        <div class="trend-indicator {% if sales_growth >= 0 %}trend--up{% else %}trend--down{% endif %}">
-                            <i class="bi bi-arrow-{% if sales_growth >= 0 %}up{% else %}down{% endif %}"></i>
-                            <span>{{ "{:+.1f}".format(sales_growth) }}%</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="kpi-card">
-                    <div class="kpi-icon kpi-icon--purple">
-                        <i class="bi bi-calculator"></i>
-                    </div>
-                    <div class="kpi-body">
-                        <span class="kpi-label">Ticket Promedio</span>
-                        <h3 class="kpi-value text-mono">
-                            <span class="currency-iso">{{ currency_symbol }}</span>{{ "{:,.0f}".format(avg_ticket) }}
-                        </h3>
-                        <span class="kpi-meta">Eficiencia</span>
-                    </div>
-                </div>
-
-                <a href="{{ url_for('sales_bp.pending_sales') }}" class="kpi-card kpi-card--link">
-                    <div class="kpi-icon kpi-icon--amber">
-                        <i class="bi bi-clock-history"></i>
-                    </div>
-                    <div class="kpi-body">
-                        <span class="kpi-label">Órdenes Pendientes</span>
-                        <h3 class="kpi-value text-amber text-mono">{{ pending_count }}</h3>
-                        <span class="kpi-meta text-amber">Gestionar flujo <i class="bi bi-arrow-right-short"></i></span>
-                    </div>
-                </a>
-
-                <a href="/stock" class="kpi-card kpi-card--link">
-                    <div class="kpi-icon kpi-icon--red">
-                        <i class="bi bi-shield-alert"></i>
-                    </div>
-                    <div class="kpi-body">
-                        <span class="kpi-label">Quiebre Stock</span>
-                        <h3 class="kpi-value text-red text-mono">{{ low_stock_products }}</h3>
-                        <span class="kpi-meta text-red">Ver críticos <i class="bi bi-arrow-right-short"></i></span>
-                    </div>
-                </a>
-            </section>
-
-            <!-- PANEL DE CONTROL DE CAJA Y FLUJO DE LIQUIDEZ -->
-            <section class="cash-flow-control-panel table-card">
-                <div class="cash-panel-header">
-                    <div class="cash-header-title">
-                        <div class="live-dot animate-pulse"></div>
-                        <h4>Estado de la Caja Chica Diario</h4>
-                    </div>
-                    <span class="badge badge-success">Caja Abierta / En Línea</span>
-                </div>
-                <div class="cash-metrics-row">
-                    <div class="cash-stat">
-                        <span class="cash-stat-label">Apertura de Caja</span>
-                        <strong class="cash-stat-value text-mono">{{ currency_symbol }} 0.00</strong>
-                    </div>
-                    <div class="cash-stat">
-                        <span class="cash-stat-label">Ingresos Registrados</span>
-                        <strong class="cash-stat-value text-green text-mono">{{ currency_symbol }} {{ "{:,.2f}".format(sales_today) }}</strong>
-                    </div>
-                    <div class="cash-stat">
-                        <span class="cash-stat-label">Egresos / Retiros</span>
-                        <strong class="cash-stat-value text-red text-mono">{{ currency_symbol }} 0.00</strong>
-                    </div>
-                    <div class="cash-stat border-none">
-                        <span class="cash-stat-label">Saldo Neto Estimado</span>
-                        <strong class="cash-stat-value text-blue text-mono">{{ currency_symbol }} {{ "{:,.2f}".format(sales_today) }}</strong>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ESTADO DEL PLAN / LÍMITES OPERATIVOS -->
-            {% if session.get('user_role') == 'admin' or session.get('role') == 'admin' %}
-            <section class="plan-bar">
-                <div class="plan-bar__left">
-                    <i class="bi bi-award-fill plan-gem"></i>
-                    <span class="plan-name">Plan {{ plan_name }}</span>
-                    <span class="plan-tier plan-tier--pro">Active</span>
-                </div>
-
-                <div class="plan-bar__meters">
-                    <div class="meter">
-                        <span class="meter-label"><i class="bi bi-file-earmark-bar-graph"></i> Facturas</span>
-                        <div class="meter-track">
-                            <div class="meter-fill meter-fill--blue" style="width: {{ inv_percent }}%"></div>
-                        </div>
-                        <span class="meter-val">{{ invoices_usage|int }}/{{ invoices_limit|int if invoices_limit < 999999 else '∞' }}</span>
-                    </div>
-                    
-                    <div class="meter">
-                        <span class="meter-label"><i class="bi bi-person-gear"></i> Usuarios</span>
-                        <div class="meter-track">
-                            <div class="meter-fill meter-fill--purple" style="width: {{ users_percent }}%"></div>
-                        </div>
-                        <span class="meter-val">{{ users_count|int }}/{{ users_limit|int }}</span>
-                    </div>
-
-                    <div class="meter">
-                        <span class="meter-label"><i class="bi bi-geo-alt"></i> Sedes</span>
-                        <div class="meter-track">
-                            <div class="meter-fill meter-fill--teal" style="width: {{ wares_percent }}%"></div>
-                        </div>
-                        <span class="meter-val">{{ wares_count|int }}/{{ wares_limit|int }}</span>
-                    </div>
-                </div>
-
-                <a href="{{ url_for('company_bp.view_plans') }}" class="plan-upgrade">
-                    <i class="bi bi-lightning-fill"></i> Escalabilidad
-                </a>
-            </section>
-            {% endif %}
-
-            <!-- METAS OPERATIVAS MENSUALES -->
-            <section class="monthly-goals-card table-card">
-                <div class="goals-header">
-                    <div>
-                        <h4 class="goals-title">Objetivos Comerciales del Mes</h4>
-                        <p class="goals-subtitle">Monitoreo de rendimiento contra cuotas asignadas</p>
-                    </div>
-                    <span class="goals-percentage text-mono text-strong">64% Completado</span>
-                </div>
-                <div class="meter-track large-track" style="height: 8px;">
-                    <div class="meter-fill meter-fill--teal" style="width: 64%"></div>
-                </div>
-                <div class="goals-footer-metrics">
-                    <span>Cuota Mensual: <strong class="text-mono">{{ currency_symbol }} --.--</strong></span>
-                    <span>Restante para la Meta: <strong class="text-mono">{{ currency_symbol }} --.--</strong></span>
-                </div>
-            </section>
-
-            <!-- SECCIÓN DE ANALÍTICAS AVANZADAS Y TABLAS DE RENDIMIENTO (Content Grid) -->
-            <div class="content-grid">
-
-                <!-- Gráfico Principal: Tendencias de Rendimiento Comercial -->
-                <section class="chart-card chart-span-2">
-                    <div class="section-label">Tendencia de Rendimiento Comercial</div>
-                    <div class="canvas-wrap">
-                        <canvas id="myChart"
-                            data-labels='{{ chart_labels | tojson | safe }}'
-                            data-values='{{ chart_values | tojson | safe }}'
-                            data-currency-iso="{{ current_currency }}"
-                            data-currency-symbol="{{ currency_symbol }}"
-                            data-rate="{{ conversion_rate }}">
-                        </canvas>
-                    </div>
-                </section>
-
-                <!-- Mini Gráfico de Distribución Comercial Complementario -->
-                <section class="table-card flex-column-layout">
-                    <div class="section-label">Métodos de Pago</div>
-                    <div class="chart-mini-wrap">
-                        <div class="mock-pie-chart">
-                            <div class="mock-segment data-cash" style="--p:60; --c:var(--success)"></div>
-                            <div class="mock-segment data-card" style="--p:30; --c:var(--blue)"></div>
-                            <div class="mock-segment data-transfer" style="--p:10; --c:var(--purple)"></div>
-                            <div class="mock-center-hole"></div>
-                        </div>
-                    </div>
-                    <div class="chart-legends-list">
-                        <div class="legend-item"><span class="legend-dot" style="background-color: var(--success)"></span><span>Efectivo (60%)</span></div>
-                        <div class="legend-item"><span class="legend-dot" style="background-color: var(--blue)"></span><span>Tarjetas (30%)</span></div>
-                        <div class="legend-item"><span class="legend-dot" style="background-color: var(--purple)"></span><span>Transferencia (10%)</span></div>
-                    </div>
-                </section>
-
-                <!-- SKUs de Alta Rotación (Top Productos) -->
-                <section class="table-card">
-                    <div class="section-label">SKU de Alta Rotación</div>
-                    <div class="table-wrap">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 40px;">Rango</th>
-                                    <th>Detalle Producto</th>
-                                    <th class="col-right">Volumen</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for p in top_products %}
-                                <tr>
-                                    <td class="row-num">{{ loop.index }}</td>
-                                    <td>
-                                        <span class="prod-name">{{ p.name }}</span>
-                                        <span class="prod-sku">{{ p.code if p.code else 'SKU-00' ~ loop.index }}</span>
-                                    </td>
-                                    <td class="col-right">
-                                        <span class="qty-chip">{{ p.qty }} uds</span>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
-
-                <!-- Control y Estado de Órdenes de Compra -->
-                <section class="table-card">
-                    <div class="section-label">Logística de Abastecimiento</div>
-                    <div class="table-wrap">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Proveedor / OC</th>
-                                    <th class="col-right">Estado</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <span class="prod-name">Proveedor Central S.A.</span>
-                                        <span class="prod-sku">OC #9021</span>
-                                    </td>
-                                    <td class="col-right"><span class="status-tag status-pendiente">En Tránsito</span></td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <span class="prod-name">Distribuidora Global</span>
-                                        <span class="prod-sku">OC #9020</span>
-                                    </td>
-                                    <td class="col-right"><span class="status-tag status-pagado">Recibido</span></td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <span class="prod-name">Logística Express</span>
-                                        <span class="prod-sku">OC #8945</span>
-                                    </td>
-                                    <td class="col-right"><span class="status-tag status-pagado">Recibido</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
-
-                <!-- Bitácora Auditada de Actividad de Usuarios (Timeline)
-                <section class="table-card">
-                    <div class="section-label">Historial de Auditoría</div>
-                    <div class="timeline-activity-wrapper">
-                        <div class="timeline-event-item">
-                            <div class="timeline-icon" style="background-color: var(--success)"><i class="bi bi-cart-check"></i></div>
-                            <div class="timeline-body">
-                                <p class="timeline-text">Factura emitida correctamente por <strong>{{ user.name }}</strong></p>
-                                <span class="timeline-time text-mono">Hace 3 mins</span>
-                            </div>
-                        </div>
-                        <div class="timeline-event-item">
-                            <div class="timeline-icon" style="background-color: var(--blue)"><i class="bi bi-box-arrow-in-right"></i></div>
-                            <div class="timeline-body">
-                                <p class="timeline-text">Sesión iniciada en el sistema desde IP autorizada.</p>
-                                <span class="timeline-time text-mono">Hace 15 mins</span>
-                            </div>
-                        </div>
-                    </div>
-                </section> -->
-
-                <!-- Auditoría Total de Transacciones Recientes (Full Width) -->
-                <section class="table-card table-card--full">
-                    <div class="section-label">Auditoría de Transacciones Recientes</div>
-                    <div class="table-wrap">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th class="col-mono">ID Operación</th>
-                                    <th>Entidad Cliente</th>
-                                    <th>Estatus Operativo</th>
-                                    <th class="col-right">Monto Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for sale in recent_sales %}
-                                <tr>
-                                    <td class="col-mono col-bold">#{{ sale.id }}</td>
-                                    <td>
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <i class="bi bi-person-fill-check" style="color: var(--text-muted)"></i>
-                                            <span>{{ sale.client.name if sale.client else 'Consumidor Final Regular' }}</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="status-tag status-{{ sale.status | lower }}">
-                                            {{ sale.status }}
-                                        </span>
-                                    </td>
-                                    <td class="col-right col-mono col-bold" style="font-size: 14px;">
-                                        {{ currency_symbol }} {{ "{:,.2f}".format(sale.converted_total) }}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
+<main class="sales-hub">
+    <div class="sales-hub__shell">
+        <header class="hub-header">
+            <div>
+                <span class="hub-eyebrow">{{ company.name|upper }} · RESUMEN COMERCIAL</span>
+                <h1>Buen día, {{ user.name.split()[0] }}</h1>
+                <p>Revisa las ventas, atiende los pendientes y continúa operando desde un solo lugar.</p>
             </div>
-        </div>
-    </main>
+            <div class="hub-header__actions">
+                {% if can('notifications.view') %}
+                <a class="icon-action" href="{{ url_for('backoffice_bp.notifications') }}" aria-label="Abrir notificaciones">
+                    <i class="bi bi-bell"></i>
+                    {% if unread_notifications %}<span>{{ unread_notifications if unread_notifications < 100 else '99+' }}</span>{% endif %}
+                </a>
+                {% endif %}
+                {% if can('sales.create') %}
+                <a class="primary-action" href="{{ url_for('sales_bp.create_sale') }}"><i class="bi bi-plus-lg"></i>Nueva venta</a>
+                {% endif %}
+            </div>
+        </header>
 
-    <!-- Scripts de Sincronización Real-Time -->
-    <script>
-        const conversionRate = {{ conversion_rate }};
-        const currencySymbol = "{{ currency_symbol }}";
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <section class="hub-messages" aria-live="polite">
+            {% for category, message in messages %}<div class="hub-message hub-message--{{ category }}">{{ message }}</div>{% endfor %}
+        </section>
+        {% endif %}
+        {% endwith %}
 
-        async function refreshDashboard() {
-            try {
-                const response = await fetch('/api/dashboard/realtime-stats');
-                if (!response.ok) return;
-                const data = await response.json();
-                // Actualización limpia sin dañar los selectores
-                const now = new Date();
-                document.getElementById('sync-timestamp').innerText = now.toLocaleTimeString();
-            } catch (err) { console.error("Sync error:", err); }
-        }
-        setInterval(refreshDashboard, 60000);
-    </script>
+        <section class="metric-grid" aria-label="Indicadores comerciales">
+            <article class="metric-card metric-card--main">
+                <div class="metric-card__top"><span>Ventas netas del mes</span><i class="bi bi-graph-up-arrow"></i></div>
+                <strong>{{ currency_symbol }} {{ '{:,.2f}'.format(revenue_this_month / conversion_rate) }}</strong>
+                <footer>
+                    <span class="metric-trend {{ 'metric-trend--up' if revenue_growth >= 0 else 'metric-trend--down' }}">
+                        <i class="bi {{ 'bi-arrow-up-right' if revenue_growth >= 0 else 'bi-arrow-down-right' }}"></i>{{ '{:+.1f}'.format(revenue_growth) }}%
+                    </span>
+                    <small>frente al mes anterior</small>
+                </footer>
+            </article>
 
-    <!-- Transición del Loader sin flashes cromáticos -->
-    <script>
-        window.addEventListener("load", function () {
-            const loader = document.getElementById("global-loader");
-            setTimeout(() => { loader.classList.add("loader-hidden"); }, 300);
-        });
-    </script>
-    <script src="/static/js/dashboard.js"></script>
+            <article class="metric-card">
+                <div class="metric-card__top"><span>Ventas de hoy</span><i class="bi bi-sun"></i></div>
+                <strong>{{ currency_symbol }} {{ '{:,.2f}'.format(sales_today) }}</strong>
+                <footer><span class="metric-trend {{ 'metric-trend--up' if sales_growth >= 0 else 'metric-trend--down' }}">{{ '{:+.1f}'.format(sales_growth) }}%</span><small>comparado con ayer</small></footer>
+            </article>
+
+            <article class="metric-card">
+                <div class="metric-card__top"><span>Ticket promedio</span><i class="bi bi-receipt"></i></div>
+                <strong>{{ currency_symbol }} {{ '{:,.2f}'.format(avg_ticket) }}</strong>
+                <footer><b>{{ sales_count_month }}</b><small>{{ 'venta completada' if sales_count_month == 1 else 'ventas completadas' }} este mes</small></footer>
+            </article>
+
+            {% if can_costs %}
+            <article class="metric-card">
+                <div class="metric-card__top"><span>Resultado operativo</span><i class="bi bi-pie-chart"></i></div>
+                <strong>{{ currency_symbol }} {{ '{:,.2f}'.format(net_result) }}</strong>
+                <footer><b>{{ '{:.1f}'.format(margin_percent) }}%</b><small>de margen bruto{% if can_expenses %}, después de gastos{% endif %}</small></footer>
+            </article>
+            {% else %}
+            <article class="metric-card">
+                <div class="metric-card__top"><span>Clientes registrados</span><i class="bi bi-people"></i></div>
+                <strong>{{ '{:,}'.format(total_clients_count) }}</strong>
+                <footer><b>{{ total_tickets_count }}</b><small>operaciones comerciales completadas</small></footer>
+            </article>
+            {% endif %}
+        </section>
+
+        <section class="quick-panel" aria-label="Accesos rápidos">
+            <div class="quick-panel__title"><span>Accesos rápidos</span><small>Lo que más utilizas durante el día</small></div>
+            <nav class="quick-actions">
+                {% if can('sales.create') %}<a href="{{ url_for('sales_bp.create_sale') }}"><i class="bi bi-cart-plus"></i><span><b>Crear venta</b><small>Facturar y cobrar</small></span></a>{% endif %}
+                {% if can('clients.view') %}<a href="{{ url_for('client_bp.list_clients') }}"><i class="bi bi-person-plus"></i><span><b>Clientes</b><small>Consultar o registrar</small></span></a>{% endif %}
+                {% if can('products.view') %}<a href="{{ url_for('products_bp.list_products') }}"><i class="bi bi-box-seam"></i><span><b>Productos</b><small>Catálogo y precios</small></span></a>{% endif %}
+                {% if can('purchases.view') %}<a href="{{ url_for('purchase_bp.purchase_list') }}"><i class="bi bi-bag-check"></i><span><b>Compras</b><small>Órdenes y recepción</small></span></a>{% endif %}
+                {% if can('transfers.view') %}<a href="{{ url_for('transfer_bp.transfers') }}"><i class="bi bi-arrow-left-right"></i><span><b>Transferencias</b><small>Mover existencias</small></span></a>{% endif %}
+            </nav>
+        </section>
+
+        <section class="overview-grid">
+            <article class="hub-card sales-chart-card">
+                <header class="card-header">
+                    <div><span class="card-kicker">RENDIMIENTO DE VENTAS</span><h2>Tendencia comercial</h2><p>Ventas netas registradas durante el período.</p></div>
+                    <nav class="period-tabs" aria-label="Período del gráfico">
+                        {% for days in (7, 30, 90) %}<a href="{{ url_for('dashboard_bp.dashboard', period=days) }}" class="{{ 'is-active' if period_days == days else '' }}" aria-current="{{ 'page' if period_days == days else 'false' }}">{{ days }} días</a>{% endfor %}
+                    </nav>
+                </header>
+                <div class="chart-summary">
+                    <div><span>Total del período</span><strong>{{ currency_symbol }} {{ '{:,.2f}'.format(chart_values|sum) }}</strong></div>
+                    <span class="currency-tag">{{ selected_currency }}</span>
+                </div>
+                <div class="sales-chart"><canvas id="salesChart" aria-label="Gráfico de ventas netas"></canvas></div>
+            </article>
+
+            <aside class="hub-card priority-card">
+                <header class="card-header card-header--compact">
+                    <div><span class="card-kicker">PENDIENTES</span><h2>Atención requerida</h2><p>Operaciones que conviene revisar.</p></div>
+                    <span class="live-indicator"><i></i>Actualizado</span>
+                </header>
+                <div class="priority-list">
+                    {% if can_stock %}
+                    <a href="{{ url_for('stock_bp.stock_actual') }}"><span class="priority-icon priority-icon--orange"><i class="bi bi-box-seam"></i></span><span><b>Existencias bajas</b><small>Productos por debajo del nivel recomendado</small></span><strong>{{ low_stock_products }}</strong><i class="bi bi-chevron-right"></i></a>
+                    {% endif %}
+                    {% if can('transfers.view') %}
+                    <a href="{{ url_for('transfer_bp.transfers') }}"><span class="priority-icon priority-icon--blue"><i class="bi bi-arrow-left-right"></i></span><span><b>Transferencias pendientes</b><small>Por validar o recibir en destino</small></span><strong>{{ pending_transfers }}</strong><i class="bi bi-chevron-right"></i></a>
+                    {% endif %}
+                    {% if can('sales.resume') %}
+                    <a href="{{ url_for('sales_bp.pending_sales') }}"><span class="priority-icon priority-icon--violet"><i class="bi bi-receipt-cutoff"></i></span><span><b>Ventas pendientes</b><small>Borradores que aún no se han completado</small></span><strong>{{ pending_count }}</strong><i class="bi bi-chevron-right"></i></a>
+                    {% endif %}
+                    {% if can_payables %}
+                    <a href="{{ url_for('backoffice_bp.payables') }}"><span class="priority-icon priority-icon--red"><i class="bi bi-calendar-x"></i></span><span><b>Pagos vencidos</b><small>Compromisos fuera de la fecha acordada</small></span><strong>{{ overdue_payables }}</strong><i class="bi bi-chevron-right"></i></a>
+                    {% endif %}
+                    {% if not can_stock and not can('transfers.view') and not can('sales.resume') and not can_payables %}
+                    <div class="empty-state"><i class="bi bi-check2-circle"></i><b>Todo bajo control</b><span>No tienes pendientes visibles.</span></div>
+                    {% endif %}
+                </div>
+            </aside>
+        </section>
+
+        <section class="activity-grid">
+            <article class="hub-card recent-sales-card">
+                <header class="card-header card-header--row">
+                    <div><span class="card-kicker">MOVIMIENTO RECIENTE</span><h2>Últimas ventas</h2></div>
+                    {% if can('sales.view') %}<a class="text-link" href="{{ url_for('sales_bp.list_sales') }}">Ver todas <i class="bi bi-arrow-right"></i></a>{% endif %}
+                </header>
+                <div class="table-scroll">
+                    <table class="commercial-table">
+                        <thead><tr><th>Venta</th><th>Cliente</th><th>Vendedor</th><th>Estado</th><th class="align-right">Total</th><th>Fecha</th></tr></thead>
+                        <tbody>
+                        {% for sale in recent_sales %}
+                        <tr>
+                            <td><a href="{{ url_for('sales_bp.sale_detail', sale_id=sale.id) }}">#{{ '%06d'|format(sale.id) }}</a></td>
+                            <td><b>{{ sale.customer_name or 'Cliente general' }}</b></td>
+                            <td><span class="seller"><i>{{ sale.user.name[:1]|upper }}</i>{{ sale.user.name }}</span></td>
+                            <td><span class="status status--{{ sale.status|lower }}">{{ sale_statuses.get(sale.status, sale.status|capitalize) }}</span></td>
+                            <td class="align-right"><b>{{ currency_symbol }} {{ '{:,.2f}'.format(sale.converted_total) }}</b></td>
+                            <td><time datetime="{{ sale.created_at.isoformat() }}">{{ sale.created_at.strftime('%d/%m/%Y · %H:%M') }}</time></td>
+                        </tr>
+                        {% else %}<tr><td colspan="6"><div class="empty-state"><i class="bi bi-receipt"></i><b>Aún no hay ventas</b><span>Las operaciones aparecerán aquí.</span></div></td></tr>{% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+
+            <article class="hub-card top-products-card">
+                <header class="card-header card-header--row"><div><span class="card-kicker">MÁS VENDIDOS</span><h2>Productos destacados</h2></div>{% if can('reports.view') %}<a class="icon-link" href="{{ url_for('reports_bp.index') }}" aria-label="Abrir reportes"><i class="bi bi-arrow-up-right"></i></a>{% endif %}</header>
+                <div class="product-list">
+                    {% set max_qty = top_products[0].qty if top_products else 1 %}
+                    {% for product in top_products %}
+                    <div class="product-item">
+                        <div class="product-image">{% if product.image_path %}<img src="{{ url_for('static', filename=product.image_path) }}" alt="" loading="lazy">{% else %}<i class="bi bi-box-seam"></i>{% endif %}</div>
+                        <div class="product-info"><b>{{ product.name }}</b><small>{{ product.sku or 'Sin SKU' }} · {{ product.qty }} unidades</small><span><i style="--value: {{ (product.qty / max_qty * 100) if max_qty else 0 }}%"></i></span></div>
+                        <strong>{{ currency_symbol }} {{ '{:,.0f}'.format((product.revenue|float) / conversion_rate) }}</strong>
+                    </div>
+                    {% else %}<div class="empty-state"><i class="bi bi-box-seam"></i><b>Sin datos de productos</b><span>Completa ventas para ver el ranking.</span></div>{% endfor %}
+                </div>
+            </article>
+        </section>
+
+        <section class="secondary-grid">
+            <article class="hub-card payment-card">
+                <header class="card-header card-header--row"><div><span class="card-kicker">FORMAS DE COBRO</span><h2>Métodos de pago</h2></div><span class="currency-tag">{{ selected_currency }}</span></header>
+                <div class="payment-content">
+                    <div class="payment-chart"><canvas id="paymentChart" aria-label="Métodos de pago"></canvas><div><b>{{ currency_symbol }} {{ '{:,.0f}'.format(payment_values|sum) }}</b><small>Total cobrado</small></div></div>
+                    <div class="payment-legend" id="paymentLegend"></div>
+                </div>
+            </article>
+
+            <article class="hub-card finance-card">
+                <header class="card-header card-header--row"><div><span class="card-kicker">ESTADO DEL NEGOCIO</span><h2>Resumen financiero</h2></div><i class="header-icon bi bi-wallet2"></i></header>
+                <div class="finance-list">
+                    {% if can_receivables %}<a href="{{ url_for('backoffice_bp.receivables') }}"><span><i class="bi bi-arrow-down-left"></i>Por cobrar</span><b>{{ currency_symbol }} {{ '{:,.2f}'.format(receivables_total) }}</b></a>{% endif %}
+                    {% if can_payables %}<a href="{{ url_for('backoffice_bp.payables') }}"><span><i class="bi bi-arrow-up-right"></i>Por pagar</span><b>{{ currency_symbol }} {{ '{:,.2f}'.format(payables_total) }}</b></a>{% endif %}
+                    {% if can_costs and can_stock %}<div><span><i class="bi bi-boxes"></i>Inventario valorizado</span><b>{{ currency_symbol }} {{ '{:,.2f}'.format(inventory_value) }}</b></div>{% elif can_stock %}<div><span><i class="bi bi-boxes"></i>Unidades disponibles</span><b>{{ '{:,}'.format(inventory_units) }}</b></div>{% endif %}
+                    {% if can('sales.returns') %}<a href="{{ url_for('backoffice_bp.returns') }}"><span><i class="bi bi-arrow-counterclockwise"></i>Devoluciones del mes</span><b>{{ returns_month }}</b></a>{% endif %}
+                </div>
+            </article>
+
+            {% if can_purchases %}
+            <article class="hub-card purchase-card">
+                <header class="card-header card-header--row"><div><span class="card-kicker">ABASTECIMIENTO</span><h2>Compras recientes</h2></div><a class="text-link" href="{{ url_for('purchase_bp.purchase_list') }}">Ver órdenes <i class="bi bi-arrow-right"></i></a></header>
+                <div class="purchase-list">
+                    {% for order in recent_purchases %}
+                    <a href="{{ url_for('purchase_bp.purchase_detail', order_id=order.id) }}"><span class="purchase-icon"><i class="bi bi-bag-check"></i></span><span><b>OC-{{ '%05d'|format(order.id) }}</b><small>{{ order.supplier_name or 'Proveedor sin nombre' }} · {{ order.created_at.strftime('%d/%m/%Y') }}</small></span><span><b>{{ currency_symbol }} {{ '{:,.2f}'.format((order.total_cost|float) / conversion_rate) }}</b><em class="status status--{{ order.status|lower }}">{{ purchase_statuses.get(order.status, order.status|capitalize) }}</em></span></a>
+                    {% else %}<div class="empty-state"><i class="bi bi-bag"></i><b>Sin compras recientes</b></div>{% endfor %}
+                </div>
+            </article>
+            {% endif %}
+        </section>
+
+        <footer class="plan-summary">
+            <div class="plan-name"><span><i class="bi bi-stars"></i></span><div><small>PLAN ACTUAL</small><b>{{ plan_name }}</b></div></div>
+            <div class="usage"><span>Facturas <b>{{ invoices_usage|int }}/{{ invoices_limit|int }}</b></span><i><em style="--usage: {{ inv_percent }}%"></em></i></div>
+            <div class="usage"><span>Usuarios <b>{{ users_count }}/{{ users_limit }}</b></span><i><em style="--usage: {{ users_percent }}%"></em></i></div>
+            <div class="usage"><span>Almacenes <b>{{ wares_count }}/{{ wares_limit }}</b></span><i><em style="--usage: {{ wares_percent }}%"></em></i></div>
+            {% if can('company.settings') %}<a href="{{ url_for('operations_bp.billing') }}">Administrar plan <i class="bi bi-arrow-right"></i></a>{% endif %}
+        </footer>
+    </div>
+</main>
+
+<script id="dashboard-data" type="application/json">{{ {
+    'labels': chart_labels, 'sales': chart_values,
+    'paymentLabels': payment_labels, 'paymentValues': payment_values,
+    'currencySymbol': currency_symbol, 'currencyCode': selected_currency,
+    'period': period_days
+}|tojson }}</script>
 </body>
 </html>

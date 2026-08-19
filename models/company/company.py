@@ -43,6 +43,8 @@ class Company(db.Model):
     tax_percent = db.Column(db.Numeric(5, 2), default=18.00) 
     currency_symbol = db.Column(db.String(10), default='RD$')
     invoice_footer = db.Column(db.Text, nullable=True)
+    fiscal_mode = db.Column(db.String(20), nullable=False, default='disabled')
+    fiscal_disclaimer = db.Column(db.String(180), nullable=False, default='DOCUMENTO NO FISCAL')
     
     # --- SISTEMA DE PLANES ---
     plan_name = db.Column(db.String(20), default='BASIC') # BASIC, PRO, ULTRA
@@ -63,6 +65,11 @@ class Company(db.Model):
     last_receipt_path = db.Column(db.String(255), nullable=True)
     receipt_status = db.Column(db.String(20), default='NONE') 
     grace_period_until = db.Column(db.DateTime, nullable=True)
+    billing_provider = db.Column(db.String(40), nullable=True)
+    billing_customer_id = db.Column(db.String(120), nullable=True)
+    billing_subscription_id = db.Column(db.String(120), nullable=True)
+    cancel_at_period_end = db.Column(db.Boolean, default=False, nullable=False)
+    onboarding_completed = db.Column(db.Boolean, default=False, nullable=False)
 
     # RELACIONES
     users_list = db.relationship('User', backref='company', lazy=True)

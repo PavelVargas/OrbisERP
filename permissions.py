@@ -13,6 +13,7 @@ PERMISSION_GROUPS = [
         ('sales.resume', 'Retomar pendientes', 'Editar ventas pendientes o borradores.'),
         ('sales.cancel', 'Anular ventas', 'Cancelar ventas ya registradas.'),
         ('sales.print', 'Imprimir comprobantes', 'Descargar o imprimir facturas y cotizaciones.'),
+        ('sales.returns', 'Gestionar devoluciones', 'Registrar devoluciones, reembolsos y reingreso de inventario.'),
     ]),
     ('clients', 'Clientes y CRM', 'bi-people', [
         ('clients.view', 'Ver clientes', 'Consultar directorio y fichas de clientes.'),
@@ -41,6 +42,8 @@ PERMISSION_GROUPS = [
         ('locations.traceability', 'Ver trazabilidad de tramos', 'Consultar kardex y transferencias por ubicación.'),
         ('stock.view', 'Ver existencias', 'Consultar stock actual y detalle por producto.'),
         ('stock.adjust', 'Ajustar existencias', 'Realizar ajustes manuales de inventario.'),
+        ('stock.count', 'Realizar conteos físicos', 'Crear y completar conteos de almacén o ubicación.'),
+        ('stock.count_approve', 'Aprobar conteos físicos', 'Conciliar diferencias y actualizar el inventario.'),
         ('stock.kardex', 'Ver kardex', 'Consultar entradas, salidas e historial general.'),
         ('movements.view', 'Ver movimientos', 'Consultar entradas y salidas de inventario.'),
     ]),
@@ -65,6 +68,9 @@ PERMISSION_GROUPS = [
         ('cash.close', 'Cerrar caja', 'Registrar cierres y diferencias de caja.'),
         ('currencies.view', 'Ver divisas', 'Consultar monedas y tasas.'),
         ('currencies.manage', 'Gestionar divisas', 'Crear, editar o eliminar tasas.'),
+        ('finance.receivables', 'Gestionar cuentas por cobrar', 'Registrar abonos y consultar balances de clientes.'),
+        ('finance.payables', 'Gestionar cuentas por pagar', 'Registrar facturas y pagos a proveedores.'),
+        ('finance.expenses', 'Gestionar gastos', 'Registrar y consultar gastos operativos.'),
     ]),
     ('reports', 'Reportes y auditoría', 'bi-bar-chart', [
         ('reports.view', 'Ver reportes', 'Acceder a reportes comerciales e inventario.'),
@@ -78,6 +84,8 @@ PERMISSION_GROUPS = [
         ('users.delete', 'Eliminar usuarios', 'Eliminar cuentas de usuario.'),
         ('users.reset_password', 'Restablecer contraseñas', 'Enviar enlaces de cambio de contraseña.'),
         ('company.settings', 'Configurar empresa', 'Editar información fiscal y comercial.'),
+        ('notifications.view', 'Ver notificaciones', 'Consultar y marcar alertas operativas.'),
+        ('security.2fa', 'Configurar seguridad 2FA', 'Activar o desactivar la verificación en dos pasos propia.'),
     ]),
 ]
 
@@ -88,13 +96,14 @@ PROFILE_PRESETS = {
     'seller': {
         'dashboard.view', 'sales.view', 'sales.create', 'sales.complete', 'sales.quote',
         'sales.resume', 'sales.print', 'clients.view', 'clients.create', 'products.view',
-        'stock.view', 'cash.view', 'tablet.use',
+        'stock.view', 'cash.view', 'finance.receivables', 'notifications.view', 'security.2fa', 'tablet.use',
     },
     'warehouse': {
         'dashboard.view', 'products.view', 'warehouses.view', 'locations.view',
         'locations.traceability', 'stock.view', 'stock.kardex', 'movements.view',
         'transfers.view', 'transfers.create', 'transfers.receive', 'transfers.scanner',
         'transfers.print', 'purchases.view', 'purchases.receive', 'suppliers.view',
+        'stock.count', 'notifications.view', 'security.2fa',
     },
     'supervisor': ALL_PERMISSIONS - {'users.delete', 'company.settings', 'currencies.manage'},
     'auditor': {
@@ -172,6 +181,22 @@ ENDPOINT_PERMISSIONS = {
     'users_bp.entrada_user': ('users.view',), 'users_bp.create_user': ('users.create',),
     'users_bp.edit_user': ('users.edit',), 'users_bp.delete_user': ('users.delete',),
     'users_bp.request_password_reset': ('users.reset_password',), 'company_bp.settings': ('company.settings',),
+    'operations_bp.onboarding': ('company.settings',), 'operations_bp.billing': ('company.settings',),
+    'operations_bp.data_center': ('company.settings',), 'operations_bp.export_data': ('company.settings',),
+    'company_bp.upgrade_plan': ('company.settings',), 'company_bp.upload_receipt': ('company.settings',),
+    'company_bp.impersonate_company': ('company.settings',), 'company_bp.stop_impersonate': ('company.settings',),
+    'company_bp.create_company': ('company.settings',), 'company_bp.list_companies': ('company.settings',),
+    'company_bp.view_plans': ('company.settings',), 'perfil_bp.perfil': ('dashboard.view',),
+    'backoffice_bp.overview': ('dashboard.view',),
+    'backoffice_bp.returns': ('sales.returns',), 'backoffice_bp.create_return': ('sales.returns',),
+    'backoffice_bp.receivables': ('finance.receivables',), 'backoffice_bp.receive_payment': ('finance.receivables',),
+    'backoffice_bp.payables': ('finance.payables',), 'backoffice_bp.pay_supplier': ('finance.payables',),
+    'backoffice_bp.expenses': ('finance.expenses',),
+    'backoffice_bp.inventory_counts': ('stock.count',), 'backoffice_bp.inventory_count_detail': ('stock.count',),
+    'backoffice_bp.approve_inventory_count': ('stock.count_approve',),
+    'backoffice_bp.notifications': ('notifications.view',), 'backoffice_bp.notifications_read_all': ('notifications.view',),
+    'backoffice_bp.notification_open': ('notifications.view',),
+    'backoffice_bp.security_settings': ('security.2fa',),
 }
 
 

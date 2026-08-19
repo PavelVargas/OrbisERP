@@ -50,7 +50,9 @@ def get_client_details(client_id):
     # --- LÓGICA DE DIVISAS ---
     selected_currency = session.get('selected_currency', 'DOP')
     rate_val = ExchangeRate.get_rate(selected_currency, company_id)
-    conversion_rate = Decimal(str(rate_val))
+    conversion_rate = Decimal(str(rate_val or 1))
+    if conversion_rate <= 0:
+        conversion_rate = Decimal('1')
     
     rate_row = ExchangeRate.query.filter_by(currency_code=selected_currency, company_id=company_id).first()
     currency_symbol = rate_row.symbol if rate_row else 'RD$'
@@ -69,8 +71,8 @@ def get_client_details(client_id):
     tareas = db.session.execute(stmt_tasks).scalars().all()
 
     # Cálculo de montos convertidos
-    total_debt = sum([s.balance for s in cliente.sales if s.balance and s.balance > 0])
-    total_sales = sum([s.total for s in cliente.sales]) if cliente.sales else 0
+    total_debt = sum((Decimal(str(s.balance)) for s in cliente.sales if s.balance and s.balance > 0), Decimal('0'))
+    total_sales = sum((Decimal(str(s.total or 0)) for s in cliente.sales), Decimal('0'))
     
     # Aplicar conversión
     total_debt_converted = total_debt / conversion_rate
@@ -95,16 +97,16 @@ def get_client_details(client_id):
             "id": i.id,
             "content": i.content,
             "type": i.type,
-            "date": i.created_at.strftime('%d %b, %H:%M'),
+            "date": i.created_at.strftime('%d %b, %H:%M') if i.created_at else 'Sin fecha',
             "user": i.user.name if i.user else "Sistema"
-        } for i in sorted(cliente.interactions, key=lambda x: x.created_at, reverse=True)],
+        } for i in sorted(cliente.interactions, key=lambda x: x.created_at.timestamp() if x.created_at else 0, reverse=True)],
         
         "tasks": [{
             "id": t.id,
             "title": t.title,
-            "due": t.due_date.strftime('%d %b %Y'),
-            "due_iso": t.due_date.strftime('%Y-%m-%d'),
-            "priority": t.priority
+            "due": t.due_date.strftime('%d %b %Y') if t.due_date else 'Sin fecha',
+            "due_iso": t.due_date.strftime('%Y-%m-%d') if t.due_date else '',
+            "priority": t.priority or 'Media'
         } for t in tareas]
     })
     

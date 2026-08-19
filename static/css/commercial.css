@@ -373,3 +373,7 @@ button:disabled, input:disabled, select:disabled { cursor: not-allowed !importan
     .product-overview-card { grid-template-columns: 1fr; }
     .product-detail-media { min-height: 210px; }
 }
+
+/* CRM alineado al lenguaje comercial global */
+.crm-page{margin-left:var(--sidebar-width)!important;padding:34px clamp(22px,3vw,46px) 54px!important}.crm-page .crm-stats{gap:0;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--bg-card)}.crm-page .crm-stats article{border:0;border-right:1px solid var(--border);border-radius:0;box-shadow:none}.crm-page .crm-stats article:last-child{border-right:0}.crm-page .crm-workspace{border-radius:15px;box-shadow:none}.crm-page .client-hero,.crm-page .debt-banner,.crm-page .crm-card{border-radius:13px}.crm-page .pipeline-nav button.active{background:var(--primary);border-color:var(--primary);box-shadow:none}.crm-page .btn-add-task,.crm-page #btnSave{background:var(--primary)}.crm-page .eyebrow,.crm-page .card-title small,.crm-page .sidebar-head small{color:var(--primary)}
+@media(max-width:1180px){.crm-page{margin-left:0!important;padding-top:88px!important}}

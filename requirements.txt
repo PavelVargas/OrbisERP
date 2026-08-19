@@ -7,6 +7,7 @@ Flask==3.1.2
 Flask-Mail==0.10.0
 Flask-Migrate==4.1.0
 Flask-SQLAlchemy==3.1.1
+gunicorn==23.0.0
 fonttools==4.61.1
 fpdf2==2.8.7
 greenlet==3.3.1
@@ -16,6 +17,8 @@ Jinja2==3.1.6
 MarkupSafe==3.0.3
 pdfkit==1.0.0
 pillow==12.1.1
+python-dotenv==1.1.1
+pytest==8.4.2
 psycopg[binary]==3.3.2
 python-barcode==0.16.1
 reportlab==4.4.10

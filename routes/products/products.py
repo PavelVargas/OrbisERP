@@ -7,6 +7,7 @@ from models.warehouse_location.warehouse_location import LocationStock, Warehous
 from models.stock_transfer.stock_transfer import StockTransfer
 from models.warehouse.warehouse import Warehouse
 from models.divisas.divisas import ExchangeRate
+from models.company.company import Company
 from db import db
 from datetime import datetime, timedelta
 from io import BytesIO
@@ -50,6 +51,14 @@ def save_product_image(upload, company_id):
     try:
         absolute_dir.mkdir(parents=True, exist_ok=True)
         canvas.save(absolute_dir / filename, 'WEBP', quality=86, method=6)
+        company = db.session.get(Company, company_id)
+        company_root = Path(current_app.static_folder) / 'uploads' / f'company_{company_id}'
+        usage = sum(path.stat().st_size for path in company_root.rglob('*') if path.is_file())
+        if company and usage > int(company.storage_limit or 0):
+            (absolute_dir / filename).unlink(missing_ok=True)
+            raise ValueError('Tu empresa alcanzó el límite de almacenamiento del plan.')
+        if company:
+            company.current_storage_usage = usage
     except OSError as exc:
         raise ValueError('No se pudo guardar la foto en el servidor.') from exc
     return (relative_dir / filename).as_posix()
@@ -242,6 +251,17 @@ def create_product():
             flash(str(exc), 'danger')
             return redirect(url_for('products_bp.create_product'))
 
+        try:
+            min_stock = max(int(request.form.get('min_stock') or 5), 0)
+            max_stock = int(request.form['max_stock']) if request.form.get('max_stock') else None
+            if max_stock is not None and max_stock < min_stock:
+                raise ValueError
+        except (TypeError, ValueError):
+            if image_path:
+                delete_product_image(image_path)
+            flash('Los niveles mínimo y máximo de stock no son válidos.', 'danger')
+            return redirect(url_for('products_bp.create_product'))
+
         product = Product(
             name=name,
             sku=sku,
@@ -252,7 +272,9 @@ def create_product():
             category_id=category_id if category_id else None,
             company_id=company_id,
             product_type=product_type, # <--- Guardar el tipo
-            status=True
+            status=True,
+            min_stock=min_stock,
+            max_stock=max_stock,
         )
 
         try:
@@ -320,6 +342,14 @@ def edit_product(id):
             flash('La categoría seleccionada no es válida.', 'danger')
             return redirect(url_for('products_bp.edit_product', id=id))
         product.category_id = category_id
+        try:
+            product.min_stock = max(int(request.form.get('min_stock') or 0), 0)
+            product.max_stock = int(request.form['max_stock']) if request.form.get('max_stock') else None
+            if product.max_stock is not None and product.max_stock < product.min_stock:
+                raise ValueError
+        except (TypeError, ValueError):
+            flash('Los niveles mínimo y máximo de stock no son válidos.', 'danger')
+            return redirect(url_for('products_bp.edit_product', id=id))
         
         # Actualizar tipo de producto
         type_str = request.form.get('product_type')

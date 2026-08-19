@@ -232,6 +232,11 @@
             input.name = 'search';
             input.value = sku;
             form.appendChild(input);
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = '_csrf_token';
+            csrf.value = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            form.appendChild(csrf);
             document.body.appendChild(form);
             form.submit();
         }

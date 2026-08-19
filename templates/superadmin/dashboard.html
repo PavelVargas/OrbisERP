@@ -77,7 +77,7 @@
             <i id="themeIco"></i>
             <span id="themeTxt"></span>
         </button>
-        <a href="{{ url_for('login_bp.logout') }}" class="btn-sm"><i class="bi bi-box-arrow-right"></i> Salir</a>
+        <form method="post" action="{{ url_for('login_bp.logout') }}" style="display:contents"><button class="btn-sm"><i class="bi bi-box-arrow-right"></i> Salir</button></form>
     </div>
 </nav>
 
@@ -115,9 +115,9 @@
             <label>USUARIOS</label>
             <div class="v">{{ total_users }}</div>
         </div>
-        <a href="{{ url_for('login_bp.logout') }}" class="btn-exit" title="Cerrar sesión master">
+        <form method="post" action="{{ url_for('login_bp.logout') }}" style="display:contents"><button class="btn-exit" title="Cerrar sesión master">
             <i class="bi bi-power"></i>
-        </a>
+        </button></form>
     </div>
 </div>
 
@@ -247,9 +247,9 @@
         </div>
 
         <div class="nc-foot">
-            <a href="{{ url_for('superadmin_bp.impersonate', company_id=c.id) }}" class="btn-tech">
+            <form method="post" action="{{ url_for('superadmin_bp.impersonate', company_id=c.id) }}" style="display:contents"><button class="btn-tech">
                 <i class="bi bi-shield-lock-fill" style="font-size:12px"></i> ACCESO
-            </a>
+            </button></form>
 
             <form action="{{ url_for('superadmin_bp.toggle_readonly', id=c.id) }}" method="POST" style="display:contents">
                 <button type="submit" class="bic {{ 'warn' if c.is_readonly }}" title="Cambiar permisos">

@@ -90,6 +90,7 @@
             <div class="nav-items">
                 {% if can('reports.view') %}<a href="{{ url_for('reports_bp.index') }}" class="nav-item {% if request.path.startswith('/reports') %}active{% endif %}" data-nav-label="reportes analítica indicadores"><span class="nav-icon"><i class="bi bi-bar-chart"></i></span><span class="nav-label hide-collapsed">Reportes</span><span class="nav-tooltip">Reportes</span></a>{% endif %}
                 {% if can('cash.view') %}<a href="{{ url_for('cash_bp.close_cash') }}" class="nav-item {% if request.path.startswith('/cash') %}active{% endif %}" data-nav-label="caja cierre cuadre efectivo"><span class="nav-icon"><i class="bi bi-cash-coin"></i></span><span class="nav-label hide-collapsed">Cierre de caja</span><span class="nav-tooltip">Caja</span></a>{% endif %}
+                {% if can('finance.receivables') or can('finance.payables') or can('finance.expenses') or can('sales.returns') or can('stock.count') %}<a href="{{ url_for('backoffice_bp.overview') }}" class="nav-item {% if request.path.startswith('/backoffice') and '/notifications' not in request.path and '/security' not in request.path %}active{% endif %}" data-nav-label="centro operativo devoluciones cobros pagos gastos conteos"><span class="nav-icon"><i class="bi bi-command"></i></span><span class="nav-label hide-collapsed">Centro operativo</span><span class="nav-tooltip">Operaciones</span></a>{% endif %}
             </div>
         </section>
         {% endif %}
@@ -98,8 +99,13 @@
             <span class="section-title hide-collapsed">Configuración</span>
             <div class="nav-items">
                 {% if can('company.settings') %}<a href="{{ url_for('company_bp.settings') }}" class="nav-item {% if '/settings' in request.path %}active{% endif %}" data-nav-label="empresa configuración datos fiscales"><span class="nav-icon"><i class="bi bi-gear"></i></span><span class="nav-label hide-collapsed">Mi empresa</span><span class="nav-tooltip">Mi empresa</span></a>{% endif %}
+                {% if can('company.settings') and user and user.company and not user.company.onboarding_completed %}<a href="{{ url_for('operations_bp.onboarding') }}" class="nav-item nav-item--primary" data-nav-label="configuración inicial asistente"><span class="nav-icon"><i class="bi bi-stars"></i></span><span class="nav-label hide-collapsed">Completar configuración</span><span class="nav-tooltip">Configurar</span></a>{% endif %}
+                {% if can('company.settings') %}<a href="{{ url_for('operations_bp.billing') }}" class="nav-item {% if request.path == '/operations/billing' %}active{% endif %}" data-nav-label="suscripción pagos facturación plan"><span class="nav-icon"><i class="bi bi-credit-card"></i></span><span class="nav-label hide-collapsed">Suscripción</span><span class="nav-tooltip">Suscripción</span></a>{% endif %}
+                {% if can('company.settings') %}<a href="{{ url_for('operations_bp.data_center') }}" class="nav-item {% if request.path == '/operations/data' %}active{% endif %}" data-nav-label="importar exportar csv datos"><span class="nav-icon"><i class="bi bi-arrow-down-up"></i></span><span class="nav-label hide-collapsed">Importar y exportar</span><span class="nav-tooltip">Datos</span></a>{% endif %}
                 {% if can('users.view') %}<a href="{{ url_for('users_bp.users') }}" class="nav-item {% if request.path.startswith('/users') %}active{% endif %}" data-nav-label="usuarios equipo permisos"><span class="nav-icon"><i class="bi bi-person-gear"></i></span><span class="nav-label hide-collapsed">Usuarios y permisos</span><span class="nav-tooltip">Usuarios</span></a>{% endif %}
                 {% if can('tablet.use') %}<a href="{{ url_for('launchpad_bp.launchpad') }}" class="nav-item" data-nav-label="modo tablet punto venta"><span class="nav-icon"><i class="bi bi-tablet-landscape"></i></span><span class="nav-label hide-collapsed">Modo tablet</span><span class="nav-tooltip">Modo tablet</span></a>{% endif %}
+                {% if can('notifications.view') %}<a href="{{ url_for('backoffice_bp.notifications') }}" class="nav-item {% if request.path == '/backoffice/notifications' %}active{% endif %}" data-nav-label="notificaciones alertas vencimientos stock"><span class="nav-icon"><i class="bi bi-bell"></i></span><span class="nav-label hide-collapsed">Notificaciones{% if unread_notifications %} · {{ unread_notifications }}{% endif %}</span><span class="nav-tooltip">Alertas</span></a>{% endif %}
+                {% if can('security.2fa') %}<a href="{{ url_for('backoffice_bp.security_settings') }}" class="nav-item {% if request.path == '/backoffice/security' %}active{% endif %}" data-nav-label="seguridad autenticación dos factores 2fa"><span class="nav-icon"><i class="bi bi-shield-check"></i></span><span class="nav-label hide-collapsed">Seguridad de acceso</span><span class="nav-tooltip">Seguridad</span></a>{% endif %}
             </div>
         </section>
         <p id="nav-empty" class="nav-empty hide-collapsed" hidden>No encontramos esa opción.</p>
@@ -107,7 +113,7 @@
 
     <div class="sidebar-footer">
         <button class="nav-item theme-toggle" id="theme-switch" type="button"><span class="nav-icon"><i class="bi bi-moon-stars theme-moon"></i><i class="bi bi-sun theme-sun"></i></span><span class="nav-label hide-collapsed">Cambiar apariencia</span><span class="nav-tooltip">Tema</span></button>
-        <a href="{{ url_for('login_bp.logout') }}" class="nav-item logout-item"><span class="nav-icon"><i class="bi bi-box-arrow-right"></i></span><span class="nav-label hide-collapsed">Cerrar sesión</span><span class="nav-tooltip">Salir</span></a>
+        <form method="post" action="{{ url_for('login_bp.logout') }}" style="display:contents"><button type="submit" class="nav-item logout-item"><span class="nav-icon"><i class="bi bi-box-arrow-right"></i></span><span class="nav-label hide-collapsed">Cerrar sesión</span><span class="nav-tooltip">Salir</span></button></form>
     </div>
     <button class="collapse-btn" id="collapse-toggle" type="button" aria-label="Contraer menú"><i class="bi bi-chevron-left"></i></button>
 </aside>

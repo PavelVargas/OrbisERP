@@ -23,6 +23,7 @@
         </div>
 
         <div class="invoice-container">
+            {% if user.company and user.company.fiscal_mode == 'disabled' %}<div style="padding:12px 16px;margin-bottom:14px;border:1px solid rgba(255,90,36,.35);border-radius:12px;color:#ff5a24;text-align:center;font-size:.72rem;font-weight:900;letter-spacing:.12em">{{ user.company.fiscal_disclaimer }}</div>{% endif %}
             
             <header class="invoice-header-card">
                 <div class="title-group">

@@ -1,0 +1,39 @@
+/* State layer loaded after every shared stylesheet. */
+.crm-page {
+    display: grid !important;
+}
+
+.crm-page [hidden] {
+    display: none !important;
+}
+
+.loader-overlay:not([hidden]) {
+    display: grid;
+}
+
+.loader-overlay p {
+    margin-top: 48px;
+    color: var(--crm-muted);
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.crm-error-state > span {
+    background: rgba(216, 72, 80, 0.1);
+    color: var(--crm-danger);
+}
+
+.crm-error-state button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 14px auto 0;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--crm-primary);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 800;
+    cursor: pointer;
+}

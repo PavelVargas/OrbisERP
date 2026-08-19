@@ -1,5 +1,40 @@
 # Revisión técnica de OrbisERP
 
+## Ajuste CRM y orden de compra · 19/08/2026
+
+- Corregido el conflicto CSS que mantenía visible el estado vacío del CRM después de seleccionar un cliente.
+- Añadidos estados explícitos de carga, error y reintento, selección inicial y URL persistente por cliente.
+- Reforzada la carga AJAX para sesión, caché y respuestas concurrentes.
+- Rediseñada la orden de compra con progreso operativo, controles más legibles, tabla comercial y resumen final adaptable.
+- Reconstruido el listado de compras con indicadores, búsqueda, filtros compactos, totales y estados operativos.
+- Añadida una confirmación visual del producto seleccionado y progreso de recepción por línea en el detalle.
+- Reestructurada nuevamente la orden interna como espacio de trabajo: catálogo y condiciones separados, jerarquía más clara y cierre fiscal al final.
+- Versionada la hoja visual de la orden para impedir que el navegador reutilice CSS anterior y reforzados estados, foco y acabados.
+- Movida la hoja estructural al `head` para garantizar su carga antes del renderizado en todos los navegadores.
+- Completadas las reglas de layout faltantes del progreso superior, columnas de captura y cierre inferior de la orden.
+
+## Centro de mando comercial
+
+- Tercera revisión visual: se redujo el patrón de “una tarjeta para todo” y se convirtió el dashboard en una composición continua por bandas y espacios de trabajo.
+- Las cuatro métricas superiores ahora viven en una sola banda, con divisores y jerarquía interna en lugar de cuatro cajas independientes.
+- Ventas recientes, productos, pagos, finanzas y compras se agrupan en superficies compartidas para reducir ruido visual.
+- Unificada la identidad naranja mediante `--primary`: menú lateral, botones, indicadores y gráficas ahora utilizan exactamente la misma gama.
+- Segunda revisión visual orientada al uso comercial diario: se eliminó el bloque oscuro protagonista y se equilibraron ventas, accesos rápidos, pendientes y actividad.
+- Tipografía más cómoda, tarjetas claras, densidad moderada y naranja dosificado para trabajar durante períodos largos sin fatiga visual.
+- Centro de informes reconstruido sin depender de Tailwind CDN, evitando que la pantalla aparezca completamente sin estilos cuando ese recurso no carga.
+- Informes, inventario, cierres de caja y exportaciones ahora comparten la identidad visual del resto del sistema.
+- Corregida la serie del gráfico de informes, que inicializaba siete ceros adicionales antes de agregar los siete días reales.
+- Dashboard ejecutivo reconstruido con una jerarquía visual clara y una tarjeta protagonista para ventas netas.
+- Selector real de períodos de 7, 30 y 90 días, calculado con consultas agrupadas para evitar una consulta por fecha.
+- Indicadores de ventas del día, ticket promedio, resultado operativo, margen, cartera, compromisos e inventario.
+- Resultado y margen basados en ventas netas, costo de los productos vendidos, devoluciones y gastos registrados.
+- Banda de prioridades para existencias bajas, transferencias, pagos vencidos, ventas pendientes y devoluciones.
+- Tablas compactas de actividad, ranking de productos con imágenes, mezcla de cobros y órdenes de compra.
+- Panel adaptable a escritorio, tablet y móvil, con estados vacíos y modo oscuro uniforme en negro suave y naranja.
+- Datos financieros, compras, inventario y alertas respetan los permisos efectivos de cada usuario.
+- Ventas, devoluciones, cobros y gráficos de vendedores no administradores se limitan a sus propias operaciones.
+- Gráficos externos sin lógica de negocio incrustada, formato multimoneda y animaciones compatibles con accesibilidad.
+
 ## Rediseño comercial unificado
 
 - Nuevo sistema visual suave y consistente para todas las pantallas internas.
@@ -168,3 +203,58 @@
 - Tabla de productos con imágenes, impuestos por línea, encabezado fijo, altura máxima, scroll y contadores de productos y unidades.
 - Resumen fiscal movido al final de la pantalla para mantener primero el flujo de captura y revisión.
 - Migración Alembic y actualización automática compatibles con la base PostgreSQL local existente.
+
+# Preparación comercial y operación mensual
+
+- Eliminadas las credenciales PostgreSQL y de correo incrustadas; configuración central mediante `.env` con validación estricta en producción.
+- Gunicorn, Docker, health checks, migración de lanzamiento y configuración de proxy/HTTPS listos para despliegue.
+- Protección CSRF automática para formularios y `fetch`, cookies seguras, HSTS, CSP, bloqueo de intentos, política de contraseñas y logout por POST.
+- Auditoría estructurada de operaciones mutables con identificador de solicitud y páginas de error seguras para soporte.
+- Suscripciones con facturas, períodos, mora, gracia, cancelación, reactivación y webhooks HMAC idempotentes, manteniendo también el pago manual existente.
+- Asistente de configuración inicial para empresa y almacén principal.
+- Centro de importación/exportación CSV aislado por empresa para productos, inventario inicial, clientes y proveedores.
+- Almacenamiento persistente mediante volumen, validación real de imágenes/PDF y aplicación de cuota del plan a fotos de productos.
+- Bloqueo transaccional de la empresa al finalizar ventas para impedir exceder el límite mensual mediante ventas concurrentes.
+- Scripts seguros de respaldo y restauración PostgreSQL con retención configurable.
+- Suite inicial de pruebas, verificación de 79 plantillas y documentación de producción, seguridad, webhooks y preparación legal.
+## Corrección de migraciones PostgreSQL existentes (2026-08-18)
+
+- Las migraciones de imágenes, ubicaciones, trazabilidad y permisos ahora son idempotentes: si una tabla, columna, índice o relación ya existe, Alembic no intenta duplicarla.
+- `flask --app app db upgrade` ya no ejecuta la autorreparación local mientras Alembic importa la aplicación.
+- Esto resuelve `psycopg.errors.DuplicateColumn: products.image_path` sin borrar ni reiniciar `db_inventario`.
+## Suite operativa integral y Dashboard V2 (2026-08-18)
+
+- Devoluciones parciales o completas con cantidades controladas, reembolso, auditoría y reintegro opcional al inventario.
+- Cuentas por cobrar con abonos parciales, métodos, referencias y actualización transaccional del balance.
+- Cuentas por pagar con vencimientos, documentos únicos por empresa y pagos parciales o completos.
+- Registro de gastos por categoría, proveedor, método, fecha y referencia.
+- Conteos físicos por almacén o sububicación, diferencias y aprobación separada que genera kardex.
+- Centro de notificaciones para stock bajo y cuentas vencidas.
+- Autenticación 2FA TOTP compatible con aplicaciones autenticadoras estándar, sin servicio externo.
+- Stock mínimo y máximo configurable en productos.
+- Modo fiscal desactivado y aviso `DOCUMENTO NO FISCAL` en la vista y el PDF de ventas.
+- Centro operativo responsive y nuevos permisos independientes para cada función.
+- Dashboard V2 con ventas netas, devoluciones, gastos, cuentas por cobrar/pagar, valor del inventario, alertas, métodos de pago, compras y consumo del plan usando datos reales.
+- Migración PostgreSQL idempotente `c8f2a91d640e` y cobertura de rutas nuevas.
+## Compatibilidad del ejecutor de pruebas (2026-08-18)
+
+- La raíz del proyecto se agrega explícitamente al `PYTHONPATH` de pytest.
+- `pytest -q` y `python -m pytest -q` ahora importan `security` y `models` de la misma manera.
+# Mejora comercial de módulos — 18/08/2026
+
+- Gestión de personal con vista alternable entre lista y tarjetas, búsqueda y contador.
+- Directorio de clientes rediseñado con filtros, acceso directo a CRM y permisos correctos.
+- CRM estabilizado: selección automática, acceso por `?client=`, cálculos monetarios y fechas defensivas.
+- Cuadre de caja renovado con conteo asistido por denominaciones y validación decimal segura.
+- Importación/exportación con zona de arrastre, plantillas CSV y mensajes de validación claros.
+- Escáner alineado con la estética comercial y entrada manual compatible con tablet.
+- Historial mensual creado desde cero con métricas, filtros y exportación.
+- Corregido el 400 al agregar productos mediante formularios POS creados por JavaScript.
+# Renovación de módulos operativos — 19/08/2026
+
+- Configuración de empresa alineada con la estética comercial, vista previa del logo y validaciones de datos.
+- Modo tablet reconstruido con tarjetas táctiles, búsqueda y módulos filtrados por permisos.
+- CRM adaptado al alto de la pantalla: la ficha completa queda visible y solo desplazan las listas internas.
+- Kardex renovado con métricas, búsqueda, filtros avanzados, almacén y rango de fechas seguro.
+- Proveedores con indicadores de compras, filtros, búsqueda y eliminación protegida cuando existen relaciones.
+- Notificaciones explicadas, clasificadas y accionables; cada aviso se marca al abrir y los problemas resueltos cierran alertas pendientes.

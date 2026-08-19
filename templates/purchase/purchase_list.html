@@ -1,106 +1,82 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="{% if session.get('theme') == 'dark' %}dark{% endif %}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/css/order_css/order.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <title>Órdenes de Compra</title>
+    <title>Órdenes de compra · OrbisERP</title>
 </head>
 <body>
-    {% include 'layouts/left_bar.html'%}
-    <main>
-        <div class="top-nav">
-            <a href="{{ url_for('dashboard_bp.dashboard') }}" class="back-link"><i class="bi bi-chevron-left"></i> Dashboard</a>
-            <div class="user-meta"><i class="bi bi-cart-check"></i> Compras</div>
+{% include 'layouts/left_bar.html' %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/order_css/purchase_list.css') }}">
+
+<main class="purchases-page">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<section class="purchase-alerts">{% for category, message in messages %}<div class="purchase-alert {{ category }}"><i class="bi bi-info-circle"></i><span>{{ message }}</span></div>{% endfor %}</section>{% endif %}
+    {% endwith %}
+
+    <header class="purchases-header">
+        <div>
+            <span class="purchase-kicker">Compras y abastecimiento</span>
+            <h1>Órdenes de compra</h1>
+            <p>Controla solicitudes, recepciones, proveedores e inversión desde una vista clara.</p>
         </div>
-        <header class="page-header">
-            <div class="title-group">
-                <h2>Órdenes de Compra</h2>
-                <p>Gestión de abastecimiento y proveedores.</p>
-            </div>
-            {% if can('purchases.create') %}<a href="{{ url_for('purchase_bp.create_purchase') }}" class="btn-primary"><i class="bi bi-plus-lg"></i> Nueva Orden</a>{% endif %}
-        </header>
-        <div class="table-container">
-        <table class="modern-table">
-            <thead>
-                <tr>
-                    <th>Referencia</th>
-                    <th>Proveedor</th>
-                    <th>Fecha Emisión</th>
-                    <th>Volumen</th>
-                    <th>Estado</th>
-                    <th class="text-right">Gestión</th>
-                </tr>
-            </thead>
-            <tbody>
+        {% if can('purchases.create') %}<a href="{{ url_for('purchase_bp.create_purchase') }}" class="new-purchase"><i class="bi bi-plus-lg"></i><span>Nueva orden</span></a>{% endif %}
+    </header>
+
+    <section class="purchase-metrics" aria-label="Resumen de compras">
+        <article><span class="metric-icon"><i class="bi bi-receipt"></i></span><div><small>ÓRDENES</small><strong>{{ stats.total }}</strong><p>Histórico registrado</p></div></article>
+        <article><span class="metric-icon pending"><i class="bi bi-hourglass-split"></i></span><div><small>PENDIENTES</small><strong>{{ stats.pending }}</strong><p>Requieren seguimiento</p></div></article>
+        <article><span class="metric-icon received"><i class="bi bi-check2-circle"></i></span><div><small>RECIBIDAS</small><strong>{{ stats.received }}</strong><p>Entradas completadas</p></div></article>
+        <article><span class="metric-icon money"><i class="bi bi-wallet2"></i></span><div><small>INVERSIÓN RECIBIDA</small><strong>RD$ {{ '{:,.2f}'.format(stats.invested|float) }}</strong><p>Total de órdenes recibidas</p></div></article>
+    </section>
+
+    <section class="purchase-workspace">
+        <div class="workspace-head">
+            <div><span class="purchase-kicker">Control operativo</span><h2>Historial de órdenes</h2><p>{{ orders|length }} resultado{{ '' if orders|length == 1 else 's' }} en esta consulta</p></div>
+            <form class="purchase-search" method="get" id="purchaseFilters">
+                <label><i class="bi bi-search"></i><input type="search" name="q" value="{{ filters.q }}" placeholder="Buscar número o proveedor…" autocomplete="off"><button type="submit" aria-label="Buscar"><i class="bi bi-arrow-right"></i></button></label>
+                <details class="filters-popover" {% if filters_active and (filters.status or filters.supplier_id or filters.date_from or filters.date_to) %}open{% endif %}>
+                    <summary><i class="bi bi-sliders2"></i><span>Filtros</span>{% if filters_active %}<b></b>{% endif %}</summary>
+                    <div class="filters-panel">
+                        <header><div><strong>Filtrar órdenes</strong><small>Combina los criterios necesarios.</small></div><a href="{{ url_for('purchase_bp.purchase_list') }}">Limpiar</a></header>
+                        <label><span>Estado</span><select name="status"><option value="">Todos los estados</option><option value="PENDING" {% if filters.status=='PENDING' %}selected{% endif %}>Pendientes</option><option value="RECEIVED" {% if filters.status=='RECEIVED' %}selected{% endif %}>Recibidas</option><option value="CANCELLED" {% if filters.status=='CANCELLED' %}selected{% endif %}>Canceladas</option></select></label>
+                        <label><span>Proveedor</span><select name="supplier_id"><option value="">Todos los proveedores</option>{% for supplier in suppliers %}<option value="{{ supplier.id }}" {% if filters.supplier_id==supplier.id %}selected{% endif %}>{{ supplier.name }}</option>{% endfor %}</select></label>
+                        <div class="date-fields"><label><span>Desde</span><input type="date" name="date_from" value="{{ filters.date_from }}"></label><label><span>Hasta</span><input type="date" name="date_to" value="{{ filters.date_to }}"></label></div>
+                        <button type="submit" class="apply-filters"><i class="bi bi-check2"></i> Aplicar filtros</button>
+                    </div>
+                </details>
+            </form>
+        </div>
+
+        <div class="quick-status" role="navigation" aria-label="Filtros rápidos">
+            <a href="{{ url_for('purchase_bp.purchase_list', q=filters.q) }}" class="{% if not filters.status %}active{% endif %}">Todas <b>{{ stats.total }}</b></a>
+            <a href="{{ url_for('purchase_bp.purchase_list', q=filters.q, status='PENDING') }}" class="{% if filters.status=='PENDING' %}active{% endif %}">Pendientes <b>{{ stats.pending }}</b></a>
+            <a href="{{ url_for('purchase_bp.purchase_list', q=filters.q, status='RECEIVED') }}" class="{% if filters.status=='RECEIVED' %}active{% endif %}">Recibidas <b>{{ stats.received }}</b></a>
+        </div>
+
+        {% if orders %}
+        <div class="purchases-table-wrap">
+            <table class="purchases-table">
+                <thead><tr><th>Orden</th><th>Proveedor</th><th>Emisión</th><th>Contenido</th><th>Total</th><th>Estado</th><th><span class="sr-only">Acciones</span></th></tr></thead>
+                <tbody>
                 {% for order in orders %}
-                <tr class="order-row">
-                    <td data-label="Referencia">
-                        <div class="id-badge">
-                            <i class="bi bi-hash"></i>
-                            <span>{{ "%05d" % order.id }}</span>
-                        </div>
-                    </td>
-                    <td data-label="Proveedor">
-                        <div class="supplier-info">
-                            <span class="main-text">{{ order.supplier_name }}</span>
-                            <span class="sub-text">Suministros Externos</span>
-                        </div>
-                    </td>
-                    <td data-label="Fecha">
-                        <div class="date-stack">
-                            <i class="bi bi-calendar3"></i>
-                            <span>{{ order.created_at.strftime('%d %b, %Y') }}</span>
-                        </div>
-                    </td>
-                    <td data-label="Volumen">
-                        <div class="items-pill">
-                            <strong>{{ order.total_items }}</strong> 
-                            <span>uds.</span>
-                        </div>
-                    </td>
-                    <td data-label="Estado">
-                        {% if order.status == 'PENDING' %}
-                            <span class="status-chip pending">
-                                <i class="bi bi-clock-history"></i> Pendiente
-                            </span>
-                        {% elif order.status == 'RECEIVED' %}
-                            <span class="status-chip received">
-                                <i class="bi bi-check2-all"></i> Recibida
-                            </span>
-                        {% else %}
-                            <span class="status-chip cancelled">
-                                <i class="bi bi-x-circle"></i> Cancelada
-                            </span>
-                        {% endif %}
-                    </td>
-                    <td class="text-right" data-label="Acciones">
-                        <div class="action-dock">
-                            <a href="{{ url_for('purchase_bp.purchase_detail', order_id=order.id) }}" class="dock-btn view" title="Ver Detalles">
-                                <i class="bi bi-eye"></i>
-                            </a>
-                            {% if order.status == 'PENDING' %}
-                            {% if can('purchases.cancel') %}<form method="POST" action="{{ url_for('purchase_bp.cancel_purchase', order_id=order.id) }}" onsubmit="return confirm('¿Confirmar cancelación?')">
-                            <button type="submit" class="dock-btn delete" title="Cancelar Orden" aria-label="Cancelar orden">
-                                <i class="bi bi-trash3"></i>
-                            </button>
-                            </form>{% endif %}
-                            {% endif %}
-                        </div>
-                    </td>
-                </tr>
-                {% else %}
                 <tr>
-                    <td colspan="6" class="empty-placeholder">
-                        <i class="bi bi-cart-x"></i>
-                        <p>No se encontraron registros de compra.</p>
-                    </td>
+                    <td data-label="Orden"><a class="order-reference" href="{{ url_for('purchase_bp.purchase_detail', order_id=order.id) }}"><span>OC</span><strong>#{{ '%05d'|format(order.id) }}</strong></a></td>
+                    <td data-label="Proveedor"><div class="supplier-cell"><span>{{ (order.supplier_name or 'P')[:1]|upper }}</span><div><strong>{{ order.supplier_name }}</strong><small>{{ order.supplier.email if order.supplier and order.supplier.email else 'Sin correo registrado' }}</small></div></div></td>
+                    <td data-label="Emisión"><div class="date-cell"><strong>{{ order.created_at.strftime('%d/%m/%Y') if order.created_at else 'Sin fecha' }}</strong><small>{{ order.created_at.strftime('%I:%M %p') if order.created_at else '' }}</small></div></td>
+                    <td data-label="Contenido"><div class="content-cell"><strong>{{ order.total_items or 0 }}</strong><span>unidades</span><small>{{ order.items|length }} producto{{ '' if order.items|length == 1 else 's' }}</small></div></td>
+                    <td data-label="Total"><strong class="order-total">RD$ {{ '{:,.2f}'.format((order.total_cost or 0)|float) }}</strong></td>
+                    <td data-label="Estado"><span class="purchase-status {{ order.status|lower }}"><i class="bi bi-{% if order.status=='PENDING' %}clock{% elif order.status=='RECEIVED' %}check2-circle{% else %}x-circle{% endif %}"></i>{{ {'PENDING':'Pendiente','RECEIVED':'Recibida','CANCELLED':'Cancelada'}.get(order.status, order.status|title) }}</span></td>
+                    <td class="row-actions"><a href="{{ url_for('purchase_bp.purchase_detail', order_id=order.id) }}" title="Abrir orden"><i class="bi bi-arrow-right"></i></a>{% if order.status=='PENDING' and can('purchases.cancel') %}<form method="post" action="{{ url_for('purchase_bp.cancel_purchase', order_id=order.id) }}" onsubmit="return confirm('¿Descartar esta orden pendiente?')"><button type="submit" title="Descartar orden"><i class="bi bi-trash3"></i></button></form>{% endif %}</td>
                 </tr>
                 {% endfor %}
                 </tbody>
             </table>
         </div>
-    </main>
+        {% else %}
+        <div class="purchase-empty"><span><i class="bi bi-bag-x"></i></span><h3>{% if filters_active %}No encontramos órdenes con esos filtros{% else %}Todavía no hay órdenes de compra{% endif %}</h3><p>{% if filters_active %}Prueba otra búsqueda o limpia los filtros aplicados.{% else %}Crea una orden para comenzar a registrar el abastecimiento.{% endif %}</p>{% if filters_active %}<a href="{{ url_for('purchase_bp.purchase_list') }}">Limpiar filtros</a>{% elif can('purchases.create') %}<a href="{{ url_for('purchase_bp.create_purchase') }}">Crear primera orden</a>{% endif %}</div>
+        {% endif %}
+    </section>
+</main>
 </body>
 </html>

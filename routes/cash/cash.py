@@ -6,6 +6,7 @@ from models.divisas.divisas import ExchangeRate
 from db import db
 from sqlalchemy import func
 from datetime import datetime, time
+from decimal import Decimal, InvalidOperation
 
 cash_bp = Blueprint('cash_bp', __name__, url_prefix='/cash')
 
@@ -61,11 +62,17 @@ def close_cash():
     total_tickets_count = stats.ticket_count or 0
 
     if request.method == 'POST':
+        try:
+            reported = Decimal((request.form.get('reported_amount') or '').strip()).quantize(Decimal('0.01'))
+        except (InvalidOperation, ValueError):
+            flash('Escribe un monto contado válido.', 'danger')
+            return redirect(url_for('cash_bp.close_cash'))
+        if reported < 0:
+            flash('El efectivo contado no puede ser negativo.', 'danger')
+            return redirect(url_for('cash_bp.close_cash'))
+        notes = (request.form.get('notes') or '').strip()[:1000]
 
-        reported = request.form.get('reported_amount', type=float) or 0
-        notes = request.form.get('notes', "")
-
-        difference = reported - system_total_converted
+        difference = reported - Decimal(str(system_total_converted)).quantize(Decimal('0.01'))
 
         audit_note = f"{notes} | Audit: {selected_currency} Rate {conversion_rate}"
 
@@ -84,7 +91,7 @@ def close_cash():
         db.session.commit()
 
         # 5️⃣ Alertas
-        if abs(difference) < 0.01:
+        if abs(difference) < Decimal('0.01'):
             flash(f'Caja cuadrada en {selected_currency}', 'success')
         else:
             status = "FALTANTE" if difference < 0 else "SOBRANTE"

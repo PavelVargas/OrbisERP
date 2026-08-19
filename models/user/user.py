@@ -14,6 +14,8 @@ class User(db.Model):
     cedula = db.Column(db.String(150), nullable=False)
     role = db.Column(db.String(150), nullable=False, default="user")
     permissions = db.Column(db.Text, nullable=True)
+    totp_secret = db.Column(db.String(64), nullable=True)
+    two_factor_enabled = db.Column(db.Boolean, nullable=False, default=False)
 
     warehouse_id = db.Column(db.Integer, db.ForeignKey('warehouses.id'), nullable=True)
     assigned_warehouse = db.relationship('Warehouse', backref='assigned_users')

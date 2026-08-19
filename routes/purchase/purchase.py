@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, request, abort,
 from models.purchase.purchase_order import PurchaseOrder
 from models.purchase.purchase_order_item import PurchaseOrderItem
 from models.purchase.purchase_tax import PurchaseTax
+from models.backoffice import SupplierBill
 from models.stock_movement.stock_movement import StockMovement
 from models.products.products import Product
 from models.supplier.supplier import Supplier
@@ -10,7 +11,9 @@ from db import db
 from models.warehouse.warehouse import Warehouse
 from models.warehouse_stock.warehouse_stock import WarehouseStock
 from decimal import Decimal, InvalidOperation
-from sqlalchemy import func
+from datetime import datetime, timedelta
+from sqlalchemy import String, cast, func, or_
+from sqlalchemy.orm import joinedload, selectinload
 
 purchase_bp = Blueprint('purchase_bp', __name__)
 
@@ -72,10 +75,55 @@ def purchase_list():
     if not user_id or not company_id:
         return redirect(url_for('login_bp.login'))
 
-    user = User.query.get(user_id)
-    orders = PurchaseOrder.query.filter_by(company_id=company_id).order_by(PurchaseOrder.created_at.desc()).all()
-    
-    return render_template('purchase/purchase_list.html', orders=orders, user=user)
+    user = db.session.get(User, user_id)
+    query = PurchaseOrder.query.options(
+        joinedload(PurchaseOrder.supplier),
+        selectinload(PurchaseOrder.items),
+    ).filter_by(company_id=company_id)
+
+    search = (request.args.get('q') or '').strip()
+    status = (request.args.get('status') or '').strip().upper()
+    supplier_id = request.args.get('supplier_id', type=int)
+    date_from = request.args.get('date_from', '').strip()
+    date_to = request.args.get('date_to', '').strip()
+
+    if search:
+        like = f'%{search}%'
+        query = query.filter(or_(
+            PurchaseOrder.supplier_name.ilike(like),
+            cast(PurchaseOrder.id, String).ilike(like),
+        ))
+    if status in {'PENDING', 'RECEIVED', 'CANCELLED'}:
+        query = query.filter(PurchaseOrder.status == status)
+    else:
+        status = ''
+    if supplier_id:
+        query = query.filter(PurchaseOrder.supplier_id == supplier_id)
+    try:
+        if date_from:
+            query = query.filter(PurchaseOrder.created_at >= datetime.strptime(date_from, '%Y-%m-%d'))
+        if date_to:
+            query = query.filter(PurchaseOrder.created_at < datetime.strptime(date_to, '%Y-%m-%d') + timedelta(days=1))
+    except ValueError:
+        flash('El rango de fechas no es válido.', 'warning')
+
+    orders = query.order_by(PurchaseOrder.created_at.desc()).limit(1000).all()
+    all_orders = PurchaseOrder.query.filter_by(company_id=company_id).all()
+    stats = {
+        'total': len(all_orders),
+        'pending': sum(1 for order in all_orders if order.status == 'PENDING'),
+        'received': sum(1 for order in all_orders if order.status == 'RECEIVED'),
+        'invested': sum((Decimal(order.total_cost or 0) for order in all_orders if order.status == 'RECEIVED'), Decimal('0.00')),
+    }
+    suppliers = Supplier.query.filter_by(company_id=company_id).order_by(Supplier.name.asc()).all()
+    filters_active = bool(search or status or supplier_id or date_from or date_to)
+
+    return render_template(
+        'purchase/purchase_list.html', orders=orders, user=user, stats=stats,
+        suppliers=suppliers, filters_active=filters_active,
+        filters={'q': search, 'status': status, 'supplier_id': supplier_id,
+                 'date_from': date_from, 'date_to': date_to},
+    )
 
 # =========================
 # CREAR ORDEN (Paso 1: Seleccionar Proveedor)
@@ -344,6 +392,14 @@ def receive_purchase(order_id):
     # Verificar si se completó la orden
     if all(i.quantity_received >= i.quantity for i in order.items):
         order.status = 'RECEIVED'
+        internal_document = f'AUTO-OC-{order.id}'
+        if not SupplierBill.query.filter_by(company_id=company_id, purchase_order_id=order.id).first():
+            db.session.add(SupplierBill(
+                company_id=company_id, supplier_id=order.supplier_id, purchase_order_id=order.id,
+                document_number=internal_document, amount=order.total_cost or 0,
+                due_date=(datetime.now() + timedelta(days=30)).date(),
+                notes='Cuenta generada automáticamente al recibir la orden.',
+            ))
 
     db.session.commit()
     flash('Entrada de almacén registrada con éxito.', 'success')

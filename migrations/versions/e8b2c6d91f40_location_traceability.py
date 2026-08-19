@@ -14,28 +14,34 @@ depends_on = None
 
 
 def upgrade():
-    op.create_table(
-        'location_movements',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('movement_type', sa.String(length=20), nullable=False),
-        sa.Column('quantity', sa.Integer(), nullable=False),
-        sa.Column('balance_after', sa.Integer(), nullable=False),
-        sa.Column('reference', sa.String(length=80), nullable=True),
-        sa.Column('notes', sa.String(length=255), nullable=True),
-        sa.Column('created_at', sa.DateTime(), nullable=False),
-        sa.Column('location_id', sa.Integer(), nullable=False),
-        sa.Column('product_id', sa.Integer(), nullable=False),
-        sa.Column('company_id', sa.Integer(), nullable=False),
-        sa.Column('user_id', sa.Integer(), nullable=True),
-        sa.Column('transfer_id', sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(['company_id'], ['companies.id']),
-        sa.ForeignKeyConstraint(['location_id'], ['warehouse_locations.id']),
-        sa.ForeignKeyConstraint(['product_id'], ['products.id']),
-        sa.ForeignKeyConstraint(['transfer_id'], ['stock_transfers.id']),
-        sa.ForeignKeyConstraint(['user_id'], ['users.id']),
-        sa.PrimaryKeyConstraint('id'),
-    )
-    op.create_index('ix_location_movements_location_created', 'location_movements', ['location_id', 'created_at'])
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    if 'location_movements' not in set(inspector.get_table_names()):
+        op.create_table(
+            'location_movements',
+            sa.Column('id', sa.Integer(), nullable=False),
+            sa.Column('movement_type', sa.String(length=20), nullable=False),
+            sa.Column('quantity', sa.Integer(), nullable=False),
+            sa.Column('balance_after', sa.Integer(), nullable=False),
+            sa.Column('reference', sa.String(length=80), nullable=True),
+            sa.Column('notes', sa.String(length=255), nullable=True),
+            sa.Column('created_at', sa.DateTime(), nullable=False),
+            sa.Column('location_id', sa.Integer(), nullable=False),
+            sa.Column('product_id', sa.Integer(), nullable=False),
+            sa.Column('company_id', sa.Integer(), nullable=False),
+            sa.Column('user_id', sa.Integer(), nullable=True),
+            sa.Column('transfer_id', sa.Integer(), nullable=True),
+            sa.ForeignKeyConstraint(['company_id'], ['companies.id']),
+            sa.ForeignKeyConstraint(['location_id'], ['warehouse_locations.id']),
+            sa.ForeignKeyConstraint(['product_id'], ['products.id']),
+            sa.ForeignKeyConstraint(['transfer_id'], ['stock_transfers.id']),
+            sa.ForeignKeyConstraint(['user_id'], ['users.id']),
+            sa.PrimaryKeyConstraint('id'),
+        )
+    inspector = sa.inspect(bind)
+    index_names = {index['name'] for index in inspector.get_indexes('location_movements')}
+    if 'ix_location_movements_location_created' not in index_names:
+        op.create_index('ix_location_movements_location_created', 'location_movements', ['location_id', 'created_at'])
 
 
 def downgrade():

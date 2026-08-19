@@ -150,6 +150,7 @@
             50% { background-color: #450a0a; } 
         }
     </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/scanner.css') }}">
 </head>
 <body>
     {% include 'layouts/left_bar.html' %}
@@ -161,6 +162,12 @@
         </div>
 
         <input type="text" id="master-scanner" autofocus autocomplete="off" inputmode="none">
+
+        <form class="manual-scan" id="manual-scan-form">
+            <i class="bi bi-upc-scan"></i>
+            <input id="manual-code" type="text" autocomplete="off" placeholder="Escanear o escribir código…" aria-label="Código escaneado">
+            <button type="submit">Procesar</button>
+        </form>
 
         <div class="scan-guide">
             <div class="scan-step active" id="step-transfer"><i class="bi bi-file-earmark-bar-graph"></i><span>1. Conduce</span></div>
@@ -222,8 +229,16 @@
         let mode = 'WAITING_TRANSFER', currentTransfer = null, scannedQty = 0;
         let typingTimer;
 
-        document.addEventListener('click', () => scannerInput.focus());
-        setInterval(() => { if(document.activeElement !== scannerInput) scannerInput.focus(); }, 500);
+        const manualInput = document.getElementById('manual-code');
+        document.addEventListener('click', event => { if (!event.target.closest('input,button,a,select,textarea')) scannerInput.focus(); });
+        setInterval(() => { if(!['INPUT','BUTTON','SELECT','TEXTAREA'].includes(document.activeElement?.tagName)) scannerInput.focus(); }, 800);
+        document.getElementById('manual-scan-form').addEventListener('submit', event => {
+            event.preventDefault();
+            const code = manualInput.value.trim();
+            if (code) handleInput(code);
+            manualInput.value = '';
+            manualInput.focus();
+        });
 
         scannerInput.addEventListener('input', () => {
             clearTimeout(typingTimer);

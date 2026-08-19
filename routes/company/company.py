@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
 import os
 import uuid
+from io import BytesIO
+from PIL import Image, UnidentifiedImageError
 from routes.super_admin.superadmin import get_dir_size
 
 company_bp = Blueprint('company_bp', __name__, url_prefix='/company')
@@ -24,11 +26,27 @@ def require_login():
 
 def upload_file(file, folder, company_id=None):
     """
-    Versión mejorada: Si se pasa company_id, guarda en la carpeta técnica 
+    Versión mejorada: Si se pasa company_id, guarda en la carpeta técnica
     de la empresa para que el monitor de almacenamiento pueda contarlo.
     """
     if file and file.filename:
         filename = secure_filename(file.filename)
+        extension = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+        if extension not in {'png', 'jpg', 'jpeg', 'webp', 'pdf'}:
+            raise ValueError('Solo se permiten imágenes PNG/JPG/WEBP o documentos PDF.')
+        content = file.read()
+        if not content:
+            raise ValueError('El archivo está vacío.')
+        if extension == 'pdf':
+            if not content.startswith(b'%PDF-'):
+                raise ValueError('El documento no es un PDF válido.')
+        else:
+            try:
+                with Image.open(BytesIO(content)) as image:
+                    image.verify()
+            except (UnidentifiedImageError, OSError, SyntaxError) as exc:
+                raise ValueError('La imagen está dañada o no es válida.') from exc
+        file.stream.seek(0)
         unique_name = f"{uuid.uuid4().hex}_{filename}"
 
         # Si tenemos ID de empresa, forzamos la ruta técnica
@@ -95,7 +113,7 @@ def create_company():
         )
 
         db.session.add(new_company)
-        db.session.flush() 
+        db.session.flush()
 
         user.company_id = new_company.id
         user.role = 'admin'
@@ -108,10 +126,10 @@ def create_company():
         refresh_session_user(user)
 
         flash("Empresa creada correctamente", "success")
-        return redirect(url_for('dashboard_bp.dashboard'))
+        return redirect(url_for('operations_bp.onboarding'))
 
     return render_template('company/create_company.html', user=user)
-    
+
 # =====================================================
 # CONFIGURACIÓN (Actualiza almacenamiento al subir Logo)
 # =====================================================
@@ -130,22 +148,37 @@ def settings():
     company = Company.query.get_or_404(company_id)
 
     if request.method == 'POST':
-        company.name = request.form.get('name')
-        company.rnc = request.form.get('rnc')
-        company.email = request.form.get('email')
-        company.phone = request.form.get('phone')
-        company.address = request.form.get('address')
+        name = (request.form.get('name') or '').strip()
+        email = (request.form.get('email') or '').strip().lower() or None
+        if len(name) < 2:
+            flash('El nombre comercial debe tener al menos 2 caracteres.', 'danger')
+            return redirect(url_for('company_bp.settings'))
+        if email and ('@' not in email or len(email) > 120):
+            flash('Escribe un correo administrativo válido.', 'danger')
+            return redirect(url_for('company_bp.settings'))
+        company.name = name[:150]
+        company.rnc = (request.form.get('rnc') or '').strip()[:20] or None
+        company.email = email
+        company.phone = (request.form.get('phone') or '').strip()[:20] or None
+        company.address = (request.form.get('address') or '').strip()[:500] or None
+        company.fiscal_mode = 'disabled'
+        company.fiscal_disclaimer = ((request.form.get('fiscal_disclaimer') or 'DOCUMENTO NO FISCAL').strip()[:180]
+                                     or 'DOCUMENTO NO FISCAL')
 
         logo_file = request.files.get('logo')
         if logo_file and logo_file.filename:
+            try:
+                new_logo = upload_file(logo_file, "uploads/companies/logos", company_id=company.id)
+            except ValueError as error:
+                flash(str(error), 'danger')
+                return redirect(url_for('company_bp.settings'))
             delete_file(company.logo)
-            # Guardamos logo en la carpeta técnica de la empresa
-            company.logo = upload_file(logo_file, "uploads/companies/logos", company_id=company.id)
+            company.logo = new_logo
 
         # 🔥 Sincronizar barra de almacenamiento después de cambios
         db.session.flush()
         company.current_storage_usage = get_dir_size(company.id)
-        
+
         db.session.commit()
         session['company_name'] = company.name
 
@@ -177,7 +210,7 @@ def list_companies():
 # IMPERSONAR EMPRESA
 # =====================================================
 
-@company_bp.route('/impersonate/<int:company_id>')
+@company_bp.route('/impersonate/<int:company_id>', methods=['POST'])
 def impersonate_company(company_id):
     user = require_login()
     if not user:
@@ -207,7 +240,7 @@ def impersonate_company(company_id):
 # DETENER IMPERSONACIÓN
 # =====================================================
 
-@company_bp.route('/stop-impersonate')
+@company_bp.route('/stop-impersonate', methods=['POST'])
 def stop_impersonate():
     original_user_id = session.get('original_user_id')
     if not original_user_id:
@@ -236,24 +269,31 @@ def upload_receipt():
     company = Company.query.get(session.get('company_id'))
     file = request.files.get('receipt')
 
+    if company.receipt_status == 'PENDING':
+        flash('Ya tienes un comprobante pendiente de revisión.', 'warning')
+        return redirect(url_for('dashboard_bp.dashboard'))
+
     if file and file.filename:
-        # Guardamos en la carpeta técnica de la empresa
-        receipt_path = upload_file(file, "uploads/payments", company_id=company.id)
+        try:
+            receipt_path = upload_file(file, "uploads/payments", company_id=company.id)
+        except ValueError as error:
+            flash(str(error), 'danger')
+            return redirect(url_for('dashboard_bp.dashboard'))
         company.last_receipt_path = receipt_path
         company.receipt_status = "PENDING"
-        company.status = True 
-        
+        company.status = True
+
         ahora = datetime.utcnow()
         if not company.expiration_date or company.expiration_date < ahora:
             company.grace_period_until = ahora + timedelta(hours=24)
-        
+
         # 🔥 Recalcular barra de almacenamiento
         db.session.flush()
         company.current_storage_usage = get_dir_size(company.id)
-        
+
         db.session.commit()
-        session['subscription_status'] = 'GRACE_PERIOD' 
-        
+        session['subscription_status'] = 'GRACE_PERIOD'
+
         flash("¡Comprobante subido! Almacenamiento actualizado.", "success")
         return redirect(url_for('dashboard_bp.dashboard'))
 
@@ -269,25 +309,33 @@ def upgrade_plan():
     if not user: return redirect(url_for('login_bp.login'))
 
     company = Company.query.get(session.get('company_id'))
-    selected_plan = request.form.get('plan_type') 
+    selected_plan = (request.form.get('plan_type') or '').upper()
     file = request.files.get('receipt')
 
-    if file and selected_plan:
-        path = upload_file(file, "uploads/payments", company_id=company.id)
-        
+    if company.receipt_status == 'PENDING':
+        flash('Ya tienes una solicitud de pago pendiente de revisión.', 'warning')
+        return redirect(url_for('company_bp.view_plans'))
+
+    if file and selected_plan in {'BASIC', 'PRO', 'ULTRA'}:
+        try:
+            path = upload_file(file, "uploads/payments", company_id=company.id)
+        except ValueError as error:
+            flash(str(error), 'danger')
+            return redirect(url_for('company_bp.view_plans'))
+
         company.last_receipt_path = path
         company.receipt_status = "PENDING"
-        company.requested_plan = selected_plan 
-        company.plan_status = "UPGRADING" 
+        company.requested_plan = selected_plan
+        company.plan_status = "UPGRADING"
 
         ahora = datetime.utcnow()
         if not company.expiration_date or company.expiration_date < ahora:
             company.grace_period_until = ahora + timedelta(hours=24)
-        
+
         # 🔥 Recalcular barra de almacenamiento
         db.session.flush()
         company.current_storage_usage = get_dir_size(company.id)
-        
+
         db.session.commit()
         flash(f"Solicitud para el plan {selected_plan} enviada.", "success")
         return redirect(url_for('dashboard_bp.dashboard'))
@@ -303,16 +351,16 @@ def view_plans():
 
     company_id = session.get('company_id')
     company = Company.query.get_or_404(company_id)
-    
+
     days_remaining = 0
     if company.expiration_date:
         fecha_vencimiento = company.expiration_date.date()
         hoy = datetime.utcnow().date()
-        
+
         delta = fecha_vencimiento - hoy
         days_remaining = delta.days
-    
+
         if days_remaining < 0:
             days_remaining = 0
-            
+
     return render_template('company/plans.html', company=company, days_remaining=days_remaining)

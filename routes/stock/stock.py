@@ -7,6 +7,7 @@ from models.warehouse.warehouse import Warehouse
 from models.warehouse_stock.warehouse_stock import WarehouseStock
 from models.user.user import User
 from sqlalchemy import or_
+from datetime import datetime, timedelta
 
 stock_bp = Blueprint('stock_bp', __name__)
 
@@ -190,6 +191,7 @@ def kardex_general():
     movement_type = request.args.get('movement_type')
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
+    search = (request.args.get('search') or '').strip()
 
     query = StockMovement.query.join(Product).filter(StockMovement.company_id == company_id)
 
@@ -200,11 +202,22 @@ def kardex_general():
     if movement_type in ['IN', 'OUT']:
         query = query.filter(StockMovement.movement_type == movement_type)
     if date_from:
-        query = query.filter(StockMovement.created_at >= date_from)
+        try:
+            query = query.filter(StockMovement.created_at >= datetime.strptime(date_from, '%Y-%m-%d'))
+        except ValueError:
+            date_from = ''
     if date_to:
-        query = query.filter(StockMovement.created_at <= date_to)
+        try:
+            query = query.filter(StockMovement.created_at < datetime.strptime(date_to, '%Y-%m-%d') + timedelta(days=1))
+        except ValueError:
+            date_to = ''
+    if search:
+        query = query.filter(or_(Product.name.ilike(f'%{search}%'), Product.sku.ilike(f'%{search}%'),
+                                 StockMovement.reason.ilike(f'%{search}%')))
 
-    movements = query.order_by(StockMovement.created_at.desc()).all()
+    movements = query.order_by(StockMovement.created_at.desc()).limit(1000).all()
+    total_in = sum(int(row.quantity or 0) for row in movements if row.movement_type == 'IN')
+    total_out = sum(int(row.quantity or 0) for row in movements if row.movement_type == 'OUT')
     
     products = Product.query.filter_by(status=True, company_id=company_id).all()
     warehouses = Warehouse.query.filter_by(status=True, company_id=company_id).all()
@@ -219,5 +232,8 @@ def kardex_general():
         movement_type=movement_type,
         date_from=date_from,
         date_to=date_to,
+        search=search,
+        total_in=total_in,
+        total_out=total_out,
         user=user
     )

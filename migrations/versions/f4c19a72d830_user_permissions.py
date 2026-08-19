@@ -14,8 +14,14 @@ depends_on = None
 
 
 def upgrade():
-    op.add_column('users', sa.Column('permissions', sa.Text(), nullable=True))
+    inspector = sa.inspect(op.get_bind())
+    columns = {column['name'] for column in inspector.get_columns('users')}
+    if 'permissions' not in columns:
+        op.add_column('users', sa.Column('permissions', sa.Text(), nullable=True))
 
 
 def downgrade():
-    op.drop_column('users', 'permissions')
+    inspector = sa.inspect(op.get_bind())
+    columns = {column['name'] for column in inspector.get_columns('users')}
+    if 'permissions' in columns:
+        op.drop_column('users', 'permissions')

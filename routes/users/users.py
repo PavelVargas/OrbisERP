@@ -6,6 +6,7 @@ from permissions import ALL_PERMISSIONS, PERMISSION_GROUPS, PROFILE_PRESETS
 from db import db
 from flask_mail import Message
 from itsdangerous import SignatureExpired, BadTimeSignature
+from security import password_error
 
 users_bp = Blueprint('users_bp', __name__)
 
@@ -125,6 +126,10 @@ def create_user():
         if not email or not name or not password or not role or not cedula:
             flash('Todos los campos son obligatorios', 'danger')
             return redirect(url_for('users_bp.create_user'))
+        issue = password_error(password)
+        if issue:
+            flash(issue, 'danger')
+            return redirect(url_for('users_bp.create_user'))
 
         existing_user = User.query.filter_by(email=email).first()
         if existing_user:
@@ -220,6 +225,10 @@ def edit_user(id):
             target_user.set_permissions(requested_permissions)
 
         if password and password.strip() != "":
+            issue = password_error(password)
+            if issue:
+                flash(issue, 'danger')
+                return redirect(url_for('users_bp.edit_user', id=id))
             target_user.set_password(password)
         
         target_user.warehouse_id = int(warehouse_id) if warehouse_id and warehouse_id != "" else None
@@ -350,8 +359,9 @@ def reset_with_token(token):
 
     if request.method == 'POST':
         nueva_clave = request.form.get('password')
-        if not nueva_clave or len(nueva_clave) < 8:
-            flash("La contraseña debe tener al menos 8 caracteres.", "danger")
+        issue = password_error(nueva_clave)
+        if issue:
+            flash(issue, "danger")
             return render_template('users/reset_password_form.html', token=token)
         user_to_update.set_password(nueva_clave)
         db.session.commit()

@@ -122,7 +122,7 @@ def index():
     total_sales_month = 0.0
     low_stock_count = 0
     recent_closings = []
-    chart_data = [0]*7
+    chart_data = []
     chart_labels = []
 
     # ==========================================
@@ -271,10 +271,17 @@ def export_csv():
 def monthly_history():
     company_id, currency_symbol, rate = get_company_context()
     if not company_id: return redirect(url_for('login_bp.login'))
+    rate = rate or Decimal('1')
     month_format = func.to_char(Sale.created_at, 'YYYY-MM').label('month')
-    query = db.session.query(month_format, User.name.label('seller_name'), func.sum(Sale.total).label('revenue'), func.count(Sale.id).label('transactions')).join(User, Sale.user_id == User.id).filter(Sale.company_id == company_id, Sale.status == 'COMPLETED').group_by('month', User.name).order_by('month')
+    query = db.session.query(month_format, User.name.label('seller_name'), func.sum(Sale.total).label('revenue'), func.count(Sale.id).label('transactions')).join(User, Sale.user_id == User.id).filter(Sale.company_id == company_id, Sale.status == 'COMPLETED').group_by('month', User.name).order_by(month_format.desc(), User.name.asc())
     results = query.all()
-    return render_template('reports/monthly_history.html', results=results, sym=currency_symbol, rate=rate)
+    total_revenue = sum((Decimal(str(row.revenue or 0)) for row in results), Decimal('0')) / rate
+    total_transactions = sum(row.transactions or 0 for row in results)
+    sellers = sorted({row.seller_name for row in results})
+    user = db.session.get(User, session.get('user_id'))
+    return render_template('reports/monthly_history.html', results=results, sym=currency_symbol, rate=rate,
+                           total_revenue=total_revenue, total_transactions=total_transactions,
+                           sellers=sellers, user=user)
 
 @reports_bp.route('/inventory-health')
 def inventory_health():

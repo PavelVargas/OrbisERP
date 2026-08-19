@@ -1,16 +1,24 @@
-from flask import Flask, session, redirect, url_for, render_template, request, jsonify, abort, flash
+from flask import Flask, session, redirect, url_for, render_template, request, jsonify, abort, flash, g
 from db import db
 import os
+import sys
 from datetime import datetime, timezone
 from flask_mail import Mail
 from itsdangerous import URLSafeTimedSerializer
 from flask_migrate import Migrate
 from sqlalchemy import inspect, text
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
+import logging
+from werkzeug.middleware.proxy_fix import ProxyFix
+from config import Config
+from security import init_security, password_error
 # MODELS 
 from models.user.user import User
 from models.divisas.divisas import ExchangeRate 
 from models.company.company import Company
 from models.company.company import GlobalAnnouncement
+from models.backoffice import AppNotification
 from permissions import required_permissions
 
 # BLUEPRINTS
@@ -36,47 +44,29 @@ from routes.super_admin.superadmin import superadmin_bp
 from routes.reports.reports import reports_bp
 from routes.divisas.divisas import divisas_bp
 from routes.launchpad.launchpad import launchpad_bp
+from routes.operations import operations_bp
+from routes.backoffice import backoffice_bp
 
 app = Flask(__name__)
+app.config.from_object(Config)
+Config.validate()
+if app.config['TRUST_PROXY']:
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+app.permanent_session_lifetime = app.config['PERMANENT_SESSION_LIFETIME']
+init_security(app)
 
-# =========================
-# 🐘 POSTGRESQL (LOCAL + DATABASE_URL EN PRODUCCIÓN)
-# =========================
-LOCAL_POSTGRES_URL = "postgresql+psycopg://postgres:pavel@localhost:5432/db_inventario"
-DATABASE_URL = (os.getenv("DATABASE_URL") or LOCAL_POSTGRES_URL).strip()
-
-if DATABASE_URL.startswith("postgresql://"):
-    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
-
-if not DATABASE_URL.startswith("postgresql+psycopg://"):
-    raise RuntimeError("OrbisERP requiere una conexión PostgreSQL válida.")
-
-if os.getenv("DATABASE_URL"):
-    print("🐘 PostgreSQL configurado mediante DATABASE_URL")
-else:
-    print("🐘 PostgreSQL local: db_inventario")
-
-app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
-app.secret_key = os.getenv("SECRET_KEY") or os.urandom(32)
-app.config.update(
-    SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE='Lax',
-    SESSION_COOKIE_SECURE=os.getenv('COOKIE_SECURE', '1' if os.getenv('RAILWAY_ENVIRONMENT') else '0') == '1',
-    MAX_CONTENT_LENGTH=int(os.getenv('MAX_UPLOAD_MB', '10')) * 1024 * 1024,
-)
+log_dir = Path(os.getenv('LOG_DIR', Path(__file__).resolve().parent / 'logs'))
+log_dir.mkdir(parents=True, exist_ok=True)
+handler = RotatingFileHandler(log_dir / 'orbiserp.log', maxBytes=5_000_000, backupCount=5)
+handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(name)s %(message)s'))
+handler.setLevel(logging.INFO)
+app.logger.addHandler(handler)
+app.logger.setLevel(logging.INFO)
+print('🐘 PostgreSQL configurado de forma segura')
 
 # =========================
 # 📧 MAIL CONFIG
 # =========================
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = os.getenv("MAIL_USERNAME", "tuemail@gmail.com")
-app.config['MAIL_PASSWORD'] = os.getenv("MAIL_PASSWORD", "password")
-app.config['MAIL_DEFAULT_SENDER'] = app.config['MAIL_USERNAME']
-
 mail = Mail(app)
 s = URLSafeTimedSerializer(app.secret_key)
 
@@ -97,6 +87,9 @@ def create_superadmin():
     admin_password = os.getenv('SUPERADMIN_PASSWORD')
     if not admin_email or not admin_password:
         return
+    issue = password_error(admin_password)
+    if issue:
+        raise RuntimeError(f'SUPERADMIN_PASSWORD inválida: {issue}')
     try:
         admin = User.query.filter_by(email=admin_email.lower()).first()
         
@@ -122,6 +115,22 @@ def create_superadmin():
 
     except Exception as e:
         print("⚠️ Error creando superadmin:", e)
+
+
+@app.cli.command('create-superadmin')
+def create_superadmin_command():
+    """Create the first superadmin from environment variables."""
+    if not os.getenv('SUPERADMIN_EMAIL') or not os.getenv('SUPERADMIN_PASSWORD'):
+        raise RuntimeError('Configura SUPERADMIN_EMAIL y SUPERADMIN_PASSWORD antes de ejecutar el comando.')
+    create_superadmin()
+
+
+@app.cli.command('check-production')
+def check_production_command():
+    """Validate configuration and the PostgreSQL connection."""
+    Config.validate()
+    db.session.execute(text('SELECT 1'))
+    print('✅ Configuración y PostgreSQL listos para producción')
 
 
 def ensure_schema_compatibility():
@@ -202,14 +211,36 @@ def ensure_schema_compatibility():
                 connection.execute(text('ALTER TABLE purchase_order_items ADD COLUMN tax_included BOOLEAN DEFAULT FALSE NOT NULL'))
                 print('✅ PostgreSQL actualizado: purchase_order_items.tax_included agregado')
 
-try:
-    with app.app_context():
-        db.create_all()
-        ensure_schema_compatibility()
-        create_superadmin()
-        print("✅ DB lista")
-except Exception as e:
-    print("⚠️ DB error:", e)
+    if 'companies' in table_names:
+        company_columns = {column['name'] for column in schema.get_columns('companies')}
+        additions = {
+            'billing_provider': 'VARCHAR(40)', 'billing_customer_id': 'VARCHAR(120)',
+            'billing_subscription_id': 'VARCHAR(120)',
+            'cancel_at_period_end': 'BOOLEAN DEFAULT FALSE NOT NULL',
+            'onboarding_completed': 'BOOLEAN DEFAULT FALSE NOT NULL',
+        }
+        with engine.begin() as connection:
+            for column, definition in additions.items():
+                if column not in company_columns:
+                    connection.execute(text(f'ALTER TABLE companies ADD COLUMN {column} {definition}'))
+                    print(f'✅ PostgreSQL actualizado: companies.{column} agregado')
+
+def _is_alembic_command():
+    """Avoid changing the schema while Flask-Migrate/Alembic is importing app."""
+    arguments = {argument.lower() for argument in sys.argv[1:]}
+    return 'db' in arguments or 'alembic' in arguments
+
+
+if app.config['AUTO_CREATE_SCHEMA'] and not _is_alembic_command():
+    try:
+        with app.app_context():
+            db.create_all()
+            ensure_schema_compatibility()
+            create_superadmin()
+            print("✅ DB local lista")
+    except Exception as e:
+        app.logger.exception('No se pudo preparar la base de datos local')
+        print("⚠️ DB error:", e)
 
 # =========================
 # REGISTER BLUEPRINTS
@@ -236,6 +267,8 @@ app.register_blueprint(cash_bp)
 app.register_blueprint(reports_bp)
 app.register_blueprint(divisas_bp)
 app.register_blueprint(launchpad_bp)
+app.register_blueprint(operations_bp)
+app.register_blueprint(backoffice_bp)
 
 # =========================
 # ROUTES
@@ -245,7 +278,17 @@ app.register_blueprint(launchpad_bp)
 def inject_global_announcements():
     # Buscamos si hay algún anuncio activo en la DB
     active = GlobalAnnouncement.query.filter_by(is_active=True).first()
-    return dict(active_announcement=active)
+    unread_notifications = 0
+    if session.get('company_id') and session.get('user_id'):
+        try:
+            from sqlalchemy import or_
+            unread_notifications = AppNotification.query.filter(
+                AppNotification.company_id == session['company_id'], AppNotification.read_at.is_(None),
+                or_(AppNotification.user_id.is_(None), AppNotification.user_id == session['user_id'])
+            ).count()
+        except Exception:
+            db.session.rollback()
+    return dict(active_announcement=active, unread_notifications=unread_notifications)
 
 @app.route('/')
 def index():
@@ -275,13 +318,14 @@ def set_currency(iso_code):
 def enforce_request_security():
     """Central authentication, same-origin and read-only enforcement."""
     public_endpoints = {
-        'index', 'login_bp.login', 'login_bp.logout',
+        'index', 'login_bp.login', 'login_bp.two_factor', 'login_bp.logout',
         'login_bp.forgot_password', 'registrar.register',
-        'users_bp.reset_with_token', 'static'
+        'users_bp.reset_with_token', 'static',
+        'operations_bp.health_live', 'operations_bp.health_ready', 'operations_bp.billing_webhook'
     }
     endpoint = request.endpoint or ''
 
-    if request.method in {'POST', 'PUT', 'PATCH', 'DELETE'}:
+    if request.method in {'POST', 'PUT', 'PATCH', 'DELETE'} and endpoint != 'operations_bp.billing_webhook':
         origin = request.headers.get('Origin')
         referer = request.headers.get('Referer')
         expected = request.host_url.rstrip('/')
@@ -369,6 +413,12 @@ def add_security_headers(response):
     response.headers.setdefault('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
     if request.path.startswith('/api/'):
         response.headers.setdefault('Cache-Control', 'no-store')
+    if request.method in {'POST', 'PUT', 'PATCH', 'DELETE'} and request.endpoint != 'static':
+        app.logger.info(
+            'audit request_id=%s method=%s path=%s status=%s user_id=%s company_id=%s ip=%s',
+            getattr(g, 'request_id', '-'), request.method, request.path, response.status_code,
+            session.get('user_id'), session.get('company_id'), request.remote_addr,
+        )
     return response
 
 
@@ -384,6 +434,29 @@ def forbidden(_error):
 @app.errorhandler(413)
 def file_too_large(_error):
     return jsonify({'error': 'El archivo supera el límite permitido.'}), 413
+
+
+@app.errorhandler(400)
+@app.errorhandler(429)
+def friendly_request_error(error):
+    if request.is_json or request.path.startswith('/api/'):
+        return jsonify(error=getattr(error, 'description', 'Solicitud inválida'), request_id=getattr(g, 'request_id', None)), error.code
+    user_id = session.get('user_id')
+    user = db.session.get(User, user_id) if user_id else None
+    return render_template('errors/request_error.html', user=user, error=error,
+                           request_id=getattr(g, 'request_id', None)), error.code
+
+
+@app.errorhandler(500)
+def internal_error(error):
+    db.session.rollback()
+    app.logger.error('Unhandled request error id=%s', getattr(g, 'request_id', '-'), exc_info=error)
+    if request.is_json or request.path.startswith('/api/'):
+        return jsonify(error='Ocurrió un error interno.', request_id=getattr(g, 'request_id', None)), 500
+    user_id = session.get('user_id')
+    user = db.session.get(User, user_id) if user_id else None
+    return render_template('errors/request_error.html', user=user, error=error,
+                           request_id=getattr(g, 'request_id', None)), 500
 
 # =========================
 # RUN

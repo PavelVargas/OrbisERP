@@ -1,0 +1,199 @@
+2026-08-18 00:51:02,377 INFO app audit request_id=c15d10b56293b3cb7f2c8053 method=POST path=/login status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-18 00:52:29,594 INFO app audit request_id=30059d1be345f9d4aefcb12d method=POST path=/logout status=302 user_id=None company_id=None ip=127.0.0.1
+2026-08-18 00:52:32,878 INFO app audit request_id=da66d14d455c897a2e8c72ef method=POST path=/login status=302 user_id=1 company_id=None ip=127.0.0.1
+2026-08-18 00:52:52,223 INFO app audit request_id=56a5700e30d0f418f5b74fb0 method=POST path=/logout status=302 user_id=None company_id=None ip=127.0.0.1
+2026-08-18 00:53:07,082 INFO app audit request_id=551fedfd1a5c6ccf57c050e9 method=POST path=/login status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-18 00:53:57,343 INFO app audit request_id=68d6c5e771698f94d2a0fb0a method=POST path=/purchase/create status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-18 00:54:04,420 INFO app audit request_id=938053c89fdb780bb80606d0 method=POST path=/purchase/cancel/5 status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-18 01:33:18,255 INFO app audit request_id=aa5b7d12eabeee29f3dc44c7 method=POST path=/operations/setup status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-18 01:33:44,371 INFO app audit request_id=7dc8e4272e567ac29855b8b6 method=POST path=/logout status=302 user_id=None company_id=None ip=127.0.0.1
+2026-08-18 01:33:54,576 INFO app audit request_id=5d50cb9a9e32c14454dab26c method=POST path=/login status=302 user_id=1 company_id=None ip=127.0.0.1
+2026-08-18 01:33:57,971 INFO app audit request_id=0adefec10f9976dd657e16f9 method=POST path=/logout status=302 user_id=None company_id=None ip=127.0.0.1
+2026-08-18 01:34:02,014 INFO app audit request_id=ea5a047fca9485905018ac1a method=POST path=/login status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-18 01:34:30,747 INFO app audit request_id=e1ba60721b61c5b0bf2f5283 method=POST path=/company/upgrade-plan status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-18 01:35:27,037 INFO app audit request_id=8d392d1acde264e408323a58 method=POST path=/backoffice/inventory-counts status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-18 01:36:14,139 INFO app audit request_id=43ab27365664776b7f0fb437 method=POST path=/logout status=302 user_id=None company_id=None ip=127.0.0.1
+2026-08-18 01:36:17,454 INFO app audit request_id=19d0a3f5b447146ff593839e method=POST path=/login status=302 user_id=1 company_id=None ip=127.0.0.1
+2026-08-18 01:36:25,043 INFO app audit request_id=2bda0d729a37b5492b4a61d7 method=POST path=/superadmin/approve_payment/1 status=302 user_id=1 company_id=None ip=127.0.0.1
+2026-08-18 01:36:35,167 INFO app audit request_id=ed4349175fcd2bf6f51c27f9 method=POST path=/superadmin/broadcast status=302 user_id=1 company_id=None ip=127.0.0.1
+2026-08-18 01:36:40,577 INFO app audit request_id=a7330f4f70a424e4b43fb305 method=POST path=/logout status=302 user_id=None company_id=None ip=127.0.0.1
+2026-08-18 01:36:44,002 INFO app audit request_id=5cac0ac858843bf1ad2bed53 method=POST path=/login status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-18 01:37:02,449 INFO app audit request_id=1d5a09c6e4158b5f3a3bd597 method=POST path=/backoffice/security status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-18 02:06:53,420 INFO app audit request_id=b75d4bac2ab3cb2155f114a6 method=POST path=/logout status=302 user_id=None company_id=None ip=127.0.0.1
+2026-08-18 09:23:58,334 INFO app audit request_id=b2ceb89fbb018faff1bd0459 method=POST path=/login status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-18 09:40:45,122 INFO app audit request_id=9761ee8ef832ae4e0e5d966a method=POST path=/logout status=302 user_id=None company_id=None ip=127.0.0.1
+2026-08-18 09:45:00,311 INFO app audit request_id=ffe3636df6a02aabb60dc77e method=POST path=/login status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-18 10:02:00,979 INFO app audit request_id=57a8060186fe58e71468628c method=POST path=/backoffice/inventory-counts/1 status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-18 10:02:05,234 INFO app audit request_id=78f1ea74e9a01704171e2991 method=POST path=/backoffice/inventory-counts/1/approve status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-18 11:14:28,234 INFO app audit request_id=80b1b2f5771f213a8269b2de method=POST path=/logout status=302 user_id=None company_id=None ip=127.0.0.1
+2026-08-18 11:14:32,476 INFO app audit request_id=f0afc9703bdb60be041d4908 method=POST path=/login status=302 user_id=1 company_id=None ip=127.0.0.1
+2026-08-18 11:14:35,307 INFO app audit request_id=22d5d68bab4fc26145d7efae method=POST path=/superadmin/broadcast/clear status=302 user_id=1 company_id=None ip=127.0.0.1
+2026-08-18 11:14:37,219 INFO app audit request_id=94465d6bffc80473ba1ad3ba method=POST path=/superadmin/refresh_storage/1 status=302 user_id=1 company_id=None ip=127.0.0.1
+2026-08-18 11:14:38,706 INFO app audit request_id=b6fab143a1811e9b23c58b7a method=POST path=/logout status=302 user_id=None company_id=None ip=127.0.0.1
+2026-08-18 11:14:41,348 INFO app audit request_id=9db604214f52ea1c1d9eab5b method=POST path=/login status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-18 12:00:30,529 INFO app audit request_id=95baea8501f5ecf14f336851 method=POST path=/login status=302 user_id=2 company_id=1 ip=10.0.0.158
+2026-08-18 12:00:58,712 INFO app audit request_id=73b171cc67319e4a5ae558dc method=POST path=/edit/6 status=302 user_id=2 company_id=1 ip=10.0.0.158
+2026-08-18 12:01:31,598 INFO app audit request_id=3643e39054f3539040db51c3 method=POST path=/transfers/create status=302 user_id=2 company_id=1 ip=10.0.0.158
+2026-08-18 12:01:36,814 INFO app audit request_id=de89c4216d7179ba06b81128 method=POST path=/transfers/receive/7 status=302 user_id=2 company_id=1 ip=10.0.0.158
+2026-08-18 12:03:39,870 INFO app audit request_id=ba86443288c33447035d355e method=POST path=/login status=302 user_id=None company_id=None ip=10.0.0.191
+2026-08-18 12:03:45,613 INFO app audit request_id=ad9cb0ccdebcad935db2d5ad method=POST path=/login status=302 user_id=None company_id=None ip=10.0.0.191
+2026-08-18 12:03:50,932 INFO app audit request_id=0014e6db00c1fc6bb0551c2c method=POST path=/login status=302 user_id=2 company_id=1 ip=10.0.0.191
+2026-08-18 12:05:48,707 INFO app audit request_id=3189159374a04522348a5fd3 method=POST path=/sales/create status=400 user_id=2 company_id=1 ip=10.0.0.191
+2026-08-18 12:05:52,433 INFO app audit request_id=d8627de681b7f8b4bf831b7a method=POST path=/sales/create status=400 user_id=2 company_id=1 ip=10.0.0.191
+2026-08-18 12:05:54,022 INFO app audit request_id=8b41a1a659f6139b20af19ca method=POST path=/sales/create status=400 user_id=2 company_id=1 ip=10.0.0.191
+2026-08-18 12:05:59,827 INFO app audit request_id=ed974ef8e5d646117bccc9ae method=POST path=/sales/create status=400 user_id=2 company_id=1 ip=10.0.0.191
+2026-08-18 12:06:02,468 INFO app audit request_id=814fbd2b6d1ec96129f09dc2 method=POST path=/sales/create status=400 user_id=2 company_id=1 ip=10.0.0.191
+2026-08-18 12:06:03,880 INFO app audit request_id=d5cdaa00ce86f215987e2002 method=POST path=/sales/create status=400 user_id=2 company_id=1 ip=10.0.0.191
+2026-08-18 12:06:18,207 INFO app audit request_id=658fa866aaa6ed05d2090fe9 method=POST path=/logout status=302 user_id=None company_id=None ip=10.0.0.191
+2026-08-18 12:07:18,415 INFO app audit request_id=6f29a57e11d365538c238a0c method=POST path=/login status=302 user_id=2 company_id=1 ip=10.0.0.191
+2026-08-18 15:00:48,449 ERROR app Exception on /reports/monthly-history [GET]
+Traceback (most recent call last):
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/routes/reports/reports.py", line 277, in monthly_history
+    return render_template('reports/monthly_history.html', results=results, sym=currency_symbol, rate=rate)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/flask/templating.py", line 149, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/jinja2/environment.py", line 1087, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/jinja2/environment.py", line 1016, in get_template
+    return self._load_template(name, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/jinja2/environment.py", line 975, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/jinja2/loaders.py", line 126, in load
+    source, filename, uptodate = self.get_source(environment, name)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/flask/templating.py", line 65, in get_source
+    return self._get_source_fast(environment, template)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/flask/templating.py", line 99, in _get_source_fast
+    raise TemplateNotFound(template)
+jinja2.exceptions.TemplateNotFound: reports/monthly_history.html
+2026-08-18 15:00:48,477 ERROR app Unhandled request error id=101eec169be15a581f786b74
+werkzeug.exceptions.InternalServerError: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+2026-08-18 15:00:57,993 INFO app audit request_id=0a8a305ac090c1265a79659d method=POST path=/sales/create status=400 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-18 15:02:00,656 ERROR app Exception on /reports/monthly-history [GET]
+Traceback (most recent call last):
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/routes/reports/reports.py", line 277, in monthly_history
+    return render_template('reports/monthly_history.html', results=results, sym=currency_symbol, rate=rate)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/flask/templating.py", line 149, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/jinja2/environment.py", line 1087, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/jinja2/environment.py", line 1016, in get_template
+    return self._load_template(name, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/jinja2/environment.py", line 975, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/jinja2/loaders.py", line 126, in load
+    source, filename, uptodate = self.get_source(environment, name)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/flask/templating.py", line 65, in get_source
+    return self._get_source_fast(environment, template)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/flask/templating.py", line 99, in _get_source_fast
+    raise TemplateNotFound(template)
+jinja2.exceptions.TemplateNotFound: reports/monthly_history.html
+2026-08-18 15:02:00,658 ERROR app Unhandled request error id=bb18883c9369d72edd567e1f
+werkzeug.exceptions.InternalServerError: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+2026-08-18 15:02:04,888 ERROR app Exception on /reports/monthly-history [GET]
+Traceback (most recent call last):
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/routes/reports/reports.py", line 277, in monthly_history
+    return render_template('reports/monthly_history.html', results=results, sym=currency_symbol, rate=rate)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/flask/templating.py", line 149, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/jinja2/environment.py", line 1087, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/jinja2/environment.py", line 1016, in get_template
+    return self._load_template(name, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/jinja2/environment.py", line 975, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/jinja2/loaders.py", line 126, in load
+    source, filename, uptodate = self.get_source(environment, name)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/flask/templating.py", line 65, in get_source
+    return self._get_source_fast(environment, template)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/flask/templating.py", line 99, in _get_source_fast
+    raise TemplateNotFound(template)
+jinja2.exceptions.TemplateNotFound: reports/monthly_history.html
+2026-08-18 15:02:04,891 ERROR app Unhandled request error id=61a59abeb6724ec803fa9874
+werkzeug.exceptions.InternalServerError: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+2026-08-19 09:26:01,304 INFO app audit request_id=411b680ca3283020a4b55e57 method=POST path=/login status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 11:44:53,453 INFO app audit request_id=e0c838b956182629d570cedb method=POST path=/editar/4 status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 13:02:49,071 INFO app audit request_id=8f855394aad1d610635ce305 method=POST path=/crm/api/update_status status=200 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 13:02:49,668 INFO app audit request_id=3e0e9c32cef39821ffc89af0 method=POST path=/crm/api/update_status status=200 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 13:02:50,049 INFO app audit request_id=0e5370f2cb3288f6c9341e02 method=POST path=/crm/api/update_status status=200 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 13:02:50,432 INFO app audit request_id=968fda5caef4c0c054a1cb76 method=POST path=/crm/api/update_status status=200 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 13:03:22,127 INFO app audit request_id=d9b6f18dd22075e74144991a method=POST path=/purchase/create status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 13:03:35,496 INFO app audit request_id=20e834c7da7c94cc5453a5c4 method=POST path=/purchase/6 status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 13:03:45,649 INFO app audit request_id=8a919c502058f5a9783d4b23 method=POST path=/purchase/6/save status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 13:36:53,636 INFO app audit request_id=67369b18d8b98c6ccbdfc73e method=POST path=/purchase/6/save status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 13:55:51,272 INFO app audit request_id=05b6ad39af6a085f3e539484 method=POST path=/purchase/6/save status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 14:00:45,842 INFO app audit request_id=9491c689ad81871e4829315e method=POST path=/purchase/cancel/6 status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 14:00:52,623 INFO app audit request_id=33fcb30e2ba7da774b0a84ed method=POST path=/purchase/create status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 14:05:47,053 INFO app audit request_id=5399e4542138e3de5c89a79e method=POST path=/purchase/7 status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 14:05:53,423 INFO app audit request_id=842e9f971702dc625aca4c88 method=POST path=/purchase/item/delete/11 status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 14:10:10,911 INFO app audit request_id=145b16b6934c7a0afc142da2 method=POST path=/purchase/7 status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 14:10:33,072 INFO app audit request_id=bee0962424de76ee36880ae6 method=POST path=/purchase/7 status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 14:10:55,043 INFO app audit request_id=3c70fd84c27142f12b2d40ba method=POST path=/purchase/7 status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 14:11:05,233 INFO app audit request_id=717803eb2c0863d145a0ebc2 method=POST path=/purchase/7/tax status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 14:11:14,888 INFO app audit request_id=61149569e2bce8b1b40097ce method=POST path=/purchase/7/tax status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 14:12:15,318 INFO app audit request_id=2f78c9c9368c96116fab56b4 method=POST path=/purchase/receive/7 status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 14:13:09,725 INFO app audit request_id=389f26b60dc765c7e2acc0a7 method=POST path=/sales/create status=200 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 14:13:11,046 INFO app audit request_id=b5986c7f2b4dbf86a338ab53 method=POST path=/sales/create status=200 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 14:13:15,817 INFO app audit request_id=0e7ceb916d21e6b7846efc49 method=POST path=/sales/create status=200 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 14:13:16,087 INFO app audit request_id=db579327e08895e8b1e894c3 method=POST path=/sales/create status=200 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 14:13:16,459 INFO app audit request_id=26d0bf29b34baa4df9c0461c method=POST path=/sales/create status=200 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 14:13:18,159 INFO app audit request_id=c7d250df87fef56c9a1085d2 method=POST path=/sales/remove-item/46 status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 14:13:18,358 INFO app audit request_id=315ec9e28467aa98c86253d5 method=POST path=/sales/remove-item/47 status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 14:13:18,514 INFO app audit request_id=7ffa3405364b96298e37029f method=POST path=/sales/remove-item/48 status=302 user_id=2 company_id=1 ip=127.0.0.1
+2026-08-19 14:15:49,691 INFO app audit request_id=b82dbd250d87ddd4ffcb46eb method=POST path=/backoffice/payables/1/payment status=302 user_id=2 company_id=1 ip=127.0.0.1

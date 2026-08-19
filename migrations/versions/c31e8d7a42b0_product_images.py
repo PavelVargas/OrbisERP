@@ -13,8 +13,14 @@ depends_on = None
 
 
 def upgrade():
-    op.add_column('products', sa.Column('image_path', sa.String(length=255), nullable=True))
+    inspector = sa.inspect(op.get_bind())
+    columns = {column['name'] for column in inspector.get_columns('products')}
+    if 'image_path' not in columns:
+        op.add_column('products', sa.Column('image_path', sa.String(length=255), nullable=True))
 
 
 def downgrade():
-    op.drop_column('products', 'image_path')
+    inspector = sa.inspect(op.get_bind())
+    columns = {column['name'] for column in inspector.get_columns('products')}
+    if 'image_path' in columns:
+        op.drop_column('products', 'image_path')

@@ -1,176 +1,179 @@
 /**
- * OrbisERP Dashboard Engine
- * Gestiona la renderización de gráficos y UI dinámica con soporte multimoneda.
+ * OrbisERP command center charts.
+ * Data is serialized by Jinja in #dashboard-data; no business values live here.
  */
+(function () {
+    'use strict';
 
-const initDashboardChart = () => {
-    const canvas = document.getElementById('myChart');
-    if (!canvas) return;
+    const payloadNode = document.getElementById('dashboard-data');
+    if (!payloadNode) return;
 
-    const ctx = canvas.getContext('2d');
-
-    // 1. Extraer estilos computados de dashboard.css para mantener coherencia visual
-    const style = getComputedStyle(document.body);
-
-    const primaryColor = style.getPropertyValue('--accent').trim() || style.getPropertyValue('--primary').trim() || '#faa200';
-    const textColor = style.getPropertyValue('--text-muted').trim() || '#94a3b8';
-    const gridColor = style.getPropertyValue('--border').trim() || 'rgba(0,0,0,0.1)';
-    const cardBg = style.getPropertyValue('--bg-card').trim() || '#ffffff';
-    const mainText = style.getPropertyValue('--text-main').trim() || '#1e293b';
-
-    // 2. Recuperar datos y CONFIGURACIÓN DE DIVISA desde data-attributes
-    // Estos valores vienen del backend (app.py -> inject_global_data)
-    const labels = JSON.parse(canvas.getAttribute('data-labels') || '[]');
-    const dataValues = JSON.parse(canvas.getAttribute('data-values') || '[]');
-    const currencyISO = canvas.getAttribute('data-currency-iso') || 'DOP';
-    const currencySymbol = canvas.getAttribute('data-currency-symbol') || 'RD$';
-
-    // 3. Crear gradiente vertical basado en el color de acento actual
-    const gradient = ctx.createLinearGradient(0, 0, 0, 320);
-    gradient.addColorStop(0, primaryColor + '55'); // ~33% opacidad arriba
-    gradient.addColorStop(0.6, primaryColor + '14');
-    gradient.addColorStop(1, primaryColor + '00'); // transparente abajo
-
-    // Destruir instancia previa si existe (evita solapamiento al redibujar)
-    const existingChart = Chart.getChart("myChart");
-    if (existingChart) {
-        existingChart.destroy();
+    let data;
+    try {
+        data = JSON.parse(payloadNode.textContent || '{}');
+    } catch (error) {
+        console.error('No se pudieron leer los datos del dashboard.', error);
+        return;
     }
 
-    // 4. Configuración de Chart.js
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Ventas Totales',
-                data: dataValues,
-                fill: true,
-                backgroundColor: gradient,
-                borderColor: primaryColor,
-                borderWidth: 3,
-                pointBackgroundColor: cardBg,
-                pointBorderColor: primaryColor,
-                pointBorderWidth: 2.5,
-                pointRadius: 4,
-                pointHoverRadius: 7,
-                pointHoverBackgroundColor: primaryColor,
-                pointHoverBorderColor: cardBg,
-                pointHoverBorderWidth: 3,
-                cubicInterpolationMode: 'monotone',
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            layout: {
-                padding: { top: 8, right: 4, bottom: 0, left: 0 }
-            },
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    backgroundColor: cardBg,
-                    titleColor: mainText,
-                    bodyColor: mainText,
-                    padding: 14,
-                    borderColor: primaryColor + '40',
-                    borderWidth: 1,
-                    cornerRadius: 14,
-                    displayColors: false,
-                    titleFont: {
-                        family: "'DM Sans', sans-serif",
-                        size: 12,
-                        weight: '600'
-                    },
-                    bodyFont: {
-                        family: "'DM Mono', monospace",
-                        size: 13,
-                        weight: '500'
-                    },
-                    boxPadding: 6,
-                    callbacks: {
-                        label: function(context) {
-                            // FORMATEO DINÁMICO: Fiel a la moneda de la sesión/empresa
-                            if (context.parsed.y !== null) {
-                                return new Intl.NumberFormat('en-US', {
-                                    style: 'currency',
-                                    currency: currencyISO
-                                }).format(context.parsed.y);
-                            }
-                            return context.parsed.y;
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    grid: {
-                        display: false
-                    },
-                    border: {
-                        display: false
-                    },
-                    ticks: {
-                        color: textColor,
-                        font: {
-                            family: "'DM Sans', sans-serif",
-                            size: 11,
-                            weight: '500'
-                        }
-                    }
-                },
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: gridColor,
-                        drawBorder: false,
-                        // líneas punteadas: look más limpio que las sólidas en un panel redondeado
-                        dash: [4, 5]
-                    },
-                    border: {
-                        display: false
-                    },
-                    ticks: {
-                        color: textColor,
-                        font: {
-                            family: "'DM Mono', monospace",
-                            size: 11
-                        },
-                        // ETIQUETA LATERAL: usa el símbolo de la base de datos
-                        callback: function(value) {
-                            return currencySymbol + ' ' + value.toLocaleString();
-                        }
-                    }
-                }
-            },
-            interaction: {
-                intersect: false,
-                mode: 'index',
-            }
+    const palette = ['#df7419', '#3b6ff5', '#098c68', '#8456e8', '#d89b24', '#d8444d'];
+    const paymentNames = {
+        CASH: 'Efectivo', CARD: 'Tarjeta', TRANSFER: 'Transferencia',
+        CREDIT: 'Crédito', CHECK: 'Cheque', OTHER: 'Otro', OTRO: 'Otro'
+    };
+    let salesChart;
+    let paymentChart;
+
+    const css = (name, fallback) => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+    const money = (value, compact = false) => {
+        const amount = Number(value || 0);
+        const options = compact && Math.abs(amount) >= 1000
+            ? { notation: 'compact', maximumFractionDigits: 1 }
+            : { minimumFractionDigits: 0, maximumFractionDigits: 2 };
+        return `${data.currencySymbol || 'RD$'} ${new Intl.NumberFormat('es-DO', options).format(amount)}`;
+    };
+
+    function renderLegend() {
+        const legend = document.getElementById('paymentLegend');
+        if (!legend) return;
+        if (!data.paymentLabels?.length) {
+            legend.innerHTML = '<div class="empty-state empty-state--small"><i class="bi bi-wallet2"></i><strong>Sin cobros este mes</strong></div>';
+            return;
         }
-    });
-};
+        legend.replaceChildren(...data.paymentLabels.map((label, index) => {
+            const row = document.createElement('span');
+            const swatch = document.createElement('i');
+            const name = document.createElement('span');
+            const value = document.createElement('b');
+            swatch.style.backgroundColor = palette[index % palette.length];
+            name.textContent = paymentNames[String(label).toUpperCase()] || label;
+            value.textContent = money(data.paymentValues[index]);
+            row.append(swatch, name, value);
+            return row;
+        }));
+    }
 
-const observeThemeChange = () => {
-    const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            if (mutation.attributeName === 'class' || mutation.attributeName === 'data-theme') {
-                // Pequeño delay para dejar que el CSS se aplique antes de leer colores
-                setTimeout(() => {
-                    initDashboardChart();
-                }, 100);
-            }
-        });
-    });
-    observer.observe(document.documentElement, { attributes: true });
-    observer.observe(document.body, { attributes: true });
-};
+    function renderCharts() {
+        renderLegend();
+        if (typeof window.Chart === 'undefined') return;
 
-// Inicialización al cargar el DOM
-document.addEventListener('DOMContentLoaded', () => {
-    initDashboardChart();
-    observeThemeChange();
-});
+        const muted = css('--hub-muted', '#6f7d78');
+        const line = css('--hub-border', '#dfe5e1');
+        const surface = css('--hub-card', '#ffffff');
+        const ink = css('--hub-text', '#1b2421');
+        const accent = css('--hub-orange', '#df7419');
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        const salesCanvas = document.getElementById('salesChart');
+        if (salesCanvas) {
+            salesChart?.destroy();
+            const context = salesCanvas.getContext('2d');
+            const gradient = context.createLinearGradient(0, 0, 0, 255);
+            gradient.addColorStop(0, 'rgba(223, 116, 25, .20)');
+            gradient.addColorStop(.6, 'rgba(223, 116, 25, .05)');
+            gradient.addColorStop(1, 'rgba(223, 116, 25, 0)');
+            const labelStep = data.period >= 90 ? 14 : data.period >= 30 ? 5 : 1;
+
+            salesChart = new Chart(context, {
+                type: 'line',
+                data: {
+                    labels: data.labels || [],
+                    datasets: [{
+                        data: data.sales || [],
+                        borderColor: accent,
+                        backgroundColor: gradient,
+                        borderWidth: 2.5,
+                        fill: true,
+                        tension: .42,
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: accent,
+                        pointHoverBorderColor: '#ffffff',
+                        pointHoverBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: reducedMotion ? false : { duration: 650, easing: 'easeOutQuart' },
+                    interaction: { intersect: false, mode: 'index' },
+                    layout: { padding: { top: 10, right: 7, left: 2 } },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            displayColors: false,
+                            backgroundColor: surface,
+                            titleColor: muted,
+                            bodyColor: ink,
+                            borderColor: line,
+                            borderWidth: 1,
+                            padding: 12,
+                            cornerRadius: 11,
+                            callbacks: { label: context => money(context.parsed.y) }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            border: { display: false },
+                            ticks: {
+                                color: muted,
+                                font: { size: 9, weight: '600' },
+                                callback(value, index) { return index % labelStep === 0 || index === data.labels.length - 1 ? this.getLabelForValue(value) : ''; }
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            border: { display: false },
+                            grid: { color: line, drawTicks: false },
+                            ticks: { color: muted, padding: 9, font: { size: 9 }, callback: value => money(value, true) }
+                        }
+                    }
+                }
+            });
+        }
+
+        const paymentCanvas = document.getElementById('paymentChart');
+        if (paymentCanvas && data.paymentLabels?.length) {
+            paymentChart?.destroy();
+            paymentChart = new Chart(paymentCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: data.paymentLabels.map(label => paymentNames[String(label).toUpperCase()] || label),
+                    datasets: [{ data: data.paymentValues, backgroundColor: palette, borderColor: surface, borderWidth: 3, hoverOffset: 3 }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '74%',
+                    animation: reducedMotion ? false : { duration: 700, easing: 'easeOutQuart' },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: surface,
+                            titleColor: muted,
+                            bodyColor: ink,
+                            borderColor: line,
+                            borderWidth: 1,
+                            displayColors: false,
+                            padding: 11,
+                            callbacks: { label: context => money(context.parsed) }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', renderCharts);
+    window.addEventListener('load', () => {
+        if (!salesChart && window.Chart) renderCharts();
+    });
+
+    let themeTimer;
+    const observer = new MutationObserver(() => {
+        clearTimeout(themeTimer);
+        themeTimer = setTimeout(renderCharts, 120);
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] });
+})();

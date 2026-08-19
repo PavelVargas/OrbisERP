@@ -26,7 +26,7 @@ def finish_sale():
         flash('Sesión de venta no encontrada', 'danger')
         return redirect(url_for('sales_bp.create_sale'))
 
-    company = db.session.get(Company, company_id)
+    company = Company.query.filter_by(id=company_id).with_for_update().first()
     if not company:
         flash('Error de consistencia de empresa', 'danger')
         return redirect(url_for('login_bp.login'))

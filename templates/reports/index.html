@@ -1,301 +1,97 @@
 <!DOCTYPE html>
-<html lang="es" class="{% if session.get('theme') == 'dark' %}dark{% endif %}">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auditoría | OrbisERP</title>
-
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
-                    colors: {
-                        orbis: { DEFAULT: '#faa200', dark: '#d98c00' },
-                        carbon: {
-                            700: '#1e2328',
-                            800: '#16191c', 
-                            900: '#0f1113'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-
-    <style>
-        body {
-            background-color: #f3f4f6;
-            color: #111827;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            overflow-x: hidden;
-        }
-        .dark body { 
-            background-color: #0f1113; 
-            color: #e5e7eb; 
-        }
-
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .dark ::-webkit-scrollbar-thumb { background: #1e2328; }
-
-        /* Tarjetas de Control Estilo Odoo 18 Analytics */
-        .odoo-card {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-            transition: all 0.2s ease-in-out;
-        }
-        .dark .odoo-card {
-            background: #16191c;
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        }
-        .odoo-card:hover {
-            border-color: #faa200;
-        }
-
-        /* Botones de Acción Rápida (Obsidian Glass Effect) */
-        .odoo-btn-action {
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .odoo-btn-action:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 24px -10px rgba(250, 162, 0, 0.3);
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f6f7f5">
+    <title>Centro de informes · OrbisERP</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/reports_dashboard.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
+    <script src="{{ url_for('static', filename='js/reports_dashboard.js') }}" defer></script>
 </head>
+<body>
+{% include 'layouts/left_bar.html' %}
 
-<body class="flex">
-
-    {% include 'layouts/left_bar.html' %}
-
-    <main class="flex-grow h-screen overflow-y-auto p-4 lg:p-6 space-y-6">
-        
-        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-gray-200 dark:border-white/5">
+<main class="reports-center">
+    <div class="reports-shell">
+        <header class="reports-header">
             <div>
-                <div class="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    <span>Informes</span>
-                    <i class="bi bi-chevron-right text-[10px]"></i>
-                    <span class="text-orbis">Panel Fiscal</span>
-                </div>
-                <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white mt-1">
-                    Auditoría Tributaria
-                </h1>
+                <a class="reports-back" href="{{ url_for('dashboard_bp.dashboard') }}"><i class="bi bi-chevron-left"></i> Resumen</a>
+                <span class="reports-eyebrow">INFORMES Y CONTROL INTERNO</span>
+                <h1>Centro de informes</h1>
+                <p>Consulta el comportamiento comercial, revisa el inventario y exporta la información de tu negocio.</p>
             </div>
-
-            <div class="flex items-center gap-2 w-full sm:w-auto">
-                <a href="{{ url_for('reports_bp.monthly_history') }}" class="flex items-center justify-center gap-2 bg-white dark:bg-carbon-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-carbon-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors w-full sm:w-auto shadow-sm">
-                    <i class="bi bi-clock-history"></i> Historial
-                </a>
-                <a href="{{ url_for('dashboard_bp.dashboard') }}" class="flex items-center justify-center gap-2 bg-orbis text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm hover:bg-orbis-dark transition-colors w-full sm:w-auto">
-                    <i class="bi bi-speedometer2"></i> Dashboard
-                </a>
+            <div class="reports-actions">
+                <a href="{{ url_for('reports_bp.monthly_history') }}" class="reports-button reports-button--secondary"><i class="bi bi-clock-history"></i>Historial mensual</a>
+                <a href="{{ url_for('dashboard_bp.dashboard') }}" class="reports-button reports-button--primary"><i class="bi bi-grid-1x2"></i>Volver al resumen</a>
             </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
-            <div class="lg:col-span-8 odoo-card rounded-xl p-5 flex flex-col justify-between">
-                <div>
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Ingresos Netos del Mes Actual</p>
-                            <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white mt-1 tracking-tight">
-                                {{ currency_symbol }} {{ "{:,.2f}".format(total_sales_month | default(0)) }}
-                            </h2>
-                        </div>
-                        {% if total_sales_month and total_sales_month > 0 %}
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Sincronizado
-                        </span>
-                        {% endif %}
+        <section class="internal-notice">
+            <span><i class="bi bi-shield-check"></i></span>
+            <div><strong>Panel de control interno</strong><p>Los balances y documentos de esta sección son administrativos; no sustituyen comprobantes fiscales autorizados.</p></div>
+        </section>
+
+        <section class="reports-grid">
+            <article class="report-card revenue-report">
+                <header class="report-card__header">
+                    <div><span class="report-label">INGRESOS REGISTRADOS · MES ACTUAL</span><h2>{{ currency_symbol }} {{ '{:,.2f}'.format(total_sales_month|default(0)) }}</h2><p>Ventas completadas registradas durante el mes.</p></div>
+                    <span class="sync-badge"><i></i>Actualizado</span>
+                </header>
+                <div class="report-chart"><canvas id="mainChart" aria-label="Ingresos diarios de los últimos siete días"></canvas></div>
+                <footer class="chart-footer"><span><i class="bi bi-calendar3"></i>Últimos 7 días</span><span><i class="bi bi-currency-exchange"></i>{{ currency_symbol }} · Moneda activa</span></footer>
+            </article>
+
+            <aside class="report-side">
+                <article class="report-card stock-report">
+                    <div class="report-icon {{ 'report-icon--danger' if low_stock_count else 'report-icon--success' }}"><i class="bi {{ 'bi-exclamation-triangle' if low_stock_count else 'bi-check2-circle' }}"></i></div>
+                    <div><span class="report-label">EXISTENCIAS BAJAS</span><strong>{{ low_stock_count|default(0) }}</strong><p>{{ 'productos necesitan revisión' if low_stock_count else 'inventario sin alertas críticas' }}</p></div>
+                    <a href="{{ url_for('reports_bp.inventory_health') }}">Revisar inventario <i class="bi bi-arrow-right"></i></a>
+                </article>
+
+                <article class="report-card closing-report">
+                    <header><span class="report-label">ÚLTIMO CIERRE DE CAJA</span><i class="bi bi-cash-stack"></i></header>
+                    {% if recent_closings %}
+                    <div class="closing-main">
+                        <div class="closing-avatar">{{ recent_closings[0].user.name[:1]|upper }}</div>
+                        <div><strong>{{ recent_closings[0].user.name }}</strong><span>{% if recent_closings[0].closing_date.strftime %}{{ recent_closings[0].closing_date.strftime('%d/%m/%Y · %H:%M') }}{% else %}{{ recent_closings[0].closing_date }}{% endif %}</span></div>
                     </div>
-                </div>
-                
-                <div class="h-64 w-full mt-4">
-                    <canvas id="mainChart"></canvas>
-                </div>
+                    <div class="closing-total"><span>Monto reportado</span><strong>{{ currency_symbol }} {{ '{:,.2f}'.format(recent_closings[0].reported_amount|float) }}</strong></div>
+                    {% else %}
+                    <div class="report-empty"><i class="bi bi-inbox"></i><strong>Sin cierres registrados</strong><span>Los cierres de caja aparecerán aquí.</span></div>
+                    {% endif %}
+                    <a href="{{ url_for('reports_bp.closings_history') }}">Auditar cierres anteriores <i class="bi bi-arrow-right"></i></a>
+                </article>
+            </aside>
+        </section>
+
+        <section class="exports-section">
+            <header class="section-heading"><div><span class="report-label">EXPORTACIONES</span><h2>Documentos y datos</h2><p>Genera reportes listos para revisar, imprimir o trabajar en otra herramienta.</p></div></header>
+            <div class="export-grid">
+                <a href="{{ url_for('reports_bp.export_sales_print') }}" target="_blank" rel="noopener" class="export-card">
+                    <span class="export-icon export-icon--blue"><i class="bi bi-receipt-cutoff"></i></span>
+                    <span><b>Libro de ventas</b><small>Balance detallado de operaciones y clientes.</small></span>
+                    <i class="bi bi-arrow-up-right"></i>
+                </a>
+                <a href="{{ url_for('reports_bp.export_cash_print') }}" target="_blank" rel="noopener" class="export-card">
+                    <span class="export-icon export-icon--green"><i class="bi bi-shield-check"></i></span>
+                    <span><b>Auditoría de cajas</b><small>Arqueos, responsables y control de diferencias.</small></span>
+                    <i class="bi bi-arrow-up-right"></i>
+                </a>
+                <a href="{{ url_for('reports_bp.export_csv') }}" class="export-card">
+                    <span class="export-icon export-icon--orange"><i class="bi bi-filetype-csv"></i></span>
+                    <span><b>Exportar datos</b><small>Descarga masiva de registros en formato CSV.</small></span>
+                    <i class="bi bi-download"></i>
+                </a>
             </div>
+        </section>
+    </div>
+</main>
 
-            <div class="lg:col-span-4 flex flex-col gap-6">
-                
-                <div class="odoo-card rounded-xl p-5 flex items-center justify-between relative overflow-hidden">
-                    <div class="space-y-2">
-                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Stock Mínimo Comprometido</p>
-                        <div class="flex items-baseline gap-2">
-                            <span class="text-4xl font-black {% if low_stock_count and low_stock_count > 0 %}text-red-500{% else %}text-emerald-500{% endif %}">
-                                {{ low_stock_count | default(0) }}
-                            </span>
-                            <span class="text-xs font-medium text-gray-500 dark:text-gray-400">ítems detectados</span>
-                        </div>
-                        <a href="{{ url_for('reports_bp.inventory_health') }}" class="inline-flex items-center text-xs font-semibold text-orbis hover:text-orbis-dark gap-1 transition-colors pt-2">
-                            Ver Almacenes <i class="bi bi-arrow-right text-[10px]"></i>
-                        </a>
-                    </div>
-                    <div class="p-3 bg-gray-100 dark:bg-white/5 rounded-lg text-gray-400 dark:text-gray-500">
-                        <i class="bi bi-exclamation-octagon text-2xl"></i>
-                    </div>
-                </div>
-
-                <div class="odoo-card rounded-xl p-5 flex flex-col justify-between">
-                    <div>
-                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Último Cierre de Caja Activo</p>
-                        
-                        {% if recent_closings %}
-                        <div class="bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 p-3 rounded-lg flex justify-between items-center">
-                            <div class="space-y-1">
-                                <p class="text-xs font-bold text-gray-700 dark:text-gray-200">
-                                    {% if recent_closings[0].closing_date.strftime %}
-                                        {{ recent_closings[0].closing_date.strftime('%d %b, %H:%M') }}
-                                    {% else %}
-                                        {{ recent_closings[0].closing_date }}
-                                    {% endif %}
-                                </p>
-                                <p class="text-[11px] font-medium text-gray-400">Cajero: {{ recent_closings[0].user.name[:18] }}</p>
-                            </div>
-                            <span class="text-base font-extrabold text-emerald-500">
-                                {{ currency_symbol }}{{ "{:,.0f}".format(recent_closings[0].reported_amount) }}
-                            </span>
-                        </div>
-                        {% else %}
-                        <div class="p-4 border border-dashed border-gray-300 dark:border-white/10 rounded-lg text-center">
-                            <p class="text-xs text-gray-400 italic">No se registran cierres de caja hoy.</p>
-                        </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mt-4 pt-3 border-t border-gray-200 dark:border-white/5">
-                        <a href="{{ url_for('reports_bp.closings_history') }}" class="text-xs font-semibold text-gray-400 hover:text-orbis dark:hover:text-orbis transition-colors flex items-center gap-1">
-                            Auditar arqueos históricos <i class="bi bi-chevron-right text-[9px]"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="lg:col-span-12">
-                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">Acciones Generales de Exportación</p>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    
-                    <a href="{{ url_for('reports_bp.export_sales_print') }}" target="_blank" class="odoo-btn-action group flex items-center justify-between p-4 bg-white dark:bg-carbon-800 border border-gray-200 dark:border-white/5 rounded-xl shadow-sm hover:border-blue-500/50">
-                        <div class="flex items-center gap-3">
-                            <div class="p-2.5 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-lg">
-                                <i class="bi bi-printer text-xl"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100">Libro de Ventas</h3>
-                                <p class="text-[11px] text-gray-400">Ver e imprimir balance formal</p>
-                            </div>
-                        </div>
-                        <i class="bi bi-arrow-up-right-square text-gray-300 dark:text-gray-600 group-hover:text-blue-500 transition-colors text-sm"></i>
-                    </a>
-
-                    <a href="{{ url_for('reports_bp.export_cash_print') }}" target="_blank" class="odoo-btn-action group flex items-center justify-between p-4 bg-white dark:bg-carbon-800 border border-gray-200 dark:border-white/5 rounded-xl shadow-sm hover:border-emerald-500/50">
-                        <div class="flex items-center gap-3">
-                            <div class="p-2.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg">
-                                <i class="bi bi-shield-check text-xl"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100">Auditoría de Cajas</h3>
-                                <p class="text-[11px] text-gray-400">Imprimir arqueos y control de descuadres</p>
-                            </div>
-                        </div>
-                        <i class="bi bi-arrow-up-right-square text-gray-300 dark:text-gray-600 group-hover:text-emerald-500 transition-colors text-sm"></i>
-                    </a>
-
-                    <a href="{{ url_for('reports_bp.export_csv') }}" class="odoo-btn-action group flex items-center justify-between p-4 bg-white dark:bg-carbon-800 border border-gray-200 dark:border-white/5 rounded-xl shadow-sm hover:border-orbis/50">
-                        <div class="flex items-center gap-3">
-                            <div class="p-2.5 bg-amber-50 dark:bg-orbis/10 text-orbis rounded-lg">
-                                <i class="bi bi-filetype-csv text-xl"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100">Estructura de Datos</h3>
-                                <p class="text-[11px] text-gray-400">Descarga masiva de registros (CSV)</p>
-                            </div>
-                        </div>
-                        <i class="bi bi-download text-gray-300 dark:text-gray-600 group-hover:text-orbis transition-colors"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const canvas = document.getElementById('mainChart');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const isDark = document.documentElement.classList.contains('dark');
-
-            const rawLabels = {{ chart_labels | tojson | safe }};
-            const rawData = {{ chart_data | tojson | safe }};
-            
-            const chartLabels = Array.isArray(rawLabels) ? rawLabels : [];
-            const chartData = Array.isArray(rawData) ? rawData : [];
-
-            const gradient = ctx.createLinearGradient(0, 0, 0, 240);
-            if (isDark) {
-                gradient.addColorStop(0, 'rgba(250, 162, 0, 0.15)');
-                gradient.addColorStop(1, 'rgba(250, 162, 0, 0.0)');
-            } else {
-                gradient.addColorStop(0, 'rgba(250, 162, 0, 0.12)');
-                gradient.addColorStop(1, 'rgba(250, 162, 0, 0.01)');
-            }
-
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: chartLabels,
-                    datasets: [{
-                        data: chartData,
-                        borderColor: '#faa200',
-                        backgroundColor: gradient,
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.2,
-                        pointRadius: chartLabels.length === 1 ? 4 : 1, 
-                        pointBackgroundColor: '#faa200',
-                        pointBorderColor: isDark ? '#16191c' : '#fff',
-                        pointBorderWidth: 1,
-                        pointHoverRadius: 5,
-                        pointHoverBackgroundColor: '#faa200',
-                        pointHoverBorderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: {
-                            grid: { display: false },
-                            ticks: { 
-                                color: isDark ? '#9ca3af' : '#6b7280', 
-                                font: { size: 11, weight: '500', family: 'Plus Jakarta Sans' } 
-                            }
-                        },
-                        y: {
-                            beginAtZero: true, 
-                            grid: { color: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.05)' },
-                            ticks: { 
-                                color: isDark ? '#9ca3af' : '#6b7280', 
-                                font: { size: 11, family: 'Plus Jakarta Sans' },
-                                callback: value => '{{ currency_symbol }}' + value.toLocaleString('en-US', { minimumFractionDigits: 0 })
-                            },
-                            border: { display: false }
-                        }
-                    }
-                }
-            });
-        });
-    </script>
+<script id="reports-data" type="application/json">{{ {
+    'labels': chart_labels,
+    'values': chart_data,
+    'currencySymbol': currency_symbol
+}|tojson }}</script>
 </body>
 </html>

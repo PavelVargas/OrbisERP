@@ -5,9 +5,36 @@ from db import db
 from flask_mail import Message
 from sqlalchemy.exc import SQLAlchemyError
 import logging
+from security import verify_totp
 
 login_bp = Blueprint('login_bp', __name__)
 logger = logging.getLogger(__name__)
+
+
+def _establish_session(user):
+    session.clear()
+    session.permanent = True
+    session['user_id'] = user.id
+    session['user_name'] = user.name
+    session['user_role'] = user.role
+    selected_currency = user.default_currency or 'DOP'
+    session['selected_currency'] = selected_currency
+    exchange = ExchangeRate.query.filter_by(currency_code=selected_currency).first()
+    session['currency_symbol'] = exchange.symbol if exchange else {'DOP': 'RD$', 'USD': '$', 'EUR': '€'}.get(selected_currency, '$')
+    if user.company_id:
+        session['company_id'] = user.company_id
+        session['warehouse_id'] = user.warehouse_id
+
+
+def _login_destination(user):
+    if user.role == 'superadmin':
+        flash(f'Modo Maestro: Bienvenido {user.name}', 'success')
+        return redirect(url_for('superadmin_bp.admin_dashboard'))
+    if user.company_id:
+        flash('Sesión iniciada correctamente', 'success')
+        return redirect(url_for('dashboard_bp.dashboard'))
+    flash('Debes registrar tu empresa para continuar', 'warning')
+    return redirect(url_for('company_bp.create_company'))
 
 @login_bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -40,52 +67,40 @@ def login():
                 )
                 return redirect(url_for('login_bp.login'))
 
-        # 3. Limpiar sesión y cargar datos de identidad básica
-        session.clear()
-        session['user_id'] = user.id
-        session['user_name'] = user.name
-        session['user_role'] = user.role
+        if user.two_factor_enabled and user.totp_secret:
+            session.clear()
+            session['pending_2fa_user_id'] = user.id
+            session['pending_2fa_started_at'] = int(__import__('time').time())
+            return redirect(url_for('login_bp.two_factor'))
 
-        # ==========================================
-        # 🔑 LÓGICA DE MONEDA PREDETERMINADA
-        # ==========================================
-        # 1. Obtener la moneda del usuario (Prioridad: DB -> Default DOP)
-        selected_currency = user.default_currency if user.default_currency else 'DOP'
-        session['selected_currency'] = selected_currency
-
-        # 2. Buscar en ExchangeRate usando 'currency_code' (EL NOMBRE CORRECTO)
-        # Cambié .filter_by(code=...) por .filter_by(currency_code=...)
-        exchange = ExchangeRate.query.filter_by(currency_code=selected_currency).first()
-        
-        if exchange:
-            session['currency_symbol'] = exchange.symbol
-        else:
-            # Símbolos de emergencia por si no existe en la tabla aún
-            defaults = {'DOP': 'RD$', 'USD': '$', 'EUR': '€'}
-            session['currency_symbol'] = defaults.get(selected_currency, '$')
-
-        # ==========================================
-        # LÓGICA DE REDIRECCIÓN POR ROL (Jerarquía)
-        # ==========================================
-
-        if user.role == 'superadmin':
-            flash(f'Modo Maestro: Bienvenido {user.name}', 'success')
-            return redirect(url_for('superadmin_bp.admin_dashboard'))
-
-        if user.company_id:
-            session['company_id'] = user.company_id
-            session['warehouse_id'] = user.warehouse_id 
-            flash(f'Sesión iniciada correctamente', 'success')
-            return redirect(url_for('dashboard_bp.dashboard'))
-        
-        else:
-            flash('Debes registrar tu empresa para continuar', 'warning')
-            return redirect(url_for('company_bp.create_company'))
+        _establish_session(user)
+        return _login_destination(user)
 
     # Si es GET
     return render_template('login/login.html')
 
-@login_bp.route('/logout')
+
+@login_bp.route('/login/2fa', methods=['GET', 'POST'])
+def two_factor():
+    pending_id = session.get('pending_2fa_user_id')
+    started_at = int(session.get('pending_2fa_started_at') or 0)
+    if not pending_id or __import__('time').time() - started_at > 300:
+        session.clear()
+        flash('La verificación venció. Inicia sesión nuevamente.', 'warning')
+        return redirect(url_for('login_bp.login'))
+    user = db.session.get(User, pending_id)
+    if not user or not user.two_factor_enabled:
+        session.clear()
+        return redirect(url_for('login_bp.login'))
+    if request.method == 'POST':
+        if not verify_totp(user.totp_secret, request.form.get('code')):
+            flash('Código incorrecto o vencido.', 'danger')
+            return redirect(request.url)
+        _establish_session(user)
+        return _login_destination(user)
+    return render_template('login/two_factor.html')
+
+@login_bp.route('/logout', methods=['POST'])
 def logout():
     session.clear()
     flash('Sesión cerrada correctamente', 'info')

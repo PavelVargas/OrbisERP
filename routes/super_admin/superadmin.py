@@ -117,7 +117,7 @@ def admin_dashboard():
                            active_announcement=active_announcement,
                            ahora=ahora)
 
-@superadmin_bp.route('/superadmin/impersonate/<int:company_id>')
+@superadmin_bp.route('/superadmin/impersonate/<int:company_id>', methods=['POST'])
 @superadmin_required
 def impersonate(company_id):
     company = Company.query.get_or_404(company_id)

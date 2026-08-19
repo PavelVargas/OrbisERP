@@ -18,7 +18,8 @@ def export_pdf(sale_id):
         abort(403)
 
     sale = Sale.query.filter_by(id=sale_id, company_id=company_id).first_or_404()
-    company = Company.query.get(company_id)
+    from db import db
+    company = db.session.get(Company, company_id)
     
     # --- LÓGICA DE DIVISA PARA PDF ---
     selected_currency = session.get('selected_currency', 'DOP')

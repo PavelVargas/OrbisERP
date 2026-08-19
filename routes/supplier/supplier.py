@@ -4,6 +4,8 @@ from models.supplier.supplier import Supplier
 from models.purchase.purchase_order import PurchaseOrder
 from models.user.user import User # Importamos el modelo User
 from db import db
+from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 
 supplier_bp = Blueprint('supplier_bp', __name__, url_prefix='/suppliers')
 
@@ -22,11 +24,24 @@ def supplier_list():
 
     # Filtrar estrictamente por empresa
     suppliers = Supplier.query.filter_by(company_id=company_id).order_by(Supplier.name.asc()).all()
+    aggregates = db.session.query(
+        PurchaseOrder.supplier_id,
+        func.count(PurchaseOrder.id),
+        func.coalesce(func.sum(PurchaseOrder.total_cost), 0),
+        func.max(PurchaseOrder.created_at),
+    ).filter(PurchaseOrder.company_id == company_id).group_by(PurchaseOrder.supplier_id).all()
+    supplier_stats = {supplier_id: {'orders': int(count or 0), 'spent': total or Decimal('0'), 'last_order': last_order}
+                      for supplier_id, count, total, last_order in aggregates}
+    total_orders = sum(row['orders'] for row in supplier_stats.values())
+    total_spent = sum((Decimal(row['spent'] or 0) for row in supplier_stats.values()), Decimal('0'))
     
     return render_template(
         'suppliers/list.html',
         suppliers=suppliers,
-        user=user # Pasamos user a la plantilla
+        user=user,
+        supplier_stats=supplier_stats,
+        total_orders=total_orders,
+        total_spent=total_spent,
     )
 
 
@@ -42,10 +57,19 @@ def supplier_create():
         return redirect(url_for('login_bp.login'))
 
     if request.method == 'POST':
+        name = (request.form.get('name') or '').strip()
+        email = (request.form.get('email') or '').strip().lower() or None
+        phone = (request.form.get('phone') or '').strip() or None
+        if len(name) < 2:
+            flash('El nombre debe tener al menos 2 caracteres.', 'danger')
+            return redirect(request.url)
+        if email and ('@' not in email or len(email) > 120):
+            flash('Escribe un correo válido.', 'danger')
+            return redirect(request.url)
         supplier = Supplier(
-            name=request.form['name'],
-            email=request.form.get('email'),
-            phone=request.form.get('phone'),
+            name=name[:150],
+            email=email,
+            phone=phone[:50] if phone else None,
             company_id=company_id
         )
 
@@ -124,9 +148,15 @@ def supplier_edit(supplier_id):
     supplier = Supplier.query.filter_by(id=supplier_id, company_id=company_id).first_or_404()
 
     if request.method == 'POST':
-        supplier.name = request.form['name']
-        supplier.email = request.form.get('email')
-        supplier.phone = request.form.get('phone')
+        name = (request.form.get('name') or '').strip()
+        email = (request.form.get('email') or '').strip().lower() or None
+        phone = (request.form.get('phone') or '').strip() or None
+        if len(name) < 2 or (email and ('@' not in email or len(email) > 120)):
+            flash('Revisa el nombre y el correo del proveedor.', 'danger')
+            return redirect(request.url)
+        supplier.name = name[:150]
+        supplier.email = email
+        supplier.phone = phone[:50] if phone else None
 
         db.session.commit()
         flash('Proveedor actualizado correctamente', 'success')
@@ -151,10 +181,13 @@ def supplier_delete(supplier_id):
 
     supplier = Supplier.query.filter_by(id=supplier_id, company_id=company_id).first_or_404()
 
-    db.session.delete(supplier)
-    db.session.commit()
-
-    flash('Proveedor eliminado permanentemente', 'info')
+    try:
+        db.session.delete(supplier)
+        db.session.commit()
+        flash('Proveedor eliminado permanentemente', 'info')
+    except IntegrityError:
+        db.session.rollback()
+        flash('No puedes eliminar este proveedor porque tiene órdenes o cuentas relacionadas. Puedes editar sus datos.', 'warning')
     return redirect(url_for('supplier_bp.supplier_list'))
 
 

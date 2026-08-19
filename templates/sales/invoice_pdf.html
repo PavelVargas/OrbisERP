@@ -19,6 +19,7 @@
             max-width: 750px;
             margin: auto;
         }
+        .fiscal-notice { border: 1px solid #ff5a24; color: #c93e0b; padding: 10px 14px; margin-bottom: 24px; text-align: center; font-size: 10px; font-weight: 900; letter-spacing: 2px; }
 
         /* --- HEADER: EL IMPACTO --- */
         .top-header {
@@ -207,6 +208,7 @@
 </head>
 <body>
     <div class="receipt">
+        {% if not company or company.fiscal_mode == 'disabled' %}<div class="fiscal-notice">{{ company.fiscal_disclaimer if company else 'DOCUMENTO NO FISCAL' }}</div>{% endif %}
         
         <header class="top-header">
             <div class="brand-info">

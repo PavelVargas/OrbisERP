@@ -20,7 +20,9 @@ class Product(db.Model):
     image_path = db.Column(db.String(255), nullable=True)
     
     price = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
-    cost = db.Column(db.Numeric(10, 2), nullable=False, default=0.00) 
+    cost = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
+    min_stock = db.Column(db.Integer, nullable=False, default=5)
+    max_stock = db.Column(db.Integer, nullable=True)
     
     status = db.Column(db.Boolean, default=True)
     product_type = db.Column(
