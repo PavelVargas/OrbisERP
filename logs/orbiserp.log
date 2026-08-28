@@ -2239,3 +2239,6 @@ DETAIL:  La fila que falla contiene (1168, Arroz premium 5 lb, SUP-260823-001, A
 2026-08-27 15:35:44,828 INFO app audit request_id=7e5a47ff49dd5e7883e619d9 method=POST path=/sales/remove-item/108 status=200 user_id=7 company_id=2 ip=127.0.0.1
 2026-08-27 15:35:50,610 INFO app audit request_id=d03551daaa5e5be0b91388f9 method=POST path=/sales/finish status=200 user_id=7 company_id=2 ip=127.0.0.1
 2026-08-27 17:41:59,040 INFO app audit request_id=28de6c2b5984745d8d34b791 method=POST path=/logout status=302 user_id=None company_id=None ip=127.0.0.1
+2026-08-28 10:09:34,056 INFO app PostgreSQL configurado; release=2026.08.13 env=development
+2026-08-28 10:11:40,600 INFO app audit request_id=0f1c4932aeb2c454aaa63dd1 method=POST path=/login status=302 user_id=7 company_id=2 ip=10.0.0.240
+2026-08-28 10:33:02,013 INFO app audit request_id=5907cfd468a29b3216f99b86 method=POST path=/login status=302 user_id=7 company_id=2 ip=10.0.0.21
