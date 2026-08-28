@@ -1,1 +1,69 @@
-{% extends 'backoffice/base.html' %}{% block title %}Nueva devolución{% endblock %}{% block heading %}Devolución de venta #{{ sale.id }}{% endblock %}{% block subtitle %}Cliente: {{ sale.customer_name or 'Sin nombre' }} · Total original RD$ {{ '{:,.2f}'.format(sale.total|float) }}{% endblock %}{% block content %}<form method="post" class="bo-stack"><section class="bo-card"><div class="bo-card-head"><div><span>PRODUCTOS</span><h2>Selecciona las cantidades</h2></div></div><div class="bo-table-wrap"><table><thead><tr><th>Producto</th><th>Vendido</th><th>Devuelto</th><th>Disponible</th><th>Devolver</th></tr></thead><tbody>{% for item in sale.items %}{% set prior=returned.get(item.id,0)|int %}<tr><td><strong>{{ item.product.name }}</strong><small>{{ item.product.sku }}</small></td><td>{{ item.quantity }}</td><td>{{ prior }}</td><td>{{ item.quantity-prior }}</td><td><input type="number" name="quantity_{{ item.id }}" min="0" max="{{ item.quantity-prior }}" value="0"></td></tr>{% endfor %}</tbody></table></div></section><section class="bo-card bo-form-grid"><label class="span-2">Motivo<textarea name="reason" required placeholder="Describe por qué se devuelve la mercancía"></textarea></label><label>Método de reembolso<select name="refund_method"><option value="ORIGINAL">Método original</option><option value="CASH">Efectivo</option><option value="TRANSFER">Transferencia</option><option value="CREDIT_NOTE">Crédito interno</option></select></label><label class="bo-check"><input type="checkbox" name="restock" value="1" checked><span>Reintegrar productos al inventario</span></label><div class="span-2 bo-form-actions"><a href="{{ url_for('backoffice_bp.returns') }}">Cancelar</a><button type="submit">Confirmar devolución</button></div></section></form>{% endblock %}
+{% extends 'backoffice/base.html' %}
+{% block title %}Nueva devolución{% endblock %}
+{% block heading %}Devolución de venta #{{ sale.id }}{% endblock %}
+{% block subtitle %}{{ sale.customer_name or (sale.client.name if sale.client else 'Consumidor Final') }} · {{ sale.created_at.strftime('%d/%m/%Y %H:%M') }} · RD$ {{ '{:,.2f}'.format(sale.total|float) }}{% endblock %}
+{% block content %}
+<form method="post" class="bo-stack return-flow-form">
+  <section class="bo-card">
+    <div class="return-step-head compact">
+      <span class="return-step-number">02</span>
+      <div><span>PRODUCTOS</span><h2>Selecciona exactamente qué regresa</h2><p>Orbis nunca reintegra más de lo vendido y conserva lotes/seriales de la venta original.</p></div>
+    </div>
+    <div class="return-disposition-legend">
+      <div class="available"><i class="bi bi-box-seam"></i><strong>Disponible</strong><small>Regresa a stock vendible.</small></div>
+      <div class="quarantine"><i class="bi bi-shield-exclamation"></i><strong>Cuarentena</strong><small>Se registra físicamente, pero no se vende.</small></div>
+      <div class="damaged"><i class="bi bi-wrench-adjustable-circle"></i><strong>Dañado</strong><small>Queda separado para control de calidad.</small></div>
+      <div class="none"><i class="bi bi-slash-circle"></i><strong>No reintegrar</strong><small>Solo reembolso; no entra inventario.</small></div>
+    </div>
+    <div class="bo-table-wrap return-items-table">
+      <table>
+        <thead><tr><th>Producto / trazabilidad</th><th>Vendido</th><th>Ya devuelto</th><th>Máximo</th><th>Devolver</th><th>Destino físico</th></tr></thead>
+        <tbody>
+        {% for item in sale.items %}
+          {% set prior = returned.get(item.id, 0) %}
+          {% set remaining = item.quantity - prior %}
+          {% set fractional = item.product.sale_mode == 'WEIGHT' or (item.uom and item.uom.allow_fraction) %}
+          <tr>
+            <td>
+              <strong>{{ item.product.name }}</strong>
+              <small>{{ item.variant.name if item.variant else item.product.sku }}{% if item.uom %} · {{ item.uom.name }}{% endif %}</small>
+              {% if item.product.tracking == 'LOT' and item.lot_allocations %}
+                <small class="return-trace">Lotes: {% for alloc in item.lot_allocations %}{{ alloc.lot.lot_number }} ({{ display_quantity(alloc.quantity) }}){% if not loop.last %}, {% endif %}{% endfor %}</small>
+              {% endif %}
+              {% if item.product.tracking == 'SERIAL' %}
+                <div class="return-serials">
+                  <span>Selecciona el/los seriales que físicamente recibes:</span>
+                  {% for serial in item.serials if serial.status in ['SOLD','WARRANTY'] %}
+                    <label><input type="checkbox" name="serial_{{ item.id }}" value="{{ serial.id }}"> <b>{{ serial.serial_number }}</b>{% if serial.warranty_until %}<small>garantía {{ serial.warranty_until.strftime('%d/%m/%Y') }}</small>{% endif %}</label>
+                  {% else %}<small>No hay seriales actualmente asociados a esta línea.</small>{% endfor %}
+                </div>
+              {% endif %}
+            </td>
+            <td>{{ display_quantity(item.quantity) }}</td><td>{{ display_quantity(prior) }}</td><td><b>{{ display_quantity(remaining) }}</b></td>
+            <td><input class="return-qty" type="number" name="quantity_{{ item.id }}" min="0" max="{{ display_quantity(remaining) }}" step="{{ '0.001' if fractional else '1' }}" value="0" {% if remaining <= 0 %}disabled{% endif %}></td>
+            <td>
+              <select name="disposition_{{ item.id }}" {% if remaining <= 0 %}disabled{% endif %}>
+                <option value="AVAILABLE">Disponible / vendible</option>
+                <option value="QUARANTINE">Cuarentena / revisión</option>
+                <option value="DAMAGED">Dañado / no vendible</option>
+                <option value="NONE">No reintegrar inventario</option>
+              </select>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="bo-card">
+    <div class="return-step-head compact"><span class="return-step-number">03</span><div><span>CIERRE</span><h2>Motivo y reembolso</h2><p>Esta operación queda enlazada a la venta y registrada en auditoría e inventario.</p></div></div>
+    <div class="bo-form-grid">
+      <label class="span-2">Motivo<textarea name="reason" required minlength="3" placeholder="Ej. producto defectuoso, talla incorrecta, empaque dañado…"></textarea></label>
+      <label>Método de reembolso<select name="refund_method"><option value="ORIGINAL">Método original</option><option value="CASH">Efectivo</option><option value="TRANSFER">Transferencia</option><option value="CREDIT_NOTE">Crédito interno</option></select><small>Orbis registra el método y el importe de la devolución. La reversión bancaria/tarjeta externa debe confirmarse en el proveedor de pagos cuando aplique.</small></label>
+      <div class="return-audit-note"><i class="bi bi-journal-check"></i><span><strong>Movimiento conectado</strong><small>Disponible crea entrada a stock vendible; cuarentena/dañado crea entrada física segregada; seriales y lotes conservan trazabilidad. La devolución queda enlazada a la venta original y a auditoría.</small></span></div>
+      <div class="span-2 bo-form-actions"><a href="{{ url_for('backoffice_bp.returns', sale=sale.id) }}">Cancelar</a><button type="submit">Confirmar devolución</button></div>
+    </div>
+  </section>
+</form>
+{% endblock %}

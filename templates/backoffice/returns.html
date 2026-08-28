@@ -1,1 +1,62 @@
-{% extends 'backoffice/base.html' %}{% block title %}Devoluciones{% endblock %}{% block heading %}Devoluciones y reembolsos{% endblock %}{% block subtitle %}Devuelve cantidades exactas y conserva la trazabilidad del inventario.{% endblock %}{% block actions %}<form class="bo-inline" onsubmit="if(this.sale_id.value)location.href='/backoffice/returns/new/'+this.sale_id.value;return false"><select name="sale_id" required><option value="">Seleccionar venta…</option>{% for sale in eligible_sales %}<option value="{{ sale.id }}">Venta #{{ sale.id }} · {{ sale.customer_name or 'Cliente' }} · RD$ {{ '{:,.2f}'.format(sale.total|float) }}</option>{% endfor %}</select><button>Crear devolución</button></form>{% endblock %}{% block content %}<section class="bo-card"><div class="bo-card-head"><div><span>HISTORIAL</span><h2>Operaciones registradas</h2></div><b>{{ rows|length }}</b></div><div class="bo-table-wrap"><table><thead><tr><th>Referencia</th><th>Venta</th><th>Motivo</th><th>Inventario</th><th>Total</th><th>Fecha</th></tr></thead><tbody>{% for row in rows %}<tr><td><strong>DEV-{{ '%06d'|format(row.id) }}</strong></td><td>#{{ row.sale_id }}</td><td>{{ row.reason }}</td><td><span class="bo-status">{{ 'Reintegrado' if row.restocked else 'Sin reintegro' }}</span></td><td>RD$ {{ '{:,.2f}'.format(row.total_refund|float) }}</td><td>{{ row.created_at.strftime('%d/%m/%Y %H:%M') }}</td></tr>{% else %}<tr><td colspan="6" class="bo-empty">Aún no existen devoluciones.</td></tr>{% endfor %}</tbody></table></div></section>{% endblock %}
+{% extends 'backoffice/base.html' %}
+{% block title %}Devoluciones{% endblock %}
+{% block heading %}Devoluciones de ventas{% endblock %}
+{% block subtitle %}Localiza primero la venta original; después Orbis valida cantidades, trazabilidad y destino de inventario.{% endblock %}
+{% block content %}
+<section class="bo-card return-lookup-card">
+  <div class="return-step-head">
+    <span class="return-step-number">01</span>
+    <div>
+      <span>VENTA ORIGINAL</span>
+      <h2>Busca por número de venta</h2>
+      <p>Usa el número que aparece en la factura o ticket. No necesitas recorrer una lista de ventas.</p>
+    </div>
+  </div>
+  <form method="get" action="{{ url_for('backoffice_bp.returns') }}" class="return-sale-search">
+    <label>
+      <span>Número de venta</span>
+      <div class="return-search-control">
+        <i class="bi bi-receipt-cutoff"></i>
+        <input name="sale" value="{{ sale_ref }}" inputmode="numeric" autocomplete="off" placeholder="Ej. 125 o VEN-000125" autofocus>
+        <button type="submit"><i class="bi bi-search"></i> Buscar venta</button>
+      </div>
+    </label>
+  </form>
+
+  {% if selected_sale %}
+  <article class="return-sale-result">
+    <div class="return-sale-summary">
+      <span class="return-found"><i class="bi bi-check-circle-fill"></i> Venta encontrada</span>
+      <h3>Venta #{{ selected_sale.id }}</h3>
+      <p>{{ selected_sale.customer_name or (selected_sale.client.name if selected_sale.client else 'Consumidor Final') }}</p>
+    </div>
+    <dl class="return-sale-facts">
+      <div><dt>Fecha</dt><dd>{{ selected_sale.created_at.strftime('%d/%m/%Y %H:%M') }}</dd></div>
+      <div><dt>Sucursal</dt><dd>{{ selected_sale.branch.name if selected_sale.branch else 'Sin sucursal registrada' }}</dd></div>
+      <div><dt>Artículos</dt><dd>{{ selected_sale.items|length }} línea(s)</dd></div>
+      <div><dt>Total original</dt><dd>RD$ {{ '{:,.2f}'.format(selected_sale.total|float) }}</dd></div>
+      <div><dt>Devuelto antes</dt><dd>RD$ {{ '{:,.2f}'.format(selected_returned|float) }}</dd></div>
+    </dl>
+    <a class="return-continue" href="{{ url_for('backoffice_bp.create_return', sale_id=selected_sale.id) }}">
+      Revisar productos y devolver <i class="bi bi-arrow-right"></i>
+    </a>
+  </article>
+  {% elif sale_ref %}
+  <div class="return-not-found"><i class="bi bi-info-circle"></i><span>Corrige el número y vuelve a buscar. No se creó ningún movimiento.</span></div>
+  {% endif %}
+</section>
+
+<section class="bo-card">
+  <div class="bo-card-head"><div><span>HISTORIAL</span><h2>Devoluciones registradas</h2></div><b>{{ rows|length }}</b></div>
+  <div class="bo-table-wrap"><table><thead><tr><th>Referencia</th><th>Venta</th><th>Motivo</th><th>Inventario</th><th>Total</th><th>Fecha</th></tr></thead><tbody>
+  {% for row in rows %}<tr>
+    <td><strong>DEV-{{ '%06d'|format(row.id) }}</strong></td>
+    <td><a href="{{ url_for('sales_bp.sale_detail', sale_id=row.sale_id) }}">#{{ row.sale_id }}</a></td>
+    <td>{{ row.reason }}</td>
+    <td><span class="bo-status">{{ 'Con reintegro disponible' if row.restocked else 'Sin reintegro vendible' }}</span></td>
+    <td>RD$ {{ '{:,.2f}'.format(row.total_refund|float) }}</td>
+    <td>{{ row.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+  </tr>{% else %}<tr><td colspan="6" class="bo-empty">Aún no existen devoluciones.</td></tr>{% endfor %}
+  </tbody></table></div>
+</section>
+{% endblock %}

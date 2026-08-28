@@ -1,72 +1,56 @@
- // --- Gestión de Temas ---
-    function applyThemeUI(isDark) {
-        document.getElementById('themeIco').className = isDark ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
-        document.getElementById('themeTxt').textContent = isDark ? 'Modo claro' : 'Modo oscuro';
-    }
+(() => {
+  'use strict';
+  const root = document.documentElement;
+  const $ = (id) => document.getElementById(id);
 
-    let dark = (localStorage.getItem('orbis-theme') || 'dark') === 'dark';
-    applyThemeUI(dark);
+  const storedTheme = () => {
+    try { const value = localStorage.getItem('theme') || localStorage.getItem('orbis-theme'); if (['dark','light'].includes(value)) return value; } catch (_e) {}
+    return root.dataset.theme === 'dark' || matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  };
+  const setTheme = (theme) => {
+    if (window.OrbisTheme) return window.OrbisTheme.set(theme);
+    const dark = theme === 'dark';
+    root.classList.toggle('dark', dark); root.dataset.theme = theme; root.style.colorScheme = theme;
+    try { localStorage.setItem('theme', theme); localStorage.setItem('orbis-theme', theme); } catch (_e) {}
+    return theme;
+  };
+  const updateThemeButton = (theme) => {
+    const icon = $('themeIco'); const text = $('themeTxt');
+    if (icon) icon.className = theme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
+    if (text) text.textContent = theme === 'dark' ? 'Usar modo claro' : 'Usar modo oscuro';
+  };
+  let theme = setTheme(storedTheme()); updateThemeButton(theme);
+  $('themeBtn')?.addEventListener('click', () => { theme = setTheme(theme === 'dark' ? 'light' : 'dark'); updateThemeButton(theme); });
+  document.addEventListener('orbis:themechange', (event) => { theme = event.detail?.theme || storedTheme(); updateThemeButton(theme); });
 
-    document.getElementById('themeBtn').addEventListener('click', () => {
-        dark = !dark;
-        const theme = dark ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('orbis-theme', theme);
-        applyThemeUI(dark);
-    });
+  const openBackdrop = (id) => { const el = $(id); if (!el) return; el.hidden = false; document.body.style.overflow = 'hidden'; el.querySelector('button,input,select,textarea')?.focus(); };
+  const closeBackdrop = (id) => { const el = $(id); if (!el) return; el.hidden = true; if (!document.querySelector('.master-modal-backdrop:not([hidden])')) document.body.style.overflow = ''; };
 
-    // --- Modal de Inspección (Corregido y Blindado) ---
-    function openModal(d) {
-        // Asignación segura de textos
-        document.getElementById('m-name').textContent = d.name || 'Empresa';
-        document.getElementById('m-id').textContent = '#NODE-' + String(d.id || 0).padStart(3, '0');
-        
-        const statusEl = document.getElementById('m-status');
-        statusEl.textContent = d.status ? 'Activo (Online)' : 'Suspendido (Offline)';
-        statusEl.style.color = d.status ? 'var(--success)' : 'var(--danger)';
+  document.querySelector('[data-open-broadcast]')?.addEventListener('click', () => openBackdrop('broadcastModal'));
+  document.querySelectorAll('[data-close-modal]').forEach((btn) => btn.addEventListener('click', () => closeBackdrop(btn.dataset.closeModal)));
+  document.querySelectorAll('.master-modal-backdrop').forEach((backdrop) => backdrop.addEventListener('click', (event) => { if (event.target === backdrop) closeBackdrop(backdrop.id); }));
+  document.addEventListener('keydown', (event) => { if (event.key === 'Escape') document.querySelectorAll('.master-modal-backdrop:not([hidden])').forEach((el) => closeBackdrop(el.id)); });
 
-        const roEl = document.getElementById('m-readonly');
-        roEl.textContent = d.is_readonly ? 'SÓLO LECTURA' : 'Acceso Total';
-        roEl.style.color = d.is_readonly ? '#f39c12' : 'var(--success)';
-        
-        document.getElementById('m-expiry').textContent = d.expiry || 'N/A';
-        document.getElementById('m-plan').textContent = d.plan || 'N/A';
-        document.getElementById('m-rnc').textContent = d.rnc || 'N/A';
-        document.getElementById('m-tax').textContent = (d.tax_name || 'ITBIS') + ' (' + (d.tax_percent || 0) + '%)';
-        document.getElementById('m-currency').textContent = d.currency || 'N/A';
-        document.getElementById('m-usage').textContent = (d.usage || 0) + ' MB';
-        document.getElementById('m-email').textContent = d.email || 'N/A';
-        document.getElementById('m-address').textContent = d.address || 'N/A';
-        
-        // Acción de formulario
-        document.getElementById('renewForm').action = '/superadmin/renew_plan/' + (d.id || 0);
-        
-        // Mostrar
-        document.getElementById('modalBg').classList.add('open');
-    }
-    
-    function closeModal() { document.getElementById('modalBg').classList.remove('open'); }
+  document.querySelectorAll('.inspect-company').forEach((button) => button.addEventListener('click', () => {
+    let data = {};
+    try { data = JSON.parse(button.dataset.company || '{}'); } catch (_e) { return; }
+    const assign = (id, value) => { const el = $(id); if (el) el.textContent = value ?? 'N/D'; };
+    assign('m-name', data.name || 'Empresa'); assign('m-id', `#NODE-${String(data.id || 0).padStart(3,'0')}`);
+    assign('m-status', data.status ? 'Activa' : 'Suspendida'); assign('m-readonly', data.is_readonly ? 'Solo lectura' : 'Acceso total');
+    assign('m-plan', data.plan); assign('m-expiry', data.expiry); assign('m-rnc', data.rnc || 'N/D'); assign('m-tax', `${data.tax_name || 'Impuesto'} (${data.tax_percent || 0}%)`);
+    assign('m-currency', data.currency); assign('m-usage', `${data.usage || 0} MB`); assign('m-email', data.email || 'N/D'); assign('m-address', data.address || 'N/D');
+    const renew = $('renewForm'); if (renew) renew.action = button.dataset.renewUrl || '';
+    openBackdrop('modalBg');
+  }));
 
-    // --- Modal Broadcast ---
-    function openBroadcastModal() { document.getElementById('broadcastModal').classList.add('open'); }
-    function closeBroadcastModal() { document.getElementById('broadcastModal').classList.remove('open'); }
+  const search = $('srch'); const empty = $('empty');
+  const applySearch = () => {
+    if (!search) return; const term = search.value.trim().toLocaleLowerCase('es'); let visible = 0;
+    document.querySelectorAll('.nc').forEach((card) => { const haystack = `${card.dataset.name || ''} ${card.dataset.rnc || ''} ${card.dataset.admin || ''}`.toLocaleLowerCase('es'); const ok = !term || haystack.includes(term); card.hidden = !ok; if (ok) visible += 1; });
+    if (empty) empty.style.display = visible ? 'none' : 'grid';
+  };
+  search?.addEventListener('input', applySearch);
+  document.addEventListener('keydown', (event) => { if (event.key === '/' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '')) { event.preventDefault(); search?.focus(); } });
 
-    // --- Buscador Inteligente ---
-    document.getElementById('srch').addEventListener('input', function() {
-        const t = this.value.toLowerCase();
-        let count = 0;
-        document.querySelectorAll('.nc').forEach(c => {
-            const ok = (c.dataset.name || '').includes(t) ||
-                       (c.dataset.rnc || '').includes(t) ||
-                       (c.dataset.admin || '').toLowerCase().includes(t);
-            c.style.display = ok ? '' : 'none';
-            if (ok) count++;
-        });
-        document.getElementById('empty').style.display = count ? 'none' : 'block';
-    });
-
-    // --- Eventos de Cierre Global ---
-    window.addEventListener('click', e => {
-        if (e.target.id === 'modalBg') closeModal();
-        if (e.target.id === 'broadcastModal') closeBroadcastModal();
-    });
+  requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('theme-preload')));
+})();

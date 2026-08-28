@@ -1,0 +1,86 @@
+name: OrbisERP quality
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: orbiserp_test
+          POSTGRES_PASSWORD: orbiserp_test
+          POSTGRES_DB: orbiserp_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U orbiserp_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      APP_ENV: testing
+      AUTO_CREATE_SCHEMA: "0"
+      SECRET_KEY: test-secret-key-that-is-long-enough-for-ci
+      DATABASE_URL: postgresql+psycopg://orbiserp_test:orbiserp_test@127.0.0.1:5432/orbiserp_test
+      TEST_DATABASE_URL: postgresql+psycopg://orbiserp_test:orbiserp_test@127.0.0.1:5432/orbiserp_test
+      PUBLIC_BASE_URL: http://127.0.0.1:5001
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install Python dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Install browser for E2E
+        run: python -m playwright install --with-deps chromium
+      - name: Dependency consistency
+        run: python -m pip check
+      - name: Python dependency vulnerability audit
+        run: pip-audit -r requirements.txt
+      - name: Compile Python
+        run: python -m compileall -q .
+      - name: Upgrade PostgreSQL schema
+        run: flask --app app db upgrade
+      - name: Database integrity checks
+        run: |
+          flask --app app audit-integrity
+          flask --app app validate-integrity
+      - name: Unit and HTTP integration tests
+        run: pytest -q -rs --ignore=tests/e2e
+      - name: JavaScript syntax
+        run: |
+          node --check main.js
+          find static/js -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: Seed browser smoke data
+        run: python scripts/seed_e2e.py
+      - name: Start application for browser smoke
+        run: |
+          gunicorn --bind 127.0.0.1:5001 --workers 1 --threads 2 --timeout 60 app:app > /tmp/orbiserp-e2e.log 2>&1 &
+          echo $! > /tmp/orbiserp-e2e.pid
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:5001/operations/health/live >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/orbiserp-e2e.log
+          exit 1
+      - name: Browser E2E smoke
+        env:
+          E2E_BASE_URL: http://127.0.0.1:5001
+        run: pytest -q tests/e2e -rs
+      - name: Print app log on failure
+        if: failure()
+        run: cat /tmp/orbiserp-e2e.log 2>/dev/null || true
+      - name: Build clean customer release
+        run: python scripts/build_release.py --output /tmp/orbiserp_release.zip
+      - name: Verify release archive
+        run: python scripts/verify_release.py /tmp/orbiserp_release.zip

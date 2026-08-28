@@ -1,389 +1,119 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Oracle | OrbisERP</title>
-    <script>
-        (function() {
-            const t = localStorage.getItem('orbis-theme') || 'dark';
-            document.documentElement.setAttribute('data-theme', t);
-        })();
-    </script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/superadmin_css/superadmin.css">
-    <style>
-        /* Estilos Core y Variables */
-        .mrr-val { color: var(--success); font-weight: 700; font-family: 'JetBrains Mono', monospace; }
-        
-        /* Sistema de Alerta Broadcast */
-        .active-announcement-card {
-            margin-top: 15px;
-            padding: 15px;
-            border-radius: 12px;
-            background: rgba(0,0,0,0.25);
-            border-left: 5px solid var(--purple);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            backdrop-filter: blur(10px);
-        }
-        .active-announcement-card.warning { border-left-color: #f39c12; }
-        .active-announcement-card.danger { border-left-color: #e74c3c; }
-
-        .broadcast-badge {
-            position: absolute;
-            top: -4px;
-            right: -4px;
-            width: 14px;
-            height: 14px;
-            background: #ff4757;
-            border-radius: 50%;
-            border: 2px solid var(--sur1);
-            animation: pulse-red 1.5s infinite;
-        }
-
-        @keyframes pulse-red {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7); }
-            70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(255, 71, 87, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
-        }
-
-        .bc-select, .bc-input {
-            width: 100%;
-            background: var(--sur1);
-            border: 1px solid var(--bd);
-            color: var(--tx);
-            padding: 12px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            font-size: 14px;
-            transition: border 0.3s;
-        }
-        .bc-input:focus { border-color: var(--purple); outline: none; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Centro maestro · OrbisERP</title>
+  <script>
+    (()=>{let saved=null;try{saved=localStorage.getItem('theme')||localStorage.getItem('orbis-theme')}catch(_e){}const dark=saved==='dark'||(saved!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);const t=dark?'dark':'light';document.documentElement.classList.toggle('dark',dark);document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t;document.documentElement.classList.add('theme-preload')})();
+  </script>
+  <style>html{background:#f4f6f8}html.dark{background:#0d1114}.theme-preload *, .theme-preload *::before,.theme-preload *::after{transition:none!important;animation:none!important}</style>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/superadmin_css/superadmin.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/feedback.css') }}">
+  <script src="{{ url_for('static', filename='js/theme-sync.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/feedback.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}" defer></script>
 </head>
-<body>
-
-<nav class="topbar">
-    <a href="/" class="brand">
-        <div class="brand-icon"><i class="bi bi-intersect"></i></div>
-        <div class="brand-name">OrbisERP <strong>Master</strong><small>Master Node · System Level 0</small></div>
+<body class="master-body">
+  <nav class="master-topbar">
+    <a class="master-brand" href="{{ url_for('superadmin_bp.admin_dashboard') }}">
+      <span><i class="bi bi-intersect"></i></span>
+      <div><strong>OrbisERP</strong><small>Centro maestro</small></div>
     </a>
-    <div class="tb-right">
-        <div class="live-badge"><div class="live-dot"></div>Infraestructura Online · AST</div>
-        <button id="themeBtn" class="btn-sm">
-            <i id="themeIco"></i>
-            <span id="themeTxt"></span>
-        </button>
-        <form method="post" action="{{ url_for('login_bp.logout') }}" style="display:contents"><button class="btn-sm"><i class="bi bi-box-arrow-right"></i> Salir</button></form>
+    <div class="master-top-actions">
+      <span class="master-health"><i></i> Plataforma operativa</span>
+      <a class="master-icon-action" href="{{ url_for('superadmin_bp.view_payments') }}" title="Pagos"><i class="bi bi-wallet2"></i>{% set pending_payments = companies|selectattr('receipt_status','equalto','PENDING')|list|length %}{% if pending_payments %}<b>{{ pending_payments }}</b>{% endif %}</a>
+      <button id="themeBtn" class="master-icon-action" type="button" title="Cambiar tema"><i id="themeIco" class="bi bi-moon-fill"></i><span id="themeTxt" class="sr-only">Tema</span></button>
+      <form method="post" action="{{ url_for('login_bp.logout') }}"><button class="master-icon-action danger" type="submit" title="Cerrar sesión"><i class="bi bi-box-arrow-right"></i></button></form>
     </div>
-</nav>
+  </nav>
 
-<div class="hero">
-    <div>
-        <div class="hero-eyebrow">PANEL MAESTRO</div>
-        <h1>Control de nodos</h1>
-        <p>Gestión centralizada de empresas · Auditoría de suscripciones</p>
-    </div>
-    <div class="kpis">
-        <div class="kpi">
-            <label>INGRESO MENSUAL (MRR)</label>
-            <div class="v mrr-val">RD$ {{ "{:,.2f}".format(total_mrr) }}</div>
+  <main class="master-shell">
+    {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div class="master-flashes">{% for cat,msg in messages %}<div class="master-flash {{ cat }}"><i class="bi {{ 'bi-check-circle' if cat=='success' else 'bi-exclamation-circle' }}"></i><span>{{ msg }}</span></div>{% endfor %}</div>{% endif %}{% endwith %}
+
+    <header class="master-heading">
+      <div><span class="master-eyebrow">ADMINISTRACIÓN DE PLATAFORMA</span><h1>Centro de control</h1><p>Empresas, suscripciones, almacenamiento y soporte desde una sola superficie operativa.</p></div>
+      <div class="master-heading-actions"><button type="button" class="master-btn secondary" data-open-broadcast><i class="bi bi-megaphone"></i> Anuncio global{% if active_announcement %}<span class="master-pulse"></span>{% endif %}</button><a class="master-btn" href="{{ url_for('superadmin_bp.view_payments') }}"><i class="bi bi-credit-card"></i> Revisar pagos</a></div>
+    </header>
+
+    <section class="master-kpis">
+      <article><span class="kpi-icon revenue"><i class="bi bi-graph-up-arrow"></i></span><div><small>MRR estimado</small><strong>RD$ {{ '{:,.0f}'.format(total_mrr) }}</strong><em>Ingresos mensuales por planes</em></div></article>
+      <article><span class="kpi-icon companies"><i class="bi bi-buildings"></i></span><div><small>Empresas</small><strong>{{ companies|length }}</strong><em>{{ critical_nodes|length }} con vencimiento próximo</em></div></article>
+      <article><span class="kpi-icon users"><i class="bi bi-people"></i></span><div><small>Usuarios</small><strong>{{ total_users }}</strong><em>Usuarios registrados en plataforma</em></div></article>
+      <article><span class="kpi-icon payments"><i class="bi bi-receipt"></i></span><div><small>Pagos pendientes</small><strong>{{ pending_payments }}</strong><em>Requieren validación manual</em></div></article>
+    </section>
+
+    <section class="master-overview-grid">
+      <article class="master-panel infra-panel">
+        <header><div><span>INFRAESTRUCTURA</span><h2>Capacidad de almacenamiento</h2></div><span class="panel-badge {{ 'warning' if infra_perc > 80 else 'ok' }}">{{ infra_perc }}%</span></header>
+        <div class="infra-value"><strong>{{ total_used_mb }}</strong><span>MB usados de {{ total_disk_mb }} MB</span></div>
+        <div class="master-progress"><i style="--progress:{{ infra_perc if infra_perc <= 100 else 100 }}%"></i></div>
+        <p>{{ 'Capacidad alta: conviene ampliar o limpiar almacenamiento.' if infra_perc > 80 else 'Capacidad dentro del margen operativo configurado.' }}</p>
+      </article>
+      <article class="master-panel plan-panel">
+        <header><div><span>SUSCRIPCIONES</span><h2>Distribución de planes</h2></div></header>
+        <div class="plan-bars">
+          {% set total_nodes = companies|length if companies|length else 1 %}
+          {% for plan in ['BASIC','PRO','ULTRA'] %}<div><span><b>{{ plan }}</b><em>{{ plan_counts[plan] }}</em></span><i><b style="--progress:{{ (plan_counts[plan] / total_nodes * 100)|round(1) }}%"></b></i></div>{% endfor %}
         </div>
+      </article>
+      <article class="master-panel alert-panel">
+        <header><div><span>ATENCIÓN</span><h2>Vencimientos en 72 horas</h2></div><span class="panel-badge {{ 'warning' if critical_nodes else 'ok' }}">{{ critical_nodes|length }}</span></header>
+        {% if critical_nodes %}<div class="critical-list">{% for node in critical_nodes[:4] %}<div><span class="node-avatar">{{ node.name[:1]|upper }}</span><span><strong>{{ node.name }}</strong><small>{{ node.plan_name }} · vence {{ node.expiration_date.strftime('%d/%m/%Y') if node.expiration_date else 'N/D' }}</small></span></div>{% endfor %}</div>{% else %}<div class="master-empty compact"><i class="bi bi-shield-check"></i><span>Sin vencimientos críticos.</span></div>{% endif %}
+      </article>
+    </section>
 
-        <button type="button" class="btn-exit" style="background: var(--sur2); border: 1px solid var(--bd); color: var(--tx); position: relative; width: 45px; height: 60px; display: flex; align-items: center; justify-content: center;" 
-                onclick="openBroadcastModal()" title="Sistema de Comunicación Global">
-            <i class="bi bi-megaphone" style="font-size: 1.2rem;"></i>
-            {% if active_announcement %}<div class="broadcast-badge"></div>{% endif %}
-        </button>
+    {% if active_announcement %}<section class="master-announcement {{ active_announcement.type }}"><i class="bi bi-megaphone-fill"></i><div><span>ANUNCIO ACTIVO · {{ active_announcement.type|upper }}</span><strong>{{ active_announcement.message }}</strong></div><form action="{{ url_for('superadmin_bp.clear_broadcast') }}" method="post"><button type="submit" title="Desactivar"><i class="bi bi-x-lg"></i></button></form></section>{% endif %}
 
-        <a href="{{ url_for('superadmin_bp.view_payments') }}" class="kpi-link" title="Ver pagos pendientes">
-            <div class="kpi">
-                <label>PAGOS</label>
-                <div class="v kpi-icon"><i class="bi bi-wallet2"></i></div>
-                {% set pc = companies|selectattr('receipt_status','equalto','PENDING')|list|length %}
-                {% if pc > 0 %}<span class="notif">{{ pc }}</span>{% endif %}
+    <section class="master-companies-section">
+      <header class="master-section-head"><div><span>EMPRESAS</span><h2>Nodos administrados</h2><p>Busca, inspecciona o entra en modo soporte sin perder el contexto de estado.</p></div><label class="master-search"><i class="bi bi-search"></i><input id="srch" type="search" placeholder="Buscar por empresa, RNC o email…" autocomplete="off"><kbd>/</kbd></label></header>
+      <div class="master-company-grid" id="grid">
+      {% for c in companies %}
+        {% set usage = c.current_storage_usage or 0 %}{% set storage_limit = c.storage_limit or 0 %}{% set usage_pct = ((usage / storage_limit * 100)|int) if storage_limit > 0 else 0 %}
+        <article class="master-company-card nc" data-name="{{ c.name|lower }}" data-rnc="{{ c.rnc or '' }}" data-admin="{{ c.email or '' }}">
+          <header>
+            <span class="company-logo">{% if c.logo %}<img src="{{ url_for('static', filename=c.logo) }}" alt="Logo de {{ c.name }}">{% else %}<b>{{ c.name[:1]|upper }}</b>{% endif %}</span>
+            <div class="company-title"><small>#NODE-{{ '%03d'|format(c.id) }}</small><h3>{{ c.name }}</h3><span>{{ c.email or 'Sin email administrativo' }}</span></div>
+            <div class="company-badges"><span class="status {{ 'online' if c.status else 'offline' }}"><i></i>{{ 'Activa' if c.status else 'Suspendida' }}</span><span class="plan {{ c.plan_name|lower }}">{{ c.plan_name }}</span>{% if c.is_readonly %}<span class="readonly"><i class="bi bi-lock-fill"></i> Solo lectura</span>{% endif %}</div>
+          </header>
+          <div class="company-body">
+            <dl><div><dt>RNC</dt><dd>{{ c.rnc or 'N/D' }}</dd></div><div><dt>Moneda</dt><dd>{{ c.display_currency_code or 'N/D' }}</dd></div><div><dt>Vencimiento</dt><dd class="{% if c.expiration_date and c.expiration_date < ahora %}danger-text{% endif %}">{{ c.expiration_date.strftime('%d/%m/%Y') if c.expiration_date else 'N/D' }}</dd></div><div><dt>Almacenamiento</dt><dd>{{ (usage / 1024 / 1024)|round(1) }} MB</dd></div></dl>
+            <div class="company-storage"><span><small>Uso del plan</small><b>{{ usage_pct }}%</b></span><i><b class="{% if usage_pct > 90 %}danger{% elif usage_pct > 75 %}warning{% endif %}" style="--progress:{{ usage_pct if usage_pct <= 100 else 100 }}%"></b></i><small>Límite {{ (storage_limit / 1024 / 1024)|round(0) if storage_limit else 0 }} MB</small></div>
+          </div>
+          <footer>
+            <form method="post" action="{{ url_for('superadmin_bp.impersonate', company_id=c.id) }}"><button class="company-support" type="submit"><i class="bi bi-headset"></i> Entrar como soporte</button></form>
+            <div class="company-actions">
+              <button type="button" class="inspect-company" title="Inspeccionar" data-renew-url="{{ url_for('superadmin_bp.renew_plan', id=c.id) }}" data-company='{{ {"id":c.id,"name":c.name,"rnc":c.rnc,"status":c.status,"is_readonly":c.is_readonly,"email":c.email,"address":c.address or "Sin dirección","tax_name":c.tax_name or "Impuesto","tax_percent":c.tax_percent or 0,"currency":(c.display_currency_code or "N/D") ~ " (" ~ (c.display_currency_symbol or "") ~ ")","expiry":c.expiration_date.strftime("%d/%m/%Y") if c.expiration_date else "N/D","plan":c.plan_name,"usage":(usage / 1024 / 1024)|round(2)}|tojson|forceescape }}'><i class="bi bi-eye"></i></button>
+              <form action="{{ url_for('superadmin_bp.toggle_readonly', id=c.id) }}" method="post"><button type="submit" class="{% if c.is_readonly %}warning{% endif %}" title="{{ 'Quitar solo lectura' if c.is_readonly else 'Activar solo lectura' }}"><i class="bi {{ 'bi-unlock' if c.is_readonly else 'bi-lock' }}"></i></button></form>
+              <form action="{{ url_for('superadmin_bp.refresh_storage', id=c.id) }}" method="post"><button type="submit" title="Recalcular almacenamiento"><i class="bi bi-arrow-clockwise"></i></button></form>
+              <form action="{{ url_for('superadmin_bp.toggle_status', id=c.id) }}" method="post"><button type="submit" title="{{ 'Suspender' if c.status else 'Activar' }}"><i class="bi bi-power"></i></button></form>
+              <form action="{{ url_for('superadmin_bp.delete_company', id=c.id) }}" method="post" data-confirm="¿Eliminar permanentemente {{ c.name }}?" data-confirm-title="Eliminar empresa" data-confirm-detail="Esta acción elimina el tenant y sus datos asociados. No puede deshacerse desde la aplicación." data-confirm-action="Eliminar empresa"><button type="submit" class="danger" title="Eliminar"><i class="bi bi-trash3"></i></button></form>
             </div>
-        </a>
-        <div class="kpi">
-            <label>NODOS</label>
-            <div class="v">{{ companies|length }}</div>
-        </div>
-        <div class="kpi">
-            <label>USUARIOS</label>
-            <div class="v">{{ total_users }}</div>
-        </div>
-        <form method="post" action="{{ url_for('login_bp.logout') }}" style="display:contents"><button class="btn-exit" title="Cerrar sesión master">
-            <i class="bi bi-power"></i>
-        </button></form>
-    </div>
-</div>
+          </footer>
+        </article>
+      {% endfor %}
+        <div class="master-empty" id="empty"><i class="bi bi-search"></i><strong>Sin coincidencias</strong><span>Prueba con otro nombre, RNC o correo.</span></div>
+      </div>
+    </section>
+  </main>
 
-<section class="infra-health">
-    <div class="health-card">
-        <label>Infraestructura Railway (Disco)</label>
-        <div class="h-val">{{ total_used_mb }} <small>MB / {{ total_disk_mb }} MB</small></div>
-        <div class="h-bar-bg">
-            <div class="h-bar-fill {{ 'warn' if infra_perc > 80 }}" style="width: {{ infra_perc if infra_perc <= 100 else 100 }}%"></div>
-        </div>
-        <div style="font-size: 10px; color: var(--tx3);">
-            {{ infra_perc }}% de la capacidad contratada en uso
-        </div>
-    </div>
-
-    <div class="health-card">
-        <label>Distribución de Planes</label>
-        <div class="plan-dist">
-            <div class="pd-item"><span class="dot basic"></span> B: {{ plan_counts['BASIC'] }}</div>
-            <div class="pd-item"><span class="dot pro"></span> P: {{ plan_counts['PRO'] }}</div>
-            <div class="pd-item"><span class="dot ultra"></span> U: {{ plan_counts['ULTRA'] }}</div>
-        </div>
-        <div style="margin-top: 15px; font-size: 10px; color: var(--tx3);">Segmentación de nodos activos</div>
-    </div>
-
-    <div class="health-card">
-        <label>Vencimientos Próximos (72h)</label>
-        <div class="critical-nodes">
-            {% if critical_nodes %}
-                <ul class="critical-list">
-                    {% for n in critical_nodes[:3] %}
-                    <li class="critical-item">
-                        {{ n.name[:15] }}{{ '...' if n.name|length > 15 }}
-                        <span>{{ n.expiration_date.strftime('%d/%m') }}</span>
-                    </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <div class="all-good">
-                    <i class="bi bi-shield-check"></i> Todos los nodos al día
-                </div>
-            {% endif %}
-        </div>
-    </div>
-</section>
-
-<div class="toolbar">
-    <div class="searchbar">
-        <i class="bi bi-terminal"></i>
-        <input type="text" id="srch" placeholder="Filtrar por RNC, nombre o email administrativo...">
-    </div>
-</div>
-
-<div class="grid" id="grid">
-    {% for c in companies %}
-    <article class="nc"
-             data-name="{{ c.name|lower }}"
-             data-rnc="{{ c.rnc }}"
-             data-admin="{{ c.email }}">
-
-        <div class="nc-head">
-            <div class="nc-logo">
-                {% if c.logo %}
-                    <img src="{{ url_for('static', filename=c.logo) }}" alt="">
-                {% else %}
-                    <i class="bi bi-building" style="font-size:18px;color:var(--tx3)"></i>
-                {% endif %}
-            </div>
-            <div class="nc-meta">
-                <div class="nc-nodeid">#NODE-{{ '%03d' % c.id }}</div>
-                <div class="nc-name">{{ c.name }}</div>
-            </div>
-            <div class="nc-badges">
-                <span class="pill {{ 'pill-online' if c.status else 'pill-offline' }}">
-                    {{ 'Online' if c.status else 'Offline' }}
-                </span>
-                
-                {% if c.is_readonly %}
-                <span class="pill" style="background:#f39c12; color:#000; font-weight:700;">READ ONLY</span>
-                {% endif %}
-
-                <span class="pill {{ 'pill-ultra' if c.plan_name == 'ULTRA' else 'pill-pro' if c.plan_name == 'PRO' else 'pill-basic' }}">
-                    {{ c.plan_name }}
-                </span>
-            </div>
-        </div>
-
-        <div class="nc-body">
-            <div class="rnc-tag"><i class="bi bi-qr-code" style="font-size:11px"></i> RNC: {{ c.rnc or 'N/A' }}</div>
-            
-            <div style="margin-top: 12px; padding: 12px; background: var(--sur2); border-radius: 10px; border: 1px solid var(--bd); margin-bottom: 10px;">
-                <div style="display:flex; justify-content:space-between; font-size:10px; margin-bottom:6px;">
-                    <label style="color:var(--tx2); font-weight:700; letter-spacing: 0.5px;">ESTADO DEL NODO (DISCO)</label>
-                    <span style="font-family: monospace; color: var(--tx); font-weight: 700;">{{ (c.current_storage_usage / 1024 / 1024)|round(2) }} MB</span>
-                </div>
-                
-                {% set perc = (c.current_storage_usage / c.storage_limit * 100)|int if c.storage_limit > 0 else 0 %}
-                
-                <div style="width:100%; height:8px; background: rgba(255,255,255,0.03); border-radius:10px; overflow:hidden; position:relative; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
-                    <div style="width:{{ perc if perc <= 100 else 100 }}%; 
-                                height:100%; 
-                                background: {{ 'linear-gradient(90deg, #E24B4A, #ff6b6b)' if perc > 90 else 'linear-gradient(90deg, var(--purple), #ffcc00)' }}; 
-                                box-shadow: 0 0 10px {{ 'rgba(226,75,74,0.4)' if perc > 90 else 'rgba(250,162,0,0.3)' }};
-                                border-radius: 10px;
-                                transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-                                position: relative;">
-                        <div style="position: absolute; top: 0; left: 0; right: 0; height: 30%; background: rgba(255,255,255,0.15);"></div>
-                    </div>
-                </div>
-                
-                <div style="display:flex; justify-content:space-between; font-size:9px; margin-top:6px; color:var(--tx3); font-weight: 600;">
-                    <span>{{ perc }}% usado</span>
-                    <span>Límite: {{ (c.storage_limit / 1024 / 1024)|round(0) }} MB</span>
-                </div>
-            </div>
-
-            <div class="nc-data">
-                <div class="nd">
-                    <label>MONEDA</label>
-                    <span>{{ c.display_currency_code or 'N/A' }}</span>
-                </div>
-                <div class="nd">
-                    <label>VENCIMIENTO</label>
-                    <span class="{{ 'text-danger' if c.expiration_date and c.expiration_date < ahora }}">{{ c.expiration_date.strftime("%d/%m/%Y") if c.expiration_date else "N/A" }}</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="nc-foot">
-            <form method="post" action="{{ url_for('superadmin_bp.impersonate', company_id=c.id) }}" style="display:contents"><button class="btn-tech">
-                <i class="bi bi-shield-lock-fill" style="font-size:12px"></i> ACCESO
-            </button></form>
-
-            <form action="{{ url_for('superadmin_bp.toggle_readonly', id=c.id) }}" method="POST" style="display:contents">
-                <button type="submit" class="bic {{ 'warn' if c.is_readonly }}" title="Cambiar permisos">
-                    <i class="bi {{ 'bi-file-lock2-fill' if c.is_readonly else 'bi-pencil-square' }}"></i>
-                </button>
-            </form>
-
-            <form action="{{ url_for('superadmin_bp.refresh_storage', id=c.id) }}" method="POST" style="display:contents">
-                <button type="submit" class="bic" title="Refrescar disco">
-                    <i class="bi bi-hdd-network"></i>
-                </button>
-            </form>
-
-            <button type="button" class="bic inf"
-                onclick='openModal({{ {
-                    "id": c.id, "name": c.name, "rnc": c.rnc, "status": c.status, "is_readonly": c.is_readonly,
-                    "email": c.email, "address": c.address or "Sin dirección",
-                    "tax_name": c.tax_name or "Impuesto", "tax_percent": c.tax_percent or 0,
-                    "currency": (c.display_currency_code or "N/A") + " (" + (c.display_currency_symbol or "") + ")",
-                    "expiry": c.expiration_date.strftime("%d/%m/%Y") if c.expiration_date else "N/A",
-                    "plan": c.plan_name, "usage": (c.current_storage_usage / 1024 / 1024)|round(2)
-                }|tojson }})'
-                title="Inspeccionar">
-                <i class="bi bi-eye"></i>
-            </button>
-
-            <form action="{{ url_for('superadmin_bp.toggle_status', id=c.id) }}" method="POST" style="display:contents">
-                <button type="submit" class="bic" title="On/Off"><i class="bi bi-power"></i></button>
-            </form>
-
-            <form action="{{ url_for('superadmin_bp.delete_company', id=c.id) }}" method="POST"
-                  onsubmit="return confirm('¿Eliminar nodo permanentemente?')"
-                  style="display:contents">
-                <button type="submit" class="bic del" title="Eliminar"><i class="bi bi-trash3"></i></button>
-            </form>
-        </div>
-    </article>
-    {% endfor %}
-
-    <div class="empty-state" id="empty">
-        <i class="bi bi-search"></i>
-        <p>Ningún nodo coincide con la búsqueda</p>
-    </div>
-</div>
-
-<div id="modalBg" class="modal-bg">
-    <div class="modal">
-        <div class="mhead">
-            <div>
-                <div class="ey">MASTER AUDIT LOG</div>
-                <h2 id="m-name">—</h2>
-            </div>
-            <button class="close-m" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
-        </div>
-        <div class="mbody">
-            <div class="mp">
-                <h4>NODO Y SUSCRIPCIÓN</h4>
-                <div class="dr"><label>ID interno</label><span id="m-id"></span></div>
-                <div class="dr"><label>Estado</label><span id="m-status"></span></div>
-                <div class="dr"><label>Restricción</label><span id="m-readonly"></span></div>
-                <div class="dr"><label>Vencimiento</label><span id="m-expiry"></span></div>
-                <div class="dr"><label>Plan activo</label><span class="tag-p" id="m-plan"></span></div>
-                <form id="renewForm" method="POST">
-                    <button type="submit" class="btn-renew"><i class="bi bi-arrow-repeat"></i> Renovar plan (30 días)</button>
-                </form>
-            </div>
-            <div class="mp">
-                <h4>CONTEXTO REGIONAL Y CONTACTO</h4>
-                <div class="dr"><label>RNC fiscal</label><span id="m-rnc"></span></div>
-                <div class="dr"><label>Impuesto</label><span id="m-tax"></span></div>
-                <div class="dr"><label>Divisa</label><span class="tag-c" id="m-currency"></span></div>
-                <div class="dr"><label>Disco Usado</label><span id="m-usage"></span></div>
-                <div class="dr"><label>Email Admin</label><span id="m-email"></span></div>
-                <div class="dr"><label>Dirección</label><span id="m-address"></span></div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="broadcastModal" class="modal-bg">
-    <div class="modal" style="max-width: 450px;">
-        <div class="mhead">
-            <div>
-                <div class="ey">COMUNICACIÓN GLOBAL</div>
-                <h2>Emitir Anuncio</h2>
-            </div>
-            <button class="close-m" onclick="closeBroadcastModal()"><i class="bi bi-x-lg"></i></button>
-        </div>
-        <div class="mbody">
-            <form action="{{ url_for('superadmin_bp.create_broadcast') }}" method="POST">
-                <div class="mp full">
-                    <label style="font-size: 10px; font-weight: 800; color: var(--tx3); text-transform: uppercase;">Prioridad</label>
-                    <select name="type" class="bc-select">
-                        <option value="info">🔵 Informativo</option>
-                        <option value="warning">🟡 Mantenimiento / Aviso</option>
-                        <option value="danger">🔴 Urgencia / Caída</option>
-                    </select>
-
-                    <label style="font-size: 10px; font-weight: 800; color: var(--tx3); text-transform: uppercase;">Mensaje</label>
-                    <textarea name="message" placeholder="Escribe el mensaje global..." required class="bc-input" style="min-height: 100px; resize: none;"></textarea>
-                    
-                    <button type="submit" class="btn-tech" style="width: 100%; justify-content: center; height: 45px;">Publicar Broadcast</button>
-                </div>
-            </form>
-
-            {% if active_announcement %}
-            <div class="mp full" style="margin-top: 20px; border-top: 1px solid var(--bd); padding-top: 20px;">
-                <label style="font-size: 10px; font-weight: 800; color: var(--tx3);">ACTIVO AHORA</label>
-                <div class="active-announcement-card {{ active_announcement.type }}">
-                    <div style="font-size: 13px;">
-                        <strong>[{{ active_announcement.type|upper }}]:</strong> {{ active_announcement.message }}
-                    </div>
-                    <form action="{{ url_for('superadmin_bp.clear_broadcast') }}" method="POST">
-                        <button type="submit" style="background: none; border: none; color: #ff4757; cursor: pointer; font-size: 20px;">
-                            <i class="bi bi-x-circle-fill"></i>
-                        </button>
-                    </form>
-                </div>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-</div>
-
-{% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-  <div class="flash-wrap">
-    {% for cat, msg in messages %}
-    <div class="flash {{ cat }}">{{ msg }}</div>
-    {% endfor %}
+  <div class="master-modal-backdrop" id="modalBg" hidden>
+    <section class="master-modal" role="dialog" aria-modal="true" aria-labelledby="m-name">
+      <header><div><span>INSPECCIÓN DE EMPRESA</span><h2 id="m-name">Empresa</h2></div><button type="button" data-close-modal="modalBg"><i class="bi bi-x-lg"></i></button></header>
+      <div class="master-modal-grid">
+        <article><h3>Suscripción</h3><dl><div><dt>ID interno</dt><dd id="m-id"></dd></div><div><dt>Estado</dt><dd id="m-status"></dd></div><div><dt>Restricción</dt><dd id="m-readonly"></dd></div><div><dt>Plan</dt><dd id="m-plan"></dd></div><div><dt>Vencimiento</dt><dd id="m-expiry"></dd></div><div><dt>Disco usado</dt><dd id="m-usage"></dd></div></dl><form id="renewForm" method="post"><button class="master-btn" type="submit"><i class="bi bi-arrow-repeat"></i> Renovar 30 días</button></form></article>
+        <article><h3>Fiscal y contacto</h3><dl><div><dt>RNC</dt><dd id="m-rnc"></dd></div><div><dt>Impuesto</dt><dd id="m-tax"></dd></div><div><dt>Divisa</dt><dd id="m-currency"></dd></div><div><dt>Email</dt><dd id="m-email"></dd></div><div><dt>Dirección</dt><dd id="m-address"></dd></div></dl></article>
+      </div>
+    </section>
   </div>
-  {% endif %}
-{% endwith %}
 
-<script src="/static/js/admin.js"></script>
+  <div class="master-modal-backdrop" id="broadcastModal" hidden>
+    <section class="master-modal broadcast-modal" role="dialog" aria-modal="true" aria-labelledby="broadcastTitle">
+      <header><div><span>COMUNICACIÓN GLOBAL</span><h2 id="broadcastTitle">Publicar anuncio</h2></div><button type="button" data-close-modal="broadcastModal"><i class="bi bi-x-lg"></i></button></header>
+      <form action="{{ url_for('superadmin_bp.create_broadcast') }}" method="post" class="broadcast-form"><label><span>Prioridad</span><select name="type"><option value="info">Informativo</option><option value="warning">Mantenimiento / aviso</option><option value="danger">Urgente</option></select></label><label><span>Mensaje</span><textarea name="message" required maxlength="1000" placeholder="Escribe el mensaje que verán las empresas…"></textarea></label><button type="submit" class="master-btn"><i class="bi bi-send"></i> Publicar anuncio</button></form>
+    </section>
+  </div>
 </body>
 </html>

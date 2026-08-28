@@ -1,0 +1,29 @@
+{
+  "checks": {
+    "body_dark_while_global_light": true,
+    "orange_action": true,
+    "dark_input": true,
+    "manual_input_dark": true,
+    "fractional_input_dark": true,
+    "global_main_spacing_overridden": true,
+    "scanner_nav_only": true,
+    "unit_scan_reaches_confirmation": true,
+    "unit_receive_action": true,
+    "fractional_panel_appears": true,
+    "fractional_scan_reaches_confirmation": true,
+    "fractional_receive_action": true,
+    "mobile_no_horizontal_overflow": true
+  },
+  "computed": {
+    "body": "rgb(12, 14, 17)",
+    "mainImage": "radial-gradient(circle at 92% 0%, color(srgb 0.952941 0.419608 0.129412 / 0.1), rgba(0, 0, 0, 0) 480px), linear-gradient(rgb(16, 19, 24) 0%, rgb(12, 14, 17) 72%)",
+    "surface": "rgb(21, 25, 31)",
+    "button": "rgb(243, 107, 33)",
+    "input": "rgb(21, 25, 31)",
+    "manualInput": "rgb(21, 25, 31)",
+    "fractionalInput": "rgb(32, 38, 46)",
+    "mainPaddingTop": "30px",
+    "mainMarginLeft": "268px"
+  },
+  "passed": true
+}

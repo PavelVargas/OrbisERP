@@ -1,3 +1,4 @@
+from services.time_utils import utcnow
 from db import db
 from datetime import datetime
 
@@ -6,6 +7,7 @@ class Category(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=True)
 
     company_id = db.Column(
         db.Integer,
@@ -14,7 +16,7 @@ class Category(db.Model):
     )
 
     status = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
 
     def __repr__(self):
         return f'<Category {self.name}>'

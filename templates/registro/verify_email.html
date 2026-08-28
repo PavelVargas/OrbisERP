@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>{% include 'layouts/theme_prepaint.html' %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verifica tu correo | OrbisERP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/static/css/registro_css/registro.css">
+    <link rel="stylesheet" href="/static/css/public.css">
+</head>
+<body class="auth-page verify-page">
+
+    <header class="auth-nav">
+        <a href="/" class="nav-logo" aria-label="OrbisERP, inicio">
+            <i class="bi bi-intersect"></i>
+            <span>Orbis<strong>ERP</strong></span>
+        </a>
+
+        <button id="themeToggle" class="theme-switch" type="button" aria-label="Cambiar tema">
+            <i class="bi bi-moon-stars-fill"></i>
+            <span class="mode-text">Modo Oscuro</span>
+        </button>
+    </header>
+
+    <main class="split-layout verify-layout">
+        <section class="side-visual verify-visual" aria-hidden="true">
+            <div class="visual-content">
+                <span class="pill-badge">Seguridad de cuenta</span>
+                <h1>Un último paso.<br><span class="text-gradient">Confirma que eres tú.</span></h1>
+                <p>Usamos un código temporal para proteger tu cuenta antes de darte acceso a tu espacio de trabajo.</p>
+
+                <div class="mini-features">
+                    <div class="m-item"><i class="bi bi-shield-check"></i> Código temporal</div>
+                    <div class="m-item"><i class="bi bi-envelope-check"></i> Verificación segura</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="side-form verify-form-side">
+            <div class="register-card verify-card">
+                <div class="verify-kicker">
+                    <span class="verify-kicker-icon"><i class="bi bi-envelope-check"></i></span>
+                    <span>Verificación de correo</span>
+                </div>
+
+                <div class="form-header verify-header">
+                    <h2>Revisa tu correo</h2>
+                    <p>Introduce el código de 4 dígitos que acabamos de enviarte.</p>
+                </div>
+
+                {% include 'partials/auth_flashes.html' %}
+
+                {% if email %}
+                <div class="verify-email-row">
+                    <div class="verify-email-copy">
+                        <i class="bi bi-envelope"></i>
+                        <div>
+                            <span>Enviado a</span>
+                            <strong>{{ email }}</strong>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('registrar.register') }}">Cambiar</a>
+                </div>
+                {% endif %}
+
+                <form id="verificationForm" method="post" action="{{ url_for('registrar.verification_pending') }}" autocomplete="one-time-code" class="verify-form">
+                    <input id="verification_code" name="code" type="hidden" value="">
+
+                    <fieldset class="verify-code-fieldset">
+                        <legend>Código de verificación</legend>
+                        <div class="verify-code-grid" id="verificationDigits">
+                            <input class="verify-digit" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="1" aria-label="Primer dígito" autofocus>
+                            <input class="verify-digit" type="text" inputmode="numeric" maxlength="1" aria-label="Segundo dígito">
+                            <input class="verify-digit" type="text" inputmode="numeric" maxlength="1" aria-label="Tercer dígito">
+                            <input class="verify-digit" type="text" inputmode="numeric" maxlength="1" aria-label="Cuarto dígito">
+                        </div>
+                    </fieldset>
+
+                    <button type="submit" class="btn-register-main verify-submit">
+                        <span>Verificar mi cuenta</span>
+                        <i class="bi bi-arrow-right"></i>
+                    </button>
+                </form>
+
+                <div class="verify-note">
+                    <i class="bi bi-clock"></i>
+                    <span>El código vence en <strong>{{ code_minutes or 10 }} minutos</strong>. Revisa Spam o Promociones si no lo ves.</span>
+                </div>
+
+                <div class="verify-footer-actions">
+                    <form method="post" action="{{ url_for('registrar.resend_verification') }}">
+                        {% if email %}<input type="hidden" name="email" value="{{ email }}">{% endif %}
+                        <button class="verify-resend" type="submit">
+                            <i class="bi bi-arrow-clockwise"></i>
+                            Reenviar código
+                        </button>
+                    </form>
+
+                    <a class="verify-back" href="{{ url_for('login_bp.login') }}">
+                        <i class="bi bi-arrow-left"></i>
+                        Volver al inicio de sesión
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/public-theme-toggle.js') }}" defer></script>
+    <script>
+        const form = document.getElementById('verificationForm');
+        const hiddenCode = document.getElementById('verification_code');
+        const digits = Array.from(document.querySelectorAll('.verify-digit'));
+
+        function updateCode() {
+            hiddenCode.value = digits.map(input => input.value).join('');
+        }
+
+        digits.forEach((input, index) => {
+            input.addEventListener('input', event => {
+                const clean = event.target.value.replace(/\D/g, '').slice(-1);
+                event.target.value = clean;
+                updateCode();
+                if (clean && index < digits.length - 1) digits[index + 1].focus();
+            });
+
+            input.addEventListener('keydown', event => {
+                if (event.key === 'Backspace' && !input.value && index > 0) {
+                    digits[index - 1].focus();
+                }
+                if (event.key === 'ArrowLeft' && index > 0) digits[index - 1].focus();
+                if (event.key === 'ArrowRight' && index < digits.length - 1) digits[index + 1].focus();
+            });
+
+            input.addEventListener('paste', event => {
+                const pasted = (event.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 4);
+                if (!pasted) return;
+                event.preventDefault();
+                pasted.split('').forEach((value, pastedIndex) => {
+                    if (digits[pastedIndex]) digits[pastedIndex].value = value;
+                });
+                updateCode();
+                digits[Math.min(pasted.length, 4) - 1].focus();
+            });
+        });
+
+        form.addEventListener('submit', event => {
+            updateCode();
+            if (!/^\d{4}$/.test(hiddenCode.value)) {
+                event.preventDefault();
+                const firstEmpty = digits.find(input => !input.value) || digits[0];
+                firstEmpty.focus();
+                firstEmpty.classList.add('verify-digit-error');
+                setTimeout(() => firstEmpty.classList.remove('verify-digit-error'), 600);
+            }
+        });
+    </script>
+</body>
+</html>

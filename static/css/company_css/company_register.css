@@ -1,162 +1,585 @@
-/* --- BASE & LAYOUT --- */
-.auth-page {
-    background-color: var(--bg-main);
-    color: var(--text-main);
-    min-height: 100vh;
-}
+/* ======================================================================
+   OrbisERP - Company onboarding
+   Hoja exclusiva de templates/company/create_company.html.
+   Todos los selectores quedan aislados bajo body.company-onboarding para
+   impedir que este layout altere login, registro u otros modulos.
+   ====================================================================== */
 
-.auth-nav {
-    position: absolute;
-    top: 0; left: 0; width: 100%;
-    padding: 30px 50px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    z-index: 10;
-}
-
-.nav-logo { font-size: 1.5rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
-.nav-logo i { color: #f9a100; }
-
-.theme-switch {
-    background: var(--glass);
-    border: 1px solid var(--border);
-    padding: 10px 20px;
-    border-radius: 30px;
-    color: var(--text-main);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 600;
-    transition: 0.3s;
-}
-
-/* --- SPLIT LAYOUT --- */
-.split-layout {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    min-height: 100vh;
-}
-
-.side-visual {
-    background: radial-gradient(circle at top left, rgba(249, 161, 0, 0.1), transparent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 60px;
-}
-
-.side-visual h1 { font-size: 4.5rem; line-height: 1; letter-spacing: -2px; margin-bottom: 20px; }
-
-/* --- SIDE FORM & COMPONENTS --- */
-.side-form {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 60px;
+body.company-onboarding {
+    --company-nav-h: 64px;
+    --company-page-pad: clamp(28px, 4vw, 72px);
+    --company-panel-gap: clamp(40px, 5vw, 84px);
+    --company-card-pad: clamp(24px, 2.6vw, 38px);
+    --company-radius: 18px;
+    min-height: 100dvh;
+    margin: 0;
+    overflow-x: hidden;
     background: var(--bg-main);
+    color: var(--text-main);
+    font-family: "Plus Jakarta Sans", system-ui, sans-serif;
 }
 
-.register-card {
+body.company-onboarding *,
+body.company-onboarding *::before,
+body.company-onboarding *::after {
+    box-sizing: border-box;
+}
+
+/* Header exclusivo de esta pantalla */
+body.company-onboarding .auth-nav {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 40;
     width: 100%;
-    max-width: 460px;
-}
-
-.form-header { margin-bottom: 35px; }
-.form-header h2 { font-size: 2rem; font-weight: 800; margin-bottom: 10px; }
-.form-header p { color: var(--text-muted); }
-
-/* Grid de Formulario */
-.form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-
-.field-group.full { grid-column: span 2; }
-
-.field-group label {
+    height: var(--company-nav-h);
+    padding: 0 var(--company-page-pad);
     display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: color-mix(in srgb, var(--bg-main) 94%, transparent);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+
+body.company-onboarding .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: var(--text-main);
+    font-size: 1.14rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+body.company-onboarding .nav-logo i { color: #ff7a1a; }
+
+body.company-onboarding .theme-switch {
+    min-height: 36px;
+    padding: 8px 13px;
+    display: inline-flex;
     align-items: center;
     gap: 8px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    margin-bottom: 8px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--glass);
     color: var(--text-main);
-}
-
-.field-group label i { color: #f9a100; }
-
-.field-group input {
-    width: 100%;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px;
-    color: white;
-    transition: 0.3s;
-}
-
-.field-group input:focus {
-    outline: none;
-    border-color: #f9a100;
-    background: rgba(249, 161, 0, 0.05);
-}
-
-/* Custom File Input */
-.file-upload input { display: none; }
-.file-upload label {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 12px;
+    font: inherit;
+    font-size: .76rem;
+    font-weight: 700;
     cursor: pointer;
-    transition: 0.3s;
-    margin-bottom: 0;
 }
-.file-upload label:hover { border-color: #f9a100; color: #f9a100; }
 
-.form-divider {
-    grid-column: span 2;
-    text-align: center;
-    position: relative;
-    margin: 10px 0;
+/* Layout: 34 / 66, centrado y con padding exterior estable */
+body.company-onboarding .company-shell {
+    width: min(1680px, 100%);
+    min-height: 100dvh;
+    margin: 0 auto;
+    padding: calc(var(--company-nav-h) + 22px) var(--company-page-pad) 28px;
+    display: grid;
+    grid-template-columns: minmax(390px, 0.78fr) minmax(620px, 1.22fr);
+    gap: var(--company-panel-gap);
+    align-items: center;
 }
-.form-divider::before { content: ""; position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: var(--border); }
-.form-divider span { position: relative; background: var(--bg-main); padding: 0 15px; font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; }
 
-/* Botón */
-.btn-register {
+body.company-onboarding .company-intro,
+body.company-onboarding .company-form-panel {
+    min-width: 0;
+}
+
+body.company-onboarding .company-intro {
     width: 100%;
-    margin-top: 30px;
-    padding: 16px;
-    border-radius: 12px;
-    border: none;
-    background: #f9a100;
-    color: #000;
+    max-width: 470px;
+    justify-self: start;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding: 8px 0;
+}
+
+body.company-onboarding .intro-copy { width: 100%; }
+
+body.company-onboarding .pill-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 10px;
+    border: 1px solid rgba(255,122,26,.30);
+    border-radius: 999px;
+    background: rgba(255,122,26,.09);
+    color: #ff8b2c;
+    font-size: .65rem;
     font-weight: 800;
-    font-size: 1rem;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    transition: 0.3s;
+    letter-spacing: .065em;
+    text-transform: uppercase;
 }
-.btn-register:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(249, 161, 0, 0.2); }
 
-.form-footer { text-align: center; margin-top: 25px; font-size: 0.9rem; color: var(--text-muted); }
-.form-footer a { color: #f9a100; text-decoration: none; font-weight: 700; }
+body.company-onboarding .intro-copy h1 {
+    max-width: 420px;
+    margin: 16px 0 16px;
+    color: var(--text-main);
+    font-size: clamp(2.8rem, 4vw, 4.25rem);
+    line-height: 1.02;
+    letter-spacing: -.055em;
+    font-weight: 800;
+}
 
-/* RESPONSIVO */
-@media (max-width: 992px) {
-    .split-layout { grid-template-columns: 1fr; }
-    .side-visual { display: none; }
-    .auth-nav { padding: 20px; }
-    .side-form { padding: 100px 20px 40px; }
-    .mode-text { display: none; }
+body.company-onboarding .text-gradient {
+    color: #ff7a1a;
+    background: none;
+    -webkit-text-fill-color: currentColor;
+}
+
+body.company-onboarding .intro-copy p {
+    max-width: 405px;
+    margin: 0;
+    color: var(--text-muted);
+    font-size: .92rem;
+    line-height: 1.62;
+}
+
+body.company-onboarding .owner-card {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 46px minmax(0,1fr) auto;
+    align-items: center;
+    gap: 13px;
+    padding: 14px 15px;
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    background: color-mix(in srgb, var(--glass) 84%, transparent);
+}
+
+body.company-onboarding .owner-avatar {
+    width: 46px;
+    height: 46px;
+    display: grid;
+    place-items: center;
+    border-radius: 13px;
+    background: linear-gradient(145deg,#ffad16,#ff821a);
+    color: #111;
+    font-size: 1rem;
+    font-weight: 900;
+}
+
+body.company-onboarding .owner-card > div:nth-child(2) {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+}
+
+body.company-onboarding .owner-card span,
+body.company-onboarding .owner-card small {
+    overflow: hidden;
+    color: var(--text-muted);
+    font-size: .69rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.company-onboarding .owner-card strong {
+    overflow: hidden;
+    color: var(--text-main);
+    font-size: .88rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.company-onboarding .owner-card > i {
+    color: #ff9817;
+    font-size: 1.15rem;
+}
+
+body.company-onboarding .setup-steps {
+    display: grid;
+    gap: 6px;
+}
+
+body.company-onboarding .setup-step {
+    min-height: 44px;
+    display: grid;
+    grid-template-columns: 31px minmax(0,1fr) auto;
+    align-items: center;
+    gap: 11px;
+    padding: 6px 8px;
+    border-radius: 11px;
+    color: var(--text-muted);
+}
+
+body.company-onboarding .setup-step b {
+    width: 29px;
+    height: 29px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: rgba(255,255,255,.025);
+    font-size: .71rem;
+}
+
+body.company-onboarding .setup-step span {
+    display: grid;
+    gap: 1px;
+    color: inherit;
+    font-size: .78rem;
+    font-weight: 800;
+}
+
+body.company-onboarding .setup-step small {
+    color: var(--text-muted);
+    font-size: .65rem;
+    font-weight: 600;
+}
+
+body.company-onboarding .setup-step.done,
+body.company-onboarding .setup-step.active { color: var(--text-main); }
+
+body.company-onboarding .setup-step.done b,
+body.company-onboarding .setup-step.active b {
+    border-color: rgba(255,137,22,.33);
+    background: rgba(255,137,22,.10);
+    color: #ff9817;
+}
+
+body.company-onboarding .setup-step.done > i,
+body.company-onboarding .setup-step.active > i { color: #ff9817; }
+
+/* Formulario */
+body.company-onboarding .company-form-panel {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+body.company-onboarding .company-card {
+    width: 100%;
+    max-width: 900px;
+    margin: 0;
+    padding: var(--company-card-pad);
+    border: 1px solid var(--border);
+    border-radius: var(--company-radius);
+    background: color-mix(in srgb, var(--glass) 90%, transparent);
+    box-shadow: 0 22px 62px rgba(0,0,0,.14);
+}
+
+body.company-onboarding .company-card .form-header { margin: 0 0 20px; }
+
+body.company-onboarding .section-kicker {
+    display: block;
+    margin-bottom: 6px;
+    color: #ff9817;
+    font-size: .67rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+body.company-onboarding .company-card .form-header h2 {
+    margin: 0 0 6px;
+    color: var(--text-main);
+    font-size: clamp(1.55rem, 2vw, 1.85rem);
+    line-height: 1.15;
+    letter-spacing: -.035em;
+}
+
+body.company-onboarding .company-card .form-header p {
+    max-width: 600px;
+    margin: 0;
+    color: var(--text-muted);
+    font-size: .78rem;
+    line-height: 1.5;
+}
+
+body.company-onboarding .modern-form { margin: 0; }
+
+body.company-onboarding .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 13px 16px;
+}
+
+body.company-onboarding .field-group { min-width: 0; }
+body.company-onboarding .field-group.full { grid-column: 1 / -1; }
+
+body.company-onboarding .field-group label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 5px;
+    color: var(--text-main);
+    font-size: .71rem;
+    font-weight: 700;
+}
+
+body.company-onboarding .field-group label i { color: var(--text-muted); }
+
+body.company-onboarding .field-group input {
+    width: 100%;
+    min-height: 43px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    outline: 0;
+    background: rgba(255,255,255,.035);
+    color: var(--text-main);
+    font: inherit;
+    font-size: .78rem;
+    transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+body.company-onboarding .field-group input::placeholder { color: color-mix(in srgb,var(--text-muted) 72%,transparent); }
+
+body.company-onboarding .field-group input:focus {
+    border-color: rgba(255,130,24,.72);
+    background: rgba(255,130,24,.035);
+    box-shadow: 0 0 0 3px rgba(255,130,24,.10);
+}
+
+html:not(.dark) body.company-onboarding .field-group input { background: #fff; }
+
+body.company-onboarding .field-hint {
+    display: block;
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: .63rem;
+    line-height: 1.4;
+}
+
+body.company-onboarding .logo-upload-wrap {
+    display: grid;
+    grid-template-columns: 72px minmax(0,1fr);
+    align-items: center;
+    gap: 14px;
+    padding: 11px;
+    border: 1px dashed var(--border);
+    border-radius: 13px;
+    background: rgba(255,255,255,.018);
+}
+
+body.company-onboarding .logo-preview {
+    width: 72px;
+    height: 72px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border: 1px solid rgba(255,137,22,.20);
+    border-radius: 14px;
+    background: rgba(255,137,22,.08);
+    color: #ff9817;
+    font-size: 1.65rem;
+}
+
+body.company-onboarding .logo-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+body.company-onboarding .logo-upload-copy {
+    min-width: 0;
+    display: grid;
+    gap: 4px;
+}
+
+body.company-onboarding .logo-upload-copy > strong {
+    color: var(--text-main);
+    font-size: .82rem;
+}
+
+body.company-onboarding .logo-upload-copy > span {
+    color: var(--text-muted);
+    font-size: .66rem;
+    line-height: 1.4;
+}
+
+body.company-onboarding .file-upload input { display: none; }
+
+body.company-onboarding .file-upload label {
+    width: max-content;
+    margin: 3px 0 0;
+    padding: 6px 9px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(255,255,255,.025);
+    color: var(--text-main);
+    font-size: .66rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+body.company-onboarding .trial-note {
+    margin-top: 13px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    border: 1px solid rgba(255,137,22,.16);
+    border-radius: 12px;
+    background: rgba(255,137,22,.065);
+}
+
+body.company-onboarding .trial-note > i {
+    margin-top: 1px;
+    color: #ff9817;
+    font-size: 1rem;
+}
+
+body.company-onboarding .trial-note div { display: grid; gap: 2px; }
+body.company-onboarding .trial-note strong { font-size: .73rem; }
+body.company-onboarding .trial-note span { color: var(--text-muted); font-size: .63rem; line-height: 1.4; }
+
+body.company-onboarding .btn-register {
+    width: 100%;
+    min-height: 44px;
+    margin-top: 12px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border: 0;
+    border-radius: 10px;
+    background: linear-gradient(135deg,#ff7622,#ff5d32);
+    color: #fff;
+    font: inherit;
+    font-size: .78rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 9px 22px rgba(255,96,37,.17);
+    transition: transform .16s ease, box-shadow .16s ease;
+}
+
+body.company-onboarding .btn-register:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 26px rgba(255,96,37,.22);
+}
+
+body.company-onboarding .account-footer {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    color: var(--text-muted);
+    font-size: .64rem;
+    text-align: center;
+}
+
+body.company-onboarding .account-footer strong { color: var(--text-main); }
+body.company-onboarding .account-footer form { display: inline; margin: 0; }
+
+body.company-onboarding .link-button {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #ff9817;
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+body.company-onboarding .link-button:hover { text-decoration: underline; }
+
+/* Laptop: mantiene proporciones y reduce solo lo necesario en vertical. */
+@media (min-width: 1001px) and (max-height: 820px) {
+    body.company-onboarding {
+        --company-nav-h: 58px;
+        --company-page-pad: clamp(24px, 3vw, 46px);
+        --company-panel-gap: clamp(30px, 4vw, 58px);
+        --company-card-pad: 22px 26px;
+    }
+
+    body.company-onboarding .company-shell {
+        padding-top: calc(var(--company-nav-h) + 12px);
+        padding-bottom: 14px;
+    }
+
+    body.company-onboarding .company-intro { gap: 14px; max-width: 440px; }
+    body.company-onboarding .intro-copy h1 { margin: 10px 0 11px; font-size: clamp(2.45rem,3.6vw,3.45rem); }
+    body.company-onboarding .intro-copy p { font-size: .82rem; line-height: 1.48; }
+    body.company-onboarding .owner-card { padding: 10px 12px; }
+    body.company-onboarding .owner-avatar { width: 40px; height: 40px; }
+    body.company-onboarding .setup-steps { gap: 2px; }
+    body.company-onboarding .setup-step { min-height: 36px; padding: 3px 7px; }
+    body.company-onboarding .company-card .form-header { margin-bottom: 13px; }
+    body.company-onboarding .company-card .form-grid { gap: 8px 12px; }
+    body.company-onboarding .field-group input { min-height: 37px; padding: 8px 10px; }
+    body.company-onboarding .logo-upload-wrap { grid-template-columns: 58px minmax(0,1fr); padding: 8px 10px; }
+    body.company-onboarding .logo-preview { width: 58px; height: 58px; }
+    body.company-onboarding .trial-note { margin-top: 8px; padding: 8px 10px; }
+    body.company-onboarding .btn-register { min-height: 39px; margin-top: 8px; }
+    body.company-onboarding .account-footer { margin-top: 7px; }
+}
+
+/* Garantias de aislamiento: public.css no puede volver a encoger esta vista. */
+body.company-onboarding .register-card.company-card {
+    width: 100%;
+    max-width: 900px;
+}
+
+body.company-onboarding .company-card .btn-register {
+    margin-top: 12px;
+}
+
+@media (min-width: 1001px) {
+    body.company-onboarding .company-create-shell {
+        grid-template-columns: minmax(390px, .78fr) minmax(620px, 1.22fr);
+    }
+
+    body.company-onboarding .company-form-panel {
+        justify-content: center;
+    }
+}
+
+/* Tablet: una sola columna, sin heredar geometria de desktop. */
+@media (max-width: 1000px) {
+    body.company-onboarding {
+        --company-page-pad: clamp(16px, 4vw, 30px);
+    }
+
+    body.company-onboarding .company-shell {
+        width: min(760px, 100%);
+        min-height: 0;
+        padding-top: calc(var(--company-nav-h) + 24px);
+        display: block;
+    }
+
+    body.company-onboarding .company-intro {
+        max-width: none;
+        margin: 0 0 22px;
+        padding: 0;
+        gap: 15px;
+    }
+
+    body.company-onboarding .intro-copy h1 {
+        max-width: 650px;
+        font-size: clamp(2.35rem, 7vw, 3.35rem);
+    }
+
+    body.company-onboarding .intro-copy p { max-width: 620px; }
+    body.company-onboarding .setup-steps { display: none; }
+    body.company-onboarding .company-form-panel { display: block; }
+    body.company-onboarding .company-card { width: 100%; max-width: none; }
+}
+
+@media (max-width: 620px) {
+    body.company-onboarding { --company-nav-h: 56px; --company-page-pad: 14px; }
+    body.company-onboarding .mode-text { display: none; }
+    body.company-onboarding .theme-switch { width: 36px; padding: 0; justify-content: center; }
+    body.company-onboarding .company-shell { padding-top: calc(var(--company-nav-h) + 18px); padding-bottom: 18px; }
+    body.company-onboarding .intro-copy h1 { font-size: 2.15rem; }
+    body.company-onboarding .owner-card { grid-template-columns: 42px minmax(0,1fr); }
+    body.company-onboarding .owner-card > i { display: none; }
+    body.company-onboarding .form-grid { grid-template-columns: 1fr; }
+    body.company-onboarding .field-group.full,
+    body.company-onboarding .field-group { grid-column: 1; }
+    body.company-onboarding .company-card { padding: 20px 16px; border-radius: 15px; }
+    body.company-onboarding .logo-upload-wrap { grid-template-columns: 56px minmax(0,1fr); }
+    body.company-onboarding .logo-preview { width: 56px; height: 56px; }
+    body.company-onboarding .account-footer { align-items: center; flex-direction: column; gap: 5px; }
 }

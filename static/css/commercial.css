@@ -21,6 +21,42 @@
     --shadow-hover: 0 14px 32px rgba(24,42,40,.09);
     --radius: 12px;
     --radius-lg: 16px;
+
+    /* Compatibility aliases for legacy module styles. Keep these semantic
+       aliases tied to the canonical theme so old screens cannot fall back to
+       transparent/light-only values when dark mode is active. */
+    --bg-app: var(--bg-main);
+    --bg-body: var(--bg-main);
+    --bg-secondary: var(--bg-card);
+    --bg-tertiary: var(--bg-input);
+    --bg-active: var(--bg-hover);
+    --card: var(--bg-card);
+    --card-bg: var(--bg-card);
+    --input-bg: var(--bg-input);
+    --fg: var(--text-main);
+    --fg-main: var(--text-main);
+    --text-dim: var(--text-muted);
+    --text-primary: var(--text-main);
+    --text-secondary: var(--text-muted);
+    --text-tertiary: var(--text-soft);
+    --text-color: var(--text-main);
+    --text-h: var(--text-main);
+    --text-p: var(--text-muted);
+    --gray: var(--text-muted);
+    --gray-text: var(--text-muted);
+    --gray-light: var(--bg-input);
+    --border-color: var(--border);
+    --primary-blue: var(--primary);
+    --accent-soft: var(--primary-soft);
+    --badge-bg: var(--primary-soft);
+    --success-bg: color-mix(in srgb, var(--success) 12%, transparent);
+    --success-soft: color-mix(in srgb, var(--success) 12%, transparent);
+    --danger-bg: color-mix(in srgb, var(--danger) 12%, transparent);
+    --danger-soft: color-mix(in srgb, var(--danger) 12%, transparent);
+    --radius-sm: 10px;
+    --radius-md: var(--radius);
+    --shadow-sm: 0 2px 8px rgba(24,42,40,.06);
+    --shadow-md: var(--shadow);
 }
 
 html.dark {
@@ -377,3 +413,141 @@ button:disabled, input:disabled, select:disabled { cursor: not-allowed !importan
 /* CRM alineado al lenguaje comercial global */
 .crm-page{margin-left:var(--sidebar-width)!important;padding:34px clamp(22px,3vw,46px) 54px!important}.crm-page .crm-stats{gap:0;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--bg-card)}.crm-page .crm-stats article{border:0;border-right:1px solid var(--border);border-radius:0;box-shadow:none}.crm-page .crm-stats article:last-child{border-right:0}.crm-page .crm-workspace{border-radius:15px;box-shadow:none}.crm-page .client-hero,.crm-page .debt-banner,.crm-page .crm-card{border-radius:13px}.crm-page .pipeline-nav button.active{background:var(--primary);border-color:var(--primary);box-shadow:none}.crm-page .btn-add-task,.crm-page #btnSave{background:var(--primary)}.crm-page .eyebrow,.crm-page .card-title small,.crm-page .sidebar-head small{color:var(--primary)}
 @media(max-width:1180px){.crm-page{margin-left:0!important;padding-top:88px!important}}
+
+/* Canonical theme lock + legacy module token bridge.
+   Module CSS is loaded after the shell, so use a more specific root selector
+   to prevent older stylesheets from replacing OrbisERP's global palette. */
+html:root:not(.dark) {
+    --primary: #df7419;
+    --primary-hover: #c96311;
+    --primary-soft: #fff3e8;
+    --accent: #df7419;
+    --success: #21865f;
+    --warning: #b87912;
+    --danger: #c94c43;
+    --info: #3976ad;
+    --bg-main: #f4f6f7;
+    --bg-card: #ffffff;
+    --bg-input: #fbfcfc;
+    --bg-hover: #f1f4f4;
+    --text-main: #22302f;
+    --text-muted: #71807e;
+    --text-soft: #91a09e;
+    --border: #dfe6e7;
+    --border-strong: #ccd7d8;
+}
+
+html:root.dark {
+    --primary: #f0933f;
+    --primary-hover: #ffa456;
+    --primary-soft: rgba(240,147,63,.12);
+    --accent: #f0933f;
+    --success: #53b98e;
+    --warning: #dfad4f;
+    --danger: #ec7b70;
+    --info: #75a9d5;
+    --bg-main: #0e0f11;
+    --bg-card: #17191c;
+    --bg-input: #202328;
+    --bg-hover: #25292e;
+    --text-main: #f5f5f4;
+    --text-muted: #999da6;
+    --text-soft: #7f848e;
+    --border: #2c3036;
+    --border-strong: #3a3f47;
+}
+
+html:root:not(.dark),
+html:root.dark {
+    /* Sales / transfers */
+    --orange: var(--primary);
+    --orange-dark: var(--primary-hover);
+    --orange-soft: var(--primary-soft);
+    --page: var(--bg-main);
+    --surface: var(--bg-card);
+    --surface-2: var(--bg-input);
+    --text: var(--text-main);
+    --muted: var(--text-muted);
+    --line: var(--border);
+
+    /* Point of sale */
+    --pos-orange: var(--primary);
+    --pos-orange-hover: var(--primary-hover);
+    --pos-orange-soft: var(--primary-soft);
+    --pos-page: var(--bg-main);
+    --pos-card: var(--bg-card);
+    --pos-soft: var(--bg-input);
+    --pos-text: var(--text-main);
+    --pos-muted: var(--text-muted);
+    --pos-line: var(--border);
+    --pos-line-strong: var(--border-strong);
+
+    /* Inventory */
+    --stock-primary: var(--primary);
+    --stock-soft: var(--primary-soft);
+    --stock-bg: var(--bg-main);
+    --stock-card: var(--bg-card);
+    --stock-border: var(--border);
+    --stock-text: var(--text-main);
+    --stock-muted: var(--text-muted);
+
+    /* Warehouse traceability */
+    --trace-bg: var(--bg-main);
+    --trace-card: var(--bg-card);
+    --trace-text: var(--text-main);
+    --trace-muted: var(--text-muted);
+    --trace-line: var(--border);
+    --trace-accent: var(--primary);
+
+    /* Dashboard */
+    --hub-bg: var(--bg-main);
+    --hub-card: var(--bg-card);
+    --hub-soft: var(--bg-input);
+    --hub-soft-strong: var(--bg-hover);
+    --hub-text: var(--text-main);
+    --hub-muted: var(--text-muted);
+    --hub-subtle: var(--text-soft);
+    --hub-border: var(--border);
+    --hub-border-soft: var(--border);
+    --hub-orange: var(--primary);
+    --hub-orange-dark: var(--primary-hover);
+    --hub-orange-soft: var(--primary-soft);
+
+    /* Reports */
+    --rp-bg: var(--bg-main);
+    --rp-card: var(--bg-card);
+    --rp-soft: var(--bg-input);
+    --rp-text: var(--text-main);
+    --rp-muted: var(--text-muted);
+    --rp-border: var(--border);
+    --rp-soft-border: var(--border);
+    --rp-orange: var(--primary);
+    --rp-orange-soft: var(--primary-soft);
+
+    /* Purchase order detail */
+    --po-orange: var(--primary);
+    --po-orange-dark: var(--primary-hover);
+    --po-orange-soft: var(--primary-soft);
+    --po-bg: var(--bg-main);
+    --po-card: var(--bg-card);
+    --po-soft: var(--bg-input);
+    --po-line: var(--border);
+    --po-text: var(--text-main);
+    --po-muted: var(--text-muted);
+
+    /* Categories / CRM */
+    --cat-primary: var(--primary);
+    --cat-soft: var(--primary-soft);
+    --cat-bg: var(--bg-main);
+    --cat-card: var(--bg-card);
+    --cat-border: var(--border);
+    --cat-text: var(--text-main);
+    --cat-muted: var(--text-muted);
+    --crm-primary: var(--primary);
+    --crm-bg: var(--bg-main);
+    --crm-card: var(--bg-card);
+    --crm-soft: var(--bg-input);
+    --crm-border: var(--border);
+    --crm-text: var(--text-main);
+    --crm-muted: var(--text-muted);
+}

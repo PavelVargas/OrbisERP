@@ -1,0 +1,208 @@
+/* OrbisERP visual coherence layer
+   Shared, conservative defaults for authenticated screens. It deliberately avoids
+   redefining page-specific layouts such as POS; it normalizes controls, surfaces,
+   focus states, safe areas and responsive behavior across old and Retail 2.0 views. */
+:root {
+    --ui-radius-xs: 8px;
+    --ui-radius-sm: 10px;
+    --ui-radius-md: 14px;
+    --ui-radius-lg: 18px;
+    --ui-control-height: 42px;
+    --ui-page-max: 1480px;
+    --ui-focus: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent);
+    --ui-elevated: 0 10px 30px rgba(28, 36, 50, .06);
+}
+
+html { min-height: 100%; background: var(--bg-main); }
+body { min-height: 100vh; min-height: 100dvh; }
+button, input, select, textarea { font: inherit; }
+button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--primary) 72%, white);
+    outline-offset: 2px;
+}
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+
+/* Shared app surfaces. */
+.workspace-page .workspace-card,
+.workspace-page .workspace-metric,
+.workspace-page .retail-section-body,
+.workspace-page .variant-card {
+    border-color: var(--border) !important;
+    background: var(--bg-card) !important;
+    color: var(--text-main);
+}
+.workspace-page .workspace-card,
+.workspace-page .workspace-metric { overflow-wrap: anywhere; }
+.workspace-page .workspace-card h2,
+.workspace-page .workspace-card h3,
+.workspace-page .workspace-card strong { color: var(--text-main); }
+
+/* Forms in newly added modules use the same control geometry as the rest of OrbisERP. */
+.workspace-page :where(.retail-form,.retail-inline-form) input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+.workspace-page :where(.retail-form,.retail-inline-form) select,
+.workspace-page :where(.retail-form,.retail-inline-form) textarea {
+    min-height: var(--ui-control-height);
+    width: 100%;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--ui-radius-sm) !important;
+    padding: 9px 11px;
+    background: var(--bg-input) !important;
+    color: var(--text-main) !important;
+    outline: 0;
+}
+.workspace-page :where(.retail-form,.retail-inline-form) textarea { min-height: 96px; resize: vertical; }
+.workspace-page :where(.retail-form,.retail-inline-form) input:focus,
+.workspace-page :where(.retail-form,.retail-inline-form) select:focus,
+.workspace-page :where(.retail-form,.retail-inline-form) textarea:focus {
+    border-color: color-mix(in srgb, var(--primary) 58%, var(--border)) !important;
+    box-shadow: var(--ui-focus);
+}
+.workspace-page :where(.retail-form,.retail-inline-form) input[type="checkbox"],
+.workspace-page :where(.retail-form,.retail-inline-form) input[type="radio"] { accent-color: var(--primary); }
+
+/* Tables never force the whole page horizontally; the local area scrolls instead. */
+.workspace-page .retail-table { width: 100%; border-collapse: collapse; color: var(--text-main); }
+.workspace-page .retail-table th {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+    background: var(--bg-hover, var(--bg-input));
+    text-align: left;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+.workspace-page .retail-table td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 11px; vertical-align: middle; }
+.workspace-page .retail-table tbody tr:last-child td { border-bottom: 0; }
+.workspace-page .retail-table tbody tr:hover { background: var(--bg-hover, var(--bg-input)); }
+
+/* Normalize small status pills without introducing a second visual language. */
+.workspace-page .retail-pill,
+.workspace-page .retail-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    max-width: 100%;
+    border-radius: 999px;
+    padding: 5px 8px;
+    background: var(--bg-hover, var(--bg-input));
+    color: var(--text-muted);
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+.workspace-page .retail-pill.ok { background: color-mix(in srgb, var(--success) 12%, transparent); color: var(--success); }
+.workspace-page .retail-pill.warn { background: color-mix(in srgb, var(--warning) 13%, transparent); color: var(--warning); }
+.workspace-page .retail-pill.danger { background: color-mix(in srgb, var(--danger) 11%, transparent); color: var(--danger); }
+
+/* Safe areas for touch devices/notches. */
+html.tablet-mode body { padding-bottom: env(safe-area-inset-bottom); }
+html.tablet-mode .app-tablet-topbar { padding-top: max(10px, env(safe-area-inset-top)); }
+html.tablet-mode .app-tablet-dock { padding-bottom: max(8px, env(safe-area-inset-bottom)); }
+html.tablet-mode .workspace-page { padding-bottom: calc(94px + env(safe-area-inset-bottom)); }
+
+@media (max-width: 900px) {
+    .workspace-page .workspace-header { align-items: stretch; }
+    .workspace-page .workspace-header-actions { justify-content: flex-start; }
+    .workspace-page .retail-table { min-width: 640px; }
+    .workspace-page .retail-section-body { overflow-x: auto; }
+}
+
+@media (max-width: 620px) {
+    :root { --ui-control-height: 44px; }
+    .workspace-page .workspace-header-actions > *,
+    .workspace-page .workspace-header-actions form,
+    .workspace-page .workspace-header-actions .workspace-btn { width: 100%; }
+    .workspace-page .workspace-btn { min-height: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}
+
+/* New Retail/Post-sale screens use these aliases; keep them visually identical to
+   the established workspace cards instead of creating a second component system. */
+.workspace-page .workspace-kpis {
+    max-width: var(--ui-page-max);
+    margin: 0 auto 16px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+.workspace-page .workspace-kpi {
+    min-width: 0;
+    padding: 17px 18px;
+    border: 1px solid var(--border);
+    border-radius: var(--ui-radius-md);
+    background: var(--bg-card);
+    box-shadow: var(--shadow);
+}
+.workspace-page .workspace-kpi > span { display: block; color: var(--text-muted); font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
+.workspace-page .workspace-kpi > strong { display: block; margin: 8px 0 4px; color: var(--text-main); font-size: 25px; line-height: 1; letter-spacing: -.04em; }
+.workspace-page .workspace-kpi > small { color: var(--text-muted); font-size: 9px; }
+.workspace-page .workspace-panel {
+    max-width: var(--ui-page-max);
+    width: 100%;
+    margin: 0 auto 16px;
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: var(--ui-radius-md);
+    background: var(--bg-card);
+    box-shadow: var(--shadow);
+}
+.workspace-page .workspace-panel > .workspace-card-head { margin-bottom: 14px; }
+.workspace-page .workspace-badge {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    padding: 5px 8px;
+    border-radius: 999px;
+    background: var(--bg-hover, var(--bg-input));
+    color: var(--text-muted);
+    font-size: 9px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+.workspace-page .workspace-muted { color: var(--text-muted); font-size: 10px; }
+.workspace-page .workspace-stack { display: grid; gap: 8px; }
+.workspace-page .workspace-stack input,
+.workspace-page .workspace-stack select,
+.workspace-page .workspace-stack textarea,
+.workspace-page .workspace-filterbar input,
+.workspace-page .workspace-filterbar select {
+    min-height: 40px;
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 10px;
+    background: var(--bg-input);
+    color: var(--text-main);
+    outline: 0;
+}
+.workspace-page .workspace-filterbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+.workspace-page .workspace-filterbar > select { width: auto; min-width: 170px; }
+.workspace-page .workspace-search { position: relative; min-width: min(360px, 100%); flex: 1; }
+.workspace-page .workspace-search i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--primary); pointer-events: none; }
+.workspace-page .workspace-search input { padding-left: 36px; }
+.workspace-page .workspace-btn.ghost { color: var(--text-muted); background: transparent; border-color: transparent; box-shadow: none; }
+.workspace-page .workspace-btn.ghost:hover { color: var(--primary); background: color-mix(in srgb, var(--primary) 7%, transparent); }
+
+@media (max-width: 780px) {
+    .workspace-page .workspace-kpis { grid-template-columns: 1fr; }
+    .workspace-page .workspace-panel { padding: 13px; }
+    .workspace-page .workspace-filterbar { align-items: stretch; }
+    .workspace-page .workspace-filterbar > * { width: 100% !important; }
+}
+.workspace-page .report-card-spaced{margin-top:16px}
+.workspace-page .workspace-inline-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.workspace-page .warranty-action-stack{min-width:240px}.workspace-page .workspace-table td>small{display:block;margin-top:3px;color:var(--text-muted);line-height:1.4}.workspace-page .workspace-table td>a{color:var(--primary);font-size:10px;font-weight:700;text-decoration:none}.workspace-page .workspace-table td>a:hover{text-decoration:underline}
+@media(max-width:780px){.workspace-page .warranty-action-stack{min-width:200px}}

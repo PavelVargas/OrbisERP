@@ -1,155 +1,94 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuración de Usuario | OrbisERP</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/users_css/create_user.css">
-</head>
-<body class="admin-panel">
-    <script>
-        if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
-    </script>
-
-    {% include "layouts/left_bar.html" %}
-    
-    <main class="main-content">
-        <header class="page-header-integrated">
-            <div class="header-left">
-                <nav class="breadcrumb-nav">
-                    <a href="/users">Usuarios</a>
-                    <i class="bi bi-chevron-right"></i>
-                    <span>Nuevo Registro</span>
-                </nav>
-                <h2>Añadir Colaborador</h2>
-            </div>
-            
-            <div class="header-right">
-                <div class="status-badge">
-                    <span class="dot pulse"></span> Sesión de Administrador
+{% extends 'workspace/base.html' %}
+{% block title %}Nuevo usuario{% endblock %}
+{% block eyebrow %}Equipo y permisos{% endblock %}
+{% block heading %}Añadir colaborador{% endblock %}
+{% block subtitle %}Crea una cuenta con identidad, rol y contexto operativo coherentes con la empresa.{% endblock %}
+{% block back_link %}<a class="workspace-back" href="{{ url_for('users_bp.users') }}"><i class="bi bi-arrow-left"></i> Usuarios</a>{% endblock %}
+{% block content %}
+<form method="post" action="{{ url_for('users_bp.create_user') }}" id="createUserForm">
+    <div class="workspace-columns equal">
+        <section class="workspace-card">
+            <div class="workspace-card-head">
+                <div>
+                    <h2>Identidad y acceso</h2>
+                    <p>Datos personales y credenciales iniciales. La contraseña debe cumplir la política de seguridad vigente.</p>
                 </div>
+                <i class="bi bi-person-badge"></i>
             </div>
-        </header>
-
-        <form action="/create_user" method="post" class="form-grid-layout">
-            
-            <div class="column">
-                <section class="config-card">
-                    <div class="card-header">
-                        <i class="bi bi-person-bounding-box"></i>
-                        <div class="card-title">
-                            <h3>Perfil de Identidad</h3>
-                            <p>Información básica del trabajador</p>
-                        </div>
-                    </div>
-
-                    <div class="input-stack">
-                        <div class="field-group">
-                            <label>Nombre y Apellidos</label>
-                            <div class="input-box">
-                                <i class="bi bi-person"></i>
-                                <input type="text" name="name" placeholder="Ej. Carlos Mendoza" required>
-                            </div>
-                        </div>
-
-                        <div class="field-group">
-                            <label>Correo Institucional</label>
-                            <div class="input-box">
-                                <i class="bi bi-envelope"></i>
-                                <input type="email" name="email" placeholder="c.mendoza@orbis.com" required>
-                            </div>
-                        </div>
-
-                        <div class="field-group">
-                            <label>Cedula</label>
-                            <div class="input-box">
-                                <i class="bi bi-envelope"></i>
-                                <input type="text" name="cedula" placeholder="001-5468640-3" required>
-                            </div>
-                        </div>
-
-                        <div class="field-group">
-                            <label>Contraseña Maestra</label>
-                            <div class="input-box">
-                                <i class="bi bi-lock"></i>
-                                <input type="password" id="password" name="password" placeholder="Mínimo 8 caracteres" required>
-                                <button type="button" class="btn-toggle-view" onclick="togglePass()">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+            <div class="workspace-form compact">
+                <label class="full"><span>Nombre y apellidos *</span><input type="text" name="name" maxlength="150" autocomplete="name" placeholder="Ej. Carlos Mendoza" required autofocus></label>
+                <label class="full"><span>Correo institucional *</span><input type="email" name="email" maxlength="150" autocomplete="email" placeholder="c.mendoza@empresa.com" required></label>
+                <label><span>Cédula *</span><input type="text" name="cedula" maxlength="30" autocomplete="off" placeholder="001-0000000-0" required></label>
+                <label><span>Rol *</span><select name="role" id="roleSelect" required><option value="user">Usuario operativo</option><option value="admin">Administrador</option></select></label>
+                <label class="full"><span>Contraseña inicial *</span><input type="password" id="password" name="password" minlength="8" autocomplete="new-password" placeholder="Mínimo 8 caracteres" required><small class="workspace-help">Usa una frase de acceso única; el servidor validará la política completa antes de guardar.</small></label>
+                <label class="workspace-check full"><input type="checkbox" checked name="is_active"><span>Activar la cuenta inmediatamente</span></label>
             </div>
+        </section>
 
-            <div class="column">
-                <section class="config-card">
-                    <div class="card-header">
-                        <i class="bi bi-shield-lock"></i>
-                        <div class="card-title">
-                            <h3>Control de Acceso</h3>
-                            <p>Nivel de permisos y sede</p>
-                        </div>
-                    </div>
-
-                    <div class="input-stack">
-                        <div class="field-group">
-                            <label>Nivel de Autoridad</label>
-                            <div class="input-box">
-                                <i class="bi bi-key"></i>
-                                <select name="role" required>
-                                    <option value="user">Usuario Estándar (Lectura/Escritura)</option>
-                                    <option value="admin">Administrador (Control Total)</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="field-group">
-                            <label>Almacén / Centro de Costos</label>
-                            <div class="input-box">
-                                <i class="bi bi-geo-alt"></i>
-                                <select name="warehouse_id">
-                                    <option value="">Seleccionar ubicación...</option>
-                                    {% for wh in warehouses %}
-                                        <option value="{{ wh.id }}">{{ wh.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="switch-field">
-                            <div class="switch-label">
-                                <strong>Activar cuenta inmediatamente</strong>
-                                <span>Permitir acceso al guardar</span>
-                            </div>
-                            <label class="apple-switch">
-                                <input type="checkbox" checked name="is_active">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                    </div>
-                </section>
-
-                <div class="action-bar">
-                    <a href="/users" class="btn-cancel">Descartar</a>
-                    <button type="submit" class="btn-primary">
-                        <i class="bi bi-cloud-arrow-up"></i> Registrar Colaborador
-                    </button>
+        <section class="workspace-card">
+            <div class="workspace-card-head">
+                <div>
+                    <h2>Asignación operativa</h2>
+                    <p>Almacén, sucursal y terminal determinan el contexto del POS y de las operaciones de inventario.</p>
                 </div>
+                <i class="bi bi-diagram-3"></i>
             </div>
-        </form>
-    </main>
-
-    <script>
-        function togglePass() {
-            const p = document.getElementById('password');
-            const i = document.querySelector('.btn-toggle-view i');
-            p.type = p.type === "password" ? "text" : "password";
-            i.classList.toggle('bi-eye');
-            i.classList.toggle('bi-eye-slash');
-        }
-    </script>
-</body>
-</html>
+            <div class="workspace-form compact">
+                <label class="full"><span>Almacén</span><select name="warehouse_id" id="warehouseSelect"><option value="">Sin almacén fijo</option>{% for wh in warehouses %}<option value="{{ wh.id }}">{{ wh.name }}</option>{% endfor %}</select></label>
+                <label><span>Sucursal</span><select name="branch_id" id="branchSelect"><option value="">Sin sucursal fija</option>{% for branch in branches %}<option value="{{ branch.id }}">{{ branch.name }}</option>{% endfor %}</select></label>
+                <label><span>Terminal POS</span><select name="terminal_id" id="terminalSelect"><option value="">Sin terminal fija</option>{% for terminal in terminals %}<option value="{{ terminal.id }}" data-warehouse="{{ terminal.warehouse_id }}" data-branch="{{ terminal.branch_id or '' }}">{{ terminal.name }} · {{ terminal.warehouse.name if terminal.warehouse else 'Sin almacén' }}{% if terminal.branch %} · {{ terminal.branch.name }}{% endif %}</option>{% endfor %}</select></label>
+                <div class="workspace-callout full"><i class="bi bi-info-circle"></i><p>Para el rol operativo, sucursal y terminal POS son obligatorias. Al seleccionar una terminal se sincronizan automáticamente su almacén y sucursal.</p></div>
+                <div class="workspace-callout full"><i class="bi bi-people"></i><p>Uso del plan: <strong>{{ current_users_count }}</strong> de <strong>{{ plan_limits.max_users }}</strong> usuarios activos.</p></div>
+            </div>
+        </section>
+    </div>
+    <section class="workspace-card workspace-card--flat">
+        <div class="workspace-form compact">
+            <div class="actions">
+                <a href="{{ url_for('users_bp.users') }}" class="workspace-btn secondary">Cancelar</a>
+                <button type="submit" class="workspace-btn"><i class="bi bi-person-check"></i> Crear usuario</button>
+            </div>
+        </div>
+    </section>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+(() => {
+    const role = document.getElementById('roleSelect');
+    const warehouse = document.getElementById('warehouseSelect');
+    const branch = document.getElementById('branchSelect');
+    const terminal = document.getElementById('terminalSelect');
+    if (!role || !warehouse || !branch || !terminal) return;
+    const terminalOptions = [...terminal.options].slice(1);
+    const syncRequirements = () => {
+        const operational = role.value === 'user';
+        branch.required = operational;
+        terminal.required = operational;
+    };
+    const filterTerminals = () => {
+        const warehouseId = warehouse.value;
+        const branchId = branch.value;
+        terminalOptions.forEach(option => {
+            option.hidden = Boolean(
+                (warehouseId && option.dataset.warehouse !== warehouseId) ||
+                (branchId && option.dataset.branch && option.dataset.branch !== branchId)
+            );
+        });
+        if (terminal.selectedOptions[0]?.hidden) terminal.value = '';
+    };
+    terminal.addEventListener('change', () => {
+        const option = terminal.selectedOptions[0];
+        if (!option?.value) return;
+        if (option.dataset.warehouse) warehouse.value = option.dataset.warehouse;
+        if (option.dataset.branch) branch.value = option.dataset.branch;
+        filterTerminals();
+    });
+    warehouse.addEventListener('change', filterTerminals);
+    branch.addEventListener('change', filterTerminals);
+    role.addEventListener('change', syncRequirements);
+    syncRequirements();
+    filterTerminals();
+})();
+</script>
+{% endblock %}

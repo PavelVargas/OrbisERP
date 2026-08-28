@@ -1,0 +1,21 @@
+{# Canonical theme bootstrap for standalone/public pages. Keep inline so the
+   correct palette is applied before CSS paints; theme-sync maintains it live. #}
+<style>html{background:#f8fafc;color-scheme:light}html.dark{background:#0e0f11;color-scheme:dark}html.theme-preload *,html.theme-preload *::before,html.theme-preload *::after{transition:none!important;animation:none!important}</style>
+<script>
+(() => {
+    let saved = null;
+    try {
+        saved = localStorage.getItem('theme') || localStorage.getItem('orbis-theme');
+    } catch (_error) {
+        saved = null;
+    }
+    const dark = saved === 'dark' || (saved !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+    const theme = dark ? 'dark' : 'light';
+    const root = document.documentElement;
+    root.classList.add('theme-preload');
+    root.classList.toggle('dark', dark);
+    root.dataset.theme = theme;
+    root.style.colorScheme = theme;
+})();
+</script>
+<script src="{{ url_for('static', filename='js/theme-sync.js') }}" defer></script>

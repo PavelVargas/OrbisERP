@@ -173,7 +173,7 @@
     <div class="info-section" style="border-top: none;">
         <div class="info-box">
             <span class="label">Emitido por</span>
-            <span class="content">{{ user.name }}</span>
+            <span class="content">{{ user.name if user is defined and user else 'Sistema' }}</span>
         </div>
         <div class="info-box">
             <span class="label">Fecha y Hora</span>

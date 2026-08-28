@@ -1,0 +1,45 @@
+{% extends 'workspace/base.html' %}
+{% block title %}Promociones{% endblock %}
+{% block eyebrow %}Gestión comercial{% endblock %}
+{% block heading %}Promociones y descuentos{% endblock %}
+{% block subtitle %}Motor promocional para cupones, categorías, marcas, productos, 2x1/3x2 y segunda unidad con descuento.{% endblock %}
+{% block content %}
+{% set active_count = promotions|selectattr('active')|list|length %}
+<section class="workspace-grid">
+    <article class="workspace-metric"><span><i class="bi bi-ticket-perforated"></i> Promociones</span><strong>{{ promotions|length }}</strong><small>Códigos registrados.</small></article>
+    <article class="workspace-metric"><span><i class="bi bi-play-circle"></i> Activas</span><strong>{{ active_count }}</strong><small>Habilitadas administrativamente.</small></article>
+    <article class="workspace-metric"><span><i class="bi bi-stars"></i> Mecánicas</span><strong>3</strong><small>Descuento, compra X lleva Y y segunda unidad.</small></article>
+    <article class="workspace-metric"><span><i class="bi bi-bullseye"></i> Alcance</span><strong>4</strong><small>Todo, producto, categoría o marca.</small></article>
+</section>
+<div class="workspace-columns">
+<section class="workspace-card">
+<div class="workspace-card-head"><div><h2>Promociones registradas</h2><p>Una única vista para administrar reglas y vigencias.</p></div></div>
+<div class="workspace-table-wrap"><table class="workspace-table"><thead><tr><th>Código</th><th>Mecánica</th><th>Alcance</th><th>Compra mínima</th><th>Vigencia</th><th>Estado</th><th></th></tr></thead><tbody>
+{% for p in promotions %}<tr>
+<td><span class="promo-code">{{ p.code }}</span><small>{{ p.name }}</small></td>
+<td>{% if p.mechanic=='BUY_X_GET_Y' %}<strong>Compra {{ p.buy_qty }} + lleva {{ p.reward_qty }}</strong><small>Bonificación 100%</small>{% elif p.mechanic=='SECOND_PERCENT' %}<strong>{{ p.reward_percent }}% en unidad adicional</strong><small>Cada {{ p.buy_qty }} + {{ p.reward_qty }}</small>{% else %}<strong>{{ p.value }}{{ '%' if p.discount_type=='PERCENT' else '' }}</strong><small>{{ 'Porcentaje' if p.discount_type=='PERCENT' else 'Monto fijo' }}</small>{% endif %}{% if p.max_discount is not none %}<small>Tope {{ currency_symbol }} {{ '{:,.2f}'.format(((p.max_discount or 0)|float)/(conversion_rate|float)) }}</small>{% endif %}</td>
+<td><span class="workspace-tag neutral">{{ {'ALL':'Todo','PRODUCT':'Producto','CATEGORY':'Categoría','BRAND':'Marca'}.get(p.scope or 'ALL', p.scope) }}</span><small>{% if p.target_product %}{{ p.target_product.name }}{% elif p.target_category %}{{ p.target_category.name }}{% elif p.target_brand %}{{ p.target_brand }}{% else %}Toda la compra{% endif %}</small></td>
+<td>{{ currency_symbol }} {{ '{:,.2f}'.format(((p.min_total or 0)|float)/(conversion_rate|float)) }}</td>
+<td><small>{{ p.starts_at.strftime('%d/%m/%Y') if p.starts_at else 'Desde ahora' }}</small><br><small>hasta {{ p.ends_at.strftime('%d/%m/%Y') if p.ends_at else 'sin límite' }}</small></td>
+<td><span class="workspace-tag {{ 'ok' if p.active and p.is_available(now) else 'warn' if p.active else 'neutral' }}">{{ 'Vigente' if p.active and p.is_available(now) else 'Fuera de vigencia' if p.active else 'Pausada' }}</span></td>
+<td><form method="post" action="{{ url_for('workspace_bp.promotion_toggle', promotion_id=p.id) }}"><button class="workspace-btn secondary" type="submit">{{ 'Pausar' if p.active else 'Activar' }}</button></form></td>
+</tr>{% else %}<tr><td colspan="7"><div class="workspace-empty"><i class="bi bi-ticket-perforated"></i>Aún no hay promociones.</div></td></tr>{% endfor %}
+</tbody></table></div></section>
+<aside class="workspace-card workspace-card--flat"><div class="workspace-card-head"><div><h2>Nueva promoción</h2><p>Configura el beneficio sin salir del módulo.</p></div></div>
+<form class="workspace-form compact" method="post" id="promoForm">
+<label>Código<input name="code" required maxlength="40" placeholder="VERANO10"></label>
+<label>Nombre<input name="name" required maxlength="120" placeholder="Promoción de verano"></label>
+<label>Mecánica<select name="mechanic" id="mechanic"><option value="STANDARD">Descuento estándar</option><option value="BUY_X_GET_Y">Compra X y lleva Y gratis (2x1 / 3x2)</option><option value="SECOND_PERCENT">Unidad adicional con % descuento</option></select></label>
+<div id="standardFields"><label>Tipo<select name="discount_type"><option value="PERCENT">Porcentaje</option><option value="FIXED">Monto fijo</option></select></label><label>Valor<input type="number" name="value" min="0.01" step="0.01" value="10"></label></div>
+<div id="rewardFields" hidden><label>Unidades pagadas X<input type="number" name="buy_qty" min="1" step="0.001" value="1"></label><label>Unidades beneficiadas Y<input type="number" name="reward_qty" min="1" step="0.001" value="1"></label><label id="rewardPercentLabel">Descuento de Y (%)<input type="number" name="reward_percent" min="0" max="100" step="0.01" value="50"></label></div>
+<label>Alcance<select name="scope" id="promoScope"><option value="ALL">Toda la compra</option><option value="PRODUCT">Producto</option><option value="CATEGORY">Categoría</option><option value="BRAND">Marca</option></select></label>
+<label data-target="PRODUCT" hidden>Producto<select name="target_product_id"><option value="">Seleccionar…</option>{% for p in products %}<option value="{{ p.id }}">{{ p.name }} · {{ p.sku or 'sin SKU' }}</option>{% endfor %}</select></label>
+<label data-target="CATEGORY" hidden>Categoría<select name="target_category_id"><option value="">Seleccionar…</option>{% for c in categories %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></label>
+<label data-target="BRAND" hidden>Marca<input name="target_brand" list="brandsList" maxlength="100" placeholder="Marca"><datalist id="brandsList">{% for brand in brands %}<option value="{{ brand }}">{% endfor %}</datalist></label>
+<label>Compra mínima<input type="number" name="min_total" min="0" step="0.01" value="0"></label><label>Tope de descuento<input type="number" name="max_discount" min="0" step="0.01" placeholder="Sin tope"></label>
+<label>Inicio<input type="datetime-local" name="starts_at"></label><label>Fin<input type="datetime-local" name="ends_at"></label>
+<div class="actions"><button class="workspace-btn" type="submit"><i class="bi bi-plus-lg"></i> Crear promoción</button></div></form></aside></div>
+<script nonce="{{ csp_nonce() if csp_nonce is defined else '' }}">
+const mechanic=document.getElementById('mechanic'),standard=document.getElementById('standardFields'),reward=document.getElementById('rewardFields'),rewardLabel=document.getElementById('rewardPercentLabel'),scope=document.getElementById('promoScope');function syncPromo(){const m=mechanic.value;standard.hidden=m!=='STANDARD';reward.hidden=m==='STANDARD';rewardLabel.hidden=m==='BUY_X_GET_Y';document.querySelectorAll('[data-target]').forEach(el=>el.hidden=el.dataset.target!==scope.value)}mechanic?.addEventListener('change',syncPromo);scope?.addEventListener('change',syncPromo);syncPromo();
+</script>
+{% endblock %}

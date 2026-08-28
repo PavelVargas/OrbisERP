@@ -34,5 +34,5 @@
 .location-stock-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
 .location-stock-chips span { padding: 4px 8px; border-radius: 999px; background: rgba(16, 185, 129, .1); color: #087f5b; font-size: 11px; }
 .location-stock-chips b { margin-left: 4px; }
-.trace-button { color: #4f46e5; }
+.trace-button { color: #f36b21; }
 @media (max-width: 860px) { .location-row { grid-template-columns: auto minmax(0,1fr) auto !important; } .location-row > code { grid-column: 2 / -1; overflow-wrap: anywhere; } .location-row .barcode-button span { display: none; } }

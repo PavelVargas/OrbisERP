@@ -1,0 +1,139 @@
+{% extends 'workspace/base.html' %}
+{% block title %}Centro operativo retail{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/retail.css') }}">{% endblock %}
+{% block eyebrow %}Retail avanzado{% endblock %}
+{% block heading %}Centro operativo{% endblock %}
+{% block subtitle %}Reposición, aprobaciones y postventa, visibles únicamente según tus permisos.{% endblock %}
+{% block content %}
+<div class="retail-shell">
+  {% include 'retail/_nav.html' %}
+
+  <section class="retail-kpi-strip">
+    {% if can_replenishment %}<article><span>Reposición</span><strong>{{ replenishment|length }}</strong><small>Productos bajo mínimo</small></article>{% endif %}
+    {% if can_approvals %}<article><span>Aprobaciones</span><strong>{{ approvals|length }}</strong><small>Solicitudes pendientes</small></article>{% endif %}
+    {% if can_warranties %}<article><span>Garantías activas</span><strong>{{ warranty_open }}</strong><small>Abiertas / revisión</small></article>{% endif %}
+    {% if can_quality %}<article><span>Stock retenido</span><strong>{{ display_quantity(quality_held) }}</strong><small>Cuarentena / dañado</small></article>{% endif %}
+  </section>
+
+  <div class="retail-panel-tabs" data-tabset="operations" role="tablist" aria-label="Centro operativo">
+    {% if can_replenishment %}
+    <button type="button" class="{{ 'active' if initial_panel == 'replenishment' }}" data-panel="replenishment" role="tab" aria-selected="{{ 'true' if initial_panel == 'replenishment' else 'false' }}"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> Reposición</button>
+    {% endif %}
+    {% if can_approvals %}
+    <button type="button" class="{{ 'active' if initial_panel == 'approvals' }}" data-panel="approvals" role="tab" aria-selected="{{ 'true' if initial_panel == 'approvals' else 'false' }}"><i class="bi bi-check2-square" aria-hidden="true"></i> Aprobaciones</button>
+    {% endif %}
+    {% if can_warranties or can_quality %}
+    <button type="button" data-panel="post-sale" role="tab" aria-selected="false"><i class="bi bi-shield-check" aria-hidden="true"></i> Postventa</button>
+    {% endif %}
+  </div>
+
+  {% if can_replenishment %}
+  <section class="workspace-card retail-tab-panel {{ 'active' if initial_panel == 'replenishment' }}" data-panel="replenishment" role="tabpanel">
+    <div class="workspace-card-head"><div><h2>Reposición automática</h2><p>Stock actual frente a mínimos y máximos del catálogo.</p></div></div>
+    <div class="workspace-table-wrap retail-table-scroll">
+      <table class="workspace-table">
+        <thead><tr><th>Producto</th><th>Actual</th><th>Mínimo</th><th>Sugerido</th><th>Proveedor</th></tr></thead>
+        <tbody>
+          {% for row in replenishment %}
+          <tr>
+            <td><strong>{{ row.product.name }}</strong><small>{{ row.product.sku }}</small></td>
+            <td>{{ display_quantity(row.current) }}</td>
+            <td>{{ display_quantity(row.product.min_stock) }}</td>
+            <td>{{ display_quantity(row.suggested) }}</td>
+            <td>{{ row.supplier.name if row.supplier else 'Sin proveedor configurado' }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5"><div class="workspace-empty"><i class="bi bi-check2-circle" aria-hidden="true"></i> Inventario dentro de los mínimos configurados.</div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if replenishment %}
+    <form method="post" action="{{ url_for('retail_bp.replenishment_create_purchase') }}" class="retail-inline-form retail-form-divider">
+      <label>Proveedor
+        <select name="supplier_id" required>
+          <option value="">Selecciona</option>
+          {% for supplier in suppliers %}<option value="{{ supplier.id }}">{{ supplier.name }}</option>{% endfor %}
+        </select>
+      </label>
+      <label class="wide">Productos
+        <select name="product_id" multiple size="4" required>
+          {% for row in replenishment if row.supplier %}<option value="{{ row.product.id }}">{{ row.product.name }} · sugerido {{ display_quantity(row.suggested) }}</option>{% endfor %}
+        </select>
+      </label>
+      <div class="actions"><button type="submit" class="workspace-btn"><i class="bi bi-bag-plus" aria-hidden="true"></i> Crear orden</button></div>
+    </form>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if can_approvals %}
+  <section class="workspace-card retail-tab-panel {{ 'active' if initial_panel == 'approvals' }}" data-panel="approvals" role="tabpanel">
+    <div class="retail-subgrid">
+      <div>
+        <div class="workspace-card-head"><div><h2>Reglas</h2><p>Umbrales que requieren autorización.</p></div></div>
+        <div class="retail-list-scroll">
+          {% for rule in approval_rules %}
+          <div class="retail-record"><span><strong>{{ rule.operation_type }}</strong><small>Desde {{ rule.threshold_amount }} · requiere {{ rule.required_role }}</small></span></div>
+          {% else %}<div class="workspace-empty">Sin reglas.</div>{% endfor %}
+        </div>
+        <form method="post" action="{{ url_for('retail_bp.approval_rule_create') }}" class="retail-inline-form retail-form-divider">
+          <label>Operación<select name="operation_type"><option>DISCOUNT</option><option>PURCHASE</option><option>STOCK_ADJUST</option><option>RETURN</option><option>EXPENSE</option></select></label>
+          <label>Umbral<input type="number" step="0.01" min="0" name="threshold_amount" value="0" required></label>
+          <label>Rol<input name="required_role" value="admin" maxlength="40" required></label>
+          <div class="actions"><button type="submit" class="workspace-btn secondary">Crear regla</button></div>
+        </form>
+      </div>
+      <div>
+        <div class="workspace-card-head"><div><h2>Pendientes</h2><p>Solicitudes que esperan decisión.</p></div></div>
+        <div class="retail-list-scroll">
+          {% for approval in approvals %}
+          <div class="retail-record">
+            <span><strong>{{ approval.entity_type }} #{{ approval.entity_id or '—' }}</strong><small>{{ approval.reason or approval.rule.operation_type }} · {{ approval.amount }}</small></span>
+            <span class="retail-row-actions">
+              <form method="post" action="{{ url_for('retail_bp.approval_decide', approval_id=approval.id, decision='approve') }}"><button type="submit" class="workspace-icon-btn" title="Aprobar" aria-label="Aprobar"><i class="bi bi-check-lg" aria-hidden="true"></i></button></form>
+              <form method="post" action="{{ url_for('retail_bp.approval_decide', approval_id=approval.id, decision='reject') }}"><button type="submit" class="workspace-icon-btn" title="Rechazar" aria-label="Rechazar"><i class="bi bi-x-lg" aria-hidden="true"></i></button></form>
+            </span>
+          </div>
+          {% else %}<div class="workspace-empty">No hay aprobaciones pendientes.</div>{% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if can_warranties or can_quality %}
+  <section class="workspace-card retail-tab-panel" data-panel="post-sale" role="tabpanel">
+    <div class="retail-launch-grid retail-launch-grid--small">
+      {% if can_warranties %}
+      <a class="retail-launch-card" href="{{ url_for('retail_bp.warranties') }}"><i class="bi bi-shield-check" aria-hidden="true"></i><div><strong>Garantías</strong><p>{{ warranty_open }} reclamaciones necesitan seguimiento.</p></div><span>Abrir</span></a>
+      {% endif %}
+      {% if can_quality %}
+      <a class="retail-launch-card" href="{{ url_for('retail_bp.quality_center') }}"><i class="bi bi-patch-check" aria-hidden="true"></i><div><strong>Control de calidad</strong><p>{{ display_quantity(quality_held) }} unidades retenidas.</p></div><span>Abrir</span></a>
+      {% endif %}
+    </div>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script nonce="{{ g.csp_nonce }}">
+(() => {
+  const tabset = document.querySelector('[data-tabset="operations"]');
+  if (!tabset) return;
+  const buttons = [...tabset.querySelectorAll('button[data-panel]')];
+  const panels = [...document.querySelectorAll('.retail-tab-panel[data-panel]')];
+  const activate = (button) => {
+    buttons.forEach((item) => {
+      const active = item === button;
+      item.classList.toggle('active', active);
+      item.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+    panels.forEach((panel) => panel.classList.toggle('active', panel.dataset.panel === button.dataset.panel));
+  };
+  buttons.forEach((button) => button.addEventListener('click', () => activate(button)));
+  const initial = buttons.find((button) => button.classList.contains('active')) || buttons[0];
+  if (initial) activate(initial);
+})();
+</script>
+{% endblock %}

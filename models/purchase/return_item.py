@@ -1,3 +1,4 @@
+from services.time_utils import utcnow
 from db import db
 from datetime import datetime
 
@@ -8,4 +9,4 @@ class PurchaseReturn(db.Model):
     purchase_order_id = db.Column(db.Integer, nullable=False)
     product_id = db.Column(db.Integer, nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)

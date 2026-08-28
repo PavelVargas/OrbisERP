@@ -18,9 +18,12 @@ class PurchaseOrderItem(db.Model):
         nullable=False
     )
 
-    quantity = db.Column(db.Integer, nullable=False)
+    variant_id = db.Column(db.Integer, db.ForeignKey('product_variants.id'), nullable=True, index=True)
+    uom_id = db.Column(db.Integer, db.ForeignKey('units_of_measure.id'), nullable=True)
+    uom_factor = db.Column(db.Numeric(18, 6), nullable=False, default=1)
+    quantity = db.Column(db.Numeric(14, 3), nullable=False)
 
-    quantity_received = db.Column(db.Integer, default=0)
+    quantity_received = db.Column(db.Numeric(14, 3), nullable=False, default=0)
 
     unit_cost = db.Column(db.Numeric(10, 2), nullable=False)
     tax_name = db.Column(db.String(80), nullable=False, default='Exento')
@@ -29,6 +32,8 @@ class PurchaseOrderItem(db.Model):
 
     purchase_order = db.relationship('PurchaseOrder', backref='items')
     product = db.relationship('Product', backref='purchase_items')
+    variant = db.relationship('ProductVariant')
+    uom = db.relationship('UnitOfMeasure')
 
     # ✅ SUBTOTAL CALCULADO
     @property

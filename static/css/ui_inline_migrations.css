@@ -1,0 +1,93 @@
+/* Legacy inline declarations normalized into reusable selectors. */
+[data-ui-style="u00d6855ed7"]{color: var(--primary);}
+[data-ui-style="u01ef7fc99e"]{display:flex;gap:8px;align-items:center;}
+[data-ui-style="u0226015834"]{font-weight: 600;text-align: right;}
+[data-ui-style="u0489936da1"]{border-bottom: 2px solid var(--border);}
+[data-ui-style="u068a8ddc17"]{grid-column:1/-1;}
+[data-ui-style="u06964290dd"]{margin-right: 15px;text-decoration: none;color: #3498db;font-size: 13px;font-weight: 600;display: flex;align-items: center;gap: 5px;}
+[data-ui-style="u08048dcab2"]{display: flex;gap: 12px;justify-content: center;align-items: center;}
+[data-ui-style="u0b68039d49"]{padding:10px;text-align:left;border-bottom:1px solid #ddd;}
+[data-ui-style="u0ef737aec7"]{margin-bottom: 1.2rem;}
+[data-ui-style="u1169661891"]{margin:0;}
+[data-ui-style="u190f09cce1"]{text-decoration: none;}
+[data-ui-style="u1b0f4999d2"]{margin-top:16px;}
+[data-ui-style="u1beb96fc03"]{display: flex;gap: 10px;justify-content: flex-end;}
+[data-ui-style="u21a1be8a0d"]{font-weight: 600;}
+[data-ui-style="u25e87f15be"]{margin:0;max-width:none;}
+[data-ui-style="u2a1b75c911"]{display:block;}
+[data-ui-style="u30489cbd39"]{text-align: right;}
+[data-ui-style="u304f1ffc5b"]{width:auto;padding:0 14px;}
+[data-ui-style="u31a824a217"]{display:flex;gap:5px;}
+[data-ui-style="u34843c0f53"]{font-size: 11px;text-decoration: none;color: #3498db;}
+[data-ui-style="u359cd90a99"]{font-size: 0.8rem;color: var(--primary);font-weight: 700;margin-top: 5px;}
+[data-ui-style="u36764d1e63"]{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+[data-ui-style="u3d59ac907b"]{text-transform: uppercase;}
+[data-ui-style="u3efc9879ca"]{display:flex;gap:10px;}
+[data-ui-style="u40fd18dc3e"]{background: #faa200;color: white;}
+[data-ui-style="u455f8cca6d"]{justify-content:flex-end;}
+[data-ui-style="u48d55344ef"]{font-size: 5rem;color: var(--primary);}
+[data-ui-style="u497726e8c9"]{color:var(--danger);}
+[data-ui-style="u4ff818ffe1"]{font-size:18px;}
+[data-ui-style="u5187b6fd7a"]{width: 120px;}
+[data-ui-style="u56f4356299"]{margin-top:12px;}
+[data-ui-style="u5790ffba29"]{display: none;}
+[data-ui-style="u580bab9086"]{border-color: rgba(255,255,255,0.1);margin: 2rem 0;}
+[data-ui-style="u581be415aa"]{width:90px;}
+[data-ui-style="u5aecb40b3b"]{font-size: 0.6rem;}
+[data-ui-style="u5db75d4d4e"]{font-weight: 700;}
+[data-ui-style="u65486e3041"]{font-size:3rem;color:#ddd;margin-bottom:1rem;}
+[data-ui-style="u65f9d5a3d9"]{text-align: center;}
+[data-ui-style="u682380449d"]{display: flex;justify-content: space-between;align-items: center;}
+[data-ui-style="u6e9d939252"]{display: none;flex-direction: column;}
+[data-ui-style="u75f628dd39"]{width: 100%;justify-content: center;background: #3498db;}
+[data-ui-style="u817e5e75e5"]{display: flex;align-items: center;gap: 10px;}
+[data-ui-style="u81ba403d32"]{color: var(--primary);font-weight: 600;}
+[data-ui-style="u85b23f73de"]{color: #aaa;margin-bottom: 8px;display: block;font-size: 13px;}
+[data-ui-style="u85f64ba91c"]{padding:20px 17px 12px;}
+[data-ui-style="u86de7ac63a"]{margin-top:18px;}
+[data-ui-style="u8a77e5a311"]{margin-top:8px;}
+[data-ui-style="u8e90ad6948"]{font-size: clamp(1.8rem, 4vw, 2.4rem);font-weight: 800;margin-top: 5px;margin-bottom: 0;}
+[data-ui-style="u8f100511ce"]{color: var(--primary);font-weight: 700;}
+[data-ui-style="u91bd1385fd"]{background: linear-gradient(135deg, #2ecc71, #27ae60);}
+[data-ui-style="u92cb2572de"]{margin-bottom: 1.5rem;}
+[data-ui-style="u93f9602e08"]{width: 100%;background: var(--bg-input);color: var(--text-main);border: 1px solid var(--border);border-radius: 8px;padding: 10px;cursor: pointer;font-size: 14px;}
+[data-ui-style="u97445a8d93"]{flex:1;}
+[data-ui-style="ua4c0376226"]{font-size:22px;color:var(--success);}
+[data-ui-style="ua55f31db10"]{width:100%;border-collapse:collapse;}
+[data-ui-style="ua632715a5f"]{overflow:auto;}
+[data-ui-style="ua76d597a07"]{display:flex;gap:8px;}
+[data-ui-style="uab390de5a8"]{text-align: right;padding: 15px;font-size: 0.75rem;color: var(--text-muted);}
+[data-ui-style="uac6ea07e92"]{flex:0 0 auto;}
+[data-ui-style="uae56637dc0"]{color: var(--primary);font-size: 1.1rem;}
+[data-ui-style="uaf4f9e6a3e"]{color: var(--text-muted);font-size: 1.2rem;}
+[data-ui-style="ub05317f99f"]{margin-top:11px;}
+[data-ui-style="ub3f627f043"]{font-weight:900;}
+[data-ui-style="ub5c2c238ee"]{background:var(--bg-card);color:var(--text-main);border:1px solid var(--border);}
+[data-ui-style="ub6f3ebb6c4"]{width: 32px;height: 32px;font-size: 0.8rem;font-weight: 800;}
+[data-ui-style="uc0e2fdc5c6"]{margin-top: 15px;}
+[data-ui-style="ucb892a550e"]{flex:1;border:1px solid #dbe1ea;border-radius:10px;padding:10px;}
+[data-ui-style="ucc0244d793"]{text-align: left;padding: 15px;font-size: 0.75rem;color: var(--text-muted);}
+[data-ui-style="ucc18f56116"]{color: var(--text-muted);font-weight: 600;}
+[data-ui-style="ud2c171b18b"]{margin-top:10px;}
+[data-ui-style="ud6a2da96e2"]{font-weight: 700;color: #3498db;}
+[data-ui-style="ud6f2af6e0a"]{margin-top:14px;}
+[data-ui-style="uda190a81de"]{width: 100px;}
+[data-ui-style="udbc9178f5b"]{color: white;margin-bottom: 1rem;font-size: 16px;}
+[data-ui-style="ue0c78815ae"]{color: var(--text-muted);font-size: 0.85rem;font-weight: 600;}
+[data-ui-style="ue212d2cf0d"]{font-size: 0.75rem;color: var(--text-muted);}
+[data-ui-style="ue4f0c15ce8"]{font-family: 'monospace';font-weight: 700;color: var(--primary);}
+[data-ui-style="ue9c7d74e87"]{margin-top: 20px;font-weight: 900;}
+[data-ui-style="ue9d97296aa"]{padding:10px;border-bottom:1px solid #eee;}
+[data-ui-style="uea00a203bc"]{display:block;font-size:0.6rem;color:var(--text-muted);font-weight:800;}
+[data-ui-style="uef0b7a1148"]{margin-bottom:0;}
+[data-ui-style="uf098f67d42"]{color: var(--primary);font-size: 1.2rem;}
+[data-ui-style="uf4e719ae06"]{margin:10px 0;}
+[data-ui-style="uf773a09887"]{text-align: center;flex: 1;}
+[data-ui-style="ufeedf3bfaa"]{color: white;margin-bottom: 1.5rem;font-size: 18px;}
+.integrity-count{font-size:26px}
+.integrity-count.is-ok{color:var(--success)}
+.integrity-count.has-issues{color:var(--danger)}
+.closing-diff-value{font-weight:800}
+.closing-diff-value.is-negative,.card-value.is-negative{color:var(--danger)}
+.closing-diff-value.is-positive{color:var(--warning)}
+.closing-diff-value.is-balanced,.card-value.is-balanced{color:var(--success)}

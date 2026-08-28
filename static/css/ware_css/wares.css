@@ -86,7 +86,7 @@ body {
     align-items: center;
     gap: 10px;
     box-shadow: 0 10px 15px -3px rgba(250, 162, 0, 0.3);
-    transition: all 0.3s ease;
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
 }
 
 .btn-primary-new:hover {
@@ -290,7 +290,7 @@ body {
     font-size: 0.85rem;
     font-weight: 800;
     letter-spacing: 0.5px;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
     white-space: nowrap;
     box-shadow: 0 4px 12px rgba(255, 191, 7, 0.2);
 }

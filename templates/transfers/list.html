@@ -1,14 +1,12 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
+<html lang="es" class="{% if tablet_mode_active|default(session.get('tablet_mode')) %}tablet-mode tablet-full-width-profile{% endif %}">
+<head>{% set shell_assets_loaded = true %}{% include 'layouts/app_head_assets.html' %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OrbisERP | Centro de Transferencias</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tranfer_css/tranfer.css">
 </head>
-<body class="{% if user.dark_mode %}dark{% endif %}">
+<body>
 
     {% include 'layouts/left_bar.html' %}
     <main class="main-content">
@@ -71,7 +69,7 @@
                                 {% for t in warehouse_transfers %}
                                         <tr class="transfer-row">
                                             <td data-label="ID">
-                                                <span class="badge-id" style="font-family: 'monospace'; font-weight: 700; color: var(--primary);">
+                                                <span class="badge-id" data-ui-style="ue4f0c15ce8">
                                                     TR{{ "%06d" | format(t.id) }}
                                                 </span>
                                             </td>
@@ -95,11 +93,11 @@
                                                 <span class="text-muted">UDS</span>
                                             </td>
                                             <td data-label="Acciones" class="text-right">
-                                                <div class="action-buttons" style="display: flex; gap: 10px; justify-content: flex-end;">
-                                                    <a href="{{ url_for('transfer_bp.print_transfer', transfer_id=t.id) }}" target="_blank" class="btn-icon-print" style="color: var(--primary); font-size: 1.2rem;">
+                                                <div class="action-buttons" data-ui-style="u1beb96fc03">
+                                                    <a href="{{ url_for('transfer_bp.print_transfer', transfer_id=t.id) }}" target="_blank" rel="noopener" class="btn-icon-print" data-ui-style="uf098f67d42">
                                                         <i class="bi bi-printer-fill"></i>
                                                     </a>
-                                                    <a href="{{ url_for('transfer_bp.view_transfer', transfer_id=t.id) }}" class="btn-icon-view" style="color: var(--text-muted); font-size: 1.2rem;">
+                                                    <a href="{{ url_for('transfer_bp.view_transfer', transfer_id=t.id) }}" class="btn-icon-view" data-ui-style="uaf4f9e6a3e">
                                                         <i class="bi bi-eye-fill"></i>
                                                     </a>
                                                 </div>

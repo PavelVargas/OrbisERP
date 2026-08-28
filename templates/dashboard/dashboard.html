@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
+<html lang="es" class="{% if tablet_mode_active|default(session.get('tablet_mode')) %}tablet-mode tablet-full-width-profile{% endif %}">
+<head>{% set shell_assets_loaded = true %}{% include 'layouts/app_head_assets.html' %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f7f7f5">
@@ -128,12 +128,15 @@
                     <a href="{{ url_for('transfer_bp.transfers') }}"><span class="priority-icon priority-icon--blue"><i class="bi bi-arrow-left-right"></i></span><span><b>Transferencias pendientes</b><small>Por validar o recibir en destino</small></span><strong>{{ pending_transfers }}</strong><i class="bi bi-chevron-right"></i></a>
                     {% endif %}
                     {% if can('sales.resume') %}
-                    <a href="{{ url_for('sales_bp.pending_sales') }}"><span class="priority-icon priority-icon--violet"><i class="bi bi-receipt-cutoff"></i></span><span><b>Ventas pendientes</b><small>Borradores que aún no se han completado</small></span><strong>{{ pending_count }}</strong><i class="bi bi-chevron-right"></i></a>
+                    <a href="{{ url_for('sales_bp.list_sales', status='PENDING') }}"><span class="priority-icon priority-icon--violet"><i class="bi bi-receipt-cutoff"></i></span><span><b>Ventas pendientes</b><small>Borradores que aún no se han completado</small></span><strong>{{ pending_count }}</strong><i class="bi bi-chevron-right"></i></a>
+                    {% endif %}
+                    {% if can('sales.view') %}
+                    <a href="{{ url_for('sales_bp.list_sales', status='QUOTATION') }}"><span class="priority-icon priority-icon--blue"><i class="bi bi-file-earmark-text"></i></span><span><b>Cotizaciones abiertas</b><small>Propuestas pendientes de decisión o conversión</small></span><strong>{{ quote_count }}</strong><i class="bi bi-chevron-right"></i></a>
                     {% endif %}
                     {% if can_payables %}
                     <a href="{{ url_for('backoffice_bp.payables') }}"><span class="priority-icon priority-icon--red"><i class="bi bi-calendar-x"></i></span><span><b>Pagos vencidos</b><small>Compromisos fuera de la fecha acordada</small></span><strong>{{ overdue_payables }}</strong><i class="bi bi-chevron-right"></i></a>
                     {% endif %}
-                    {% if not can_stock and not can('transfers.view') and not can('sales.resume') and not can_payables %}
+                    {% if not can_stock and not can('transfers.view') and not can('sales.resume') and not can('sales.view') and not can_payables %}
                     <div class="empty-state"><i class="bi bi-check2-circle"></i><b>Todo bajo control</b><span>No tienes pendientes visibles.</span></div>
                     {% endif %}
                 </div>
@@ -171,7 +174,7 @@
                     {% set max_qty = top_products[0].qty if top_products else 1 %}
                     {% for product in top_products %}
                     <div class="product-item">
-                        <div class="product-image">{% if product.image_path %}<img src="{{ url_for('static', filename=product.image_path) }}" alt="" loading="lazy">{% else %}<i class="bi bi-box-seam"></i>{% endif %}</div>
+                        <div class="product-image">{% set img = product_image_url(product) %}{% if img %}<img src="{{ img }}" alt="" loading="lazy" referrerpolicy="no-referrer">{% else %}<i class="bi bi-box-seam"></i>{% endif %}</div>
                         <div class="product-info"><b>{{ product.name }}</b><small>{{ product.sku or 'Sin SKU' }} · {{ product.qty }} unidades</small><span><i style="--value: {{ (product.qty / max_qty * 100) if max_qty else 0 }}%"></i></span></div>
                         <strong>{{ currency_symbol }} {{ '{:,.0f}'.format((product.revenue|float) / conversion_rate) }}</strong>
                     </div>

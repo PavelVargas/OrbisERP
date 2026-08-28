@@ -1,6 +1,8 @@
+from services.time_utils import utcnow
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
-from models.company.company import Company
+from models.company.company import Company, PLAN_LIMITS
 from models.user.user import User
+from models.productivity import SalesTax
 from db import db
 from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
@@ -24,7 +26,7 @@ def require_login():
     return User.query.get(user_id)
 
 
-def upload_file(file, folder, company_id=None):
+def upload_file(file, folder, company_id=None, *, private=False):
     """
     Versión mejorada: Si se pasa company_id, guarda en la carpeta técnica
     de la empresa para que el monitor de almacenamiento pueda contarlo.
@@ -48,6 +50,18 @@ def upload_file(file, folder, company_id=None):
                 raise ValueError('La imagen está dañada o no es válida.') from exc
         file.stream.seek(0)
         unique_name = f"{uuid.uuid4().hex}_{filename}"
+
+        if private:
+            if not company_id:
+                raise ValueError('No se pudo asociar el archivo a una empresa.')
+            private_root = os.path.abspath(current_app.config['STORAGE_ROOT'])
+            relative = os.path.join(f'company_{company_id}', 'receipts', unique_name)
+            file_path = os.path.abspath(os.path.join(private_root, relative))
+            if os.path.commonpath([private_root, file_path]) != private_root:
+                raise ValueError('Ruta de almacenamiento inválida.')
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            file.save(file_path)
+            return f"private:{relative.replace(os.sep, '/')}"
 
         # Si tenemos ID de empresa, forzamos la ruta técnica
         if company_id:
@@ -74,6 +88,7 @@ def refresh_session_user(user):
     session['user_id'] = user.id
     session['company_id'] = user.company_id
     session['user_role'] = user.role
+    session['session_version'] = int(user.session_version or 1)
     session['company_name'] = user.company.name if user.company else None
 
 
@@ -99,21 +114,46 @@ def create_company():
             db.session.commit()
 
     if request.method == 'POST':
-        business_name = request.form.get('business_name')
-        rnc = request.form.get('rnc')
+        business_name = (request.form.get('business_name') or '').strip()
+        rnc = (request.form.get('rnc') or '').strip() or None
+        company_email = (request.form.get('company_email') or '').strip().lower() or user.email
+        phone = (request.form.get('phone') or '').strip() or None
+        address = (request.form.get('address') or '').strip() or None
 
-        if not business_name:
-            flash("El nombre es obligatorio", "danger")
+        if len(business_name) < 2:
+            flash('Escribe un nombre de empresa válido.', 'danger')
+            return redirect(url_for('company_bp.create_company'))
+        if company_email and ('@' not in company_email or len(company_email) > 120):
+            flash('Escribe un correo comercial válido.', 'danger')
+            return redirect(url_for('company_bp.create_company'))
+        if rnc and Company.query.filter_by(rnc=rnc).first():
+            flash('Ese RNC / ID ya está asociado a otra empresa.', 'danger')
             return redirect(url_for('company_bp.create_company'))
 
         new_company = Company(
-            name=business_name,
-            rnc=rnc,
-            expiration_date=datetime.utcnow() + timedelta(days=30)
+            name=business_name[:150],
+            rnc=rnc[:20] if rnc else None,
+            email=company_email[:120] if company_email else None,
+            phone=phone[:20] if phone else None,
+            address=address[:500] if address else None,
+            expiration_date=utcnow() + timedelta(days=30)
         )
 
         db.session.add(new_company)
         db.session.flush()
+
+        logo_file = request.files.get('logo')
+        if logo_file and logo_file.filename:
+            try:
+                new_company.logo = upload_file(logo_file, 'uploads/companies/logos', company_id=new_company.id)
+            except ValueError as error:
+                db.session.rollback()
+                flash(str(error), 'danger')
+                return redirect(url_for('company_bp.create_company'))
+        db.session.add(SalesTax(
+            company_id=new_company.id, name='ITBIS 18%', rate=18,
+            price_included=True, active=True, is_default=True,
+        ))
 
         user.company_id = new_company.id
         user.role = 'admin'
@@ -275,7 +315,7 @@ def upload_receipt():
 
     if file and file.filename:
         try:
-            receipt_path = upload_file(file, "uploads/payments", company_id=company.id)
+            receipt_path = upload_file(file, "uploads/payments", company_id=company.id, private=True)
         except ValueError as error:
             flash(str(error), 'danger')
             return redirect(url_for('dashboard_bp.dashboard'))
@@ -283,7 +323,7 @@ def upload_receipt():
         company.receipt_status = "PENDING"
         company.status = True
 
-        ahora = datetime.utcnow()
+        ahora = utcnow()
         if not company.expiration_date or company.expiration_date < ahora:
             company.grace_period_until = ahora + timedelta(hours=24)
 
@@ -318,7 +358,7 @@ def upgrade_plan():
 
     if file and selected_plan in {'BASIC', 'PRO', 'ULTRA'}:
         try:
-            path = upload_file(file, "uploads/payments", company_id=company.id)
+            path = upload_file(file, "uploads/payments", company_id=company.id, private=True)
         except ValueError as error:
             flash(str(error), 'danger')
             return redirect(url_for('company_bp.view_plans'))
@@ -328,7 +368,7 @@ def upgrade_plan():
         company.requested_plan = selected_plan
         company.plan_status = "UPGRADING"
 
-        ahora = datetime.utcnow()
+        ahora = utcnow()
         if not company.expiration_date or company.expiration_date < ahora:
             company.grace_period_until = ahora + timedelta(hours=24)
 
@@ -355,7 +395,7 @@ def view_plans():
     days_remaining = 0
     if company.expiration_date:
         fecha_vencimiento = company.expiration_date.date()
-        hoy = datetime.utcnow().date()
+        hoy = utcnow().date()
 
         delta = fecha_vencimiento - hoy
         days_remaining = delta.days
@@ -363,4 +403,21 @@ def view_plans():
         if days_remaining < 0:
             days_remaining = 0
 
-    return render_template('company/plans.html', company=company, days_remaining=days_remaining)
+    price_defaults = {'BASIC': '29', 'PRO': '69', 'ULTRA': '149'}
+    plan_names = {'BASIC': 'Básico', 'PRO': 'Profesional', 'ULTRA': 'Enterprise'}
+    plans = []
+    for plan_id in ('BASIC', 'PRO', 'ULTRA'):
+        limits = PLAN_LIMITS[plan_id]
+        plans.append({
+            'id': plan_id,
+            'name': plan_names[plan_id],
+            'price': current_app.config.get(f'PLAN_{plan_id}_PRICE_USD', price_defaults[plan_id]),
+            'max_warehouses': limits['max_warehouses'],
+            'max_users': limits['max_users'],
+            'max_monthly_invoices': limits['max_monthly_invoices'],
+            'storage_mb': limits['storage_bytes'] // (1024 * 1024),
+        })
+
+    return render_template(
+        'company/plans.html', company=company, days_remaining=days_remaining, plans=plans
+    )

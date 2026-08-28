@@ -47,9 +47,13 @@ def create_category():
 
     if request.method == 'POST':
         name = (request.form.get('name') or '').strip()
+        description = (request.form.get('description') or '').strip()
 
         if not name:
             flash('El nombre es obligatorio', 'error')
+            return redirect(url_for('category_bp.create_category'))
+        if len(name) > 100 or len(description) > 500:
+            flash('Revisa la longitud del nombre o la descripción', 'warning')
             return redirect(url_for('category_bp.create_category'))
 
         duplicate = Category.query.filter(Category.company_id == company_id,
@@ -59,6 +63,7 @@ def create_category():
             return redirect(url_for('category_bp.create_category'))
         category = Category(
             name=name,
+            description=description or None,
             company_id=company_id
         )
 
@@ -118,8 +123,12 @@ def edit_category(id):
 
     if request.method == 'POST':
         name = (request.form.get('name') or '').strip()
+        description = (request.form.get('description') or '').strip()
         if len(name) < 2 or len(name) > 100:
             flash('Escribe un nombre de 2 a 100 caracteres', 'warning')
+            return redirect(request.url)
+        if len(description) > 500:
+            flash('La descripción no puede superar 500 caracteres', 'warning')
             return redirect(request.url)
         duplicate = Category.query.filter(Category.company_id == company_id,
             db.func.lower(Category.name) == name.lower(), Category.id != category.id).first()
@@ -127,6 +136,7 @@ def edit_category(id):
             flash('Ya existe una categoría con ese nombre', 'warning')
             return redirect(request.url)
         category.name = name
+        category.description = description or None
         db.session.commit()
 
         flash('Categoría actualizada', 'success')

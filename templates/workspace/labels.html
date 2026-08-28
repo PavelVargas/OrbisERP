@@ -1,0 +1,26 @@
+{% extends 'workspace/base.html' %}
+{% block title %}Etiquetas{% endblock %}
+{% block eyebrow %}Inventario{% endblock %}
+{% block heading %}Etiquetas y códigos de barras{% endblock %}
+{% block subtitle %}Selecciona productos, define la cantidad de copias y prepara una hoja de impresión con el mismo catálogo del ERP.{% endblock %}
+{% block actions %}{% if print_products %}<button class="workspace-btn no-print" type="button" onclick="window.print()"><i class="bi bi-printer"></i> Imprimir etiquetas</button>{% endif %}{% endblock %}
+{% block content %}
+<section class="workspace-card no-print">
+    <div class="workspace-card-head"><div><h2>Preparar hoja</h2><p>EAN-13 se utiliza cuando el SKU es compatible; en los demás casos se genera Code 128.</p></div><span class="workspace-tag neutral">{{ print_products|length }} seleccionados</span></div>
+    <form method="get" class="workspace-form compact">
+        <div class="full label-picker">
+        {% for product in products %}
+            <label class="label-option"><input type="checkbox" name="product_id" value="{{ product.id }}" {% if product in print_products %}checked{% endif %}><span><strong>{{ product.name }}</strong><small>{{ product.sku }} · {{ currency_symbol }} {{ '{:,.2f}'.format((product.price|float) / (conversion_rate|float)) }}</small></span></label>
+        {% else %}<div class="workspace-empty"><i class="bi bi-box-seam"></i>No hay productos activos para etiquetar.</div>{% endfor %}
+        </div>
+        <label>Copias por producto<input type="number" min="1" max="20" step="1" inputmode="numeric" name="copies" value="{{ copies }}"></label>
+        <div class="actions"><a class="workspace-btn secondary" href="{{ url_for('workspace_bp.labels') }}">Limpiar</a><button class="workspace-btn" type="submit"><i class="bi bi-upc-scan"></i> Generar hoja</button></div>
+    </form>
+</section>
+<section class="workspace-card label-output">
+    <div class="workspace-card-head no-print"><div><h2>Vista de impresión</h2><p>{{ print_products|length * copies }} etiqueta(s) preparadas.</p></div></div>
+    <div class="label-sheet">
+    {% for product in print_products %}{% for _ in range(copies) %}<article class="product-label"><strong>{{ product.name }}</strong><img src="{{ url_for('workspace_bp.product_barcode', product_id=product.id) }}" alt="Código {{ product.sku }}"><small>{{ product.sku }}</small><b>{{ currency_symbol }} {{ '{:,.2f}'.format((product.price|float) / (conversion_rate|float)) }}</b></article>{% endfor %}{% else %}<div class="workspace-empty"><i class="bi bi-upc"></i>Selecciona uno o varios productos para preparar la hoja.</div>{% endfor %}
+    </div>
+</section>
+{% endblock %}

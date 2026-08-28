@@ -18,6 +18,12 @@ npm-debug.log
 # Archivos de usuario
 static/uploads/
 uploads/
+logs/
+backups/
+instance/
+*.db
+*.log
+tmp*
 
 # Build
 dist/

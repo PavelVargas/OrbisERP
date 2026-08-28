@@ -1,0 +1,93 @@
+{
+  "release": "2026.08.13",
+  "alembic_head": "a3c7d5e9f102",
+  "source_archive": "crud(20260827-054609).zip",
+  "validation": {
+    "focused_offline_and_contract_tests": {
+      "status": "passed",
+      "passed": 145,
+      "deselected": 6,
+      "deselection_reason": "Require the Flask runtime in this isolated environment."
+    },
+    "static_release_audit": {
+      "status": "passed",
+      "jinja_templates": 118,
+      "endpoints": 256,
+      "url_for_references": 1168,
+      "static_asset_references": 141,
+      "alembic_revisions": 27,
+      "javascript_files": 15
+    },
+    "ui_consistency_audit": {
+      "status": "passed"
+    },
+    "client_ui_audit": {
+      "status": "passed"
+    },
+    "sales_pos_release_audit": {
+      "status": "passed"
+    },
+    "transfer_scanner_release_audit": {
+      "status": "passed"
+    },
+    "css_parse": {
+      "status": "passed",
+      "files": 81
+    },
+    "javascript_syntax": {
+      "status": "passed",
+      "files": 14
+    },
+    "python_compileall": {
+      "status": "passed"
+    },
+    "chromium_visual_and_interaction": {
+      "status": "passed",
+      "scenarios": 11,
+      "viewports": [
+        "1512x900",
+        "1180x820",
+        "820x1180"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "modules": [
+        "POS",
+        "Clientes",
+        "Productos"
+      ],
+      "verified": [
+        "walk-in checkout button enabled",
+        "cash checkout reaches server without client",
+        "credit is blocked without client with a detailed message",
+        "success is shown only after the server confirms",
+        "add/remove product update the cart",
+        "tablet POS drawer opens, exposes checkout and closes",
+        "tablet topbar/dock and portrait grids adapt",
+        "no JavaScript console or page errors",
+        "no visible horizontal overflow"
+      ]
+    }
+  },
+  "environment_limitations": [
+    "Full Flask HTTP tests were not executed because Flask/Flask-SQLAlchemy are not installed in this isolated runner.",
+    "PostgreSQL integration tests require a dedicated TEST_DATABASE_URL and a running PostgreSQL service.",
+    "A physical tablet and thermal printer must still be smoke-tested in client staging."
+  ],
+  "packaging_policy": {
+    "exclude": [
+      ".env",
+      ".git",
+      "virtualenvs",
+      "caches",
+      "logs",
+      "local databases",
+      "customer uploads",
+      "runtime storage",
+      "historical engineering reports"
+    ],
+    "single_root": "OrbisERP"
+  }
+}

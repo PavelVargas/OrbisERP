@@ -1,174 +1,54 @@
-<!DOCTYPE html>
-<html lang="es" class="{% if session.get('theme') == 'dark' %}dark{% endif %}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/order_css/details_sales.css') }}">
-    <title>Venta #{{ sale.id }} | OrbisERP</title>
-</head>
-<body class="details-page">
+{% extends 'workspace/base.html' %}
+{% block title %}Venta #{{ sale.id }}{% endblock %}
+{% block eyebrow %}Ventas · Detalle{% endblock %}
+{% block heading %}Venta #{{ '%05d'|format(sale.id) }}{% endblock %}
+{% block subtitle %}Consulta comercial, pagos, trazabilidad y postventa de una sola operación.{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/module_refresh.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/retail.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/sales_css/detail_sales.css') }}">
+{% endblock %}
+{% block back_link %}<a class="workspace-back" href="{{ url_for('sales_bp.list_sales') }}"><i class="bi bi-chevron-left"></i> Volver a ventas</a>{% endblock %}
+{% block actions %}{% if can('sales.print') %}<a class="workspace-btn secondary" href="{{ url_for('sales_bp.thermal_receipt', sale_id=sale.id) }}" target="_blank" rel="noopener"><i class="bi bi-receipt"></i> Ticket / vista previa</a><a class="workspace-btn" href="{{ url_for('sales_bp.export_pdf', sale_id=sale.id) }}" target="_blank" rel="noopener"><i class="bi bi-file-earmark-pdf"></i> Factura PDF</a>{% endif %}{% endblock %}
+{% block content %}
+<div class="sale-view-shell">
+  {% if user.company and user.company.fiscal_mode == 'disabled' %}<div class="workspace-alert workspace-alert--warning"><strong>Documento comercial no fiscal.</strong> {{ user.company.fiscal_disclaimer }}</div>{% endif %}
 
-    {% include 'layouts/left_bar.html' %}
+  <section class="sale-hero">
+    <div class="sale-hero-main"><span class="sale-status sale-status--{{ sale.status|lower }}">{{ sale.status }}</span><h2>{{ sale.client.name if sale.client else 'Consumidor final' }}</h2><div class="sale-hero-meta"><span><i class="bi bi-calendar3"></i>{{ sale.created_at.strftime('%d/%m/%Y · %I:%M %p') }}</span><span><i class="bi bi-person"></i>{{ sale.user.name if sale.user else 'Sistema' }}</span><span><i class="bi bi-building"></i>{{ sale.warehouse_display }}</span></div></div>
+    <div class="sale-hero-total"><span>Total de la operación</span><strong>{{ currency_symbol }} {{ '{:,.2f}'.format(sale.total / conversion_rate) }}</strong><small>{{ selected_currency }} · {{ sale.items|length }} líneas</small></div>
+  </section>
 
-    <main>
-        <div class="top-nav">
-            <a href="{{ url_for('sales_bp.list_sales') }}" class="back-link">
-                <i class="bi bi-arrow-left"></i> VOLVER A VENTAS
-            </a>
-            <div class="user-meta">
-                <i class="bi bi-shield-check"></i> Factura Auditada (Tasa: {{ "{:,.2f}".format(conversion_rate) }})
-            </div>
+  <nav class="sale-view-tabs" aria-label="Detalle de la venta"><button type="button" class="active" data-sale-panel="summary"><i class="bi bi-grid-1x2"></i> Resumen</button><button type="button" data-sale-panel="items"><i class="bi bi-box-seam"></i> Artículos y garantía <span>{{ sale.items|length }}</span></button><button type="button" data-sale-panel="payments"><i class="bi bi-wallet2"></i> Pagos</button></nav>
+
+  <section class="sale-view-panel active" data-sale-panel="summary">
+    <div class="sale-summary-grid">
+      <article class="workspace-card sale-info-card"><div class="workspace-card-head"><div><h2>Operación</h2><p>Contexto exacto de la venta.</p></div></div><dl class="sale-kv"><div><dt>Cliente</dt><dd>{{ sale.client.name if sale.client else 'Consumidor final' }}</dd></div><div><dt>Vendedor</dt><dd>{{ sale.user.name if sale.user else 'Sistema' }}</dd></div><div><dt>Sucursal</dt><dd>{{ sale.branch.name if sale.branch else '—' }}</dd></div><div><dt>Terminal</dt><dd>{{ sale.terminal.name if sale.terminal else '—' }}</dd></div><div><dt>Almacén</dt><dd>{{ sale.warehouse_display }}</dd></div><div><dt>Lista de precios</dt><dd>{{ sale.price_list.name if sale.price_list else 'Precio público' }}</dd></div></dl></article>
+      <article class="workspace-card sale-total-card"><div class="workspace-card-head"><div><h2>Totales</h2><p>Resumen financiero.</p></div></div><div class="sale-money-row"><span>Subtotal</span><strong>{{ currency_symbol }} {{ '{:,.2f}'.format(sale.subtotal / conversion_rate) }}</strong></div><div class="sale-money-row"><span>Impuestos</span><strong>{{ currency_symbol }} {{ '{:,.2f}'.format(sale.itbis / conversion_rate) }}</strong></div>{% if sale.discount_amount %}<div class="sale-money-row sale-money-row--discount"><span>Descuento</span><strong>- {{ currency_symbol }} {{ '{:,.2f}'.format(sale.discount_amount / conversion_rate) }}</strong></div>{% endif %}<div class="sale-money-row sale-money-row--grand"><span>Total</span><strong>{{ currency_symbol }} {{ '{:,.2f}'.format(sale.total / conversion_rate) }}</strong></div></article>
+      <article class="workspace-card sale-balance-card"><div class="workspace-card-head"><div><h2>Estado de cobro</h2><p>Pagado y balance pendiente.</p></div></div><div class="sale-balance"><div><span>Pagado</span><strong>{{ currency_symbol }} {{ '{:,.2f}'.format(sale.amount_paid / conversion_rate) }}</strong></div><div><span>Balance</span><strong>{{ currency_symbol }} {{ '{:,.2f}'.format(sale.balance / conversion_rate) }}</strong></div></div><span class="sale-payment-state {{ 'ok' if sale.balance <= 0 else 'pending' }}">{{ 'Saldado' if sale.balance <= 0 else 'Pendiente de cobro' }}</span></article>
+    </div>
+  </section>
+
+  <section class="sale-view-panel" data-sale-panel="items">
+    <div class="sale-item-list">
+    {% for item in sale.items %}
+      <article class="sale-item-card">
+        <div class="sale-item-top">
+          <div class="sale-item-product"><div class="sale-item-image">{% set image=product_image_url(item.product) %}{% if image %}<img src="{{ image }}" alt="{{ item.product.name }}">{% else %}<i class="bi bi-box-seam"></i>{% endif %}</div><div><span class="sale-item-sku">{{ item.variant.sku if item.variant else item.product.sku }}</span><h3>{{ item.product.name }}{% if item.variant %}<small> · {{ item.variant.attribute_summary or item.variant.name }}</small>{% endif %}</h3><div class="sale-item-tags"><span>{{ display_quantity(item.quantity) }} {{ item.uom.symbol if item.uom else (item.product.base_uom.symbol if item.product.base_uom else 'ud') }}</span><span>{{ item.warehouse.name if item.warehouse else 'Sin almacén' }}</span>{% if item.product.tracking!='NONE' %}<span>{{ item.product.tracking }}</span>{% endif %}<span class="warranty">Garantía {{ item.product.warranty_days }} días · hasta {{ warranty_until_by_item[item.id].strftime('%d/%m/%Y') }}</span></div></div></div>
+          <div class="sale-item-money"><small>{{ currency_symbol }} {{ '{:,.2f}'.format(item.price / conversion_rate) }} c/u</small><strong>{{ currency_symbol }} {{ '{:,.2f}'.format((item.price * item.quantity) / conversion_rate) }}</strong></div>
         </div>
+        {% if item.lot_allocations or item.serials %}<div class="sale-trace-grid">{% for alloc in item.lot_allocations %}<div><span><i class="bi bi-box-seam"></i>Lote {{ alloc.lot.lot_number }}</span><strong>{{ display_quantity(alloc.quantity) }}{% if alloc.lot.expires_at %} · vence {{ alloc.lot.expires_at.strftime('%d/%m/%Y') }}{% endif %}</strong></div>{% endfor %}{% for serial in item.serials %}<div><span><i class="bi bi-upc-scan"></i>{{ serial.serial_number }}</span><strong>{{ serial.status }}{% if serial.warranty_until %} · garantía {{ serial.warranty_until.strftime('%d/%m/%Y') }}{% endif %}</strong></div>{% endfor %}</div>{% endif %}
+        {% set claims = claims_by_item.get(item.id, []) %}
+        {% if claims %}<div class="sale-warranty-history"><strong>Historial de garantía</strong>{% for claim in claims %}<div><span>#{{ claim.id }} · {{ claim.serial.serial_number if claim.serial else 'Línea completa' }}{% if claim.replacement_serial %} → {{ claim.replacement_serial.serial_number }}{% endif %}</span><span>{{ claim.status }} · {{ claim.reason }}</span></div>{% endfor %}</div>{% endif %}
+        {% if sale.status=='COMPLETED' and can('sales.warranties') %}<details class="sale-warranty-action"><summary><i class="bi bi-shield-plus"></i>Abrir reclamación de garantía</summary><div class="sale-warranty-stock-note"><i class="bi bi-info-circle"></i><span><strong>Garantía ≠ devolución.</strong> Abrirla no suma unidades al stock vendible. Si el cliente entrega físicamente el producto y debe entrar a inventario, registra una Devolución con el destino correcto.</span></div><form method="post" action="{{ url_for('retail_bp.warranty_open', sale_item_id=item.id) }}">{% if item.serials %}<label><span>Serial / IMEI</span><select name="serial_id" required><option value="">Selecciona serial</option>{% for serial in item.serials if serial.status in ['SOLD','WARRANTY'] %}<option value="{{ serial.id }}">{{ serial.serial_number }}{% if serial.warranty_until %} · hasta {{ serial.warranty_until.strftime('%d/%m/%Y') }}{% endif %}</option>{% endfor %}</select></label>{% endif %}<label class="reason"><span>Motivo</span><input name="reason" required minlength="3" maxlength="255" placeholder="Describe la falla reportada"></label><button class="workspace-btn secondary" type="submit"><i class="bi bi-shield-check"></i> Abrir garantía</button></form></details>{% endif %}
+      </article>
+    {% endfor %}
+    </div>
+  </section>
 
-        <div class="invoice-container">
-            {% if user.company and user.company.fiscal_mode == 'disabled' %}<div style="padding:12px 16px;margin-bottom:14px;border:1px solid rgba(255,90,36,.35);border-radius:12px;color:#ff5a24;text-align:center;font-size:.72rem;font-weight:900;letter-spacing:.12em">{{ user.company.fiscal_disclaimer }}</div>{% endif %}
-            
-            <header class="invoice-header-card">
-                <div class="title-group">
-                    <p class="invoice-subtitle">ORDEN DE VENTA OFICIAL</p>
-                    <h2>Venta #{{ sale.id }}</h2>
-                    <div class="payment-method-badge">
-                        <i class="bi bi-credit-card-2-front"></i> 
-                        MÉTODO: {{ sale.payment_method if sale.payment_method else 'CASH' }}
-                    </div>
-                </div>
-                <div class="status-badge-container">
-                    <span class="status-pill {% if sale.status == 'COMPLETED' %}b-received{% else %}b-pending{% endif %}">
-                        {{ sale.status }}
-                    </span>
-                </div>
-            </header>
-
-            {% if sale.payment_method == 'CREDIT' %}
-            <div class="debt-banner {% if sale.balance > 0 %}pending{% else %}paid{% endif %}">
-                <div class="debt-content">
-                    {% if sale.balance > 0 %}
-                        <i class="bi bi-exclamation-octagon-fill"></i>
-                        <div>
-                            <strong>CUENTA POR COBRAR</strong> 
-                            <span style="opacity: 0.85;">Esta venta tiene un saldo pendiente en el perfil del cliente.</span>
-                        </div>
-                    {% else %}
-                        <i class="bi bi-check-circle-fill"></i>
-                        <div>
-                            <strong>CRÉDITO SALDADO</strong> 
-                            <span style="opacity: 0.85;">El cliente ha completado el pago de esta factura.</span>
-                        </div>
-                    {% endif %}
-                </div>
-                <span class="balance-text">
-                    {% if sale.balance > 0 %}
-                        {{ currency_symbol }} {{ "{:,.2f}".format(sale.balance / conversion_rate) }}
-                    {% else %}
-                        PAGADO
-                    {% endif %}
-                </span>
-            </div>
-            {% endif %}
-
-            <section class="info-grid">
-                <div class="info-item">
-                    <label>Cliente / RNC</label>
-                    <span>
-                        <i class="bi bi-person-badge" style="color: var(--primary)"></i> 
-                        {{ sale.client.name if sale.client else 'Consumidor Final' }}
-                    </span>
-                </div>
-                <div class="info-item">
-                    <label>Fecha de Emisión</label>
-                    <span>
-                        <i class="bi bi-calendar-event"></i> 
-                        {{ sale.created_at.strftime('%d/%m/%Y %I:%M %p') }}
-                    </span>
-                </div>
-                <div class="info-item">
-                    <label>Terminal / Cajero</label>
-                    <span>
-                        <i class="bi bi-pc-display-horizontal"></i> 
-                        {{ sale.user.name if sale.user else 'Sistema' }}
-                    </span>
-                </div>
-            </section>
-
-            <section class="items-section">
-                <table class="modern-table">
-                    <thead>
-                        <tr>
-                            <th>Descripción del Producto</th>
-                            <th style="text-align: center;">Cant.</th>
-                            <th style="text-align: right;">Precio Unit. ({{ selected_currency }})</th>
-                            <th style="text-align: right;">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in sale.items %}
-                        <tr>
-                            <td data-label="Producto">
-                                <span class="product-name">{{ item.product.name }}</span>
-                            </td>
-                            <td data-label="Cantidad" style="text-align: center;">
-                                <span class="qty-tag">x{{ item.quantity }}</span>
-                            </td>
-                            <td data-label="Precio" style="text-align: right;">
-                                {{ currency_symbol }} {{ "{:,.2f}".format(item.price / conversion_rate) }}
-                            </td>
-                            <td data-label="Total" style="text-align: right;">
-                                <strong class="item-total-val">
-                                    {{ currency_symbol }} {{ "{:,.2f}".format((item.price * item.quantity) / conversion_rate) }}
-                                </strong>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </section>
-
-            <footer class="invoice-footer">
-                <div class="actions-left">
-                    <a href="{{ url_for('sales_bp.export_pdf', sale_id=sale.id) }}" target="_blank" class="btn-pdf">
-                        <i class="bi bi-printer-fill"></i> IMPRIMIR FACTURA
-                    </a>
-                </div>
-
-                <div class="totales-area">
-                    <div class="t-row">
-                        <span class="t-label">Subtotal Gravado</span>
-                        <span class="t-value">{{ currency_symbol }} {{ "{:,.2f}".format(sale.subtotal / conversion_rate) }}</span>
-                    </div>
-                    <div class="t-row">
-                        <span class="t-label">ITBIS (18%)</span>
-                        <span class="t-value">{{ currency_symbol }} {{ "{:,.2f}".format(sale.itbis / conversion_rate) }}</span>
-                    </div>
-                    <div class="t-row grand-total">
-                        <span class="t-label">TOTAL NETO</span>
-                        <span class="t-value">{{ currency_symbol }} {{ "{:,.2f}".format(sale.total / conversion_rate) }}</span>
-                    </div>
-
-                    <div class="financial-summary">
-                        <div class="t-row paid">
-                            <span class="t-label">Monto Pagado</span>
-                            <span class="t-value">{{ currency_symbol }} {{ "{:,.2f}".format(sale.amount_paid / conversion_rate) }}</span>
-                        </div>
-                        {% if sale.balance > 0 %}
-                        <div class="t-row balance">
-                            <span class="t-label">BALANCE PENDIENTE</span>
-                            <span class="t-value">{{ currency_symbol }} {{ "{:,.2f}".format(sale.balance / conversion_rate) }}</span>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </footer>
-        </div>
-    </main>
-
-    <script>
-        // Tema oscuro
-        if (localStorage.getItem('theme') === 'dark' || 
-            (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-    </script>
-</body>
-</html>
+  <section class="sale-view-panel" data-sale-panel="payments">
+    <div class="sale-payment-layout"><article class="workspace-card"><div class="workspace-card-head"><div><h2>Pagos registrados</h2><p>Desglose por método y referencia.</p></div></div><div class="sale-payment-list">{% for payment in sale.payments %}<div><span><i class="bi bi-credit-card"></i>{{ payment.method }}{% if payment.reference %}<small>{{ payment.reference }}</small>{% endif %}</span><strong>{{ currency_symbol }} {{ '{:,.2f}'.format(payment.amount / conversion_rate) }}</strong></div>{% else %}<div><span><i class="bi bi-cash"></i>{{ sale.payment_method or 'CASH' }}</span><strong>{{ currency_symbol }} {{ '{:,.2f}'.format(sale.amount_paid / conversion_rate) }}</strong></div>{% endfor %}</div></article><article class="workspace-card"><div class="workspace-card-head"><div><h2>Conciliación</h2><p>Comparación con el total de la venta.</p></div></div><div class="sale-money-row"><span>Total</span><strong>{{ currency_symbol }} {{ '{:,.2f}'.format(sale.total / conversion_rate) }}</strong></div><div class="sale-money-row"><span>Pagado</span><strong>{{ currency_symbol }} {{ '{:,.2f}'.format(sale.amount_paid / conversion_rate) }}</strong></div><div class="sale-money-row sale-money-row--grand"><span>Balance</span><strong>{{ currency_symbol }} {{ '{:,.2f}'.format(sale.balance / conversion_rate) }}</strong></div></article></div>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}<script nonce="{{ g.csp_nonce }}">document.querySelectorAll('.sale-view-tabs button').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.sale-view-tabs button').forEach(x=>x.classList.toggle('active',x===btn));document.querySelectorAll('.sale-view-panel').forEach(panel=>panel.classList.toggle('active',panel.dataset.salePanel===btn.dataset.salePanel));}));</script>{% endblock %}

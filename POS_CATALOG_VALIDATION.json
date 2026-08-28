@@ -1,0 +1,33 @@
+{
+  "initial_render": {
+    "status": "3 productos",
+    "cards": 3,
+    "errorState": false,
+    "runtimeErrors": [],
+    "fetchCalls": 1,
+    "unitStep": "1",
+    "weightStep": "0.001",
+    "warnings": 1,
+    "unavailableCards": 1,
+    "disabledUnavailableButton": true
+  },
+  "search_refresh": {
+    "status": "3 productos",
+    "cards": 3,
+    "errorState": false,
+    "runtimeErrors": [],
+    "fetchCalls": 2
+  },
+  "console_errors": [],
+  "checks": {
+    "initial_catalog_rendered": true,
+    "no_misleading_catalog_error": true,
+    "no_runtime_reference_error": true,
+    "unit_quantity_step": true,
+    "weight_quantity_step": true,
+    "warning_is_visible": true,
+    "invalid_product_is_disabled_not_catalog_wide_failure": true,
+    "search_refresh_keeps_catalog_operational": true
+  },
+  "passed": true
+}

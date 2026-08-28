@@ -1,0 +1,24 @@
+{% extends 'workspace/base.html' %}
+{% block title %}Centro de integridad{% endblock %}
+{% block eyebrow %}Gobernanza{% endblock %}
+{% block heading %}Centro de integridad{% endblock %}
+{% block subtitle %}Verifica reglas críticas de inventario, ventas, pagos y procesos desde una sola vista.{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/module_refresh.css') }}">{% endblock %}
+{% block actions %}<a class="workspace-btn secondary" href="{{ url_for('governance_bp.system_status') }}"><i class="bi bi-activity"></i> Estado del sistema</a>{% endblock %}
+{% block content %}
+<div class="module-page">
+<section class="workspace-grid">
+  <article class="workspace-metric"><span><i class="bi bi-shield-check"></i> Estado general</span><strong>{{ 'Correcto' if healthy else 'Atención' }}</strong><small>{{ checked_at.strftime('%d/%m/%Y %H:%M') }}</small></article>
+  <article class="workspace-metric"><span><i class="bi bi-list-check"></i> Reglas verificadas</span><strong>{{ checks|length }}</strong><small>Comprobaciones automáticas</small></article>
+  <article class="workspace-metric"><span><i class="bi bi-exclamation-triangle"></i> Incidencias</span><strong>{{ checks|selectattr('count','ne',0)|list|length }}</strong><small>Indicadores con registros afectados</small></article>
+  <article class="workspace-metric"><span><i class="bi bi-arrow-left-right"></i> Transferencias antiguas</span><strong>{{ stale_transfers|length }}</strong><small>Pendientes por más de 7 días</small></article>
+</section>
+<section class="workspace-card">
+ <div class="workspace-card-head"><div><h2>Diagnóstico operativo</h2><p>{{ 'No se detectaron anomalías en las reglas verificadas.' if healthy else 'Hay indicadores que requieren revisión. La prioridad se muestra por severidad.' }}</p></div><span class="module-chip {{ 'success' if healthy else 'danger' }}"><i class="bi {{ 'bi-check-circle' if healthy else 'bi-exclamation-circle' }}"></i>{{ 'CONSISTENTE' if healthy else 'REQUIERE ATENCIÓN' }}</span></div>
+ <div class="module-card-grid" data-ui-style="u25e87f15be">
+ {% for check in checks %}<article class="module-entity-card"><header><div><span class="module-chip {{ 'warning' if check.severity=='warning' else 'danger' if check.severity=='critical' else '' }}">{{ check.severity|upper }}</span><h3 data-ui-style="ud2c171b18b">{{ check.label }}</h3></div><strong class="integrity-count {{ 'is-ok' if check.count==0 else 'has-issues' }}">{{ check.count if check.available else '—' }}</strong></header><p>{{ 'Sin incidencias detectadas.' if check.count==0 else ('Registros afectados; revisa el flujo relacionado.' if check.available else 'La comprobación no estuvo disponible.') }}</p></article>{% endfor %}
+ </div>
+</section>
+{% if stale_transfers %}<section class="workspace-card"><div class="workspace-card-head"><div><h2>Transferencias pendientes antiguas</h2><p>Operaciones que superan siete días sin completar.</p></div></div><div class="workspace-table-wrap"><table class="workspace-table"><thead><tr><th>ID</th><th>Producto</th><th>Origen</th><th>Destino</th><th>Cantidad</th><th>Fecha</th></tr></thead><tbody>{% for row in stale_transfers %}<tr><td>#{{ row.id }}</td><td><strong>{{ row.product.name }}</strong></td><td>{{ row.from_warehouse.name }}</td><td>{{ row.to_warehouse.name }}</td><td>{{ display_quantity(row.quantity) }}</td><td>{{ row.created_at.strftime('%d/%m/%Y') }}</td></tr>{% endfor %}</tbody></table></div></section>{% endif %}
+</div>
+{% endblock %}

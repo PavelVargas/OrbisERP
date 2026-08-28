@@ -1,5 +1,15 @@
 # Revisión técnica de OrbisERP
 
+## Endurecimiento comercial · 19/08/2026
+
+- Eliminados del entregable `.env`, SQLite y logs locales; añadidas exclusiones preventivas.
+- Límites de autenticación persistentes en PostgreSQL y nueva migración de seguridad.
+- Cron de vencimientos protegido por superadministrador o secreto de infraestructura.
+- Divisas aisladas por empresa, clave de proveedor externa y soporte de tasa manual sin valores inventados.
+- Diagnóstico CLI de SMTP y almacenamiento, más respaldo automático de PostgreSQL e imágenes en Docker.
+- Cobro declarado explícitamente como manual o webhook; producción valida secretos, correo, cookies y migraciones.
+- Ampliada la suite con higiene del paquete, permisos, cron, reglas monetarias y esquema PostgreSQL.
+
 ## Ajuste CRM y orden de compra · 19/08/2026
 
 - Corregido el conflicto CSS que mantenía visible el estado vacío del CRM después de seleccionar un cliente.
@@ -258,3 +268,32 @@
 - Kardex renovado con métricas, búsqueda, filtros avanzados, almacén y rango de fechas seguro.
 - Proveedores con indicadores de compras, filtros, búsqueda y eliminación protegida cuando existen relaciones.
 - Notificaciones explicadas, clasificadas y accionables; cada aviso se marca al abrir y los problemas resueltos cierran alertas pendientes.
+# Refuerzo de integridad y operación 10/10 — 19/08/2026
+
+- Cantidades, importes e identificadores críticos ahora usan validadores compartidos que rechazan cero, negativos, fracciones indebidas, NaN e infinitos.
+- Ventas, compras, ajustes, ubicaciones y transferencias utilizan bloqueos de fila en operaciones concurrentes.
+- PostgreSQL impide nuevas filas con stock negativo, cantidades no positivas, pagos inválidos o estados desconocidos.
+- Nueva migración `2a6e8c4b1d70` con sesiones revocables, usuarios desactivables, consolidación segura de stock duplicado e idempotencia persistente.
+- Cada formulario y `fetch` de escritura incorpora una clave de operación; repetir la misma solicitud devuelve conflicto sin duplicar el movimiento.
+- Las tasas de cambio de login, caja y venta quedan aisladas por empresa.
+- Los límites mensuales consideran solo ventas completadas.
+- Los enlaces de recuperación quedan invalidados después del primer cambio de contraseña.
+- Las escrituras exitosas se auditan automáticamente y PostgreSQL protege la bitácora contra edición o eliminación.
+- Los comprobantes de pago nuevos se guardan fuera de `static` y solo el superadministrador puede abrirlos.
+- Exportaciones CSV neutralizan fórmulas de hojas de cálculo.
+- Readiness comprueba conexión, almacenamiento y revisión Alembic.
+- Se añadieron comandos `audit-integrity` y `validate-integrity`, respaldos de almacenamiento privado y CI con PostgreSQL.
+- Suite ampliada a 44 pruebas recolectadas; 42 pasan localmente y 2 de PostgreSQL se reservan para el entorno de integración.
+
+# Gobierno operativo, sesiones y recuperación — 19/08/2026
+
+- Nuevo Centro de integridad visual con comprobaciones en vivo y acceso directo a transferencias pendientes.
+- Auditoría general por empresa con filtros, paginación, exportación CSV segura, endpoint e identificador de solicitud.
+- Estado del sistema con latencia PostgreSQL, revisión Alembic, pool, disco, SMTP, versión y último respaldo confirmado.
+- Historial paginado de procesos de importación, filas procesadas y errores de validación.
+- Registro de sesiones en servidor, revocación individual o masiva y cierre automático cuando cambia la cuenta.
+- Códigos de recuperación 2FA de un solo uso almacenados mediante HMAC, con regeneración protegida por contraseña y TOTP.
+- Migración idempotente `3b7f9d5c2e81`, navegación y permisos granulares para todas las vistas nuevas.
+- Las validaciones que necesitan terceros —restauración real, pentest y piloto comercial— permanecen declaradas como controles externos y no se presentan como realizadas.
+- Verificación final: 50 pruebas recolectadas, 48 aprobadas localmente y 2 de integración PostgreSQL reservadas para CI o una base de pruebas real.
+- Corregido el enlace de sesiones activas del menú y añadida una prueba global que detecta endpoints literales inexistentes en las plantillas.

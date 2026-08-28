@@ -1,3 +1,4 @@
+from services.time_utils import utcnow
 from datetime import datetime
 
 from db import db
@@ -16,7 +17,7 @@ class WarehouseLocation(db.Model):
     barcode = db.Column(db.String(80), nullable=False)
     description = db.Column(db.String(255), nullable=True)
     status = db.Column(db.Boolean, nullable=False, default=True)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
 
     warehouse_id = db.Column(db.Integer, db.ForeignKey('warehouses.id'), nullable=False)
     company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)
@@ -77,7 +78,7 @@ class LocationStock(db.Model):
     location_id = db.Column(db.Integer, db.ForeignKey('warehouse_locations.id'), nullable=False)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
     company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)
-    quantity = db.Column(db.Integer, nullable=False, default=0)
+    quantity = db.Column(db.Numeric(14, 3), nullable=False, default=0)
 
     location = db.relationship('WarehouseLocation', back_populates='stocks')
     product = db.relationship('Product')
@@ -91,11 +92,11 @@ class LocationMovement(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     movement_type = db.Column(db.String(20), nullable=False)
-    quantity = db.Column(db.Integer, nullable=False)
-    balance_after = db.Column(db.Integer, nullable=False)
+    quantity = db.Column(db.Numeric(14, 3), nullable=False)
+    balance_after = db.Column(db.Numeric(14, 3), nullable=False)
     reference = db.Column(db.String(80), nullable=True)
     notes = db.Column(db.String(255), nullable=True)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
     location_id = db.Column(db.Integer, db.ForeignKey('warehouse_locations.id'), nullable=False)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
     company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)

@@ -2,11 +2,15 @@ from db import db
 
 class WarehouseStock(db.Model):
     __tablename__ = 'warehouse_stock'
+    __table_args__ = (
+        db.CheckConstraint('quantity >= 0', name='ck_warehouse_stock_quantity_nonnegative'),
+        db.UniqueConstraint('company_id', 'warehouse_id', 'product_id', name='uq_warehouse_stock_tenant_product'),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     warehouse_id = db.Column(db.Integer, db.ForeignKey('warehouses.id'), nullable=False)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
-    quantity = db.Column(db.Integer, default=0)
+    quantity = db.Column(db.Numeric(14, 3), nullable=False, default=0)
 
     company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)
 

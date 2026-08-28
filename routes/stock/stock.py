@@ -8,6 +8,8 @@ from models.warehouse_stock.warehouse_stock import WarehouseStock
 from models.user.user import User
 from sqlalchemy import or_
 from datetime import datetime, timedelta
+from services.validation import BusinessRuleError, tenant_id
+from services.quantity import product_quantity, as_decimal
 
 stock_bp = Blueprint('stock_bp', __name__)
 
@@ -24,17 +26,24 @@ def adjust_stock(product_id):
 
     user = User.query.get(user_id)
     # Seguridad: Producto debe pertenecer a la empresa
-    product = Product.query.filter_by(id=product_id, company_id=company_id).first_or_404()
+    product = Product.query.filter_by(id=product_id, company_id=company_id).filter(Product.archived_at.is_(None)).first_or_404()
     warehouses = Warehouse.query.filter_by(status=True, company_id=company_id).all()
 
     if request.method == 'POST':
-        warehouse_id = int(request.form.get('warehouse_id'))
+        try:
+            warehouse_id = tenant_id(request.form.get('warehouse_id'), 'Almacén')
+            quantity = product_quantity(request.form.get('quantity'), 'Cantidad', product=product, uom=product.base_uom)
+        except BusinessRuleError as exc:
+            flash(str(exc), 'danger')
+            return redirect(request.url)
         movement_type = request.form.get('movement_type')  # IN / OUT
-        quantity = int(request.form.get('quantity'))
-        reason = request.form.get('reason')
+        reason = (request.form.get('reason') or '').strip()
 
-        if quantity <= 0:
-            flash('La cantidad debe ser mayor a 0', 'error')
+        if movement_type not in {'IN', 'OUT'}:
+            flash('Selecciona un tipo de movimiento válido.', 'danger')
+            return redirect(request.url)
+        if len(reason) < 3:
+            flash('Indica un motivo de al menos 3 caracteres.', 'danger')
             return redirect(request.url)
 
         # Seguridad: Almacén debe pertenecer a la empresa
@@ -44,7 +53,7 @@ def adjust_stock(product_id):
             product_id=product.id,
             warehouse_id=warehouse.id,
             company_id=company_id
-        ).first()
+        ).with_for_update().first()
 
         if not stock:
             stock = WarehouseStock(
@@ -98,7 +107,7 @@ def stock_history(product_id):
         return redirect(url_for('login_bp.login'))
 
     user = User.query.get(user_id)
-    product = Product.query.filter_by(id=product_id, company_id=company_id).first_or_404()
+    product = Product.query.filter_by(id=product_id, company_id=company_id).filter(Product.archived_at.is_(None)).first_or_404()
     
     movements = StockMovement.query.filter_by(product_id=product.id, company_id=company_id)\
         .order_by(StockMovement.created_at.desc()).all()
@@ -126,7 +135,7 @@ def stock_actual():
     search = (request.args.get('search') or '').strip()
     warehouse_id = request.args.get('warehouse_id', type=int)
 
-    query = Product.query.filter_by(status=True, company_id=company_id)
+    query = Product.query.filter_by(status=True, company_id=company_id).filter(Product.archived_at.is_(None))
     if category_id:
         query = query.filter(Product.category_id == category_id)
     if warehouse_id:
@@ -216,10 +225,10 @@ def kardex_general():
                                  StockMovement.reason.ilike(f'%{search}%')))
 
     movements = query.order_by(StockMovement.created_at.desc()).limit(1000).all()
-    total_in = sum(int(row.quantity or 0) for row in movements if row.movement_type == 'IN')
-    total_out = sum(int(row.quantity or 0) for row in movements if row.movement_type == 'OUT')
+    total_in = sum((as_decimal(row.quantity) for row in movements if row.movement_type == 'IN'), as_decimal(0))
+    total_out = sum((as_decimal(row.quantity) for row in movements if row.movement_type == 'OUT'), as_decimal(0))
     
-    products = Product.query.filter_by(status=True, company_id=company_id).all()
+    products = Product.query.filter_by(status=True, company_id=company_id).filter(Product.archived_at.is_(None)).all()
     warehouses = Warehouse.query.filter_by(status=True, company_id=company_id).all()
 
     return render_template(

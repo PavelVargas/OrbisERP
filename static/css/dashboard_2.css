@@ -1,6 +1,6 @@
  /* --- ESTILOS DE TENDENCIA Y CRECIMIENTO --- */
         :root {
-            --up-color: #10b981;
+            --up-color: var(--primary);
             --down-color: #ef4444;
             --up-bg: rgba(16, 185, 129, 0.1);
             --down-bg: rgba(239, 68, 68, 0.1);

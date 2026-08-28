@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
+from services.numeric import NumericValueError, finite_decimal
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, current_app
 from models.stock_transfer.stock_transfer import StockTransfer
 from models.warehouse.warehouse import Warehouse
 from models.warehouse_stock.warehouse_stock import WarehouseStock
@@ -6,7 +7,9 @@ from models.warehouse_location.warehouse_location import LocationMovement, Locat
 from models.products.products import Product, ProductType
 from models.stock_movement.stock_movement import StockMovement
 from models.user.user import User
+from models.retail import ProductBarcode
 from db import db
+from decimal import Decimal
 from datetime import datetime
 import pdfkit
 import base64
@@ -16,12 +19,25 @@ from barcode.writer import ImageWriter
 from flask import render_template, make_response
 import re
 from sqlalchemy import func
+from sqlalchemy.orm import joinedload
+from services.validation import BusinessRuleError, tenant_id
+from services.quantity import product_quantity, as_decimal, display_quantity
 
 transfer_bp = Blueprint('transfer_bp', __name__, url_prefix='/transfers')
 
 def _same_inventory_point(from_warehouse_id, from_location_id, to_warehouse_id, to_location_id):
     """General stock and every nested location are separate inventory nodes."""
     return from_warehouse_id == to_warehouse_id and from_location_id == to_location_id
+
+
+def _receive_redirect_url(transfer=None):
+    """Return only to known internal transfer views after a receive attempt."""
+    target = (request.form.get('return_to') or '').strip().lower()
+    if target == 'scanner':
+        return url_for('transfer_bp.scanner_mode')
+    if target == 'warehouse' and transfer is not None:
+        return url_for('transfer_bp.transfers_by_warehouse', warehouse_id=transfer.to_warehouse_id)
+    return url_for('transfer_bp.transfers')
 
 # ==========================================
 # LISTAR TODAS LAS TRANSFERENCIAS
@@ -34,8 +50,8 @@ def transfers():
     if not user_id or not company_id:
         return redirect(url_for('login_bp.login'))
 
-    user = User.query.get(user_id)
-    products = Product.query.filter_by(company_id=company_id, status=True).all()
+    user = User.query.filter_by(id=user_id, company_id=company_id).first_or_404()
+    products = Product.query.filter_by(company_id=company_id, status=True).filter(Product.archived_at.is_(None)).all()
     warehouses = Warehouse.query.filter_by(company_id=company_id, status=True).all()
     # El centro funciona como una bandeja de trabajo: una operación recibida
     # conserva su trazabilidad, pero ya no debe seguir apareciendo como pendiente.
@@ -59,11 +75,14 @@ def transfers():
 def create_transfer():
     user_id = session.get('user_id')
     company_id = session.get('company_id')
-    
+
     if not user_id or not company_id:
         return redirect(url_for('login_bp.login'))
 
-    user = User.query.get(user_id)
+    user = User.query.filter_by(id=user_id, company_id=company_id).first()
+    if not user:
+        session.clear()
+        return redirect(url_for('login_bp.login'))
 
     if request.method == 'POST':
         from_wh = request.form.get('from_warehouse', type=int)
@@ -102,47 +121,79 @@ def create_transfer():
             return redirect(url_for('transfer_bp.create_transfer'))
 
         if not product_ids:
-            flash('Debes añadir al menos un producto', 'warning')
+            flash('Debes añadir al menos un producto.', 'warning')
             return redirect(url_for('transfer_bp.create_transfer'))
         if len(product_ids) != len(quantities):
             flash('Las líneas de la transferencia están incompletas.', 'danger')
+            return redirect(url_for('transfer_bp.create_transfer'))
+        if len(product_ids) > 200:
+            flash('Una transferencia admite como máximo 200 productos.', 'danger')
             return redirect(url_for('transfer_bp.create_transfer'))
         if user.role not in ['admin', 'superadmin'] and user.warehouse_id != from_wh:
             flash('Solo puedes transferir existencias desde tu almacén asignado.', 'danger')
             return redirect(url_for('transfer_bp.create_transfer'))
 
         try:
-            for p_id, qty in zip(product_ids, quantities):
-                p_id = int(p_id)
-                qty = int(qty)
-                if qty <= 0:
-                    raise ValueError('Las cantidades deben ser números enteros mayores que cero.')
+            parsed_ids = [tenant_id(raw_id, 'Producto') for raw_id in product_ids]
+            unique_ids = set(parsed_ids)
+            products = Product.query.options(joinedload(Product.base_uom)).filter(
+                Product.company_id == company_id,
+                Product.status.is_(True),
+                Product.archived_at.is_(None),
+                Product.id.in_(unique_ids),
+            ).all()
+            products_by_id = {product.id: product for product in products}
+            if len(products_by_id) != len(unique_ids):
+                raise BusinessRuleError('Uno de los productos seleccionados no es válido.')
 
+            # Aggregate duplicated form rows before checking stock. This prevents
+            # a forged request from reserving the same stock several times while
+            # each line is validated in isolation.
+            requested = {}
+            for product_id, raw_quantity in zip(parsed_ids, quantities):
+                product = products_by_id[product_id]
+                quantity = product_quantity(
+                    raw_quantity,
+                    'Cantidad',
+                    product=product,
+                    uom=product.base_uom,
+                )
+                accumulated = requested.get(product_id, Decimal('0')) + quantity
+                requested[product_id] = product_quantity(
+                    accumulated,
+                    'Cantidad total',
+                    product=product,
+                    uom=product.base_uom,
+                )
+
+            for product_id, quantity in requested.items():
+                product = products_by_id[product_id]
                 stock_from = WarehouseStock.query.filter_by(
-                    product_id=p_id, warehouse_id=from_wh, company_id=company_id
+                    product_id=product_id, warehouse_id=from_wh, company_id=company_id
                 ).first()
+                available = as_decimal(stock_from.quantity) if stock_from else Decimal('0')
 
-                product_obj = Product.query.filter_by(id=p_id, company_id=company_id, status=True).first()
-                if not product_obj:
-                    raise ValueError('Uno de los productos seleccionados no es válido.')
-                available = int(stock_from.quantity or 0) if stock_from else 0
                 if from_location:
                     location_stock = LocationStock.query.filter_by(
-                        location_id=from_location.id, product_id=p_id, company_id=company_id
+                        location_id=from_location.id,
+                        product_id=product_id,
+                        company_id=company_id,
                     ).first()
-                    available = int(location_stock.quantity or 0) if location_stock else 0
+                    available = as_decimal(location_stock.quantity) if location_stock else Decimal('0')
                 else:
                     allocated = db.session.query(func.coalesce(func.sum(LocationStock.quantity), 0)).join(
                         WarehouseLocation, LocationStock.location_id == WarehouseLocation.id
                     ).filter(
                         WarehouseLocation.warehouse_id == from_wh,
-                        LocationStock.product_id == p_id,
+                        WarehouseLocation.company_id == company_id,
+                        LocationStock.product_id == product_id,
                         LocationStock.company_id == company_id,
                     ).scalar()
-                    available -= int(allocated or 0)
+                    available -= as_decimal(allocated or 0)
+
                 reserved_query = db.session.query(func.coalesce(func.sum(StockTransfer.quantity), 0)).filter(
                     StockTransfer.company_id == company_id,
-                    StockTransfer.product_id == p_id,
+                    StockTransfer.product_id == product_id,
                     StockTransfer.from_warehouse_id == from_wh,
                     StockTransfer.status == 'PENDING',
                 )
@@ -150,45 +201,56 @@ def create_transfer():
                     reserved_query = reserved_query.filter(StockTransfer.from_location_id == from_location.id)
                 else:
                     reserved_query = reserved_query.filter(StockTransfer.from_location_id.is_(None))
-                available -= int(reserved_query.scalar() or 0)
-                if available < qty:
-                    place = from_location.full_path if from_location else origin.name
-                    raise ValueError(f'Stock insuficiente para {product_obj.name} en {place}. Disponible: {available}.')
+                available -= as_decimal(reserved_query.scalar() or 0)
 
-                transfer = StockTransfer(
-                    product_id=p_id,
+                if available < quantity:
+                    place = from_location.full_path if from_location else origin.name
+                    raise BusinessRuleError(
+                        f'Stock insuficiente para {product.name} en {place}. Disponible: {available}.'
+                    )
+
+                db.session.add(StockTransfer(
+                    product_id=product_id,
                     from_warehouse_id=from_wh,
                     to_warehouse_id=to_wh,
                     from_location_id=from_location.id if from_location else None,
                     to_location_id=to_location.id if to_location else None,
-                    quantity=qty,
+                    quantity=quantity,
                     company_id=company_id,
+                    created_by_id=user_id,
                     status='PENDING',
-                    created_at=datetime.now()
-                )
-                db.session.add(transfer)
-            
+                    created_at=datetime.now(),
+                ))
+
             db.session.commit()
             flash('Orden de transferencia creada. Pendiente de recepción física.', 'success')
             return redirect(url_for('transfer_bp.transfers'))
 
-        except Exception as e:
+        except BusinessRuleError as exc:
             db.session.rollback()
-            flash(f'Error al procesar: {str(e)}', 'danger')
+            flash(str(exc), 'danger')
+            return redirect(url_for('transfer_bp.create_transfer'))
+        except Exception:
+            db.session.rollback()
+            current_app.logger.exception('No se pudo crear la transferencia')
+            flash('No fue posible crear la transferencia. No se aplicó ningún cambio.', 'danger')
             return redirect(url_for('transfer_bp.create_transfer'))
 
     warehouses = Warehouse.query.filter_by(company_id=company_id, status=True).all()
-    products = Product.query.filter_by(company_id=company_id, status=True).filter(
-        Product.product_type != ProductType.SERVICE
-    ).all()
+    products = Product.query.options(joinedload(Product.base_uom)).filter(
+        Product.company_id == company_id,
+        Product.status.is_(True),
+        Product.archived_at.is_(None),
+        Product.product_type != ProductType.SERVICE,
+    ).order_by(Product.name.asc()).all()
     locations = WarehouseLocation.query.filter_by(company_id=company_id, status=True).order_by(
         WarehouseLocation.warehouse_id.asc(), WarehouseLocation.name.asc()
     ).all()
-    
+
     return render_template(
-        'transfers/create.html', 
-        user=user, 
-        warehouses=warehouses, 
+        'transfers/create.html',
+        user=user,
+        warehouses=warehouses,
         products=products,
         locations=locations,
     )
@@ -227,18 +289,18 @@ def transfers_by_warehouse(warehouse_id):
 def receive_transfer(transfer_id):
     company_id = session.get('company_id')
     user_id = session.get('user_id')
-    if not company_id:
+    if not company_id or not user_id:
         return redirect(url_for('login_bp.login'))
 
     transfer = StockTransfer.query.filter_by(id=transfer_id, company_id=company_id).with_for_update().first_or_404()
-    user = db.session.get(User, user_id) if user_id else None
+    user = User.query.filter_by(id=user_id, company_id=company_id).first()
     if not user or (user.role not in ['admin', 'superadmin'] and user.warehouse_id != transfer.to_warehouse_id):
         flash('Solo el almacén de destino puede confirmar esta recepción.', 'danger')
         return redirect(url_for('transfer_bp.transfers'))
 
     if transfer.status != 'PENDING':
         flash('Esta transferencia ya fue procesada anteriormente.', 'warning')
-        return redirect(request.referrer)
+        return redirect(_receive_redirect_url(transfer))
 
     try:
         stock_from = WarehouseStock.query.filter_by(
@@ -249,7 +311,7 @@ def receive_transfer(transfer_id):
 
         if not stock_from or stock_from.quantity < transfer.quantity:
             flash('Error crítico: El almacén de origen ya no dispone del stock solicitado.', 'danger')
-            return redirect(request.referrer)
+            return redirect(_receive_redirect_url(transfer))
 
         location_stock_from = None
         if transfer.from_location_id:
@@ -260,7 +322,7 @@ def receive_transfer(transfer_id):
             ).with_for_update().first()
             if not location_stock_from or location_stock_from.quantity < transfer.quantity:
                 flash('La ubicación de origen ya no tiene la cantidad solicitada.', 'danger')
-                return redirect(request.referrer)
+                return redirect(_receive_redirect_url(transfer))
         else:
             allocated = db.session.query(func.coalesce(func.sum(LocationStock.quantity), 0)).join(
                 WarehouseLocation, LocationStock.location_id == WarehouseLocation.id
@@ -269,9 +331,9 @@ def receive_transfer(transfer_id):
                 LocationStock.product_id == transfer.product_id,
                 LocationStock.company_id == company_id,
             ).scalar()
-            if int(stock_from.quantity or 0) - int(allocated or 0) < transfer.quantity:
+            if as_decimal(stock_from.quantity) - as_decimal(allocated or 0) < as_decimal(transfer.quantity):
                 flash('El stock general disponible cambió porque algunas unidades fueron asignadas a ubicaciones.', 'danger')
-                return redirect(request.referrer)
+                return redirect(_receive_redirect_url(transfer))
 
         stock_to = WarehouseStock.query.filter_by(
             product_id=transfer.product_id,
@@ -328,6 +390,7 @@ def receive_transfer(transfer_id):
             product_id=transfer.product_id,
             warehouse_id=transfer.from_warehouse_id,
             company_id=company_id,
+            user_id=user_id,
             movement_type='OUT',
             quantity=transfer.quantity,
             reason=f'Transferencia enviada #{transfer.id}' + (
@@ -339,6 +402,7 @@ def receive_transfer(transfer_id):
             product_id=transfer.product_id,
             warehouse_id=transfer.to_warehouse_id,
             company_id=company_id,
+            user_id=user_id,
             movement_type='IN',
             quantity=transfer.quantity,
             reason=f'Transferencia recibida #{transfer.id}' + (
@@ -348,6 +412,7 @@ def receive_transfer(transfer_id):
 
         # 5. Marcar como finalizada
         transfer.status = 'RECEIVED'
+        transfer.received_by_id = user_id
 
         db.session.commit()
         if transfer.from_warehouse_id == transfer.to_warehouse_id:
@@ -355,11 +420,12 @@ def receive_transfer(transfer_id):
         else:
             flash('Recepción confirmada. Inventario actualizado en ambos almacenes.', 'success')
     
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        flash(f'Error en el proceso de recepción: {str(e)}', 'danger')
+        current_app.logger.exception('No se pudo recibir la transferencia %s', transfer_id)
+        flash('No fue posible recibir la transferencia. No se aplicó ningún cambio.', 'danger')
 
-    return redirect(request.referrer)
+    return redirect(_receive_redirect_url(transfer))
 
 # ==========================================
 # VISTA DETALLADA DE TRANSFERENCIA
@@ -418,38 +484,86 @@ def print_transfer(transfer_id):
 @transfer_bp.route('/api/get_details/<string:code>')
 def api_get_transfer(code):
     company_id = session.get('company_id')
+    user_id = session.get('user_id')
+    if not company_id or not user_id:
+        return jsonify({"success": False, "message": "Autenticacion requerida"}), 401
+
+    match = re.fullmatch(r'(?:TR)?([0-9]{1,18})', (code or '').strip(), flags=re.IGNORECASE)
+    if not match:
+        return jsonify({"success": False, "message": "Codigo de conduce invalido"}), 400
+
     try:
-        numeric_id = re.sub(r'[^0-9]', '', code)
-        
-        if not numeric_id:
-            return {"success": False, "message": "Código inválido"}, 400
+        user = User.query.filter_by(id=user_id, company_id=company_id).first()
+        if not user:
+            return jsonify({"success": False, "message": "Sesion no valida"}), 401
 
-        t = StockTransfer.query.filter_by(id=int(numeric_id), company_id=company_id).first()
+        transfer_id = int(match.group(1))
+        transfer = StockTransfer.query.options(
+            joinedload(StockTransfer.product).joinedload(Product.base_uom),
+            joinedload(StockTransfer.from_warehouse),
+            joinedload(StockTransfer.to_warehouse),
+            joinedload(StockTransfer.from_location),
+            joinedload(StockTransfer.to_location),
+        ).filter_by(id=transfer_id, company_id=company_id).first()
 
-        if not t:
-            return {"success": False, "message": "Transferencia no encontrada"}, 404
-        
-        if t.status != 'PENDING':
-            return {"success": False, "message": "Esta transferencia ya fue recibida"}, 400
+        if not transfer:
+            return jsonify({"success": False, "message": "Transferencia no encontrada"}), 404
+        if transfer.status == 'RECEIVED':
+            return jsonify({"success": False, "message": "Esta transferencia ya fue recibida"}), 409
+        if transfer.status == 'CANCELLED':
+            return jsonify({"success": False, "message": "Esta transferencia fue cancelada"}), 409
+        if transfer.status != 'PENDING':
+            return jsonify({"success": False, "message": "La transferencia no esta disponible"}), 409
+        if user.role not in ['admin', 'superadmin'] and user.warehouse_id != transfer.to_warehouse_id:
+            return jsonify({"success": False, "message": "Solo el almacen de destino puede escanear este traslado"}), 403
+        if transfer.product.tracking in {'LOT', 'SERIAL'}:
+            return jsonify({
+                "success": False,
+                "message": "Este producto requiere trazabilidad por lote o serie y no puede recibirse en el flujo generico.",
+            }), 409
 
-        return {
+        product = transfer.product
+        barcodes = ProductBarcode.query.filter_by(
+            company_id=company_id,
+            product_id=product.id,
+        ).order_by(ProductBarcode.is_primary.desc(), ProductBarcode.id.asc()).all()
+        scan_codes = [product.sku, str(product.id)] + [row.code for row in barcodes]
+        scan_codes = [value for value in dict.fromkeys(scan_codes) if value]
+        fractional = bool(
+            product.sale_mode == 'WEIGHT'
+            or (product.base_uom is not None and bool(product.base_uom.allow_fraction))
+        )
+        uom = (
+            product.base_uom.symbol
+            if product.base_uom is not None and product.base_uom.symbol
+            else ('kg' if product.sale_mode == 'WEIGHT' else 'ud')
+        )
+
+        response = jsonify({
             "success": True,
             "transfer": {
-                "id": t.id,
-                "ref_code": f"TR{t.id:06d}",
-                "origin": t.from_warehouse.name,
-                "destination": t.to_warehouse.name,
-                "origin_location": t.from_location.full_path if t.from_location else None,
-                "destination_location": t.to_location.full_path if t.to_location else None,
-                "destination_location_barcode": t.to_location.barcode if t.to_location else None,
-                "product_name": t.product.name,
-                "product_sku": t.product.sku or "S/SKU",
-                "product_id": t.product.id,
-                "expected_qty": t.quantity
-            }
-        }
-    except Exception as e:
-        return {"success": False, "message": str(e)}, 400
+                "id": transfer.id,
+                "ref_code": f"TR{transfer.id:06d}",
+                "origin": transfer.from_warehouse.name,
+                "destination": transfer.to_warehouse.name,
+                "origin_location": transfer.from_location.full_path if transfer.from_location else None,
+                "destination_location": transfer.to_location.full_path if transfer.to_location else None,
+                "destination_location_barcode": transfer.to_location.barcode if transfer.to_location else None,
+                "product_name": product.name,
+                "product_sku": product.sku or "S/SKU",
+                "product_id": product.id,
+                "expected_qty": display_quantity(transfer.quantity),
+                "fractional": fractional,
+                "uom": uom,
+                "tracking": product.tracking,
+                "scan_codes": scan_codes,
+            },
+        })
+        response.headers['Cache-Control'] = 'no-store, private'
+        return response
+    except Exception:
+        current_app.logger.exception('No se pudo consultar la transferencia %s', match.group(1))
+        return jsonify({"success": False, "message": "No se pudo consultar la transferencia"}), 500
 
 @transfer_bp.route('/scanner-mode')
 def scanner_mode():
@@ -457,7 +571,10 @@ def scanner_mode():
     company_id = session.get('company_id')
     if not user_id or not company_id:
         return redirect(url_for('login_bp.login'))
-    user = db.session.get(User, user_id)
+    user = User.query.filter_by(id=user_id, company_id=company_id).first()
+    if not user:
+        session.clear()
+        return redirect(url_for('login_bp.login'))
     return render_template('transfers/scanner_validation.html', user=user)
 
 

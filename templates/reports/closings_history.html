@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<html lang="es" class="{% if session.get('theme') == 'dark' %}dark{% endif %}">
-<head>
+<html lang="es" class="{% if tablet_mode_active|default(session.get('tablet_mode')) %}tablet-mode tablet-full-width-profile{% endif %} {% if session.get('theme') == 'dark' %}dark{% endif %}">
+<head>{% set shell_assets_loaded = true %}{% include 'layouts/app_head_assets.html' %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Auditoría de Cajas | OrbisERP</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base_css/base.css') }}">
+
     <link rel="stylesheet" href="/static/css/reporte_clousing.css">
 </head>
 <body class="no-transition">
@@ -15,14 +14,14 @@
     <main>
         <header class="page-header">
             <div>
-                <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">Analítica / Auditoría</span>
-                <h1 style="font-size: clamp(1.8rem, 4vw, 2.4rem); font-weight: 800; margin-top: 5px; margin-bottom: 0;">Historial de Cierres</h1>
-                <p style="font-size: 0.8rem; color: var(--primary); font-weight: 700; margin-top: 5px;">
+                <span data-ui-style="ue0c78815ae">Analítica / Auditoría</span>
+                <h1 data-ui-style="u8e90ad6948">Historial de Cierres</h1>
+                <p data-ui-style="u359cd90a99">
                     Vista en {{ currency_symbol }} (Tasa: 1.00 = {{ "{:,.2f}".format(conversion_rate) }} DOP)
                 </p>
             </div>
             <div class="header-actions">
-                <a href="{{ url_for('reports_bp.export_cash_print') }}" target="_blank" class="btn-export" style="background: #faa200; color: white;">
+                <a href="{{ url_for('reports_bp.export_cash_print') }}" target="_blank" rel="noopener" class="btn-export" data-ui-style="u40fd18dc3e">
                     <i class="bi bi-printer"></i> <span>Imprimir Reporte</span>
                 </a>
                 <a href="{{ url_for('reports_bp.export_csv') }}" class="btn-export">
@@ -37,12 +36,12 @@
         <div class="history-container">
             <table class="audit-table">
                 <thead>
-                    <tr style="border-bottom: 2px solid var(--border);">
-                        <th style="text-align: left; padding: 15px; font-size: 0.75rem; color: var(--text-muted);">FECHA</th>
-                        <th style="text-align: left; padding: 15px; font-size: 0.75rem; color: var(--text-muted);">CAJERO</th>
-                        <th style="text-align: right; padding: 15px; font-size: 0.75rem; color: var(--text-muted);">SISTEMA ({{ currency_symbol }})</th>
-                        <th style="text-align: right; padding: 15px; font-size: 0.75rem; color: var(--text-muted);">FÍSICO ({{ currency_symbol }})</th>
-                        <th style="text-align: right; padding: 15px; font-size: 0.75rem; color: var(--text-muted);">DIFERENCIA</th>
+                    <tr data-ui-style="u0489936da1">
+                        <th data-ui-style="ucc0244d793">FECHA</th>
+                        <th data-ui-style="ucc0244d793">CAJERO</th>
+                        <th data-ui-style="uab390de5a8">SISTEMA ({{ currency_symbol }})</th>
+                        <th data-ui-style="uab390de5a8">FÍSICO ({{ currency_symbol }})</th>
+                        <th data-ui-style="uab390de5a8">DIFERENCIA</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -55,28 +54,28 @@
 
                     <tr>
                         <td>
-                            <div style="font-weight: 700;">{{ c.closing_date.strftime('%d %b, %Y') }}</div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ c.closing_date.strftime('%I:%M %p') }}</div>
+                            <div data-ui-style="u5db75d4d4e">{{ c.closing_date.strftime('%d %b, %Y') }}</div>
+                            <div data-ui-style="ue212d2cf0d">{{ c.closing_date.strftime('%I:%M %p') }}</div>
                         </td>
                         <td>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <div class="nav-icon" style="width: 32px; height: 32px; font-size: 0.8rem; font-weight: 800;">
+                            <div data-ui-style="u817e5e75e5">
+                                <div class="nav-icon" data-ui-style="ub6f3ebb6c4">
                                     {{ c.user.name[0] | upper if c.user else '?' }}
                                 </div>
-                                <span style="font-weight: 600;">{{ c.user.name if c.user else 'Sist.' }}</span>
+                                <span data-ui-style="u21a1be8a0d">{{ c.user.name if c.user else 'Sist.' }}</span>
                             </div>
                         </td>
-                        <td style="font-weight: 600; text-align: right;" class="text-mono">
+                        <td data-ui-style="u0226015834" class="text-mono">
                             {{ currency_symbol }} {{ "{:,.2f}".format(sys_conv) }}
                         </td>
-                        <td style="font-weight: 600; text-align: right;" class="text-mono">
+                        <td data-ui-style="u0226015834" class="text-mono">
                             {{ currency_symbol }} {{ "{:,.2f}".format(real_conv) }}
                         </td>
-                        <td style="text-align: right;">
-                            <div style="font-weight: 800; color: {% if diff_conv < -0.01 %}var(--danger){% elif diff_conv > 0.01 %}var(--warning){% else %}var(--success){% endif %};">
+                        <td data-ui-style="u30489cbd39">
+                            <div class="closing-diff-value {% if diff_conv < -0.01 %}is-negative{% elif diff_conv > 0.01 %}is-positive{% else %}is-balanced{% endif %}">
                                 {{ currency_symbol }} {{ "{:,.2f}".format(diff_conv) }}
                             </div>
-                            <span class="status-pill {% if diff_conv < -0.01 %}pill-danger{% elif diff_conv > 0.01 %}pill-warning{% else %}pill-success{% endif %}" style="font-size: 0.6rem;">
+                            <span class="status-pill {% if diff_conv < -0.01 %}pill-danger{% elif diff_conv > 0.01 %}pill-warning{% else %}pill-success{% endif %}" data-ui-style="u5aecb40b3b">
                                 {{ "Faltante" if diff_conv < -0.01 else ("Cuadrado" if diff_conv|abs <= 0.01 else "Sobrante") }}
                             </span>
                         </td>
@@ -102,7 +101,7 @@
                     </div>
                     <div class="card-row">
                         <span class="card-label">Diferencia</span>
-                        <span class="card-value" style="color: {% if diff_conv < -0.01 %}var(--danger){% else %}var(--success){% endif %};">
+                        <span class="card-value {{ 'is-negative' if diff_conv < -0.01 else 'is-balanced' }}">
                             {{ currency_symbol }} {{ "{:,.2f}".format(diff_conv) }}
                         </span>
                     </div>

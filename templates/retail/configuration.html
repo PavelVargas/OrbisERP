@@ -1,0 +1,62 @@
+{% extends 'workspace/base.html' %}
+{% block title %}Configuración retail{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/retail.css') }}">{% endblock %}
+{% block eyebrow %}Retail avanzado{% endblock %}
+{% block heading %}Configuración comercial{% endblock %}
+{% block subtitle %}Perfil operativo, dispositivos de ticket y capacidades que gobiernan el POS, inventario y postventa.{% endblock %}
+{% block content %}
+<div class="retail-shell">
+  {% include 'retail/_nav.html' %}
+  <form method="post" action="{{ url_for('retail_bp.settings_update') }}" class="retail-settings-stack" id="retailSettingsForm">
+    <section class="workspace-card">
+      <div class="workspace-card-head"><div><h2>Perfil operativo</h2><p>Estas decisiones afectan POS, inventario, catálogo y postventa.</p></div><span class="retail-chip">Garantías siempre activas</span></div>
+      <div class="workspace-form">
+        <label><span>Tipo de negocio</span><select name="industry_profile"><option value="GENERAL" {{ 'selected' if settings.industry_profile=='GENERAL' }}>Tienda general</option><option value="FASHION" {{ 'selected' if settings.industry_profile=='FASHION' }}>Ropa / calzado</option><option value="TECH" {{ 'selected' if settings.industry_profile=='TECH' }}>Tecnología</option><option value="HARDWARE" {{ 'selected' if settings.industry_profile=='HARDWARE' }}>Ferretería</option><option value="GROCERY" {{ 'selected' if settings.industry_profile=='GROCERY' }}>Supermercado / alimentos</option><option value="DISTRIBUTION" {{ 'selected' if settings.industry_profile=='DISTRIBUTION' }}>Distribución</option><option value="COSMETICS" {{ 'selected' if settings.industry_profile=='COSMETICS' }}>Cosméticos</option><option value="FURNITURE" {{ 'selected' if settings.industry_profile=='FURNITURE' }}>Muebles / electrodomésticos</option><option value="OTHER" {{ 'selected' if settings.industry_profile=='OTHER' }}>Otro</option></select></label>
+        <label><span>Método de costeo</span><select name="costing_method"><option value="AVERAGE" {{ 'selected' if settings.costing_method=='AVERAGE' }}>Promedio ponderado</option><option value="FIFO" {{ 'selected' if settings.costing_method=='FIFO' }}>FIFO</option><option value="LAST" {{ 'selected' if settings.costing_method=='LAST' }}>Último costo</option></select></label>
+        <label><span>Puntos por unidad monetaria</span><input type="number" step="0.0001" min="0" name="loyalty_points_per_currency" value="{{ settings.loyalty_points_per_currency }}"></label>
+        <label><span>Valor monetario por punto</span><input type="number" step="0.0001" min="0" name="loyalty_currency_per_point" value="{{ settings.loyalty_currency_per_point }}"></label>
+        <div class="full retail-core-note"><i class="bi bi-shield-check"></i><div><strong>Garantía obligatoria por producto</strong><small>Cada producto nuevo debe elegir un plazo. La cobertura no depende de un interruptor global.</small></div></div>
+      </div>
+    </section>
+
+    <section class="workspace-card receipt-device-card" id="receiptDeviceConfig">
+      <div class="workspace-card-head">
+        <div><h2>Impresora de facturas / tickets</h2><p>Define el ancho de papel y vincula este equipo con la impresora térmica. El ticket de venta usará esta configuración como valor predeterminado.</p></div>
+        <span class="receipt-device-state" id="receiptDeviceState"><i class="bi bi-printer"></i><b>Sin comprobar</b></span>
+      </div>
+      <div class="receipt-config-grid">
+        <div class="receipt-config-controls">
+          <label class="receipt-field"><span>Ancho del rollo</span><div class="receipt-width-control"><input id="receiptWidth" type="number" name="default_receipt_width" min="40" max="112" step="1" value="{{ settings.default_receipt_width or 80 }}" required><b>mm</b></div><small>Admite 40–112 mm. Valores comunes: 58, 60, 72 y 80 mm.</small></label>
+          <div class="receipt-width-presets" aria-label="Anchos comunes"><button type="button" data-receipt-width="58">58 mm</button><button type="button" data-receipt-width="60">60 mm</button><button type="button" data-receipt-width="72">72 mm</button><button type="button" data-receipt-width="80">80 mm</button></div>
+          <label class="receipt-field"><span>Método de impresión</span><select id="receiptPrinterMode" name="receipt_printer_mode"><option value="BROWSER" {{ 'selected' if settings.receipt_printer_mode=='BROWSER' }}>Impresora del sistema / navegador</option><option value="WEBUSB" {{ 'selected' if settings.receipt_printer_mode=='WEBUSB' }}>USB térmica compatible (WebUSB)</option><option value="ELECTRON" {{ 'selected' if settings.receipt_printer_mode=='ELECTRON' }}>Equipo Orbis Desktop / Electron</option></select><small id="printerModeHelp">El navegador abre el diálogo seguro de impresión del sistema.</small></label>
+          <label class="receipt-field"><span>Dispositivo vinculado</span><input id="receiptPrinterName" name="receipt_printer_name" maxlength="160" value="{{ settings.receipt_printer_name or '' }}" placeholder="Ej. EPSON TM-T20III / POS-80"><small>El nombre es informativo y permite identificar qué impresora corresponde a este equipo.</small></label>
+          <label class="retail-toggle receipt-auto-toggle"><input type="checkbox" name="receipt_auto_print" value="1" {{ 'checked' if settings.receipt_auto_print }}><span><strong>Abrir impresión automáticamente</strong><small>Al abrir el ticket desde una venta, muestra de inmediato el diálogo de impresión.</small></span></label>
+          <div class="receipt-device-actions"><button class="workspace-btn secondary" id="pairReceiptPrinter" type="button"><i class="bi bi-usb-symbol"></i> Conectar / comprobar</button><button class="workspace-btn secondary" id="printReceiptSample" type="button"><i class="bi bi-printer"></i> Imprimir prueba</button></div>
+          <div class="workspace-callout receipt-security-note"><i class="bi bi-shield-lock"></i><p><strong>Conexión local segura.</strong> Los navegadores no permiten escoger silenciosamente una impresora del sistema. En modo USB se solicita permiso en este dispositivo; en modo navegador se usa el diálogo nativo del sistema operativo.</p></div>
+        </div>
+        <div class="receipt-preview-stage" aria-label="Vista previa del ticket">
+          <div class="receipt-preview-ruler"><span>Vista previa</span><b id="receiptPreviewWidthLabel">{{ settings.default_receipt_width or 80 }} mm</b></div>
+          <article class="receipt-config-preview" id="receiptConfigPreview" style="--receipt-preview-mm:{{ settings.default_receipt_width or 80 }}">
+            <header><strong>{{ current_company.name if current_company else 'Tu empresa' }}</strong><small>RNC / identificación comercial</small><small>Tel. 809-000-0000</small></header>
+            <hr><div class="receipt-sample-row"><span>TICKET</span><b>#000123</b></div><div class="receipt-sample-row"><span>Fecha</span><span>26/08/2026 22:49</span></div><hr>
+            <div class="receipt-sample-item"><strong>Producto de ejemplo</strong><div><span>2 × RD$ 250.00</span><b>RD$ 500.00</b></div></div><div class="receipt-sample-item"><strong>Segundo artículo</strong><div><span>1 × RD$ 125.00</span><b>RD$ 125.00</b></div></div>
+            <hr><div class="receipt-sample-row"><span>Subtotal</span><span>RD$ 529.66</span></div><div class="receipt-sample-row"><span>ITBIS</span><span>RD$ 95.34</span></div><div class="receipt-sample-total"><span>TOTAL</span><b>RD$ 625.00</b></div><hr><footer>Gracias por su compra<small>Procesado con OrbisERP</small></footer>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="workspace-card">
+      <div class="workspace-card-head"><div><h2>Capacidades comerciales</h2><p>Activa únicamente las funciones que el negocio necesita en su operación diaria.</p></div></div>
+      <div class="retail-capabilities">
+        {% set toggles = [
+          ('enable_variants','Variantes','Tallas, colores y presentaciones.'),('enable_uom','Unidades de medida','Unidad, caja, kg, litro, metro y conversiones.'),('enable_price_lists','Listas de precios','Retail, mayorista, VIP y volumen.'),('enable_lots','Lotes','Trazabilidad por lote.'),('enable_expirations','Vencimientos','FEFO y alertas por caducidad.'),('enable_serials','Seriales / IMEI','Unidades individualizadas.'),('enable_bundles','Kits / combos','Descuento de componentes.'),('enable_credit','Crédito','Límites y plazos por cliente.'),('enable_loyalty','Fidelización','Puntos y beneficios.'),('enable_gift_cards','Gift cards','Saldo prepago.'),('enable_terminals','Terminales POS','Varias cajas por sucursal.'),('enable_layaway','Apartados','Reserva y abonos.'),('enable_replenishment','Reposición','Sugerencias de compra.')
+        ] %}
+        {% for field,title,description in toggles %}<label class="retail-toggle"><input type="checkbox" name="{{ field }}" value="1" {{ 'checked' if settings|attr(field) }}><span><strong>{{ title }}</strong><small>{{ description }}</small></span></label>{% endfor %}
+      </div>
+    </section>
+    <div class="retail-settings-save"><span><i class="bi bi-info-circle"></i> Los cambios se aplican a las próximas operaciones.</span><button class="workspace-btn" type="submit"><i class="bi bi-check2"></i> Guardar configuración</button></div>
+  </form>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/receipt-printer.js') }}" defer></script>{% endblock %}

@@ -6,7 +6,7 @@
 .main-content {
     margin-left: 0; /* Default móvil */
     padding: 1.5rem;
-    transition: all 0.3s ease;
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
 }
 
 @media (min-width: 1025px) {
@@ -166,7 +166,7 @@
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
     text-align: left;
     color: var(--text-primary);
 }

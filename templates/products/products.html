@@ -1,214 +1,165 @@
-<!DOCTYPE html>
-<html lang="es" class="{% if session.get('theme') == 'dark' %}dark{% endif %}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Productos | OrbisERP</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/products_css/products.css">
-    <style>
-        /* Estilos adicionales para los tipos */
-        .type-tag {
-            font-size: 0.65rem;
-            font-weight: 800;
-            padding: 2px 8px;
-            border-radius: 50px;
-            text-transform: uppercase;
-            margin-right: 5px;
-        }
-        .type-stocked { background: rgba(52, 152, 219, 0.1); color: #3498db; border: 1px solid #3498db; }
-        .type-service { background: rgba(155, 89, 182, 0.1); color: #9b59b6; border: 1px solid #9b59b6; }
-        .type-consumable { background: rgba(243, 156, 18, 0.1); color: #f39c12; border: 1px solid #f39c12; }
+{% extends 'workspace/base.html' %}
+{% block title %}Productos y servicios{% endblock %}
+{% block eyebrow %}Inventario{% endblock %}
+{% block heading %}Productos y servicios{% endblock %}
+{% block subtitle %}Catálogo visual para consultar precio, disponibilidad y estado de cada referencia sin perder rapidez operativa.{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/module_refresh.css') }}">{% endblock %}
+{% block actions %}
+    {% if can('products.create') and scope == 'active' %}
+    <a class="workspace-btn" href="{{ url_for('products_bp.create_product') }}"><i class="bi bi-plus-lg"></i> Nuevo producto</a>
+    {% endif %}
+{% endblock %}
 
-        .rate-info-badge {
-            background: rgba(52, 152, 219, 0.1);
-            border: 1px solid rgba(52, 152, 219, 0.2);
-            padding: 6px 14px;
-            border-radius: 50px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            margin-left: 15px;
-            vertical-align: middle;
-        }
-        .rate-info-badge i { color: #3498db; font-size: 1.1rem; }
-        .rate-text { color: #3498db; font-size: 13px; font-weight: 600; font-family: 'Plus Jakarta Sans', sans-serif; }
-        .conversion-note {
-            font-size: 0.65rem;
-            color: var(--text-muted);
-            opacity: 0.7;
-            display: block;
-            margin-top: 4px;
-            font-weight: 500;
-        }
-        .margin-tag {
-            font-size: 0.7rem;
-            font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 4px;
-            background: rgba(39, 174, 96, 0.1);
-            color: #27ae60;
-            margin-top: 5px;
-            display: inline-block;
-        }
-    </style>
-</head>
-<body>
-    {% include "layouts/left_bar.html" %}
+{% block content %}
+<div class="module-page product-kanban-page">
+    {% set active_filters = selected_category or selected_product_type or stock_state or created_from or created_to or min_price is not none or max_price is not none or (selected_sort and selected_sort != 'recent') %}
 
-    <main>
-        <div class="top-nav">
-            <a href="/dashboard" class="back-link">
-                <i class="bi bi-chevron-left"></i> Volver
-            </a>
-            <div class="user-meta">
-                <i class="bi bi-box-seam"></i> Gestión de Inventario
+    <nav class="product-scope-tabs" aria-label="Estado de productos">
+        <a class="product-scope-tab {{ 'active' if scope == 'active' else '' }}" href="{{ url_for('products_bp.list_products') }}">
+            <i class="bi bi-grid"></i><span>Activos</span><b>{{ active_count }}</b>
+        </a>
+        <a class="product-scope-tab {{ 'active' if scope == 'archived' else '' }}" href="{{ url_for('products_bp.list_products', scope='archived') }}">
+            <i class="bi bi-archive"></i><span>Archivados</span><b>{{ archived_count }}</b>
+        </a>
+    </nav>
+
+    <section class="product-catalog-bar">
+        <form method="get" class="product-catalog-search">
+            <input type="hidden" name="scope" value="{{ scope }}">
+            <div class="product-search-field">
+                <i class="bi bi-search"></i>
+                <input type="search" name="search" value="{{ search_query or '' }}" placeholder="Buscar producto o SKU..." autocomplete="off">
             </div>
+            <button class="workspace-btn secondary" type="submit">Buscar</button>
+
+            <details class="product-filter-menu" {% if active_filters %}open{% endif %}>
+                <summary><i class="bi bi-sliders2"></i> Filtros{% if active_filters %}<span class="filter-dot"></span>{% endif %}</summary>
+                <div class="product-filter-panel">
+                    <label><span>Categoría</span><select name="category_id"><option value="">Todas</option>{% for cat in categories %}<option value="{{ cat.id }}" {% if selected_category==cat.id %}selected{% endif %}>{{ cat.name }}</option>{% endfor %}</select></label>
+                    <label><span>Tipo</span><select name="product_type"><option value="">Todos</option><option value="STOCKED" {% if selected_product_type=='STOCKED' %}selected{% endif %}>Con inventario</option><option value="SERVICE" {% if selected_product_type=='SERVICE' %}selected{% endif %}>Servicios</option><option value="CONSUMABLE" {% if selected_product_type=='CONSUMABLE' %}selected{% endif %}>Consumibles</option></select></label>
+                    <label><span>Disponibilidad</span><select name="stock_state"><option value="">Cualquiera</option><option value="available" {% if stock_state=='available' %}selected{% endif %}>Disponible</option><option value="low" {% if stock_state=='low' %}selected{% endif %}>Stock bajo</option><option value="out" {% if stock_state=='out' %}selected{% endif %}>Agotado</option></select></label>
+                    <label><span>Ordenar</span><select name="sort"><option value="recent" {% if selected_sort=='recent' %}selected{% endif %}>Más recientes</option><option value="name" {% if selected_sort=='name' %}selected{% endif %}>Nombre A–Z</option><option value="price_asc" {% if selected_sort=='price_asc' %}selected{% endif %}>Menor precio</option><option value="price_desc" {% if selected_sort=='price_desc' %}selected{% endif %}>Mayor precio</option><option value="oldest" {% if selected_sort=='oldest' %}selected{% endif %}>Más antiguos</option></select></label>
+                    <label><span>Creado desde</span><input type="date" name="created_from" value="{{ created_from }}"></label>
+                    <label><span>Creado hasta</span><input type="date" name="created_to" value="{{ created_to }}"></label>
+                    <label><span>Precio mínimo</span><input type="number" min="0" step="0.01" name="min_price" value="{{ min_price if min_price is not none else '' }}"></label>
+                    <label><span>Precio máximo</span><input type="number" min="0" step="0.01" name="max_price" value="{{ max_price if max_price is not none else '' }}"></label>
+                    <div class="product-filter-actions">
+                        <a class="workspace-btn secondary" href="{{ url_for('products_bp.list_products', scope=scope) }}">Limpiar</a>
+                        <button class="workspace-btn" type="submit"><i class="bi bi-funnel"></i> Aplicar</button>
+                    </div>
+                </div>
+            </details>
+        </form>
+
+        <div class="product-view-switch" role="group" aria-label="Vista del catálogo">
+            <button type="button" class="product-view-button active" data-products-view="kanban" title="Tarjetas"><i class="bi bi-grid-3x3-gap"></i><span>Tarjetas</span></button>
+            <button type="button" class="product-view-button" data-products-view="list" title="Lista"><i class="bi bi-list-ul"></i><span>Lista</span></button>
+        </div>
+    </section>
+
+    <div class="product-catalog-meta">
+        <span><strong>{{ products|length }}</strong> {{ 'archivados' if scope == 'archived' else 'productos visibles' }}</span>
+        <span>{{ selected_currency }}{% if selected_currency != 'DOP' %} · 1 {{ selected_currency }} = {{ '%.2f'|format(conversion_rate) }} DOP{% endif %}</span>
+    </div>
+
+    <section class="product-kanban-shell" data-products-shell data-view="kanban">
+        <div class="product-list-header" aria-hidden="true">
+            <span>Producto</span><span>Categoría</span><span>Precio</span><span>Existencia</span><span>Acciones</span>
         </div>
 
-        <header class="page-header">
-            <div class="title-group">
-                <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
-                    <h2 style="margin: 0; font-family: 'Plus Jakarta Sans'; font-weight: 800;">Productos y servicios</h2>
-                    <div class="rate-info-badge">
-                        <i class="bi bi-info-circle-fill"></i>
-                        <span class="rate-text">
-                            {% if selected_currency == 'DOP' %}
-                                Moneda Base: DOP
-                            {% else %}
-                                1 {{ selected_currency }} = {{ "{:,.2f}".format(conversion_rate) }} DOP
-                            {% endif %}
-                        </span>
-                    </div>
-                </div>
-                <p>Gestione productos físicos, servicios y consumibles de su empresa.</p>
-            </div>
-            {% if can('products.create') %}<a href="{{ url_for('products_bp.create_product') }}" class="btn-primary">
-                <i class="bi bi-plus-lg"></i> Nuevo producto
-            </a>{% endif %}
-        </header>
-
-        <section class="filter-section">
-            <form method="GET" action="{{ url_for('products_bp.list_products') }}" class="filter-bar">
-                <div class="search-wrapper">
-                    <i class="bi bi-search"></i>
-                    <input type="text" name="search" placeholder="Buscar por nombre o SKU..." value="{{ search_query if search_query }}">
-                </div>
-                <details class="filter-popover" {% if selected_category or selected_product_type or stock_state or created_from or created_to or min_price is not none or max_price is not none or selected_sort != 'recent' %}open{% endif %}>
-                    <summary><i class="bi bi-sliders2"></i><span>Filtros</span>{% if selected_category or selected_product_type or stock_state or created_from or created_to or min_price is not none or max_price is not none or selected_sort != 'recent' %}<b>•</b>{% endif %}</summary>
-                <div class="filter-controls filter-popover-panel">
-                    <select name="category_id">
-                        <option value="">Todas las Categorías</option>
-                        {% for cat in categories %}
-                        <option value="{{ cat.id }}" {% if selected_category == cat.id %}selected{% endif %}>{{ cat.name }}</option>
-                        {% endfor %}
-                    </select>
-                    <select name="product_type" aria-label="Tipo de producto">
-                        <option value="">Todos los tipos</option>
-                        <option value="STOCKED" {% if selected_product_type == 'STOCKED' %}selected{% endif %}>Productos con inventario</option>
-                        <option value="SERVICE" {% if selected_product_type == 'SERVICE' %}selected{% endif %}>Servicios</option>
-                        <option value="CONSUMABLE" {% if selected_product_type == 'CONSUMABLE' %}selected{% endif %}>Consumibles</option>
-                    </select>
-                    <select name="stock_state" aria-label="Disponibilidad">
-                        <option value="">Cualquier disponibilidad</option>
-                        <option value="available" {% if stock_state == 'available' %}selected{% endif %}>Con disponibilidad</option>
-                        <option value="low" {% if stock_state == 'low' %}selected{% endif %}>Stock bajo (1–10)</option>
-                        <option value="out" {% if stock_state == 'out' %}selected{% endif %}>Agotados</option>
-                    </select>
-                    <label class="compact-filter"><span>Creado desde</span><input type="date" name="created_from" value="{{ created_from }}"></label>
-                    <label class="compact-filter"><span>Creado hasta</span><input type="date" name="created_to" value="{{ created_to }}"></label>
-                    <label class="compact-filter compact-number"><span>Precio mín.</span><input type="number" name="min_price" min="0" step="0.01" value="{{ min_price if min_price is not none else '' }}"></label>
-                    <label class="compact-filter compact-number"><span>Precio máx.</span><input type="number" name="max_price" min="0" step="0.01" value="{{ max_price if max_price is not none else '' }}"></label>
-                    <select name="sort" aria-label="Ordenar productos">
-                        <option value="recent" {% if selected_sort == 'recent' %}selected{% endif %}>Más recientes</option>
-                        <option value="name" {% if selected_sort == 'name' %}selected{% endif %}>Nombre A–Z</option>
-                        <option value="price_asc" {% if selected_sort == 'price_asc' %}selected{% endif %}>Menor precio</option>
-                        <option value="price_desc" {% if selected_sort == 'price_desc' %}selected{% endif %}>Mayor precio</option>
-                        <option value="oldest" {% if selected_sort == 'oldest' %}selected{% endif %}>Más antiguos</option>
-                    </select>
-                    <button type="submit" class="btn-filter">Filtrar</button>
-                    {% if selected_category or search_query or selected_product_type or stock_state or created_from or created_to or min_price is not none or max_price is not none or selected_sort != 'recent' %}
-                    <a href="{{ url_for('products_bp.list_products') }}" class="btn-clear">
-                        <i class="bi bi-x-circle-fill"></i>
-                    </a>
-                    {% endif %}
-                </div>
-                </details>
-            </form>
-        </section>
-
-        <div class="products-grid">
+        <div class="product-kanban-grid">
             {% for product in products %}
-            <div class="product-card">
-                <a href="{{ url_for('products_bp.view_product', id=product.id) }}" class="card-link-wrapper">
-                    <div class="product-card-media">
-                        {% if product.image_path %}
-                        <img src="{{ url_for('static', filename=product.image_path) }}" alt="{{ product.name }}" loading="lazy">
-                        {% else %}
-                        <div class="product-image-placeholder"><i class="bi bi-box-seam"></i><span>Sin foto</span></div>
-                        {% endif %}
-                    </div>
-                    <div class="card-top">
-                        <div style="display: flex; gap: 5px; align-items: center;">
-                            <!-- Etiqueta de Tipo -->
-                            {% if product.product_type.name == 'SERVICE' %}
-                                <span class="type-tag type-service">Servicio</span>
-                            {% elif product.product_type.name == 'CONSUMABLE' %}
-                                <span class="type-tag type-consumable">Consumible</span>
-                            {% else %}
-                                <span class="type-tag type-stocked">Stock</span>
-                            {% endif %}
-                            <span class="sku-tag">#{{ product.sku }}</span>
-                        </div>
-                        <span class="cat-tag">{{ product.category.name if product.category else "Sin categoría" }}</span>
-                    </div>
-                    
-                    <div class="card-body">
-                        <div class="product-name">{{ product.name }}</div>
-                        
-                        <div class="price-box">
-                            <div style="display: flex; align-items: baseline; gap: 4px;">
-                                <span class="currency" style="color: #faa200; font-weight: 800; font-size: 0.8rem;">
-                                    {{ currency_symbol }}
-                                </span>
-                                <span class="amount" style="font-size: 1.4rem; font-weight: 800; color: var(--text-main, #ffffff);">
-                                    {{ "{:,.2f}".format(product.price / conversion_rate) }}
-                                </span>
-                            </div>
-
-                            {% if can('products.costs') and product.cost and product.cost > 0 %}
-                            <div class="margin-tag">
-                                <i class="bi bi-lightning-fill"></i> 
-                                Margen: {{ currency_symbol }} {{ "{:,.2f}".format((product.price - product.cost) / conversion_rate) }}
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Lógica de Stock condicional -->
-                        {% if product.product_type.name == 'SERVICE' %}
-                            <div class="stock-status" style="background: rgba(155, 89, 182, 0.1); color: #9b59b6; border: none;">
-                                <i class="bi bi-tools"></i> Servicio Activo
-                            </div>
-                        {% else %}
-                            <div class="stock-status {% if product.total_stock > 10 %}st-ok{% elif product.total_stock > 0 %}st-low{% else %}st-out{% endif %}">
-                                <i class="bi bi-archive"></i> Stock: {{ product.total_stock }}
-                            </div>
-                        {% endif %}
-                    </div>
+            <article class="odoo-product-card {{ 'is-archived' if scope == 'archived' else '' }}">
+                <a class="odoo-product-image" href="{{ url_for('products_bp.view_product', id=product.id) }}" aria-label="Ver {{ product.name }}">
+                    {% set product_image = image_urls.get(product.id) if image_urls else none %}
+                    {% if product_image %}
+                        <img src="{{ product_image }}" alt="{{ product.name }}" loading="lazy" referrerpolicy="no-referrer">
+                    {% else %}
+                        <span class="product-image-placeholder"><i class="bi bi-box-seam"></i></span>
+                    {% endif %}
+                    {% if scope == 'archived' %}<span class="archive-ribbon">Archivado</span>{% endif %}
                 </a>
+
+                <div class="odoo-product-body">
+                    <div class="odoo-product-title-row">
+                        <div class="odoo-product-title-wrap">
+                            <a href="{{ url_for('products_bp.view_product', id=product.id) }}" class="odoo-product-name">{{ product.name }}</a>
+                            <span class="odoo-product-sku">{{ product.sku }}</span>
+                        </div>
+                        <strong class="odoo-product-price">{{ currency_symbol }}{{ '{:,.2f}'.format(product.price / conversion_rate) }}</strong>
+                    </div>
+
+                    <div class="odoo-product-tags">
+                        <span class="product-soft-tag">{{ product.category.name if product.category else 'Sin categoría' }}</span>
+                        <span class="product-soft-tag accent">{{ 'Servicio' if product.product_type.name=='SERVICE' else 'Consumible' if product.product_type.name=='CONSUMABLE' else 'Inventario' }}</span>
+                    </div>
+
+                    <div class="odoo-product-description">
+                        {{ product.description[:95] ~ ('…' if product.description|length > 95 else '') if product.description else 'Sin descripción comercial.' }}
+                    </div>
+
+                    <div class="odoo-product-footer">
+                        <div class="odoo-stock-block">
+                            <span>Existencia</span>
+                            {% if product.product_type.name == 'SERVICE' %}
+                                <strong class="stock-neutral">No aplica</strong>
+                            {% elif product.total_stock <= 0 %}
+                                <strong class="stock-danger">Agotado</strong>
+                            {% elif product.total_stock <= (product.min_stock or 0) %}
+                                <strong class="stock-warning">{{ display_quantity(product.total_stock) }} uds</strong>
+                            {% else %}
+                                <strong class="stock-success">{{ display_quantity(product.total_stock) }} uds</strong>
+                            {% endif %}
+                        </div>
+                        {% if can('products.costs') %}
+                        <div class="odoo-cost-block"><span>Costo</span><strong>{{ currency_symbol }}{{ '{:,.2f}'.format(product.cost / conversion_rate) }}</strong></div>
+                        {% endif %}
+                        <div class="odoo-product-actions">
+                            <a class="product-action-icon" href="{{ url_for('products_bp.view_product', id=product.id) }}" title="Abrir"><i class="bi bi-eye"></i></a>
+                            {% if scope == 'active' and can('products.edit') %}<a class="product-action-icon" href="{{ url_for('products_bp.edit_product', id=product.id) }}" title="Editar"><i class="bi bi-pencil"></i></a>{% endif %}
+                            {% if scope == 'active' and can('products.delete') %}
+                            <form method="post" action="{{ url_for('products_bp.delete_product', id=product.id) }}" data-confirm="¿Archivar {{ product.name|e }}?" data-confirm-title="Archivar producto" data-confirm-detail="Dejará de aparecer en ventas y operaciones nuevas, pero se conservarán inventario, movimientos y documentos históricos." data-confirm-action="Archivar producto" data-confirm-type="warning">
+                                <button class="product-action-icon" type="submit" title="Archivar"><i class="bi bi-archive"></i></button>
+                            </form>
+                            {% elif scope == 'archived' and can('products.delete') %}
+                            <form method="post" action="{{ url_for('products_bp.restore_product', id=product.id) }}">
+                                <button class="product-action-icon restore" type="submit" title="Restaurar"><i class="bi bi-arrow-counterclockwise"></i></button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </article>
+            {% else %}
+            <div class="module-empty product-kanban-empty">
+                <i class="bi {{ 'bi-archive' if scope == 'archived' else 'bi-box-seam' }}"></i>
+                <h3>{{ 'No hay productos archivados' if scope == 'archived' else 'No encontramos productos' }}</h3>
+                <p>{{ 'Cuando archives un producto aparecerá aquí y podrás restaurarlo.' if scope == 'archived' else 'Prueba otra búsqueda o limpia los filtros aplicados.' }}</p>
+                {% if scope == 'active' and can('products.create') %}<a class="workspace-btn" href="{{ url_for('products_bp.create_product') }}">Crear producto</a>{% endif %}
             </div>
             {% endfor %}
-            {% if not products %}
-            <div class="empty-state product-empty-state">
-                <span class="empty-state-icon"><i class="bi bi-search"></i></span>
-                <h3>No encontramos productos</h3>
-                <p>{% if search_query or selected_category or selected_product_type %}Prueba quitando algún filtro o usando otro término.{% else %}Crea tu primer producto o servicio para comenzar.{% endif %}</p>
-                {% if search_query or selected_category or selected_product_type %}<a href="{{ url_for('products_bp.list_products') }}" class="btn-secondary">Limpiar filtros</a>
-                {% elif can('products.create') %}<a href="{{ url_for('products_bp.create_product') }}" class="btn-primary"><i class="bi bi-plus-lg"></i> Crear producto</a>{% endif %}
-            </div>
-            {% endif %}
         </div>
-    </main>
-</body>
-</html>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(() => {
+    const shell = document.querySelector('[data-products-shell]');
+    if (!shell) return;
+    const buttons = [...document.querySelectorAll('[data-products-view]')];
+    const key = 'orbis-products-view-v2';
+    const apply = (view) => {
+        view = view === 'list' ? 'list' : 'kanban';
+        shell.dataset.view = view;
+        buttons.forEach((button) => button.classList.toggle('active', button.dataset.productsView === view));
+        try { localStorage.setItem(key, view); } catch (_) {}
+    };
+    buttons.forEach((button) => button.addEventListener('click', () => apply(button.dataset.productsView)));
+    let initial = 'kanban';
+    try { initial = localStorage.getItem(key) || 'kanban'; } catch (_) {}
+    apply(initial);
+})();
+</script>
+{% endblock %}

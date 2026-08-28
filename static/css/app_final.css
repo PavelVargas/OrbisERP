@@ -1,0 +1,931 @@
+/* OrbisERP authenticated final compatibility layer.
+   Loaded from the authenticated shell after page-level CSS so legacy modules
+   inherit the same theme, touch targets and overflow rules as workspace views. */
+
+html.dark body {
+    background: var(--bg-main) !important;
+    color: var(--text-main);
+}
+
+/* Legacy business surfaces that historically hard-coded a light palette. */
+html.dark body > main :where(
+    .table-card,
+    .content-card,
+    .form-container-left,
+    .form-container,
+    .filter-panel,
+    .filters-panel,
+    .filters-popover,
+    .control-panel,
+    .configuration-column,
+    .summary-card,
+    .warehouse-sidebar,
+    .modal-content,
+    .modal-card,
+    .detail-card,
+    .metric-card,
+    .stats-card,
+    .toolbar-card,
+    .search-card
+) {
+    border-color: var(--border) !important;
+    background: var(--bg-card) !important;
+    color: var(--text-main) !important;
+}
+
+html.dark body > main :where(input,select,textarea):not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]) {
+    border-color: var(--border);
+    background-color: var(--bg-input);
+    color: var(--text-main);
+}
+html.dark body > main :where(input,textarea)::placeholder { color: var(--text-muted); opacity: .82; }
+html.dark body > main select { color-scheme: dark; }
+html.dark body > main :where(table,th,td) { border-color: var(--border); }
+html.dark body > main th { color: var(--text-muted); }
+html.dark body > main td { color: var(--text-main); }
+
+/* Native dialogs/popovers otherwise flash white even when the page is dark. */
+html.dark body :where(dialog,[popover]) {
+    border-color: var(--border);
+    background: var(--bg-card);
+    color: var(--text-main);
+    color-scheme: dark;
+}
+
+/* Consistent interaction geometry for authenticated legacy modules. */
+body > main :where(button,a,input,select,textarea) { -webkit-tap-highlight-color: transparent; }
+body > main :where(button,a,input,select,textarea):focus-visible {
+    outline: 2px solid color-mix(in srgb,var(--primary) 72%,white);
+    outline-offset: 2px;
+}
+
+/* Tables own horizontal scrolling rather than forcing the whole application to scroll. */
+body > main :where(.table-card,.table-responsive,.table-wrap,.purchases-table-wrap,[class*="table-container"]) {
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Tablet is a first-class shell even for screens that predate workspace/base. */
+html.tablet-mode body { overflow-x: hidden; }
+html.tablet-mode body > main {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    padding-left: max(16px,env(safe-area-inset-left)) !important;
+    padding-right: max(16px,env(safe-area-inset-right)) !important;
+}
+html.tablet-mode body > main :where(button,.btn,.btn-primary,.workspace-btn,a[class*="btn"]):not(.nav-item) {
+    min-height: 44px;
+}
+html.tablet-mode body > main :where(input,select) { min-height: 44px; }
+html.tablet-mode body > main textarea { min-height: 88px; }
+html.tablet-mode body > main :where(.table-card,.table-responsive,.table-wrap,.purchases-table-wrap,[class*="table-container"]) {
+    max-width: calc(100vw - 32px);
+}
+
+/* The POS owns its own full-screen layout and must not receive generic page padding. */
+html.tablet-mode body > .pos-layout {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+@media (max-width: 900px) {
+    body > main :where(.page-header,.workstation-header,.stock-header,.clients-header,.supplier-header) {
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+    body > main :where(.page-header,.workstation-header,.stock-header,.clients-header,.supplier-header) > :last-child {
+        max-width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html:focus-within { scroll-behavior: auto; }
+    *,*::before,*::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}
+
+/* Branch-scoped cash register context. */
+.cash-scope-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 18px;padding:13px 16px;border:1px solid color-mix(in srgb,var(--primary) 22%,var(--border));border-radius:14px;background:color-mix(in srgb,var(--primary) 6%,var(--bg-card));color:var(--text-main)}
+.cash-scope-banner>span{display:flex;align-items:center;gap:9px;min-width:0}.cash-scope-banner>span>i{color:var(--primary)}.cash-scope-banner strong{font-size:.9rem}.cash-scope-banner small{color:var(--text-muted)}.cash-scope-banner>b{font-size:.76rem;color:var(--primary)}
+.cash-branch-switcher{display:flex;align-items:center;gap:8px}.cash-branch-switcher label{font-size:.72rem;font-weight:800;color:var(--text-muted)}.cash-branch-switcher select{min-height:42px;border:1px solid var(--border);border-radius:10px;background:var(--bg-input);color:var(--text-main);padding:0 34px 0 11px}
+@media(max-width:760px){.cash-scope-banner{align-items:flex-start;flex-direction:column}.cash-branch-switcher{width:100%}.cash-branch-switcher select{flex:1}}
+
+/* Tablet usability v3: predictable touch geometry and keyboard-safe actions. */
+html.tablet-mode.tablet-coarse-pointer body>main :where(button,a.btn,a.workspace-btn,input,select,textarea){touch-action:manipulation}
+html.tablet-mode body>main :where(button,.btn,.btn-primary,.workspace-btn,a[class*="btn"]):not(.nav-item){min-height:48px}
+html.tablet-mode body>main :where(input,select):not([type="checkbox"]):not([type="radio"]){min-height:48px;font-size:max(16px,1em)}
+html.tablet-mode body>main textarea{font-size:max(16px,1em)}
+html.tablet-mode.tablet-landscape .workspace-page .workspace-form{grid-template-columns:repeat(2,minmax(0,1fr))}
+html.tablet-mode.tablet-portrait .workspace-page .workspace-form{grid-template-columns:1fr}
+html.tablet-mode.tablet-keyboard-open .company-readonly-banner{position:static}
+html.tablet-mode.tablet-keyboard-open .app-tablet-topbar{transform:translateY(-105%);pointer-events:none}
+html.tablet-mode.tablet-keyboard-open body:not(.pos-page)>main,html.tablet-mode.tablet-keyboard-open body:not(.pos-page)>main.orbis-page{padding-top:max(18px,env(safe-area-inset-top))!important}
+
+/* ========================================================================
+   Authenticated visual system v7 · one language across every business view
+   The sidebar is the reference: graphite navigation, warm orange action,
+   compact information density and clear operational hierarchy.
+   ======================================================================== */
+html.orbis-authenticated {
+    --orbis-graphite: #171a1f;
+    --orbis-graphite-2: #20242a;
+    --orbis-graphite-3: #2a3038;
+    --orbis-canvas: #f3f5f7;
+    --orbis-panel: #ffffff;
+    --orbis-panel-soft: #f7f8fa;
+    --orbis-line: #e1e5e9;
+    --orbis-radius-sm: 10px;
+    --orbis-radius: 15px;
+    --orbis-radius-lg: 20px;
+    --orbis-shadow: 0 14px 40px rgba(28, 34, 42, .075);
+    --orbis-shadow-soft: 0 4px 16px rgba(28, 34, 42, .055);
+    --orbis-page-width: 1480px;
+    --orbis-page-inline: clamp(22px, 2.8vw, 48px);
+}
+
+html.orbis-authenticated.dark {
+    --orbis-canvas: #0e0f11;
+    --orbis-panel: #17191c;
+    --orbis-panel-soft: #202328;
+    --orbis-line: #2c3036;
+    --orbis-shadow: 0 18px 46px rgba(0, 0, 0, .24);
+    --orbis-shadow-soft: 0 5px 18px rgba(0, 0, 0, .18);
+}
+
+html.orbis-authenticated body:not(.pos-page) {
+    background:
+        radial-gradient(circle at 92% -10%, color-mix(in srgb, var(--primary) 7%, transparent), transparent 31rem),
+        var(--orbis-canvas) !important;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main {
+    gap: 18px;
+    color: var(--text-main);
+}
+
+@media (min-width: 1025px) {
+    html.orbis-authenticated:not(.tablet-mode) body:not(.pos-page) > main {
+        padding: 34px var(--orbis-page-inline) 46px;
+    }
+}
+
+html.orbis-authenticated body:not(.pos-page) > main > :where(
+    .content-container,
+    .workspace-header,
+    .workspace-alerts,
+    .workspace-grid,
+    .workspace-card,
+    .workspace-columns,
+    .retail-shell,
+    .retail-overview-v2,
+    .bo-header,
+    .bo-alerts,
+    .bo-grid,
+    .bo-card,
+    .page-header,
+    .sales-header,
+    .clients-header,
+    .stock-header,
+    .suppliers-header,
+    .purchases-header,
+    .staff-header,
+    .reports-header,
+    .history-header,
+    .monthly-header,
+    .kardex-header,
+    .company-settings-header,
+    .profile-header,
+    .profile-hero,
+    .hub-header,
+    .cash-header,
+    .data-hero,
+    .ops-hero,
+    .ops-card,
+    .table-card,
+    .content-card,
+    .form-container,
+    .form-container-left,
+    .filter-panel,
+    .filters-panel,
+    .control-panel,
+    .configuration-column,
+    .summary-card
+) {
+    width: min(100%, var(--orbis-page-width));
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Page headers become the visual counterpart of the sidebar. */
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-header,
+    .bo-header,
+    .page-header,
+    .sales-header,
+    .clients-header,
+    .stock-header,
+    .suppliers-header,
+    .purchases-header,
+    .staff-header,
+    .reports-header,
+    .history-header,
+    .monthly-header,
+    .kardex-header,
+    .company-settings-header,
+    .profile-header,
+    .hub-header,
+    .cash-header,
+    .data-hero,
+    .ops-hero,
+    .order-header,
+    .purchase-setup-header,
+    .transfer-header,
+    .request-error-head
+) {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    min-height: 118px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 22px;
+    padding: clamp(20px, 2.5vw, 30px);
+    border: 1px solid rgba(255,255,255,.075);
+    border-radius: var(--orbis-radius-lg);
+    color: #f5f7f8;
+    background:
+        radial-gradient(circle at 9% 0%, color-mix(in srgb, var(--primary) 19%, transparent), transparent 19rem),
+        linear-gradient(135deg, var(--orbis-graphite), #1d2127 58%, #16191e);
+    box-shadow: var(--orbis-shadow);
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-header,
+    .bo-header,
+    .page-header,
+    .sales-header,
+    .clients-header,
+    .stock-header,
+    .suppliers-header,
+    .purchases-header,
+    .staff-header,
+    .reports-header,
+    .history-header,
+    .monthly-header,
+    .kardex-header,
+    .company-settings-header,
+    .profile-header,
+    .hub-header,
+    .cash-header,
+    .data-hero,
+    .ops-hero,
+    .order-header,
+    .purchase-setup-header,
+    .transfer-header,
+    .request-error-head
+)::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    width: 210px;
+    height: 210px;
+    right: -70px;
+    bottom: -135px;
+    border: 28px solid color-mix(in srgb, var(--primary) 17%, transparent);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-header,
+    .bo-header,
+    .page-header,
+    .sales-header,
+    .clients-header,
+    .stock-header,
+    .suppliers-header,
+    .purchases-header,
+    .staff-header,
+    .reports-header,
+    .history-header,
+    .monthly-header,
+    .kardex-header,
+    .company-settings-header,
+    .profile-header,
+    .hub-header,
+    .cash-header,
+    .data-hero,
+    .ops-hero,
+    .order-header,
+    .purchase-setup-header,
+    .transfer-header,
+    .request-error-head
+) :where(h1,h2,h3,strong) {
+    color: #fff;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-header,
+    .bo-header,
+    .page-header,
+    .sales-header,
+    .clients-header,
+    .stock-header,
+    .suppliers-header,
+    .purchases-header,
+    .staff-header,
+    .reports-header,
+    .history-header,
+    .monthly-header,
+    .kardex-header,
+    .company-settings-header,
+    .profile-header,
+    .hub-header,
+    .cash-header,
+    .data-hero,
+    .ops-hero,
+    .order-header,
+    .purchase-setup-header,
+    .transfer-header,
+    .request-error-head
+) :where(p,small) {
+    color: #aeb7bf;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-eyebrow,
+    .bo-eyebrow,
+    .page-eyebrow,
+    .header-eyebrow,
+    .ops-hero > span,
+    .reports-header > div > span,
+    .suppliers-header > div > span,
+    .clients-header > div > span,
+    .purchases-header > div > span,
+    .staff-header > div > span,
+    .sales-header > div > span
+) {
+    color: #ff9a58 !important;
+    font-weight: 850;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-header-actions,
+    .bo-header-actions,
+    .page-actions,
+    .header-actions,
+    .actions
+) {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 9px;
+}
+
+/* Common surfaces: same geometry, border language and elevation. */
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-card,
+    .bo-card,
+    .table-card,
+    .content-card,
+    .detail-card,
+    .summary-card,
+    .metric-card,
+    .stats-card,
+    .toolbar-card,
+    .search-card,
+    .filter-panel,
+    .filters-panel,
+    .control-panel,
+    .configuration-column,
+    .form-container,
+    .form-container-left,
+    .ops-card,
+    .retail-section,
+    .retail-launch-card,
+    .retail-kpi-strip,
+    .cash-card,
+    .report-card,
+    .user-card,
+    .product-card,
+    .client-card,
+    .supplier-card,
+    .purchase-card,
+    .stock-card
+) {
+    border-color: var(--orbis-line) !important;
+    border-radius: var(--orbis-radius) !important;
+    background: var(--orbis-panel) !important;
+    box-shadow: var(--orbis-shadow-soft);
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-card,
+    .bo-card,
+    .table-card,
+    .content-card,
+    .detail-card,
+    .summary-card,
+    .filter-panel,
+    .filters-panel,
+    .control-panel,
+    .configuration-column,
+    .form-container,
+    .form-container-left,
+    .ops-card
+) {
+    padding: clamp(16px, 2vw, 22px);
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .card-header,
+    .section-heading,
+    .line-builder-head,
+    .scanner-toolbar,
+    .report-card__header
+) {
+    border-color: var(--orbis-line);
+}
+
+/* A single input system for legacy and workspace modules. */
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="color"]):not([type="range"]),
+    select,
+    textarea
+) {
+    min-height: 44px;
+    border: 1px solid var(--orbis-line) !important;
+    border-radius: var(--orbis-radius-sm) !important;
+    color: var(--text-main) !important;
+    background: var(--orbis-panel-soft) !important;
+    box-shadow: none !important;
+    outline: none;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main textarea {
+    min-height: 96px;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="color"]):not([type="range"]),
+    select,
+    textarea
+):focus {
+    border-color: color-mix(in srgb, var(--primary) 66%, var(--orbis-line)) !important;
+    background: var(--orbis-panel) !important;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 13%, transparent) !important;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(label) {
+    color: var(--text-muted);
+}
+
+/* Unified action language. Existing semantic classes keep their own meaning. */
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-btn,
+    .btn,
+    [class^="btn-"],
+    [class*=" btn-"],
+    button[type="submit"],
+    a[class*="action"]
+) {
+    min-height: 42px;
+    border-radius: var(--orbis-radius-sm);
+    font-weight: 750;
+    text-decoration: none;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-btn--primary,
+    .btn-primary,
+    .primary-action,
+    .action-primary,
+    button[type="submit"]:not(.danger):not(.btn-danger):not(.workspace-btn--danger)
+) {
+    border-color: var(--primary) !important;
+    color: #fff !important;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 94%, #ffad62), var(--primary-hover, #cf5c12)) !important;
+    box-shadow: 0 8px 20px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-btn--primary,
+    .btn-primary,
+    .primary-action,
+    .action-primary,
+    button[type="submit"]:not(.danger):not(.btn-danger):not(.workspace-btn--danger)
+):hover:not(:disabled) {
+    filter: brightness(1.04);
+    transform: translateY(-1px);
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(button,a)[disabled],
+html.orbis-authenticated body:not(.pos-page) > main :where(button,a).disabled {
+    cursor: not-allowed;
+    opacity: .56;
+    transform: none !important;
+}
+
+/* Table treatment mirrors the menu's compact density and active accent. */
+html.orbis-authenticated body:not(.pos-page) > main :where(table) {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(th) {
+    padding: 11px 13px;
+    border-bottom: 1px solid var(--orbis-line);
+    color: var(--text-muted);
+    background: var(--orbis-panel-soft);
+    font-size: 9px;
+    font-weight: 850;
+    letter-spacing: .055em;
+    text-transform: uppercase;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(td) {
+    padding: 12px 13px;
+    border-bottom: 1px solid var(--orbis-line);
+    color: var(--text-main);
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(tbody tr) {
+    transition: background-color .14s ease;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(tbody tr:hover) {
+    background: color-mix(in srgb, var(--primary) 4.5%, var(--orbis-panel));
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .status-badge,
+    .badge,
+    [class*="status-"],
+    [class*="-status"]
+) {
+    border-radius: 999px;
+}
+
+/* Keep icon containers consistent with the navigation's local line icon style. */
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-icon,
+    .card-icon,
+    .metric-icon,
+    .stat-icon,
+    .action-icon,
+    [class*="-icon"]
+) > :where(i,svg),
+html.orbis-authenticated body:not(.pos-page) > main :where(button,a) > i:first-child {
+    flex: 0 0 auto;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(button,a) > i:first-child {
+    line-height: 1;
+}
+
+/* ========================================================================
+   Tablet application shell v4 · every authenticated module behaves like a
+   tablet application, not like a desktop page squeezed into a smaller width.
+   ======================================================================== */
+html.tablet-mode.orbis-authenticated {
+    --orbis-page-width: 100%;
+    --orbis-page-inline: clamp(14px, 2.2vw, 28px);
+}
+
+html.tablet-mode.orbis-authenticated body:not(.pos-page) {
+    min-width: 320px;
+    overflow-x: clip;
+}
+
+html.tablet-mode.orbis-authenticated body:not(.pos-page) > main {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: calc(var(--tablet-vh, 100dvh) - 68px);
+    margin: 0 !important;
+    padding:
+        max(88px, calc(env(safe-area-inset-top) + 76px))
+        var(--orbis-page-inline)
+        max(112px, calc(env(safe-area-inset-bottom) + 96px)) !important;
+    gap: 16px;
+    overflow-x: clip;
+}
+
+html.tablet-mode.orbis-authenticated.tablet-wide body:not(.pos-page) > main,
+html.tablet-mode.orbis-authenticated.tablet-compact body:not(.pos-page) > main {
+    max-width: none !important;
+}
+
+html.tablet-mode.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-header,
+    .bo-header,
+    .page-header,
+    .sales-header,
+    .clients-header,
+    .stock-header,
+    .suppliers-header,
+    .purchases-header,
+    .staff-header,
+    .reports-header,
+    .history-header,
+    .monthly-header,
+    .kardex-header,
+    .company-settings-header,
+    .profile-header,
+    .hub-header,
+    .cash-header,
+    .data-hero,
+    .ops-hero,
+    .order-header,
+    .purchase-setup-header,
+    .transfer-header,
+    .request-error-head
+) {
+    min-height: 104px;
+    padding: 20px;
+    border-radius: 18px;
+}
+
+html.tablet-mode.orbis-authenticated body:not(.pos-page) > main :where(
+    button,
+    .btn,
+    .workspace-btn,
+    a[class*="btn"],
+    a[class*="action"],
+    summary
+) {
+    min-height: 48px;
+    touch-action: manipulation;
+}
+
+html.tablet-mode.orbis-authenticated body:not(.pos-page) > main :where(
+    input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+    select
+) {
+    min-height: 50px !important;
+    font-size: max(16px, 1em) !important;
+}
+
+html.tablet-mode.orbis-authenticated body:not(.pos-page) > main textarea {
+    min-height: 110px;
+    font-size: max(16px, 1em) !important;
+}
+
+html.tablet-mode.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-grid,
+    .stats-grid,
+    .metrics-grid,
+    .kpi-grid,
+    .cards-grid,
+    .dashboard-grid,
+    .retail-launch-grid,
+    .retail-attention-grid,
+    .retail-kpi-strip,
+    .bo-grid,
+    .ops-grid,
+    .form-grid,
+    [class*="-grid"]
+) {
+    min-width: 0;
+}
+
+html.tablet-mode.orbis-authenticated.tablet-landscape body:not(.pos-page) > main :where(
+    .workspace-grid,
+    .stats-grid,
+    .metrics-grid,
+    .kpi-grid,
+    .cards-grid,
+    .dashboard-grid,
+    .retail-launch-grid,
+    .retail-attention-grid,
+    .bo-grid
+) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+html.tablet-mode.orbis-authenticated.tablet-portrait body:not(.pos-page) > main :where(
+    .workspace-grid,
+    .stats-grid,
+    .metrics-grid,
+    .kpi-grid,
+    .cards-grid,
+    .dashboard-grid,
+    .retail-launch-grid,
+    .retail-attention-grid,
+    .retail-kpi-strip,
+    .bo-grid,
+    .ops-grid,
+    .form-grid,
+    .workspace-form,
+    .workspace-columns,
+    .workspace-columns.equal,
+    [class*="-grid"]
+) {
+    grid-template-columns: minmax(0, 1fr) !important;
+}
+
+html.tablet-mode.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-header-actions,
+    .bo-header-actions,
+    .page-actions,
+    .header-actions,
+    .filter-actions,
+    .form-actions,
+    .toolbar,
+    [class*="-actions"]
+) {
+    max-width: 100%;
+    flex-wrap: wrap;
+}
+
+html.tablet-mode.orbis-authenticated.tablet-portrait body:not(.pos-page) > main :where(
+    .workspace-header,
+    .bo-header,
+    .page-header,
+    .sales-header,
+    .clients-header,
+    .stock-header,
+    .suppliers-header,
+    .purchases-header,
+    .staff-header,
+    .reports-header,
+    .history-header,
+    .monthly-header,
+    .kardex-header,
+    .company-settings-header,
+    .profile-header,
+    .hub-header,
+    .cash-header,
+    .data-hero,
+    .ops-hero,
+    .order-header,
+    .purchase-setup-header,
+    .transfer-header,
+    .request-error-head
+) {
+    align-items: flex-start;
+    flex-direction: column;
+}
+
+html.tablet-mode.orbis-authenticated.tablet-portrait body:not(.pos-page) > main :where(
+    .workspace-header-actions,
+    .bo-header-actions,
+    .page-actions,
+    .header-actions
+) {
+    width: 100%;
+    justify-content: flex-start;
+}
+
+html.tablet-mode.orbis-authenticated body:not(.pos-page) > main :where(
+    .table-card,
+    .table-responsive,
+    .table-wrap,
+    .purchases-table-wrap,
+    [class*="table-container"],
+    [class*="table-wrap"]
+) {
+    width: 100%;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overscroll-behavior-inline: contain;
+    scrollbar-gutter: stable;
+    -webkit-overflow-scrolling: touch;
+}
+
+html.tablet-mode.orbis-authenticated body:not(.pos-page) > main table {
+    min-width: 720px;
+}
+
+html.tablet-mode.orbis-authenticated body:not(.pos-page) > main :where(img,video,canvas,svg) {
+    max-width: 100%;
+}
+
+html.tablet-mode.orbis-authenticated body:not(.pos-page) :where(dialog,.modal-content,.modal-card) {
+    max-width: min(94vw, 760px);
+    max-height: min(88vh, var(--tablet-vh, 88dvh));
+    overflow: auto;
+}
+
+html.tablet-mode.orbis-authenticated.tablet-keyboard-open body:not(.pos-page) > main {
+    padding-top: max(18px, env(safe-area-inset-top)) !important;
+    padding-bottom: max(20px, env(safe-area-inset-bottom)) !important;
+}
+
+@media (max-width: 720px) {
+    html.orbis-authenticated body:not(.pos-page) > main :where(
+        .workspace-header,
+        .bo-header,
+        .page-header,
+        .sales-header,
+        .clients-header,
+        .stock-header,
+        .suppliers-header,
+        .purchases-header,
+        .staff-header,
+        .reports-header,
+        .history-header,
+        .monthly-header,
+        .kardex-header,
+        .company-settings-header,
+        .profile-header,
+        .hub-header,
+        .cash-header,
+        .data-hero,
+        .ops-hero,
+        .order-header,
+        .purchase-setup-header,
+        .transfer-header,
+        .request-error-head
+    ) {
+        align-items: flex-start;
+        flex-direction: column;
+        min-height: 0;
+        padding: 18px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html.orbis-authenticated body:not(.pos-page) > main :where(tbody tr,button,a) {
+        transition: none !important;
+    }
+}
+
+html.tablet-mode.orbis-authenticated .orbis-tablet-table-wrap {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-gutter: stable;
+    -webkit-overflow-scrolling: touch;
+}
+
+html.tablet-mode.orbis-authenticated .orbis-tablet-table-wrap > table {
+    min-width: 720px;
+}
+
+/* Compound filter controls keep their intended geometry after the shared input
+   system is applied.  The client directory previously let the generic select
+   width squeeze the search field down to an unusable icon-sized control. */
+html.orbis-authenticated body:not(.pos-page) > main .clients-toolbar {
+    width: min(100%, var(--orbis-page-width));
+    margin-left: auto;
+    margin-right: auto;
+}
+html.orbis-authenticated body:not(.pos-page) > main .clients-toolbar > label {
+    flex: 1 1 360px;
+    min-width: min(260px, 100%);
+    max-width: none;
+}
+html.orbis-authenticated body:not(.pos-page) > main .clients-toolbar > label > input {
+    flex: 1 1 auto;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+html.orbis-authenticated body:not(.pos-page) > main .clients-toolbar > label > input:focus {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+html.orbis-authenticated body:not(.pos-page) > main .clients-toolbar > select {
+    flex: 0 1 230px;
+    width: min(230px, 100%) !important;
+    min-width: 180px;
+}
+@media (max-width: 900px) {
+    html.orbis-authenticated body:not(.pos-page) > main .clients-toolbar > label {
+        flex-basis: 100%;
+        min-width: 100%;
+    }
+    html.orbis-authenticated body:not(.pos-page) > main .clients-toolbar > select {
+        flex: 1 1 220px;
+        width: auto !important;
+    }
+}
+html.orbis-authenticated body:not(.pos-page) > main .clients-toolbar > label {
+    height: 44px;
+    min-height: 44px;
+}
+html.tablet-mode.orbis-authenticated body:not(.pos-page) > main .clients-toolbar > label {
+    height: 50px;
+    min-height: 50px;
+}

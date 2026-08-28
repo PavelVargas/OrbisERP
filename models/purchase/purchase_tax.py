@@ -1,3 +1,4 @@
+from services.time_utils import utcnow
 from datetime import datetime
 
 from db import db
@@ -12,7 +13,7 @@ class PurchaseTax(db.Model):
     price_included = db.Column(db.Boolean, nullable=False, default=False)
     active = db.Column(db.Boolean, nullable=False, default=True)
     company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
 
     __table_args__ = (
         db.UniqueConstraint('company_id', 'name', name='uq_purchase_tax_company_name'),

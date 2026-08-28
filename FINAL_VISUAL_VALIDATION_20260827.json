@@ -1,0 +1,453 @@
+{
+  "pos-desktop-light": {
+    "metrics": {
+      "rootDark": false,
+      "rootTablet": false,
+      "tabletReady": false,
+      "orientation": null,
+      "scrollWidth": 1512,
+      "clientWidth": 1512,
+      "bodyBg": "rgb(244, 246, 247)",
+      "cardBg": "rgb(255, 255, 255)",
+      "cardCount": 6,
+      "finishDisabled": false,
+      "finishHeight": 50,
+      "minAddHeight": 40,
+      "globalTabletTopbarVisible": false,
+      "globalTabletDockVisible": false,
+      "posTopbarVisible": true,
+      "cartVisibility": "visible",
+      "offenders": []
+    },
+    "interaction": {
+      "walkInButtonInitiallyEnabled": true,
+      "cardBodyDidNotSubmit": true,
+      "addUpdatedCart": true,
+      "removeUpdatedCart": true,
+      "businessErrorPopup": true,
+      "creditBlockedWithoutClient": true,
+      "creditMessageDetailed": true,
+      "walkInCashReachedServer": true,
+      "walkInCashPayload": true,
+      "successOnlyAfterServerReply": true
+    },
+    "errors": []
+  },
+  "pos-desktop-dark": {
+    "metrics": {
+      "rootDark": true,
+      "rootTablet": false,
+      "tabletReady": false,
+      "orientation": null,
+      "scrollWidth": 1512,
+      "clientWidth": 1512,
+      "bodyBg": "rgb(14, 15, 17)",
+      "cardBg": "rgb(23, 25, 28)",
+      "cardCount": 6,
+      "finishDisabled": false,
+      "finishHeight": 50,
+      "minAddHeight": 40,
+      "globalTabletTopbarVisible": false,
+      "globalTabletDockVisible": false,
+      "posTopbarVisible": true,
+      "cartVisibility": "visible",
+      "offenders": []
+    },
+    "interaction": {},
+    "errors": []
+  },
+  "pos-tablet-landscape": {
+    "metrics": {
+      "rootDark": false,
+      "rootTablet": true,
+      "tabletReady": true,
+      "orientation": "landscape",
+      "scrollWidth": 1180,
+      "clientWidth": 1180,
+      "bodyBg": "rgb(244, 246, 247)",
+      "cardBg": "rgb(255, 255, 255)",
+      "cardCount": 6,
+      "finishDisabled": false,
+      "finishHeight": 52,
+      "minAddHeight": 46,
+      "globalTabletTopbarVisible": false,
+      "globalTabletDockVisible": false,
+      "posTopbarVisible": true,
+      "cartVisibility": "visible",
+      "offenders": []
+    },
+    "interaction": {},
+    "errors": []
+  },
+  "pos-tablet-portrait-dark": {
+    "metrics": {
+      "rootDark": true,
+      "rootTablet": true,
+      "tabletReady": true,
+      "orientation": "portrait",
+      "scrollWidth": 820,
+      "clientWidth": 820,
+      "bodyBg": "rgb(14, 15, 17)",
+      "cardBg": "rgb(23, 25, 28)",
+      "cardCount": 6,
+      "finishDisabled": false,
+      "finishHeight": 52,
+      "minAddHeight": 48,
+      "globalTabletTopbarVisible": false,
+      "globalTabletDockVisible": false,
+      "posTopbarVisible": true,
+      "cartVisibility": "hidden",
+      "offenders": [
+        {
+          "tag": "ASIDE",
+          "id": "pos-order-panel",
+          "cls": "pos-right",
+          "left": 838.7999877929688,
+          "right": 1308.800048828125,
+          "width": 470.00006103515625
+        },
+        {
+          "tag": "DIV",
+          "id": "",
+          "cls": "order-head",
+          "left": 839.7999877929688,
+          "right": 1308.800048828125,
+          "width": 469.00006103515625
+        },
+        {
+          "tag": "DIV",
+          "id": "",
+          "cls": "order-head-row",
+          "left": 853.7999877929688,
+          "right": 1294.800048828125,
+          "width": 441.00006103515625
+        },
+        {
+          "tag": "DIV",
+          "id": "",
+          "cls": "order-title-copy",
+          "left": 853.7999877929688,
+          "right": 944.6437377929688,
+          "width": 90.84375
+        },
+        {
+          "tag": "SMALL",
+          "id": "",
+          "cls": "",
+          "left": 853.7999877929688,
+          "right": 944.6437377929688,
+          "width": 90.84375
+        },
+        {
+          "tag": "SPAN",
+          "id": "",
+          "cls": "order-id-badge",
+          "left": 853.7999877929688,
+          "right": 944.6437377929688,
+          "width": 90.84375
+        },
+        {
+          "tag": "DIV",
+          "id": "",
+          "cls": "order-head-actions",
+          "left": 1185.596923828125,
+          "right": 1294.800048828125,
+          "width": 109.203125
+        },
+        {
+          "tag": "SPAN",
+          "id": "",
+          "cls": "items-count",
+          "left": 1185.596923828125,
+          "right": 1246.800048828125,
+          "width": 61.203125
+        },
+        {
+          "tag": "SPAN",
+          "id": "pos-cart-line-count",
+          "cls": "",
+          "left": 1196.596923828125,
+          "right": 1201.518798828125,
+          "width": 4.921875
+        },
+        {
+          "tag": "BUTTON",
+          "id": "pos-cart-close",
+          "cls": "pos-cart-close",
+          "left": 1254.800048828125,
+          "right": 1294.800048828125,
+          "width": 40
+        },
+        {
+          "tag": "SPAN",
+          "id": "",
+          "cls": "",
+          "left": 1267.643798828125,
+          "right": 1281.956298828125,
+          "width": 14.3125
+        },
+        {
+          "tag": "DIV",
+          "id": "",
+          "cls": "client-selector-wrap",
+          "left": 853.7999877929688,
+          "right": 1294.800048828125,
+          "width": 441.00006103515625
+        },
+        {
+          "tag": "I",
+          "id": "",
+          "cls": "bi bi-person client-icon",
+          "left": 866.7999877929688,
+          "right": 866.7999877929688,
+          "width": 0
+        },
+        {
+          "tag": "FORM",
+          "id": "pos-client-form",
+          "cls": "client-selector-form",
+          "left": 853.7999877929688,
+          "right": 1294.800048828125,
+          "width": 441.00006103515625
+        },
+        {
+          "tag": "LABEL",
+          "id": "",
+          "cls": "visually-hidden",
+          "left": 852.7999877929688,
+          "right": 853.7999877929688,
+          "width": 1
+        },
+        {
+          "tag": "SELECT",
+          "id": "sale-client-select",
+          "cls": "client-select",
+          "left": 853.7999877929688,
+          "right": 1294.800048828125,
+          "width": 441.00006103515625
+        },
+        {
+          "tag": "SMALL",
+          "id": "client-selector-help",
+          "cls": "client-selector-help",
+          "left": 857.7999877929688,
+          "right": 1290.800048828125,
+          "width": 433.00006103515625
+        },
+        {
+          "tag": "DIV",
+          "id": "pos-order-items",
+          "cls": "order-items-scroll",
+          "left": 839.7999877929688,
+          "right": 1308.800048828125,
+          "width": 469.00006103515625
+        },
+        {
+          "tag": "DIV",
+          "id": "",
+          "cls": "order-item",
+          "left": 839.7999877929688,
+          "right": 1308.800048828125,
+          "width": 469.00006103515625
+        },
+        {
+          "tag": "SPAN",
+          "id": "",
+          "cls": "item-qty-badge",
+          "left": 852.7999877929688,
+          "right": 881.7999877929688,
+          "width": 29
+        }
+      ]
+    },
+    "interaction": {
+      "drawerStartsClosed": true,
+      "drawerOpens": true,
+      "checkoutReachableInDrawer": true,
+      "drawerCloses": true
+    },
+    "errors": []
+  },
+  "clients-desktop-light": {
+    "metrics": {
+      "rootDark": false,
+      "rootAuthenticated": true,
+      "rootTablet": false,
+      "tabletReady": false,
+      "orientation": null,
+      "scrollWidth": 1512,
+      "clientWidth": 1512,
+      "bodyBg": "rgb(243, 245, 247)",
+      "headerBg": "radial-gradient(circle at 9% 0%, color(srgb 0.87451 0.454902 0.0980392 / 0.19), rgba(0, 0, 0, 0) 304px), linear-gradient(135deg, rgb(23, 26, 31), rgb(29, 33, 39) 58%, rgb(22, 25, 30))|rgba(0, 0, 0, 0)",
+      "headerColor": "rgb(245, 247, 248)",
+      "mainLeft": 268,
+      "mainRight": 1512,
+      "inputHeight": 17.999984741210938,
+      "inputWidth": 696.53125,
+      "searchContainerHeight": 43.99998474121094,
+      "searchContainerWidth": 745.078125,
+      "stageFilterWidth": 230,
+      "topbarVisible": false,
+      "dockVisible": false,
+      "localIcons": 52,
+      "contentIcons": 21,
+      "tableWraps": 0,
+      "offenders": []
+    },
+    "interaction": {},
+    "errors": []
+  },
+  "clients-desktop-dark": {
+    "metrics": {
+      "rootDark": true,
+      "rootAuthenticated": true,
+      "rootTablet": false,
+      "tabletReady": false,
+      "orientation": null,
+      "scrollWidth": 1512,
+      "clientWidth": 1512,
+      "bodyBg": "rgb(14, 15, 17)",
+      "headerBg": "radial-gradient(circle at 9% 0%, color(srgb 0.941176 0.576471 0.247059 / 0.19), rgba(0, 0, 0, 0) 304px), linear-gradient(135deg, rgb(23, 26, 31), rgb(29, 33, 39) 58%, rgb(22, 25, 30))|rgba(0, 0, 0, 0)",
+      "headerColor": "rgb(245, 247, 248)",
+      "mainLeft": 268,
+      "mainRight": 1512,
+      "inputHeight": 18,
+      "inputWidth": 696.53125,
+      "searchContainerHeight": 44,
+      "searchContainerWidth": 745.078125,
+      "stageFilterWidth": 230,
+      "topbarVisible": false,
+      "dockVisible": false,
+      "localIcons": 52,
+      "contentIcons": 21,
+      "tableWraps": 0,
+      "offenders": []
+    },
+    "interaction": {},
+    "errors": []
+  },
+  "clients-tablet-landscape": {
+    "metrics": {
+      "rootDark": false,
+      "rootAuthenticated": true,
+      "rootTablet": true,
+      "tabletReady": true,
+      "orientation": "landscape",
+      "scrollWidth": 1180,
+      "clientWidth": 1180,
+      "bodyBg": "rgb(243, 245, 247)",
+      "headerBg": "radial-gradient(circle at 9% 0%, color(srgb 0.87451 0.454902 0.0980392 / 0.19), rgba(0, 0, 0, 0) 304px), linear-gradient(135deg, rgb(23, 26, 31), rgb(29, 33, 39) 58%, rgb(22, 25, 30))|rgba(0, 0, 0, 0)",
+      "headerColor": "rgb(245, 247, 248)",
+      "mainLeft": 0,
+      "mainRight": 1180,
+      "inputHeight": 24,
+      "inputWidth": 675.25,
+      "searchContainerHeight": 50,
+      "searchContainerWidth": 723.796875,
+      "stageFilterWidth": 230,
+      "topbarVisible": true,
+      "dockVisible": true,
+      "localIcons": 62,
+      "contentIcons": 21,
+      "tableWraps": 0,
+      "offenders": []
+    },
+    "interaction": {},
+    "errors": []
+  },
+  "clients-tablet-portrait-dark": {
+    "metrics": {
+      "rootDark": true,
+      "rootAuthenticated": true,
+      "rootTablet": true,
+      "tabletReady": true,
+      "orientation": "portrait",
+      "scrollWidth": 820,
+      "clientWidth": 820,
+      "bodyBg": "rgb(14, 15, 17)",
+      "headerBg": "radial-gradient(circle at 9% 0%, color(srgb 0.941176 0.576471 0.247059 / 0.19), rgba(0, 0, 0, 0) 304px), linear-gradient(135deg, rgb(23, 26, 31), rgb(29, 33, 39) 58%, rgb(22, 25, 30))|rgba(0, 0, 0, 0)",
+      "headerColor": "rgb(245, 247, 248)",
+      "mainLeft": 0,
+      "mainRight": 820,
+      "inputHeight": 24,
+      "inputWidth": 735.390625,
+      "searchContainerHeight": 50,
+      "searchContainerWidth": 783.9375,
+      "stageFilterWidth": 614.734375,
+      "topbarVisible": true,
+      "dockVisible": true,
+      "localIcons": 62,
+      "contentIcons": 21,
+      "tableWraps": 0,
+      "offenders": []
+    },
+    "interaction": {},
+    "errors": []
+  },
+  "products-desktop-light": {
+    "metrics": {
+      "rootDark": false,
+      "rootAuthenticated": true,
+      "rootTablet": false,
+      "tabletReady": false,
+      "orientation": null,
+      "scrollWidth": 1512,
+      "clientWidth": 1512,
+      "bodyBg": "rgb(243, 245, 247)",
+      "headerBg": "radial-gradient(circle at 9% 0%, color(srgb 0.87451 0.454902 0.0980392 / 0.19), rgba(0, 0, 0, 0) 304px), linear-gradient(135deg, rgb(23, 26, 31), rgb(29, 33, 39) 58%, rgb(22, 25, 30))|rgba(0, 0, 0, 0)",
+      "searchHeight": 44,
+      "cardCount": 3,
+      "gridColumns": 3,
+      "topbarVisible": false,
+      "dockVisible": false,
+      "contentIcons": 20,
+      "offenders": []
+    },
+    "interaction": {},
+    "errors": []
+  },
+  "products-tablet-landscape": {
+    "metrics": {
+      "rootDark": false,
+      "rootAuthenticated": true,
+      "rootTablet": true,
+      "tabletReady": true,
+      "orientation": "landscape",
+      "scrollWidth": 1180,
+      "clientWidth": 1180,
+      "bodyBg": "rgb(243, 245, 247)",
+      "headerBg": "radial-gradient(circle at 9% 0%, color(srgb 0.87451 0.454902 0.0980392 / 0.19), rgba(0, 0, 0, 0) 304px), linear-gradient(135deg, rgb(23, 26, 31), rgb(29, 33, 39) 58%, rgb(22, 25, 30))|rgba(0, 0, 0, 0)",
+      "searchHeight": 50,
+      "cardCount": 3,
+      "gridColumns": 3,
+      "topbarVisible": true,
+      "dockVisible": true,
+      "contentIcons": 20,
+      "offenders": []
+    },
+    "interaction": {},
+    "errors": []
+  },
+  "products-tablet-portrait-dark": {
+    "metrics": {
+      "rootDark": true,
+      "rootAuthenticated": true,
+      "rootTablet": true,
+      "tabletReady": true,
+      "orientation": "portrait",
+      "scrollWidth": 820,
+      "clientWidth": 820,
+      "bodyBg": "rgb(14, 15, 17)",
+      "headerBg": "radial-gradient(circle at 9% 0%, color(srgb 0.941176 0.576471 0.247059 / 0.19), rgba(0, 0, 0, 0) 304px), linear-gradient(135deg, rgb(23, 26, 31), rgb(29, 33, 39) 58%, rgb(22, 25, 30))|rgba(0, 0, 0, 0)",
+      "searchHeight": 50,
+      "cardCount": 3,
+      "gridColumns": 1,
+      "topbarVisible": true,
+      "dockVisible": true,
+      "contentIcons": 20,
+      "offenders": []
+    },
+    "interaction": {},
+    "errors": []
+  }
+}

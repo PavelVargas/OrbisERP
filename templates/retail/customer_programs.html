@@ -1,0 +1,147 @@
+{% extends 'workspace/base.html' %}
+{% block title %}Programas de clientes{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/retail.css') }}">
+{% endblock %}
+{% block eyebrow %}Retail avanzado{% endblock %}
+{% block heading %}Programas de clientes{% endblock %}
+{% block subtitle %}Fidelización, gift cards y apartados separados según tus permisos.{% endblock %}
+{% block content %}
+<div class="retail-shell">
+  {% include 'retail/_nav.html' %}
+
+  <div class="retail-panel-tabs" data-tabset="customer-programs" role="tablist" aria-label="Programas de clientes">
+    {% if can_loyalty %}
+    <button type="button" class="{{ 'active' if initial_panel == 'loyalty' }}" data-panel="loyalty" role="tab" aria-selected="{{ 'true' if initial_panel == 'loyalty' else 'false' }}">
+      <i class="bi bi-stars" aria-hidden="true"></i> Fidelización
+    </button>
+    {% endif %}
+    {% if can_giftcards %}
+    <button type="button" class="{{ 'active' if initial_panel == 'giftcards' }}" data-panel="giftcards" role="tab" aria-selected="{{ 'true' if initial_panel == 'giftcards' else 'false' }}">
+      <i class="bi bi-credit-card" aria-hidden="true"></i> Gift cards
+    </button>
+    {% endif %}
+    {% if can_layaways %}
+    <button type="button" class="{{ 'active' if initial_panel == 'layaways' }}" data-panel="layaways" role="tab" aria-selected="{{ 'true' if initial_panel == 'layaways' else 'false' }}">
+      <i class="bi bi-bookmark-check" aria-hidden="true"></i> Apartados
+    </button>
+    {% endif %}
+  </div>
+
+  {% if can_loyalty %}
+  <section class="workspace-card retail-tab-panel {{ 'active' if initial_panel == 'loyalty' }}" data-panel="loyalty" role="tabpanel">
+    <div class="workspace-card-head">
+      <div>
+        <h2>Fidelización</h2>
+        <p>Consulta el estado y las tasas vigentes del programa.</p>
+      </div>
+      {% if can('retail.settings') %}
+      <a class="workspace-btn secondary" href="{{ url_for('retail_bp.configuration') }}">Configurar tasas</a>
+      {% endif %}
+    </div>
+    <div class="retail-attention-grid">
+      <div><span>Estado</span><strong>{{ 'Activo' if settings.enable_loyalty else 'Inactivo' }}</strong><small>Capacidad de puntos.</small></div>
+      <div><span>Puntos por moneda</span><strong>{{ display_decimal(settings.loyalty_points_per_currency, 4) }}</strong><small>Acumulación.</small></div>
+      <div><span>Valor por punto</span><strong>{{ display_decimal(settings.loyalty_currency_per_point, 4) }}</strong><small>Valor de canje.</small></div>
+      <div><span>Clientes</span><strong>{{ loyalty_client_count }}</strong><small>Directorio disponible.</small></div>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if can_giftcards %}
+  <section class="workspace-card retail-tab-panel {{ 'active' if initial_panel == 'giftcards' }}" data-panel="giftcards" role="tabpanel">
+    <div class="workspace-card-head">
+      <div><h2>Gift cards</h2><p>Saldo prepago emitido por la empresa.</p></div>
+      <span class="retail-chip">{{ gift_cards|length }}</span>
+    </div>
+    <div class="retail-list-scroll retail-list-scroll--tall">
+      {% for card in gift_cards %}
+      <div class="retail-record">
+        <span><strong>{{ card.code }}</strong><small>{{ card.client.name if card.client else 'Sin cliente' }} · {{ card.status }}</small></span>
+        <b>{{ card.balance }}</b>
+      </div>
+      {% else %}
+      <div class="workspace-empty">Sin tarjetas emitidas.</div>
+      {% endfor %}
+    </div>
+    <form method="post" action="{{ url_for('retail_bp.gift_card_create') }}" class="retail-inline-form retail-form-divider">
+      <label>Código opcional<input name="code" maxlength="80" placeholder="Se genera si queda vacío"></label>
+      <label>Saldo inicial<input type="number" step="0.01" min="0.01" name="amount" required></label>
+      <label>Cliente
+        <select name="client_id">
+          <option value="">Sin asignar</option>
+          {% for client in clients %}<option value="{{ client.id }}">{{ client.name }}</option>{% endfor %}
+        </select>
+      </label>
+      <div class="actions"><button type="submit" class="workspace-btn secondary">Emitir</button></div>
+    </form>
+  </section>
+  {% endif %}
+
+  {% if can_layaways %}
+  <section class="workspace-card retail-tab-panel {{ 'active' if initial_panel == 'layaways' }}" data-panel="layaways" role="tabpanel">
+    <div class="workspace-card-head">
+      <div><h2>Apartados</h2><p>Reservas de inventario, abonos y entrega final.</p></div>
+      <span class="retail-chip">{{ layaways|length }}</span>
+    </div>
+    <div class="retail-list-scroll retail-list-scroll--tall">
+      {% for layaway in layaways %}
+      <article class="retail-layaway">
+        <div class="retail-record">
+          <span>
+            <strong>Apartado #{{ layaway.id }} · Venta #{{ layaway.sale_id }}</strong>
+            <small>{{ layaway.client.name }} · {{ layaway.status }}{% if layaway.due_date %} · vence {{ layaway.due_date.strftime('%d/%m/%Y') }}{% endif %}</small>
+          </span>
+          <b>Pendiente {{ layaway.balance }}</b>
+        </div>
+        {% if layaway.status == 'OPEN' and layaway.balance > 0 %}
+        <form method="post" action="{{ url_for('retail_bp.layaway_pay', layaway_id=layaway.id) }}" class="retail-inline-form">
+          <label>Monto<input type="number" step="0.01" min="0.01" max="{{ layaway.balance }}" name="amount" required></label>
+          <label>Método<select name="method"><option>CASH</option><option>CARD</option><option>TRANSFER</option></select></label>
+          <label>Referencia<input name="reference" maxlength="120"></label>
+          <div class="actions"><button type="submit" class="workspace-btn secondary">Abonar</button></div>
+        </form>
+        {% endif %}
+        {% if layaway.status == 'OPEN' %}
+        <div class="retail-row-actions">
+          {% if layaway.balance <= 0 %}
+          <form method="post" action="{{ url_for('retail_bp.layaway_complete', layaway_id=layaway.id) }}">
+            <button type="submit" class="workspace-btn">Entregar y finalizar</button>
+          </form>
+          {% endif %}
+          <form method="post" action="{{ url_for('retail_bp.layaway_cancel', layaway_id=layaway.id) }}" data-confirm-message="¿Cancelar apartado y liberar inventario?">
+            <input type="hidden" name="confirm_refund" value="1">
+            <button type="submit" class="workspace-btn danger">Cancelar</button>
+          </form>
+        </div>
+        {% endif %}
+      </article>
+      {% else %}
+      <div class="workspace-empty">Sin apartados.</div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script nonce="{{ g.csp_nonce }}">
+(() => {
+  const tabset = document.querySelector('[data-tabset="customer-programs"]');
+  if (!tabset) return;
+  const buttons = [...tabset.querySelectorAll('button[data-panel]')];
+  const panels = [...document.querySelectorAll('.retail-tab-panel[data-panel]')];
+  const activate = (button) => {
+    buttons.forEach((item) => {
+      const active = item === button;
+      item.classList.toggle('active', active);
+      item.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+    panels.forEach((panel) => panel.classList.toggle('active', panel.dataset.panel === button.dataset.panel));
+  };
+  buttons.forEach((button) => button.addEventListener('click', () => activate(button)));
+  const initial = buttons.find((button) => button.classList.contains('active')) || buttons[0];
+  if (initial) activate(initial);
+})();
+</script>
+{% endblock %}

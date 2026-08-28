@@ -1,0 +1,39 @@
+{% extends 'workspace/base.html' %}
+{% block title %}Retail avanzado{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/retail.css') }}">{% endblock %}
+{% block eyebrow %}Motor comercial{% endblock %}
+{% block heading %}Retail avanzado{% endblock %}
+{% block subtitle %}Configura el comportamiento retail por áreas. Cada apartado tiene ahora su propia vista para trabajar sin recorrer una página interminable.{% endblock %}
+{% block actions %}<a class="workspace-btn secondary" href="{{ url_for('products_bp.list_products') }}"><i class="bi bi-box-seam"></i> Productos</a>{% endblock %}
+{% block content %}
+<div class="retail-shell">
+  {% include 'retail/_nav.html' %}
+  <section class="retail-kpi-strip">
+    <article><span>Perfil</span><strong>{{ settings.industry_profile|title }}</strong><small>Modelo comercial</small></article>
+    <article><span>Productos</span><strong>{{ metrics.products }}</strong><small>Activos</small></article>
+    <article><span>Sucursales / cajas</span><strong>{{ metrics.branches }} / {{ metrics.terminals }}</strong><small>Operación física</small></article>
+    <article><span>Alertas operativas</span><strong>{{ metrics.replenishment + metrics.approvals + metrics.warranties }}</strong><small>Reposición, aprobaciones y garantías</small></article>
+  </section>
+
+  <section class="retail-launch-grid">
+    <a href="{{ url_for('retail_bp.configuration') }}" class="retail-launch-card"><i class="bi bi-sliders"></i><div><strong>Configuración comercial</strong><p>Perfil, costeo, ticket y capacidades.</p></div><span>Gestionar</span></a>
+    <a href="{{ url_for('retail_bp.locations') }}" class="retail-launch-card"><i class="bi bi-diagram-3"></i><div><strong>Sucursales y terminales</strong><p>{{ metrics.branches }} sucursales · {{ metrics.terminals }} cajas.</p></div><span>Abrir</span></a>
+    <a href="{{ url_for('retail_bp.catalog_setup') }}" class="retail-launch-card"><i class="bi bi-rulers"></i><div><strong>Unidades y variantes</strong><p>Precisión, conversiones y atributos del catálogo.</p></div><span>Configurar</span></a>
+    <a href="{{ url_for('retail_bp.pricing') }}" class="retail-launch-card"><i class="bi bi-tags"></i><div><strong>Precios avanzados</strong><p>{{ metrics.price_lists }} listas configuradas.</p></div><span>Gestionar</span></a>
+    <a href="{{ url_for('retail_bp.customer_programs') }}" class="retail-launch-card"><i class="bi bi-person-heart"></i><div><strong>Programas de clientes</strong><p>{{ metrics.layaways }} apartados abiertos · fidelidad y gift cards.</p></div><span>Abrir</span></a>
+    <a href="{{ url_for('retail_bp.operations_center') }}" class="retail-launch-card"><i class="bi bi-activity"></i><div><strong>Centro operativo</strong><p>{{ metrics.replenishment }} reposiciones · {{ metrics.approvals }} aprobaciones.</p></div><span>Revisar</span></a>
+    <a href="{{ url_for('retail_bp.warranties') }}" class="retail-launch-card"><i class="bi bi-shield-check"></i><div><strong>Garantías</strong><p>{{ metrics.warranties }} reclamaciones activas. La garantía base está siempre habilitada.</p></div><span>Atender</span></a>
+    <a href="{{ url_for('retail_bp.integrations') }}" class="retail-launch-card"><i class="bi bi-braces"></i><div><strong>API e integraciones</strong><p>Claves y webhooks aislados del resto de la configuración.</p></div><span>Abrir</span></a>
+  </section>
+
+  <section class="workspace-card retail-compact-panel">
+    <div class="workspace-card-head"><div><h2>Necesitan atención</h2><p>Solo las señales operativas más importantes; el detalle vive en su subvista.</p></div><a class="workspace-btn secondary" href="{{ url_for('retail_bp.operations_center') }}">Ver centro operativo</a></div>
+    <div class="retail-attention-grid">
+      <div><span>Reposición</span><strong>{{ metrics.replenishment }}</strong><small>Productos en mínimo o por debajo.</small></div>
+      <div><span>Garantías</span><strong>{{ metrics.warranties }}</strong><small>Abiertas o en revisión.</small></div>
+      <div><span>Aprobaciones</span><strong>{{ metrics.approvals }}</strong><small>Decisiones pendientes.</small></div>
+      <div><span>Apartados</span><strong>{{ metrics.layaways }}</strong><small>Reservas todavía abiertas.</small></div>
+    </div>
+  </section>
+</div>
+{% endblock %}

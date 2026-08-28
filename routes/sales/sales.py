@@ -6,3 +6,4 @@ from .core import *
 from .actions import *
 from .views import *
 from .exports import *
+from .quotes import *

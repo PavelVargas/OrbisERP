@@ -1,122 +1,33 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transferencia #{{ transfer.id }} | OrbisERP</title>
-    <link rel="stylesheet" href="/static/css/tranfer_css/view.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-</head>
-<body id="page-body" class="dark"> 
-    {% include 'layouts/left_bar.html' %}
+{% extends 'workspace/base.html' %}
+{% block title %}Transferencia #{{ transfer.id }}{% endblock %}
+{% block eyebrow %}Inventario · Transferencias{% endblock %}
+{% block heading %}Transferencia #{{ transfer.id }}{% endblock %}
+{% block subtitle %}Revisa origen, destino, cantidad y estado antes de confirmar la recepción física.{% endblock %}
+{% block back_link %}<a class="workspace-back" href="{{ url_for('transfer_bp.transfers_by_warehouse', warehouse_id=transfer.to_warehouse_id) }}"><i class="bi bi-arrow-left"></i> Pendientes</a>{% endblock %}
+{% block actions %}
+<a class="workspace-btn secondary" href="{{ url_for('transfer_bp.print_transfer', transfer_id=transfer.id) }}" target="_blank" rel="noopener"><i class="bi bi-printer"></i> Imprimir conduce</a>
+{% endblock %}
+{% block content %}
+<section class="workspace-grid workspace-grid--three">
+    <article class="workspace-metric"><span>Origen</span><strong>{{ transfer.from_warehouse.name }}</strong><small>{{ transfer.from_location.full_path if transfer.from_location else 'Sin ubicación específica' }}</small></article>
+    <article class="workspace-metric"><span>Destino</span><strong>{{ transfer.to_warehouse.name }}</strong><small>{{ transfer.to_location.full_path if transfer.to_location else 'Sin ubicación específica' }}</small></article>
+    <article class="workspace-metric"><span>Estado</span><strong>{{ 'Pendiente' if transfer.status == 'PENDING' else 'Recibida' }}</strong><small>{{ transfer.created_at.strftime('%d/%m/%Y %H:%M') }}</small></article>
+</section>
 
-    <main class="main-content">
-        <div class="top-nav">
-            <a href="{{ url_for('transfer_bp.transfers_by_warehouse', warehouse_id=transfer.to_warehouse_id) }}" class="back-link">
-                <i class="bi bi-arrow-left"></i> Volver a pendientes
-            </a>
-        </div>
+<section class="workspace-card workspace-section-gap">
+    <div class="workspace-card-head"><div><h2>Contenido</h2><p>Movimiento físico que se asentará en inventario.</p></div>{% if transfer.status == 'PENDING' %}<span class="workspace-tag warn">Pendiente de recepción</span>{% else %}<span class="workspace-tag ok">Recibida</span>{% endif %}</div>
+    <div class="workspace-table-wrap">
+        <table class="workspace-table"><thead><tr><th>Artículo</th><th>SKU</th><th>Cantidad</th><th>Responsable</th></tr></thead><tbody><tr><td><strong>{{ transfer.product.name }}</strong></td><td>{{ transfer.product.sku or 'N/A' }}</td><td>{{ display_quantity(transfer.quantity) }}</td><td>{{ user.name if user is defined and user else 'Sistema' }}</td></tr></tbody></table>
+    </div>
+</section>
 
-        <div class="o_control_panel">
-            <div class="o_control_panel_top">
-                <div class="o_breadcrumb">
-                    <h2>Detalle de Movimiento</h2>
-                    <p>Orden de Transferencia Interna: <span style="color: var(--primary); font-weight: 700;">#{{ transfer.id }}</span></p>
-                </div>
-                
-                <div class="o_statusbar">
-                    {% if transfer.status == 'PENDING' %}
-                        <div class="o_status_item">Borrador</div>
-                        <div class="o_status_item active">En espera</div>
-                        <div class="o_status_item">Hecho</div>
-                    {% else %}
-                        <div class="o_status_item">Borrador</div>
-                        <div class="o_status_item">En espera</div>
-                        <div class="o_status_item done"><i class="bi bi-check2"></i> Hecho</div>
-                    {% endif %}
-                </div>
-            </div>
+{% if transfer.status == 'PENDING' %}
+<section class="workspace-callout workspace-section-gap">
+    <div><strong><i class="bi bi-exclamation-triangle"></i> Verificación física requerida</strong><p>Confirma que producto, cantidad, origen y destino coinciden antes de recibir. La confirmación modifica existencias y Kardex.</p></div>
+    {% if can('transfers.receive') %}<form method="post" action="{{ url_for('transfer_bp.receive_transfer', transfer_id=transfer.id) }}" data-confirm="¿Confirmar la recepción y asentar este movimiento en inventario?"><button type="submit" class="workspace-btn"><i class="bi bi-box-seam"></i> Confirmar recepción</button></form>{% endif %}
+</section>
+{% else %}
+<section class="workspace-alert workspace-alert--success workspace-section-gap"><i class="bi bi-shield-check"></i> Transferencia recibida y asentada en inventario.</section>
+{% endif %}
+{% endblock %}
 
-            <div class="o_cp_buttons">
-                <a href="{{ url_for('transfer_bp.print_transfer', transfer_id=transfer.id) }}" target="_blank" class="btn-cp-action btn-cp-secondary">
-                    <i class="bi bi-printer-fill"></i> Imprimir Conduce (PDF)
-                </a>
-            </div>
-        </div>
-
-        <div class="o_sheet">
-            
-            <div class="info-grid">
-                <div class="info-box">
-                    <label>Origen</label>
-                    <p><i class="bi bi-building"></i> {{ transfer.from_warehouse.name }}{% if transfer.from_location %} · {{ transfer.from_location.full_path }}{% endif %}</p>
-                </div>
-                <div class="info-box">
-                    <label>Destino</label>
-                    <p style="color: var(--primary);"><i class="bi bi-geo-alt-fill"></i> {{ transfer.to_warehouse.name }}{% if transfer.to_location %} · {{ transfer.to_location.full_path }}{% endif %}</p>
-                </div>
-                <div class="info-box">
-                    <label>Responsable Envío</label>
-                    <p><i class="bi bi-person-badge-fill"></i> {{ user.name }}</p>
-                </div>
-                <div class="info-box">
-                    <label>Fecha Emisión</label>
-                    <p><i class="bi bi-calendar3"></i> {{ transfer.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
-                </div>
-            </div>
-
-            <div class="items-section">
-                <table class="items-table">
-                    <thead>
-                        <tr>
-                            <th>Artículo</th>
-                            <th>SKU</th>
-                            <th style="text-align: right;">Cant. a Recibir</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><span class="product-name">{{ transfer.product.name }}</span></td>
-                            <td><span class="product-sku">{{ transfer.product.sku or 'N/A' }}</span></td>
-                            <td style="text-align: right;"><span class="p-qty">{{ transfer.quantity }} Unidades</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="footer-actions">
-                {% if transfer.status == 'PENDING' %}
-                <div class="helper-text">
-                    <i class="bi bi-exclamation-triangle-fill" style="color: var(--primary); font-size: 1.1rem;"></i>
-                    <span>Verifique detalladamente que la cantidad física en el bulto coincida antes de procesar el ingreso al stock.</span>
-                </div>
-                
-                {% if can('transfers.receive') %}<form method="POST" action="{{ url_for('transfer_bp.receive_transfer', transfer_id=transfer.id) }}">
-                    <button type="submit" class="btn-confirm-main">
-                        <i class="bi bi-box-seam-fill"></i> Confirmar y Validar Recepción
-                    </button>
-                </form>{% endif %}
-                {% else %}
-                <div class="status-success-text">
-                    <i class="bi bi-shield-check"></i> TRANSFERENCIA TOTALMENTE RECIBIDA, AUDITADA Y ASENTADA EN KARDEX
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </main>
-
-    <script>
-        function applyTheme() {
-            const theme = localStorage.getItem('theme');
-            const body = document.getElementById('page-body');
-            if (theme === 'dark') {
-                body.classList.add('dark');
-            } else {
-                body.classList.remove('dark');
-            }
-        }
-        applyTheme();
-    </script>
-</body>
-</html>

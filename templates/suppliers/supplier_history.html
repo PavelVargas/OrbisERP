@@ -1,91 +1,32 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/css/supplier_css/supplier.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <title>Historial de Compras | {{ supplier.name }}</title>
-</head>
-<body>
+{% extends 'workspace/base.html' %}
+{% block title %}{{ supplier.name }}{% endblock %}
+{% block eyebrow %}Proveedor 360°{% endblock %}
+{% block heading %}{{ supplier.name }}{% endblock %}
+{% block subtitle %}{{ supplier.email or 'Sin correo' }} · {{ supplier.phone or 'Sin teléfono' }}{% endblock %}
+{% block back_link %}<a class="workspace-back" href="{{ url_for('supplier_bp.supplier_list') }}"><i class="bi bi-arrow-left"></i> Volver a proveedores</a>{% endblock %}
+{% block actions %}{% if can('suppliers.manage') %}<a class="workspace-btn secondary" href="{{ url_for('supplier_bp.supplier_edit', supplier_id=supplier.id) }}"><i class="bi bi-pencil"></i> Editar</a>{% endif %}{% endblock %}
+{% block content %}
+<section class="workspace-grid">
+    <article class="workspace-metric"><span><i class="bi bi-bag-check"></i> Comprado histórico</span><strong>{{ currency_symbol }} {{ '{:,.2f}'.format((total_spent|float) / (conversion_rate|float)) }}</strong><small>{{ orders|length }} {{ 'orden' if orders|length == 1 else 'órdenes' }} de compra.</small></article>
+    <article class="workspace-metric"><span><i class="bi bi-wallet2"></i> Saldo pendiente</span>{% if can_finance %}<strong>{{ currency_symbol }} {{ '{:,.2f}'.format(((outstanding or 0)|float) / (conversion_rate|float)) }}</strong><small>{{ bills|length }} cuenta{{ '' if bills|length == 1 else 's' }} registrada{{ '' if bills|length == 1 else 's' }}.</small>{% else %}<strong>Restringido</strong><small>Requiere permiso de pagos.</small>{% endif %}</article>
+    <article class="workspace-metric"><span><i class="bi bi-calendar2-check"></i> Última orden</span><strong>{{ orders[0].created_at.strftime('%d/%m/%Y') if orders else '—' }}</strong><small>Último movimiento de abastecimiento.</small></article>
+    <article class="workspace-metric"><span><i class="bi bi-folder2-open"></i> Documentos</span>{% if can_documents %}<strong>{{ documents|length }}</strong><small>Archivos privados vinculados.</small>{% else %}<strong>Restringido</strong><small>Archivo privado.</small>{% endif %}</article>
+</section>
 
-    {% include 'layouts/left_bar.html' %}
+<section class="workspace-card">
+    <div class="workspace-card-head"><div><h2>Órdenes de compra</h2><p>Historial de abastecimiento con este proveedor.</p></div>{% if can('purchases.view') %}<a class="workspace-btn secondary" href="{{ url_for('purchase_bp.purchase_list') }}">Ver todas las compras</a>{% endif %}</div>
+    <div class="workspace-table-wrap"><table class="workspace-table"><thead><tr><th>Orden</th><th>Fecha</th><th>Artículos</th><th>Total</th><th>Estado</th><th></th></tr></thead><tbody>{% for o in orders %}<tr><td><strong>OC-{{ '%05d'|format(o.id) }}</strong></td><td>{{ o.created_at.strftime('%d/%m/%Y · %H:%M') }}</td><td>{{ o.total_items }}</td><td>{{ currency_symbol }} {{ '{:,.2f}'.format(((o.total_cost or 0)|float) / (conversion_rate|float)) }}</td><td><span class="workspace-tag {{ 'ok' if o.status in ['RECEIVED','COMPLETED'] else 'warn' if o.status in ['PENDING','DRAFT'] else 'danger' }}">{{ o.status }}</span></td><td><div class="workspace-table-actions"><a class="workspace-icon-btn" href="{{ url_for('purchase_bp.purchase_detail', order_id=o.id) }}" title="Ver orden"><i class="bi bi-eye"></i></a></div></td></tr>{% else %}<tr><td colspan="6"><div class="workspace-empty"><i class="bi bi-bag"></i>Este proveedor todavía no tiene órdenes.</div></td></tr>{% endfor %}</tbody></table></div>
+</section>
 
-    <main>
-        <div class="top-nav">
-            <a href="{{ url_for('supplier_bp.supplier_list') }}" class="back-link">
-                <i class="bi bi-chevron-left"></i> VOLVER A PROVEEDORES
-            </a>
-            <div class="user-meta">
-                <i class="bi bi-clock-history"></i> Logística y Abastecimiento
-            </div>
-        </div>
+<div class="workspace-columns equal">
+    <section class="workspace-card">
+        <div class="workspace-card-head"><div><h2>Cuentas y pagos</h2><p>Obligaciones financieras vinculadas con el proveedor.</p></div>{% if can_finance %}<a class="workspace-btn secondary" href="{{ url_for('backoffice_bp.payables') }}">Abrir cuentas por pagar</a>{% endif %}</div>
+        {% if can_finance %}<h3>Cuentas pendientes</h3><div class="workspace-mini-list">{% for bill in bills %}<div class="workspace-mini-row"><span><strong>{{ bill.document_number }}</strong><small>Vence {{ bill.due_date.strftime('%d/%m/%Y') if bill.due_date else 'sin fecha' }}</small></span><b>{{ currency_symbol }} {{ '{:,.2f}'.format((bill.balance|float) / (conversion_rate|float)) }}</b></div>{% else %}<div class="workspace-empty"><i class="bi bi-check2-circle"></i>Sin cuentas pendientes.</div>{% endfor %}</div><h3 class="workspace-section-gap">Últimos pagos</h3><div class="workspace-mini-list">{% for payment in payments[:8] %}<div class="workspace-mini-row"><span><strong>{{ payment.method }}</strong><small>{{ payment.created_at.strftime('%d/%m/%Y') if payment.created_at else '—' }}</small></span><b>{{ currency_symbol }} {{ '{:,.2f}'.format((payment.amount|float) / (conversion_rate|float)) }}</b></div>{% else %}<div class="workspace-empty"><i class="bi bi-wallet2"></i>Sin pagos registrados.</div>{% endfor %}</div>{% else %}<div class="workspace-empty"><i class="bi bi-lock"></i>La información de cuentas por pagar está restringida para este perfil.</div>{% endif %}
+    </section>
 
-        <header class="page-header">
-            <div class="title-group">
-                <h2>Historial de Compras</h2>
-                <p>Proveedor: <strong>{{ supplier.name }}</strong></p>
-            </div>
-        </header>
-
-        <div class="info-card" style="max-width: 400px; margin-bottom: 30px;">
-            <div class="card-row">
-                <span>Inversión Total Acumulada</span>
-                <strong class="total-amount">$ {{ "{:,.2f}".format(total_spent or 0) }}</strong>
-            </div>
-        </div>
-
-        <div class="table-container" style="max-width: 1100px;">
-            <table class="modern-table">
-                <thead>
-                    <tr>
-                        <th># Orden</th>
-                        <th>Fecha de Registro</th>
-                        <th style="text-align: center;">Artículos</th>
-                        <th style="text-align: right;">Costo Total</th>
-                        <th style="text-align: center;">Estado</th>
-                        <th style="text-align: center;">Acciones</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {% if orders %}
-                        {% for o in orders %}
-                        <tr>
-                            <td><span class="order-id">#{{ o.id }}</span></td>
-                            <td>{{ o.created_at.strftime('%d/%m/%Y') }}</td>
-                            <td style="text-align: center;">{{ o.total_items }} u.</td>
-                            <td style="text-align: right;"><strong>$ {{ "{:,.2f}".format(o.total_cost or 0) }}</strong></td>
-                            <td style="text-align: center;">
-                                {% if o.status == 'PENDING' %}
-                                    <span class="badge b-pending">PENDIENTE</span>
-                                {% elif o.status == 'RECEIVED' %}
-                                    <span class="badge b-received">RECIBIDA</span>
-                                {% else %}
-                                    <span class="badge b-cancelled">CANCELADA</span>
-                                {% endif %}
-                            </td>
-                            <td style="text-align: center;">
-                                <div class="actions-group" style="justify-content: center;">
-                                    <a href="{{ url_for('purchase_bp.purchase_detail', order_id=o.id) }}" class="act-btn view" title="Ver detalle">
-                                        <i class="bi bi-eye-fill"></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    {% else %}
-                        <tr>
-                            <td colspan="6" class="empty-state">
-                                <i class="bi bi-box-seam"></i>
-                                <p>Este proveedor aún no tiene órdenes registradas.</p>
-                            </td>
-                        </tr>
-                    {% endif %}
-                </tbody>
-            </table>
-        </div>
-    </main>
-
-</body>
-</html>
+    <section class="workspace-card">
+        <div class="workspace-card-head"><div><h2>Documentos</h2><p>Contratos, registros fiscales y soportes privados.</p></div>{% if can_documents %}<a class="workspace-btn secondary" href="{{ url_for('workspace_bp.documents', entity_type='SUPPLIER', entity_id=supplier.id) }}">Abrir archivo</a>{% endif %}</div>
+        {% if can_documents %}<form method="post" enctype="multipart/form-data" action="{{ url_for('workspace_bp.document_upload') }}" class="workspace-form compact"><input type="hidden" name="entity_type" value="SUPPLIER"><input type="hidden" name="entity_id" value="{{ supplier.id }}"><label class="full">Adjuntar archivo<input type="file" name="file" required accept=".pdf,.png,.jpg,.jpeg,.webp,.csv,.xlsx,.docx,.txt"></label><div class="actions"><button class="workspace-btn secondary" type="submit"><i class="bi bi-cloud-arrow-up"></i> Subir</button></div></form><div class="workspace-mini-list">{% for doc in documents[:8] %}<div class="workspace-mini-row"><span><strong>{{ doc.display_name }}</strong><small>{{ doc.created_at.strftime('%d/%m/%Y') if doc.created_at else '—' }}</small></span><a class="workspace-icon-btn" href="{{ url_for('workspace_bp.document_download', document_id=doc.id) }}" title="Descargar"><i class="bi bi-download"></i></a></div>{% else %}<div class="workspace-empty"><i class="bi bi-folder2-open"></i>Sin documentos.</div>{% endfor %}</div>{% else %}<div class="workspace-empty"><i class="bi bi-lock"></i>Documentos privados disponibles solo para perfiles autorizados.</div>{% endif %}
+    </section>
+</div>
+{% endblock %}

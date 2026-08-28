@@ -1,0 +1,13 @@
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="auth-flash-stack" role="status" aria-live="polite">
+      {% for category, message in messages %}
+        {% set kind = 'danger' if category in ['danger', 'error'] else category %}
+        <div class="auth-flash auth-flash--{{ kind }}" role="{% if kind == 'danger' %}alert{% else %}status{% endif %}">
+          <i class="bi bi-{% if kind == 'success' %}check-circle-fill{% elif kind == 'danger' %}exclamation-triangle-fill{% elif kind == 'warning' %}exclamation-circle-fill{% else %}info-circle-fill{% endif %}" aria-hidden="true"></i>
+          <span>{{ message }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}

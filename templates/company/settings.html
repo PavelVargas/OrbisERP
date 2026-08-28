@@ -1,8 +1,57 @@
-<!DOCTYPE html><html lang="es" class="{% if session.get('theme') == 'dark' %}dark{% endif %}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Configuración de empresa · OrbisERP</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css"><link rel="stylesheet" href="{{ url_for('static',filename='css/company_css/settings.css') }}"></head><body>{% include 'layouts/left_bar.html' %}<main class="company-settings-page">
+<!DOCTYPE html><html lang="es" class="{% if tablet_mode_active|default(session.get('tablet_mode')) %}tablet-mode tablet-full-width-profile{% endif %} {% if session.get('theme') == 'dark' %}dark{% endif %}"><head>{% set shell_assets_loaded = true %}{% include 'layouts/app_head_assets.html' %}<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Configuración de empresa · OrbisERP</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/company_css/settings.css') }}"></head><body>{% include 'layouts/left_bar.html' %}<main class="company-settings-page">
 <header class="company-settings-header"><div><span>IDENTIDAD Y DATOS GENERALES</span><h1>Configuración de empresa</h1><p>Información que verá tu equipo en documentos, ventas y comunicaciones.</p></div><div class="settings-status"><i class="bi bi-shield-check"></i><span>Empresa activa<small>{{ company.plan_name or 'Plan actual' }}</small></span></div></header>
 {% with messages=get_flashed_messages(with_categories=true) %}{% for category,message in messages %}<div class="settings-alert {{ category }}">{{ message }}</div>{% endfor %}{% endwith %}
 <form method="post" enctype="multipart/form-data" class="settings-workspace" id="companySettingsForm"><aside class="brand-panel"><span class="section-kicker">MARCA</span><h2>Identidad visual</h2><p>Usaremos este logo en la navegación y en los documentos de la empresa.</p><label class="logo-uploader" for="logo-input"><span class="logo-frame">{% if company.logo %}<img src="{{ url_for('static',filename=company.logo) }}" id="preview-img" alt="Logo de {{ company.name }}">{% else %}<span id="preview-placeholder"><i class="bi bi-building"></i></span>{% endif %}</span><span class="logo-action"><i class="bi bi-camera"></i> Cambiar logo</span><input type="file" name="logo" id="logo-input" accept="image/png,image/jpeg,image/webp" hidden></label><ul><li>PNG, JPG o WEBP</li><li>Logo cuadrado recomendado</li><li>Máximo según tu plan</li></ul></aside>
 <section class="settings-form"><header><div><span class="section-kicker">PERFIL COMERCIAL</span><h2>Datos del negocio</h2></div><span>Los campos con * son obligatorios</span></header><div class="settings-grid"><label class="span-2"><span>Nombre comercial *</span><div><i class="bi bi-building"></i><input name="name" value="{{ company.name }}" maxlength="150" required placeholder="Nombre de tu empresa"></div></label><label><span>RNC / identificación fiscal</span><div><i class="bi bi-hash"></i><input name="rnc" value="{{ company.rnc or '' }}" maxlength="20" placeholder="131000000"></div></label><label><span>Teléfono</span><div><i class="bi bi-telephone"></i><input name="phone" value="{{ company.phone or '' }}" maxlength="20" placeholder="809-000-0000"></div></label><label class="span-2"><span>Correo administrativo</span><div><i class="bi bi-envelope"></i><input type="email" name="email" value="{{ company.email or '' }}" maxlength="120" placeholder="administracion@empresa.com"></div></label><label class="span-2"><span>Dirección principal</span><textarea name="address" rows="3" maxlength="500" placeholder="Calle, sector, ciudad y país">{{ company.address or '' }}</textarea></label></div>
 <section class="document-settings"><div class="document-icon"><i class="bi bi-file-earmark-lock"></i></div><div><span class="section-kicker">DOCUMENTOS COMERCIALES</span><h3>Aviso no fiscal</h3><p>Mientras la facturación fiscal certificada esté desactivada, este texto evita confundir recibos internos con comprobantes autorizados.</p><input name="fiscal_disclaimer" value="{{ company.fiscal_disclaimer or 'DOCUMENTO NO FISCAL' }}" maxlength="180" required></div></section>
 <footer><a href="{{ url_for('dashboard_bp.dashboard') }}">Cancelar</a><button type="submit"><i class="bi bi-check2-circle"></i> Guardar cambios</button></footer></section></form></main>
-<script>(()=>{const input=document.getElementById('logo-input');input.addEventListener('change',()=>{const file=input.files[0];if(!file)return;if(!['image/png','image/jpeg','image/webp'].includes(file.type)){input.value='';alert('Selecciona una imagen PNG, JPG o WEBP.');return}const reader=new FileReader();reader.onload=e=>{const frame=document.querySelector('.logo-frame');frame.innerHTML=`<img id="preview-img" alt="Vista previa">`;frame.querySelector('img').src=e.target.result};reader.readAsDataURL(file)});document.getElementById('companySettingsForm').addEventListener('submit',e=>{const button=e.submitter;if(button){button.disabled=true;button.innerHTML='<i class="bi bi-arrow-repeat"></i> Guardando…'}})})();</script></body></html>
+<script nonce="{{ g.csp_nonce }}">
+(() => {
+    const input = document.getElementById('logo-input');
+    const form = document.getElementById('companySettingsForm');
+    input?.addEventListener('change', () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+            input.value = '';
+            window.OrbisFeedback?.show({
+                type: 'warning',
+                context: 'Configuración de empresa',
+                title: 'Formato de logo no compatible',
+                message: 'Selecciona una imagen PNG, JPG o WEBP.',
+                detail: 'El archivo no fue cargado. Convierte la imagen a uno de los formatos admitidos y vuelve a seleccionarla.'
+            });
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = event => {
+            const frame = document.querySelector('.logo-frame');
+            if (!frame) return;
+            const preview = document.createElement('img');
+            preview.id = 'preview-img';
+            preview.alt = 'Vista previa del logo';
+            preview.src = String(event.target?.result || '');
+            frame.replaceChildren(preview);
+        };
+        reader.onerror = () => window.OrbisFeedback?.show({
+            type: 'danger',
+            context: 'Configuración de empresa',
+            title: 'No se pudo leer la imagen',
+            message: 'El navegador no pudo preparar la vista previa del logo.',
+            detail: 'Selecciona otro archivo y comprueba que la imagen no esté dañada.'
+        });
+        reader.readAsDataURL(file);
+    });
+    form?.addEventListener('submit', event => {
+        const button = event.submitter;
+        if (!button) return;
+        button.disabled = true;
+        button.replaceChildren();
+        const icon = document.createElement('i');
+        icon.className = 'bi bi-arrow-repeat';
+        icon.setAttribute('aria-hidden', 'true');
+        button.append(icon, document.createTextNode(' Guardando…'));
+    });
+})();
+</script></body></html>

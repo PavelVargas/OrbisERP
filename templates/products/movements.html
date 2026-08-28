@@ -1,115 +1,20 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Movimientos de stock</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- CSS general de productos -->
-    <link rel="stylesheet" href="/static/css/products_css/products.css">
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-</head>
-<body>
-
-{% include "layouts/left_bar.html" %}
-
-<main class="main">
-
-    <!-- Volver -->
-    <a href="{{ url_for('products_bp.list_products') }}" class="back">
-        <i class="bi bi-arrow-left-circle-fill"></i>
-    </a>
-
-    <br><br>
-
-    <!-- Info del producto -->
-    <h2 class="title">Movimientos de stock</h2>
-
-    <div class="product-info">
-        <p><strong>Producto:</strong> {{ product.name }}</p>
-        <p><strong>SKU:</strong> {{ product.sku }}</p>
-        <p><strong>Stock actual:</strong> {{ product.stock }}</p>
-    </div>
-
-    <br>
-
-    <!-- Tabla de movimientos -->
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Fecha</th>
-                <th>Tipo</th>
-                <th>Cantidad</th>
-                <th>Motivo</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for movement in movements %}
-            <tr>
-                <td>{{ movement.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
-
-                <td class="
-                    {% if movement.type == 'IN' %}stock-in
-                    {% elif movement.type == 'OUT' %}stock-out
-                    {% else %}stock-adjust{% endif %}
-                ">
-                    {% if movement.type == 'IN' %}
-                        <i class="bi bi-arrow-down-circle"></i> Entrada
-                    {% elif movement.type == 'OUT' %}
-                        <i class="bi bi-arrow-up-circle"></i> Salida
-                    {% else %}
-                        <i class="bi bi-sliders"></i> Ajuste
-                    {% endif %}
-                </td>
-
-                <td>{{ movement.quantity }}</td>
-                <td>{{ movement.reason or '-' }}</td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="4" style="text-align:center;">
-                    No hay movimientos registrados
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-</main>
-
-<style>
-    .table {
-    width: 100%;
-    border-collapse: collapse;
-    background: #f5f5f5;
-}
-
-.table th, .table td {
-    padding: 12px;
-    border-bottom: 1px solid #ddd;
-}
-
-.stock-in {
-    color: green;
-    font-weight: bold;
-}
-
-.stock-out {
-    color: red;
-    font-weight: bold;
-}
-
-.stock-adjust {
-    color: #ff9800;
-    font-weight: bold;
-}
-
-.product-info p {
-    margin: 4px 0;
-}
-
-</style>
-
-</body>
-</html>
+{% extends 'workspace/base.html' %}
+{% block title %}Movimientos de stock{% endblock %}
+{% block eyebrow %}Productos · Inventario{% endblock %}
+{% block heading %}Movimientos de stock{% endblock %}
+{% block subtitle %}Historial de entradas, salidas y ajustes de {{ product.name }}.{% endblock %}
+{% block back_link %}<a class="workspace-back" href="{{ url_for('products_bp.list_products') }}"><i class="bi bi-arrow-left"></i> Productos</a>{% endblock %}
+{% block content %}
+<section class="workspace-grid workspace-grid--three">
+    <article class="workspace-metric"><span><i class="bi bi-box-seam"></i> Producto</span><strong class="metric-text">{{ product.name }}</strong><small>{{ product.sku or 'Sin SKU' }}</small></article>
+    <article class="workspace-metric"><span><i class="bi bi-boxes"></i> Stock actual</span><strong>{{ display_quantity(product.stock) }}</strong><small>Existencia consolidada del producto.</small></article>
+    <article class="workspace-metric"><span><i class="bi bi-clock-history"></i> Movimientos</span><strong>{{ movements|length }}</strong><small>Registros visibles en este historial.</small></article>
+</section>
+<section class="workspace-card">
+    <div class="workspace-card-head"><div><h2>Historial</h2><p>Los movimientos se presentan con su tipo, cantidad y motivo registrado.</p></div></div>
+    <div class="workspace-table-wrap"><table class="workspace-table"><thead><tr><th>Fecha</th><th>Tipo</th><th>Cantidad</th><th>Motivo</th></tr></thead><tbody>
+        {% for movement in movements %}<tr><td>{{ movement.created_at.strftime('%d/%m/%Y %H:%M') }}</td><td>{% if movement.type == 'IN' %}<span class="workspace-tag ok"><i class="bi bi-arrow-down-circle"></i> Entrada</span>{% elif movement.type == 'OUT' %}<span class="workspace-tag danger"><i class="bi bi-arrow-up-circle"></i> Salida</span>{% else %}<span class="workspace-tag warn"><i class="bi bi-sliders"></i> Ajuste</span>{% endif %}</td><td><strong>{{ display_quantity(movement.quantity) }}</strong></td><td>{{ movement.reason or '—' }}</td></tr>
+        {% else %}<tr><td colspan="4" class="workspace-empty"><i class="bi bi-clock-history"></i>No hay movimientos registrados.</td></tr>{% endfor %}
+    </tbody></table></div>
+</section>
+{% endblock %}

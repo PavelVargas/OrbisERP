@@ -10,6 +10,9 @@ class Warehouse(db.Model):
     is_main = db.Column(db.Boolean, default=False) 
 
     company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)
+    branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True)
+
+    branch = db.relationship('Branch', backref=db.backref('warehouses', lazy=True))
 
     stocks = db.relationship(
         'WarehouseStock',

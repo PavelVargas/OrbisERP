@@ -1,0 +1,92 @@
+{% extends 'workspace/base.html' %}
+{% block title %}Auditoría general{% endblock %}
+{% block eyebrow %}Gobernanza{% endblock %}
+{% block heading %}Auditoría general{% endblock %}
+{% block subtitle %}Actividad legible y trazable: quién hizo cada cambio, qué ocurrió y los datos técnicos necesarios cuando toca investigar.{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/module_refresh.css') }}">{% endblock %}
+{% block actions %}
+<a class="workspace-btn secondary" href="{{ url_for('governance_bp.audit_export', q=request.args.get('q',''), action=request.args.get('action',''), audit_endpoint=request.args.get('audit_endpoint', request.args.get('endpoint','')), user_id=request.args.get('user_id',''), date_from=request.args.get('date_from',''), date_to=request.args.get('date_to','')) }}"><i class="bi bi-download"></i> Exportar CSV</a>
+{% endblock %}
+{% block content %}
+<div class="module-page audit-v2">
+    {% if audit_compat_mode %}
+    <div class="workspace-alert workspace-alert--warning" style="margin-bottom:14px">
+        <strong>Auditoría en modo compatibilidad.</strong> Los eventos siguen visibles, pero algunos metadatos técnicos no existen todavía en esta base de datos. Ejecuta <code>flask --app app db upgrade</code> para habilitar la auditoría completa.
+    </div>
+    {% endif %}
+    <section class="workspace-grid audit-kpis">
+        <article class="workspace-metric"><span><i class="bi bi-list-check"></i> Resultados</span><strong>{{ pagination.total }}</strong><small>Eventos que coinciden con los filtros</small></article>
+        <article class="workspace-metric"><span><i class="bi bi-calendar-day"></i> Hoy</span><strong>{{ today_count }}</strong><small>Acciones registradas desde las 00:00</small></article>
+        <article class="workspace-metric"><span><i class="bi bi-people"></i> Usuarios activos</span><strong>{{ active_actors }}</strong><small>Actores con actividad en 30 días</small></article>
+        <article class="workspace-metric"><span><i class="bi bi-shield-check"></i> Seguridad</span><strong>{{ security_count }}</strong><small>Eventos relacionados en 30 días</small></article>
+    </section>
+
+    <section class="workspace-card audit-filter-card">
+        <form class="audit-filter-form" method="get">
+            <label class="audit-search"><span>Buscar</span><div><i class="bi bi-search"></i><input name="q" value="{{ request.args.get('q','') }}" placeholder="Descripción o request ID"></div></label>
+            <label><span>Acción</span><select name="action"><option value="">Todas las acciones</option>{% for action in action_options %}<option value="{{ action.value }}" {% if request.args.get('action')==action.value %}selected{% endif %}>{{ action.label }}</option>{% endfor %}</select></label>
+            <label><span>Usuario</span><select name="user_id"><option value="">Todos los usuarios</option>{% for actor in users %}<option value="{{ actor.id }}" {% if request.args.get('user_id')==actor.id|string %}selected{% endif %}>{{ actor.name }}</option>{% endfor %}</select></label>
+            <label><span>Desde</span><input type="date" name="date_from" value="{{ request.args.get('date_from','') }}"></label>
+            <label><span>Hasta</span><input type="date" name="date_to" value="{{ request.args.get('date_to','') }}"></label>
+            <div class="audit-filter-actions">
+                <a class="workspace-btn secondary" href="{{ url_for('governance_bp.audit_explorer') }}">Limpiar</a>
+                <button class="workspace-btn" type="submit"><i class="bi bi-funnel"></i> Aplicar</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="workspace-card audit-feed-card">
+        <div class="workspace-card-head">
+            <div><h2>Actividad registrada</h2><p>Cada evento explica en lenguaje normal qué hizo la persona. Los detalles HTTP quedan como respaldo técnico.</p></div>
+            <span class="module-chip">Página {{ pagination.page }} / {{ pagination.pages or 1 }}</span>
+        </div>
+        <div class="audit-feed">
+            {% for event in events %}
+            {% set row = event.row %}{% set actor = event.actor %}{% set meta = event.meta %}
+            <article class="audit-event">
+                <div class="audit-avatar">
+                    {% if actor and actor.avatar_path %}<img src="{{ url_for('static', filename=actor.avatar_path) }}" alt="{{ actor.name }}">
+                    {% elif actor %}<span>{{ actor.name[:1]|upper }}</span>
+                    {% elif row.user_id %}<span>U</span>
+                    {% else %}<span class="system"><i class="bi bi-cpu"></i></span>{% endif %}
+                </div>
+                <div class="audit-event-main">
+                    <header>
+                        <div class="audit-title-line">
+                            <strong>{{ actor.name if actor else ('Usuario #' ~ row.user_id if row.user_id else 'Sistema') }}</strong>
+                            <span class="audit-action-text">{{ meta.label }}</span>
+                        </div>
+                        <time title="{{ row.created_at.isoformat() if row.created_at else '' }}">{{ row.created_at.strftime('%d/%m/%Y · %H:%M:%S') if row.created_at else 'Sin fecha' }}</time>
+                    </header>
+                    <p class="audit-description"><strong>Qué ocurrió:</strong> {{ meta.summary }}</p>
+                    <div class="audit-event-tags">
+                        <span class="module-chip"><i class="bi {{ meta.icon }}"></i>{{ meta.category }}</span>
+                        {% if meta.method %}<span class="module-chip subtle">{{ meta.method }}</span>{% endif %}
+                        {% if row.entity_type %}<span class="module-chip subtle">{{ row.entity_type }}{% if row.entity_id %} #{{ row.entity_id }}{% endif %}</span>{% endif %}
+                    </div>
+                    <details class="audit-technical">
+                        <summary><i class="bi bi-braces"></i> Datos técnicos</summary>
+                        <dl>
+                            <div><dt>Acción interna</dt><dd>{{ row.action or '—' }}</dd></div>
+                            <div><dt>Pantalla / operación</dt><dd>{{ meta.label }}</dd></div><div><dt>Endpoint interno</dt><dd>{{ row.endpoint or '—' }}</dd></div>
+                            <div><dt>Dirección IP</dt><dd>{{ row.ip_address or '—' }}</dd></div>
+                            <div><dt>Request ID</dt><dd>{{ row.request_id or '—' }}</dd></div>
+                        </dl>
+                    </details>
+                </div>
+            </article>
+            {% else %}
+            <div class="module-empty"><i class="bi bi-journal-x"></i><h3>No hay actividad con estos filtros</h3><p>Prueba un período más amplio o limpia los filtros.</p></div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <nav class="audit-pagination" aria-label="Paginación de auditoría">
+        <span>{{ pagination.total }} eventos · página {{ pagination.page }} de {{ pagination.pages or 1 }}</span>
+        <div>
+            {% if pagination.has_prev %}<a class="workspace-btn secondary" href="{{ url_for('governance_bp.audit_explorer', page=pagination.prev_num, q=request.args.get('q',''), action=request.args.get('action',''), audit_endpoint=request.args.get('audit_endpoint', request.args.get('endpoint','')), user_id=request.args.get('user_id',''), date_from=request.args.get('date_from',''), date_to=request.args.get('date_to','')) }}"><i class="bi bi-chevron-left"></i> Anterior</a>{% endif %}
+            {% if pagination.has_next %}<a class="workspace-btn secondary" href="{{ url_for('governance_bp.audit_explorer', page=pagination.next_num, q=request.args.get('q',''), action=request.args.get('action',''), audit_endpoint=request.args.get('audit_endpoint', request.args.get('endpoint','')), user_id=request.args.get('user_id',''), date_from=request.args.get('date_from',''), date_to=request.args.get('date_to','')) }}">Siguiente <i class="bi bi-chevron-right"></i></a>{% endif %}
+        </div>
+    </nav>
+</div>
+{% endblock %}

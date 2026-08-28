@@ -1,4 +1,6 @@
+from services.time_utils import utcnow
 from datetime import date, datetime, timedelta
+import re
 from decimal import Decimal, InvalidOperation
 
 from flask import Blueprint, abort, flash, redirect, render_template, request, session, url_for
@@ -21,7 +23,14 @@ from models.user.user import User
 from models.warehouse.warehouse import Warehouse
 from models.warehouse_location.warehouse_location import LocationStock, WarehouseLocation
 from models.warehouse_stock.warehouse_stock import WarehouseStock
-from security import generate_totp_secret, verify_totp
+from security import generate_recovery_codes, generate_totp_secret, store_recovery_codes, verify_totp
+from services.validation import BusinessRuleError, positive_money, tenant_id
+from services.quantity import as_decimal, base_quantity_from_factor, product_quantity
+from models.retail import (
+    WarehouseVariantStock, InventorySerial, InventoryLot, InventoryConditionStock, Branch,
+    SaleItemLotAllocation, SaleReturnItemLotAllocation, SaleReturnItemSerial,
+    InventorySerialEvent,
+)
 
 
 backoffice_bp = Blueprint('backoffice_bp', __name__, url_prefix='/backoffice')
@@ -36,13 +45,13 @@ def _identity():
 
 
 def _money(raw, field='Monto'):
-    try:
-        value = Decimal(str(raw or '')).quantize(Decimal('0.01'))
-    except (InvalidOperation, ValueError):
-        raise ValueError(f'{field} inválido.')
-    if value <= 0:
-        raise ValueError(f'{field} debe ser mayor que cero.')
-    return value
+    return positive_money(raw, field)
+
+
+def _optional_tenant_id(raw, field):
+    if raw is None or not str(raw).strip():
+        return None
+    return tenant_id(raw, field)
 
 
 def _audit(company_id, user_id, action, description):
@@ -52,46 +61,175 @@ def _audit(company_id, user_id, action, description):
     ))
 
 
+def _restore_available_stock(company_id, item, base_qty, sale_id):
+    """Return sellable quantity to the same warehouse/variant used by the sale."""
+    if not item.warehouse_id or item.product.product_type == ProductType.SERVICE:
+        return
+    stock = WarehouseStock.query.filter_by(
+        company_id=company_id, warehouse_id=item.warehouse_id, product_id=item.product_id,
+    ).with_for_update().first()
+    if not stock:
+        stock = WarehouseStock(
+            company_id=company_id, warehouse_id=item.warehouse_id,
+            product_id=item.product_id, quantity=0,
+        )
+        db.session.add(stock)
+    stock.quantity = as_decimal(stock.quantity) + base_qty
+    if item.variant_id:
+        variant_stock = WarehouseVariantStock.query.filter_by(
+            company_id=company_id, warehouse_id=item.warehouse_id, variant_id=item.variant_id,
+        ).with_for_update().first()
+        if not variant_stock:
+            variant_stock = WarehouseVariantStock(
+                company_id=company_id, warehouse_id=item.warehouse_id,
+                product_id=item.product_id, variant_id=item.variant_id, quantity=0,
+            )
+            db.session.add(variant_stock)
+        variant_stock.quantity = as_decimal(variant_stock.quantity) + base_qty
+    db.session.add(StockMovement(
+        company_id=company_id, user_id=session.get('user_id'), warehouse_id=item.warehouse_id, product_id=item.product_id,
+        movement_type='IN', quantity=base_qty, reason=f'Devolución venta #{sale_id}',
+    ))
+
+
+def _add_condition_stock(company_id, item, base_qty, condition, sale_id):
+    """Register a physical return that is not sellable yet.
+
+    Condition stock is deliberately separated from WarehouseStock. The movement
+    ledger still receives an IN entry so the physical arrival is auditable,
+    while availability reports continue to exclude quarantine/damaged units.
+    """
+    if not item.warehouse_id or item.product.product_type == ProductType.SERVICE:
+        return
+    row = InventoryConditionStock.query.filter_by(
+        company_id=company_id, warehouse_id=item.warehouse_id,
+        product_id=item.product_id, variant_id=item.variant_id, condition=condition,
+    ).with_for_update().first()
+    if not row:
+        row = InventoryConditionStock(
+            company_id=company_id, warehouse_id=item.warehouse_id,
+            product_id=item.product_id, variant_id=item.variant_id,
+            condition=condition, quantity=0,
+        )
+        db.session.add(row)
+    row.quantity = as_decimal(row.quantity) + base_qty
+    label = 'Cuarentena' if condition == 'QUARANTINE' else 'Dañado'
+    db.session.add(StockMovement(
+        company_id=company_id,
+        user_id=session.get('user_id'),
+        warehouse_id=item.warehouse_id,
+        product_id=item.product_id,
+        movement_type='IN',
+        quantity=base_qty,
+        reason=f'Devolución venta #{sale_id} -> {label}',
+    ))
+
+
+def _restore_lot_trace(company_id, sale_item, return_item, base_qty, disposition):
+    """Map a partial return back to the exact lots allocated on the original sale."""
+    allocations = SaleItemLotAllocation.query.filter_by(
+        company_id=company_id, sale_item_id=sale_item.id,
+    ).order_by(SaleItemLotAllocation.id.asc()).all()
+    if not allocations:
+        raise BusinessRuleError(
+            f'La venta de {sale_item.product.name} no conserva asignación de lote; '
+            'no es seguro reintegrarla automáticamente.'
+        )
+    prior_rows = db.session.query(
+        SaleReturnItemLotAllocation.lot_id,
+        func.coalesce(func.sum(SaleReturnItemLotAllocation.quantity), 0),
+    ).filter(
+        SaleReturnItemLotAllocation.company_id == company_id,
+        SaleReturnItemLotAllocation.sale_item_id == sale_item.id,
+    ).group_by(SaleReturnItemLotAllocation.lot_id).all()
+    prior = {lot_id: as_decimal(qty) for lot_id, qty in prior_rows}
+    remaining = as_decimal(base_qty)
+    for allocation in allocations:
+        if remaining <= 0:
+            break
+        available = max(as_decimal(allocation.quantity) - prior.get(allocation.lot_id, Decimal('0')), Decimal('0'))
+        if available <= 0:
+            continue
+        used = min(available, remaining)
+        lot = InventoryLot.query.filter_by(id=allocation.lot_id, company_id=company_id).with_for_update().first()
+        if not lot:
+            raise BusinessRuleError('No se encontró uno de los lotes originales de la venta.')
+        if disposition == 'AVAILABLE' and lot.expires_at and lot.expires_at < date.today():
+            raise BusinessRuleError(
+                f'El lote {lot.lot_number} está vencido; devuélvelo a Cuarentena o Dañado, no a Disponible.'
+            )
+        db.session.add(SaleReturnItemLotAllocation(
+            company_id=company_id, return_item_id=return_item.id, sale_item_id=sale_item.id,
+            lot_id=lot.id, quantity=used, disposition=disposition,
+        ))
+        if disposition == 'AVAILABLE':
+            lot.quantity = as_decimal(lot.quantity) + used
+            lot.status = 'AVAILABLE'
+        remaining -= used
+    if remaining > 0:
+        raise BusinessRuleError(
+            f'La cantidad devuelta de {sale_item.product.name} supera la trazabilidad de lotes disponible.'
+        )
+
+
+def _restore_serial_trace(company_id, sale_item, return_item, base_qty, disposition, selected_ids):
+    required = as_decimal(base_qty)
+    if required != required.to_integral_value():
+        raise BusinessRuleError('Un producto serializado solo puede devolverse en unidades enteras.')
+    expected = int(required)
+    selected_ids = [int(value) for value in selected_ids if str(value).isdigit()]
+    if len(set(selected_ids)) != expected:
+        raise BusinessRuleError(
+            f'Selecciona exactamente {expected} serial(es)/IMEI para {sale_item.product.name}.'
+        )
+    previously_returned = {
+        row.serial_id for row in SaleReturnItemSerial.query.filter_by(
+            company_id=company_id, sale_item_id=sale_item.id,
+        ).all()
+    }
+    rows = InventorySerial.query.filter(
+        InventorySerial.company_id == company_id,
+        InventorySerial.id.in_(selected_ids),
+        InventorySerial.product_id == sale_item.product_id,
+    ).with_for_update().all()
+    if len(rows) != expected:
+        raise BusinessRuleError('Uno o más seriales seleccionados no pertenecen a esta empresa/producto.')
+    for serial in rows:
+        if serial.id in previously_returned:
+            raise BusinessRuleError(f'El serial {serial.serial_number} ya fue devuelto anteriormente.')
+        sold_here = serial.sale_item_id == sale_item.id or InventorySerialEvent.query.filter_by(
+            company_id=company_id, serial_id=serial.id, sale_item_id=sale_item.id, event_type='SOLD'
+        ).first() is not None
+        if not sold_here:
+            raise BusinessRuleError(f'El serial {serial.serial_number} no pertenece a esta venta.')
+        db.session.add(SaleReturnItemSerial(
+            company_id=company_id, return_item_id=return_item.id, sale_item_id=sale_item.id,
+            serial_id=serial.id, disposition=disposition,
+        ))
+        if disposition == 'AVAILABLE':
+            serial.status = 'AVAILABLE'
+            serial.sale_item_id = None
+            serial.warehouse_id = sale_item.warehouse_id
+        elif disposition == 'QUARANTINE':
+            serial.status = 'QUARANTINE'
+            serial.sale_item_id = None
+            serial.warehouse_id = sale_item.warehouse_id
+        elif disposition == 'DAMAGED':
+            serial.status = 'SCRAPPED'
+            serial.sale_item_id = None
+            serial.warehouse_id = sale_item.warehouse_id
+        db.session.add(InventorySerialEvent(
+            company_id=company_id, serial_id=serial.id, event_type='RETURNED',
+            sale_item_id=sale_item.id, return_item_id=return_item.id,
+            warehouse_id=sale_item.warehouse_id,
+            notes=f'Devolución · destino {disposition}',
+        ))
+
+
 def refresh_system_notifications(company_id):
-    """Create actionable alerts once; the unique key prevents notification spam."""
-    low_rows = db.session.query(Product.id, Product.name, func.sum(WarehouseStock.quantity).label('qty')).join(
-        WarehouseStock, WarehouseStock.product_id == Product.id
-    ).filter(Product.company_id == company_id, Product.status.is_(True)).group_by(Product.id, Product.name, Product.min_stock).having(
-        func.sum(WarehouseStock.quantity) <= Product.min_stock
-    ).limit(30).all()
-    active_keys = set()
-    for row in low_rows:
-        key = f'low-stock:{row.id}'
-        active_keys.add(key)
-        if not AppNotification.query.filter_by(company_id=company_id, dedupe_key=key).first():
-            db.session.add(AppNotification(
-                company_id=company_id, level='WARNING', title='Stock bajo',
-                message=f'{row.name} tiene {int(row.qty or 0)} unidades disponibles.',
-                link=url_for('products_bp.view_product', product_id=row.id), dedupe_key=key,
-            ))
-    overdue = SupplierBill.query.filter(
-        SupplierBill.company_id == company_id, SupplierBill.status != 'PAID',
-        SupplierBill.due_date.isnot(None), SupplierBill.due_date < date.today(),
-    ).limit(30).all()
-    for bill in overdue:
-        key = f'overdue-bill:{bill.id}'
-        active_keys.add(key)
-        if not AppNotification.query.filter_by(company_id=company_id, dedupe_key=key).first():
-            db.session.add(AppNotification(
-                company_id=company_id, level='DANGER', title='Cuenta vencida',
-                message=f'La cuenta {bill.document_number} tiene un balance de RD$ {bill.balance:,.2f}.',
-                link=url_for('backoffice_bp.payables'), dedupe_key=key,
-            ))
-    stale = AppNotification.query.filter(
-        AppNotification.company_id == company_id,
-        AppNotification.read_at.is_(None),
-        or_(AppNotification.dedupe_key.like('low-stock:%'), AppNotification.dedupe_key.like('overdue-bill:%')),
-    ).all()
-    now = datetime.utcnow()
-    for notification in stale:
-        if notification.dedupe_key not in active_keys:
-            notification.read_at = now
-    db.session.commit()
+    """Evaluate the configurable notification rules used by the workspace."""
+    from services.notification_rules import evaluate_notification_rules
+    return evaluate_notification_rules(company_id)
 
 
 @backoffice_bp.get('/')
@@ -117,15 +255,49 @@ def overview():
 @backoffice_bp.route('/returns', methods=['GET'])
 def returns():
     company_id, user_id = _identity()
-    rows = SaleReturn.query.filter_by(company_id=company_id).order_by(SaleReturn.created_at.desc()).all()
-    eligible_sales = Sale.query.filter_by(company_id=company_id, status='COMPLETED').order_by(Sale.created_at.desc()).limit(100).all()
-    return render_template('backoffice/returns.html', user=db.session.get(User, user_id), rows=rows, eligible_sales=eligible_sales)
+    rows = SaleReturn.query.filter_by(company_id=company_id).order_by(SaleReturn.created_at.desc()).limit(250).all()
+    sale_ref = (request.args.get('sale') or '').strip()
+    selected_sale = None
+    selected_returned = Decimal('0')
+    if sale_ref:
+        # Operators commonly type #123, VEN-000123 or simply 123. Only the
+        # numeric sale id is trusted and tenant/status filters always apply.
+        match = re.fullmatch(r'(?:#|VENTA[- ]?|VEN[- ]?)?0*(\d+)', sale_ref, flags=re.IGNORECASE)
+        if not match:
+            flash('Número de venta no válido. Escribe, por ejemplo, 125, #125 o VEN-000125.', 'danger')
+        else:
+            sale_id = int(match.group(1))
+            selected_sale = Sale.query.filter_by(
+                id=sale_id, company_id=company_id, status='COMPLETED'
+            ).first()
+            if not selected_sale:
+                flash(
+                    f'No encontramos una venta completada #{sale_id} en esta empresa. '
+                    'Verifica el número antes de iniciar la devolución.',
+                    'danger',
+                )
+            else:
+                selected_returned = db.session.query(func.coalesce(func.sum(SaleReturn.total_refund), 0)).filter(
+                    SaleReturn.company_id == company_id,
+                    SaleReturn.sale_id == selected_sale.id,
+                    SaleReturn.status == 'COMPLETED',
+                ).scalar() or Decimal('0')
+    return render_template(
+        'backoffice/returns.html',
+        user=db.session.get(User, user_id),
+        rows=rows,
+        sale_ref=sale_ref,
+        selected_sale=selected_sale,
+        selected_returned=selected_returned,
+    )
 
 
 @backoffice_bp.route('/returns/new/<int:sale_id>', methods=['GET', 'POST'])
 def create_return(sale_id):
     company_id, user_id = _identity()
-    sale = Sale.query.filter_by(id=sale_id, company_id=company_id, status='COMPLETED').first_or_404()
+    sale = Sale.query.filter_by(
+        id=sale_id, company_id=company_id, status='COMPLETED'
+    ).with_for_update().first_or_404()
     returned = dict(db.session.query(SaleReturnItem.sale_item_id, func.coalesce(func.sum(SaleReturnItem.quantity), 0)).join(
         SaleReturn, SaleReturn.id == SaleReturnItem.return_id
     ).filter(SaleReturn.company_id == company_id, SaleReturn.sale_id == sale.id,
@@ -137,38 +309,56 @@ def create_return(sale_id):
             return redirect(request.url)
         operation = SaleReturn(company_id=company_id, sale_id=sale.id, user_id=user_id,
                                reason=reason, refund_method=(request.form.get('refund_method') or 'ORIGINAL')[:30],
-                               restocked=request.form.get('restock') == '1')
+                               restocked=False)
+        db.session.add(operation)
         total = Decimal('0')
         selected = 0
+        any_available_restock = False
         try:
             for item in sale.items:
-                qty = int(request.form.get(f'quantity_{item.id}', 0) or 0)
-                available = int(item.quantity) - int(returned.get(item.id, 0) or 0)
+                qty = product_quantity(
+                    request.form.get(f'quantity_{item.id}', 0) or 0,
+                    f'Cantidad de {item.product.name}',
+                    product=item.product, uom=item.uom, allow_zero=True,
+                )
+                available = as_decimal(item.quantity) - as_decimal(returned.get(item.id, 0) or 0)
                 if qty < 0 or qty > available:
                     raise ValueError(f'Cantidad inválida para {item.product.name}.')
                 if not qty:
                     continue
                 selected += 1
                 total += Decimal(item.price) * qty
-                operation.items.append(SaleReturnItem(
+                disposition = (request.form.get(f'disposition_{item.id}') or 'AVAILABLE').upper()
+                if disposition not in {'AVAILABLE', 'QUARANTINE', 'DAMAGED', 'NONE'}:
+                    raise BusinessRuleError(f'Destino de devolución inválido para {item.product.name}.')
+                return_item = SaleReturnItem(
                     sale_item_id=item.id, product_id=item.product_id, warehouse_id=item.warehouse_id,
-                    quantity=qty, unit_price=item.price,
-                ))
-                if operation.restocked and item.warehouse_id and item.product.product_type != ProductType.SERVICE:
-                    stock = WarehouseStock.query.filter_by(company_id=company_id, warehouse_id=item.warehouse_id,
-                                                           product_id=item.product_id).with_for_update().first()
-                    if not stock:
-                        stock = WarehouseStock(company_id=company_id, warehouse_id=item.warehouse_id,
-                                               product_id=item.product_id, quantity=0)
-                        db.session.add(stock)
-                    stock.quantity = int(stock.quantity or 0) + qty
-                    db.session.add(StockMovement(company_id=company_id, warehouse_id=item.warehouse_id,
-                                                 product_id=item.product_id, movement_type='IN', quantity=qty,
-                                                 reason=f'Devolución venta #{sale.id}'))
+                    quantity=qty, unit_price=item.price, variant_id=item.variant_id, uom_id=item.uom_id, uom_factor=item.uom_factor,
+                    disposition=disposition,
+                )
+                operation.items.append(return_item)
+                db.session.flush()
+                base_qty = base_quantity_from_factor(qty, item.uom_factor or 1, f'Cantidad base de {item.product.name}')
+
+                tracking = getattr(item.product, 'tracking', 'NONE') or 'NONE'
+                if tracking == 'LOT':
+                    _restore_lot_trace(company_id, item, return_item, base_qty, disposition)
+                elif tracking == 'SERIAL':
+                    _restore_serial_trace(
+                        company_id, item, return_item, base_qty, disposition,
+                        request.form.getlist(f'serial_{item.id}'),
+                    )
+
+                if item.product.product_type != ProductType.SERVICE:
+                    if disposition == 'AVAILABLE':
+                        _restore_available_stock(company_id, item, base_qty, sale.id)
+                        any_available_restock = True
+                    elif disposition in {'QUARANTINE', 'DAMAGED'}:
+                        _add_condition_stock(company_id, item, base_qty, disposition, sale.id)
             if not selected:
                 raise ValueError('Selecciona al menos un producto.')
             operation.total_refund = total
-            db.session.add(operation)
+            operation.restocked = any_available_restock
             db.session.flush()
             # Keep the sale as COMPLETED: the return is an immutable linked
             # operation and reports subtract it without destroying the invoice history.
@@ -176,9 +366,9 @@ def create_return(sale_id):
                 sale.balance = max(Decimal(sale.balance or 0) - total, Decimal('0'))
             _audit(company_id, user_id, 'SALE_RETURN', f'Devolución #{operation.id} de venta #{sale.id} por RD$ {total}')
             db.session.commit()
-            flash('Devolución registrada e inventario actualizado.', 'success')
+            flash('Devolución registrada. El reembolso, la trazabilidad y el movimiento de inventario quedaron vinculados a la venta original.', 'success')
             return redirect(url_for('backoffice_bp.returns'))
-        except (ValueError, TypeError) as exc:
+        except (BusinessRuleError, ValueError, TypeError) as exc:
             db.session.rollback()
             flash(str(exc), 'danger')
     return render_template('backoffice/return_form.html', user=db.session.get(User, user_id), sale=sale, returned=returned)
@@ -223,15 +413,15 @@ def payables():
     company_id, user_id = _identity()
     if request.method == 'POST':
         try:
-            supplier_id = int(request.form.get('supplier_id') or 0)
-            supplier = Supplier.query.filter_by(id=supplier_id, company_id=company_id).first()
+            supplier_id = tenant_id(request.form.get('supplier_id'), 'Proveedor')
+            supplier = Supplier.query.filter_by(id=supplier_id, company_id=company_id).filter(Supplier.archived_at.is_(None)).first()
             if not supplier:
                 raise ValueError('Proveedor inválido.')
             document = (request.form.get('document_number') or '').strip()
             if not document:
                 raise ValueError('Indica el número del documento.')
             due_date = datetime.strptime(request.form['due_date'], '%Y-%m-%d').date() if request.form.get('due_date') else None
-            purchase_order_id = int(request.form['purchase_order_id']) if request.form.get('purchase_order_id') else None
+            purchase_order_id = _optional_tenant_id(request.form.get('purchase_order_id'), 'Orden de compra')
             if purchase_order_id and not PurchaseOrder.query.filter_by(id=purchase_order_id, company_id=company_id).first():
                 raise ValueError('La orden de compra no pertenece a esta empresa.')
             bill = SupplierBill(company_id=company_id, supplier_id=supplier.id,
@@ -247,7 +437,7 @@ def payables():
             flash(str(exc), 'danger')
         return redirect(url_for('backoffice_bp.payables'))
     bills = SupplierBill.query.filter_by(company_id=company_id).order_by(SupplierBill.created_at.desc()).all()
-    suppliers = Supplier.query.filter_by(company_id=company_id).order_by(Supplier.name).all()
+    suppliers = Supplier.query.filter_by(company_id=company_id).filter(Supplier.archived_at.is_(None)).order_by(Supplier.name).all()
     orders = PurchaseOrder.query.filter_by(company_id=company_id).order_by(PurchaseOrder.created_at.desc()).limit(100).all()
     total = sum((b.balance for b in bills if b.status != 'PAID'), Decimal('0'))
     return render_template('backoffice/payables.html', user=db.session.get(User, user_id), bills=bills,
@@ -279,13 +469,28 @@ def pay_supplier(bill_id):
 @backoffice_bp.route('/expenses', methods=['GET', 'POST'])
 def expenses():
     company_id, user_id = _identity()
+    operator = db.session.get(User, user_id)
+    branches = Branch.query.filter_by(company_id=company_id, status=True).order_by(Branch.is_main.desc(), Branch.name.asc()).all()
+    branch_locked = bool(operator and operator.role not in {'admin', 'superadmin'} and operator.branch_id)
+    requested_branch_id = request.values.get('branch_id', type=int)
+    default_branch_id = (
+        operator.branch_id if branch_locked else
+        requested_branch_id or session.get('cash_branch_id') or (operator.branch_id if operator else None)
+    )
+    selected_branch = next((branch for branch in branches if branch.id == default_branch_id), None)
+    if not selected_branch and branches:
+        selected_branch = branches[0]
+
     if request.method == 'POST':
         try:
+            if not selected_branch:
+                raise ValueError('No hay una sucursal activa para registrar este gasto. Configura una sucursal primero.')
             expense_date = datetime.strptime(request.form.get('expense_date') or '', '%Y-%m-%d').date()
-            supplier_id = int(request.form['supplier_id']) if request.form.get('supplier_id') else None
-            if supplier_id and not Supplier.query.filter_by(id=supplier_id, company_id=company_id).first():
+            supplier_id = _optional_tenant_id(request.form.get('supplier_id'), 'Proveedor')
+            if supplier_id and not Supplier.query.filter_by(id=supplier_id, company_id=company_id).filter(Supplier.archived_at.is_(None)).first():
                 raise ValueError('El proveedor no pertenece a esta empresa.')
             expense = Expense(company_id=company_id, user_id=user_id,
+                              branch_id=selected_branch.id,
                               supplier_id=supplier_id,
                               category=(request.form.get('category') or '').strip()[:80],
                               description=(request.form.get('description') or '').strip()[:255],
@@ -296,42 +501,56 @@ def expenses():
             if not expense.category or not expense.description:
                 raise ValueError('Categoría y descripción son obligatorias.')
             db.session.add(expense)
-            _audit(company_id, user_id, 'EXPENSE', f'Gasto {expense.description} por RD$ {expense.amount}')
+            _audit(company_id, user_id, 'EXPENSE', f'Gasto {expense.description} por RD$ {expense.amount} · {selected_branch.name}')
             db.session.commit()
-            flash('Gasto registrado.', 'success')
+            flash(f'Gasto registrado en {selected_branch.name}. Si fue en efectivo, afectará únicamente el arqueo de esa sucursal.', 'success')
         except (ValueError, TypeError) as exc:
             db.session.rollback()
             flash(str(exc), 'danger')
-        return redirect(url_for('backoffice_bp.expenses'))
-    rows = Expense.query.filter_by(company_id=company_id).order_by(Expense.expense_date.desc(), Expense.id.desc()).limit(250).all()
-    suppliers = Supplier.query.filter_by(company_id=company_id).order_by(Supplier.name).all()
+        return redirect(url_for('backoffice_bp.expenses', branch_id=(selected_branch.id if selected_branch else None)))
+    rows_query = Expense.query.filter_by(company_id=company_id)
+    if selected_branch:
+        rows_query = rows_query.filter(Expense.branch_id == selected_branch.id)
+    rows = rows_query.order_by(Expense.expense_date.desc(), Expense.id.desc()).limit(250).all()
+    suppliers = Supplier.query.filter_by(company_id=company_id).filter(Supplier.archived_at.is_(None)).order_by(Supplier.name).all()
     total = sum((Decimal(row.amount or 0) for row in rows), Decimal('0'))
-    return render_template('backoffice/expenses.html', user=db.session.get(User, user_id), rows=rows, suppliers=suppliers, total=total, today=date.today())
+    return render_template('backoffice/expenses.html', user=operator, rows=rows, suppliers=suppliers, total=total, today=date.today(), branches=branches, selected_branch=selected_branch, branch_locked=branch_locked)
 
 
 @backoffice_bp.route('/inventory-counts', methods=['GET', 'POST'])
 def inventory_counts():
     company_id, user_id = _identity()
     if request.method == 'POST':
-        warehouse_id = int(request.form.get('warehouse_id') or 0)
-        warehouse = Warehouse.query.filter_by(id=warehouse_id, company_id=company_id).first_or_404()
-        location_id = int(request.form['location_id']) if request.form.get('location_id') else None
-        location = None
-        if location_id:
-            location = WarehouseLocation.query.filter_by(id=location_id, warehouse_id=warehouse.id, company_id=company_id).first_or_404()
-        count = InventoryCount(company_id=company_id, warehouse_id=warehouse.id, location_id=location_id,
-                               created_by=user_id, notes=(request.form.get('notes') or '').strip()[:255] or None)
-        if location:
-            rows = LocationStock.query.filter_by(company_id=company_id, location_id=location.id).all()
-        else:
-            rows = WarehouseStock.query.filter_by(company_id=company_id, warehouse_id=warehouse.id).all()
-        current = {row.product_id: int(row.quantity or 0) for row in rows}
-        products = Product.query.filter(Product.company_id == company_id, Product.status.is_(True),
-                                        Product.product_type != ProductType.SERVICE).order_by(Product.name).all()
-        for product in products:
-            count.items.append(InventoryCountItem(product_id=product.id, expected_quantity=current.get(product.id, 0)))
-        db.session.add(count)
-        db.session.commit()
+        try:
+            warehouse_id = tenant_id(request.form.get('warehouse_id'), 'Almacén')
+            warehouse = Warehouse.query.filter_by(id=warehouse_id, company_id=company_id).first()
+            if not warehouse:
+                raise BusinessRuleError('El almacén seleccionado no pertenece a esta empresa.')
+            location_id = _optional_tenant_id(request.form.get('location_id'), 'Ubicación')
+            location = None
+            if location_id:
+                location = WarehouseLocation.query.filter_by(
+                    id=location_id, warehouse_id=warehouse.id, company_id=company_id, status=True,
+                ).first()
+                if not location:
+                    raise BusinessRuleError('La ubicación seleccionada no pertenece al almacén.')
+            count = InventoryCount(company_id=company_id, warehouse_id=warehouse.id, location_id=location_id,
+                                   created_by=user_id, notes=(request.form.get('notes') or '').strip()[:255] or None)
+            if location:
+                rows = LocationStock.query.filter_by(company_id=company_id, location_id=location.id).all()
+            else:
+                rows = WarehouseStock.query.filter_by(company_id=company_id, warehouse_id=warehouse.id).all()
+            current = {row.product_id: as_decimal(row.quantity) for row in rows}
+            products = Product.query.filter(Product.company_id == company_id, Product.status.is_(True), Product.archived_at.is_(None),
+                                            Product.product_type != ProductType.SERVICE).order_by(Product.name).all()
+            for product in products:
+                count.items.append(InventoryCountItem(product_id=product.id, expected_quantity=current.get(product.id, 0)))
+            db.session.add(count)
+            db.session.commit()
+        except BusinessRuleError as exc:
+            db.session.rollback()
+            flash(str(exc), 'danger')
+            return redirect(url_for('backoffice_bp.inventory_counts'))
         flash('Conteo creado. Ahora registra las cantidades físicas.', 'success')
         return redirect(url_for('backoffice_bp.inventory_count_detail', count_id=count.id))
     rows = InventoryCount.query.filter_by(company_id=company_id).order_by(InventoryCount.created_at.desc()).all()
@@ -349,9 +568,10 @@ def inventory_count_detail(count_id):
         for item in count.items:
             raw = request.form.get(f'quantity_{item.id}')
             if raw not in (None, ''):
-                value = int(raw)
-                if value < 0:
-                    flash('Las cantidades no pueden ser negativas.', 'danger')
+                try:
+                    value = product_quantity(raw, 'Cantidad contada', product=item.product, uom=item.product.base_uom, allow_zero=True)
+                except BusinessRuleError as exc:
+                    flash(str(exc), 'danger')
                     return redirect(request.url)
                 item.counted_quantity = value
         db.session.commit()
@@ -383,19 +603,19 @@ def approve_inventory_count(count_id):
             warehouse_stock = WarehouseStock(company_id=company_id, warehouse_id=count.warehouse_id,
                                              product_id=item.product_id, quantity=0)
             db.session.add(warehouse_stock)
-        new_warehouse_quantity = int(warehouse_stock.quantity or 0) + difference if count.location_id else item.counted_quantity
+        new_warehouse_quantity = as_decimal(warehouse_stock.quantity) + as_decimal(difference) if count.location_id else as_decimal(item.counted_quantity)
         if new_warehouse_quantity < 0:
             db.session.rollback()
             flash(f'El ajuste de {item.product.name} produciría stock negativo en el almacén.', 'danger')
             return redirect(url_for('backoffice_bp.inventory_count_detail', count_id=count.id))
         warehouse_stock.quantity = new_warehouse_quantity
         if difference:
-            db.session.add(StockMovement(company_id=company_id, warehouse_id=count.warehouse_id,
+            db.session.add(StockMovement(company_id=company_id, user_id=session.get('user_id'), warehouse_id=count.warehouse_id,
                                          product_id=item.product_id, movement_type='IN' if difference > 0 else 'OUT',
                                          quantity=abs(difference), reason=f'Ajuste conteo físico #{count.id}'))
     count.status = 'APPROVED'
     count.approved_by = user_id
-    count.approved_at = datetime.utcnow()
+    count.approved_at = utcnow()
     _audit(company_id, user_id, 'INVENTORY_COUNT_APPROVED', f'Conteo físico #{count.id} aprobado')
     db.session.commit()
     flash('Conteo aprobado y existencias conciliadas.', 'success')
@@ -423,7 +643,7 @@ def notifications_read_all():
     AppNotification.query.filter(
         AppNotification.company_id == company_id, AppNotification.read_at.is_(None),
         or_(AppNotification.user_id.is_(None), AppNotification.user_id == user_id),
-    ).update({'read_at': datetime.utcnow()}, synchronize_session=False)
+    ).update({'read_at': utcnow()}, synchronize_session=False)
     db.session.commit()
     return redirect(url_for('backoffice_bp.notifications'))
 
@@ -436,7 +656,7 @@ def notification_open(notification_id):
         AppNotification.company_id == company_id,
         or_(AppNotification.user_id.is_(None), AppNotification.user_id == user_id),
     ).first_or_404()
-    row.read_at = row.read_at or datetime.utcnow()
+    row.read_at = row.read_at or utcnow()
     db.session.commit()
     target = row.link or url_for('backoffice_bp.notifications')
     if not target.startswith('/') or target.startswith('//'):
@@ -460,6 +680,9 @@ def security_settings():
                 flash('Código inválido o vencido.', 'danger')
                 return redirect(request.url)
             user.two_factor_enabled = True
+            recovery_codes = generate_recovery_codes()
+            store_recovery_codes(user, recovery_codes)
+            session['new_recovery_codes'] = recovery_codes
             _audit(company_id, user_id, 'TWO_FACTOR_ENABLED', 'Autenticación de dos factores activada')
             db.session.commit()
             flash('Autenticación de dos factores activada.', 'success')
@@ -469,11 +692,28 @@ def security_settings():
                 return redirect(request.url)
             user.two_factor_enabled = False
             user.totp_secret = None
+            user.totp_recovery_codes = None
             _audit(company_id, user_id, 'TWO_FACTOR_DISABLED', 'Autenticación de dos factores desactivada')
             db.session.commit()
             flash('Autenticación de dos factores desactivada.', 'success')
+        elif action == 'regenerate':
+            if not user.check_password(request.form.get('password') or ''):
+                flash('Contraseña incorrecta.', 'danger')
+                return redirect(request.url)
+            if not verify_totp(user.totp_secret, request.form.get('code')):
+                flash('Código temporal inválido o vencido.', 'danger')
+                return redirect(request.url)
+            recovery_codes = generate_recovery_codes()
+            store_recovery_codes(user, recovery_codes)
+            session['new_recovery_codes'] = recovery_codes
+            _audit(company_id, user_id, 'TWO_FACTOR_RECOVERY_REGENERATED', 'Códigos de recuperación regenerados')
+            db.session.commit()
+            flash('Códigos regenerados. Los anteriores quedaron invalidados.', 'success')
         return redirect(request.url)
     issuer = 'OrbisERP'
     account = user.email
     otp_uri = f'otpauth://totp/{issuer}:{account}?secret={user.totp_secret}&issuer={issuer}&digits=6&period=30' if user.totp_secret else None
-    return render_template('backoffice/security.html', user=user, otp_uri=otp_uri)
+    return render_template(
+        'backoffice/security.html', user=user, otp_uri=otp_uri,
+        recovery_codes=session.pop('new_recovery_codes', None),
+    )

@@ -1,10 +1,44 @@
 {# Shared application chrome. This partial intentionally contains no html/head/body tags. #}
-<script>
+{% if not shell_assets_loaded|default(false) %}
+<script nonce="{{ csp_nonce() if csp_nonce is defined else '' }}">
     (() => {
-        const saved = localStorage.getItem('theme');
-        const dark = saved === 'dark' || (!saved && matchMedia('(prefers-color-scheme: dark)').matches);
+        let saved = null;
+        try {
+            saved = localStorage.getItem('theme') || localStorage.getItem('orbis-theme');
+        } catch (_error) {
+            saved = null;
+        }
+        const dark = saved === 'dark' || (saved !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+        const theme = dark ? 'dark' : 'light';
+        document.documentElement.classList.add('orbis-authenticated');
         document.documentElement.classList.toggle('dark', dark);
-        document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.style.colorScheme = theme;
+        const serverTabletMode = {{ 'true' if tablet_mode_active|default(session.get('tablet_mode')) else 'false' }};
+        let canonicalUiMode = null;
+        let legacyTabletOn = false;
+        let storedTabletMode = false;
+        try {
+            const uiMatch = document.cookie.match(/(?:^|;\s*)orbis_ui_mode=(tablet|desktop)(?:;|$)/);
+            canonicalUiMode = uiMatch ? uiMatch[1] : null;
+            legacyTabletOn = /(?:^|;\s*)orbis_tablet_mode=1(?:;|$)/.test(document.cookie);
+            storedTabletMode = localStorage.getItem('orbis-tablet-mode') === '1';
+        } catch (_error) {
+            storedTabletMode = false;
+        }
+        // The signed server session always wins. A stale legacy `0` cookie is
+        // deliberately ignored; only the canonical desktop cookie/exit route
+        // may turn tablet mode off.
+        const tabletMode = serverTabletMode
+            || canonicalUiMode === 'tablet'
+            || (canonicalUiMode !== 'desktop' && (legacyTabletOn || storedTabletMode));
+        try {
+            if (tabletMode) localStorage.setItem('orbis-tablet-mode', '1');
+            else if (canonicalUiMode === 'desktop') localStorage.removeItem('orbis-tablet-mode');
+        } catch (_error) {}
+        document.documentElement.classList.toggle('tablet-mode', tabletMode);
+        document.documentElement.classList.toggle('tablet-full-width-profile', tabletMode);
+        document.documentElement.dataset.tabletMode = tabletMode ? 'true' : 'false';
     })();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,7 +48,25 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/base_css/base.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/left.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/commercial.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ui_unification.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ux_polish.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/feedback.css') }}">
 <link rel="shortcut icon" href="{{ url_for('static', filename='assets/isotipo.png') }}" type="image/x-icon">
+<script src="{{ url_for('static', filename='js/theme-sync.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/tablet_runtime.js', v='20260827-tablet10') }}" defer></script>
+<script src="{{ url_for('static', filename='js/feedback.js') }}" defer></script>
+
+{% endif %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app_final.css', v='20260827-tablet10') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tablet_mode.css', v='20260827-tablet10') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tablet_responsive.css', v='20260827-tablet10') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tablet_experience.css', v='20260827-tablet10') }}">
+
+
+{% if company_readonly|default(false) and session.get('user_role') != 'superadmin' %}
+<div class="company-readonly-banner" role="alert"><i class="bi bi-lock-fill"></i><span><strong>Modo solo lectura</strong><small>Puedes consultar información, pero no se guardarán altas, cambios, cobros, recepciones ni eliminaciones hasta que un administrador maestro reactive la escritura.</small></span></div>
+{% endif %}
 
 {% if active_announcement %}
 <div class="global-broadcast-banner announcement-{{ active_announcement.type }}" role="status">
@@ -35,7 +87,7 @@
             <span class="brand-text hide-collapsed"><strong class="brand-name">{{ user.company.name if user and user.company else 'OrbisERP' }}</strong><span class="brand-meta">Gestión comercial</span></span>
         </a>
         <a class="user-widget" href="{{ url_for('perfil_bp.perfil') }}">
-            <span class="user-avatar">{{ (user.name | first | upper) if user and user.name else 'U' }}</span>
+            <span class="user-avatar">{% if user and user.avatar_path %}<img src="{{ url_for('static', filename=user.avatar_path) }}" alt="Foto de {{ user.name if user is defined and user else 'Sistema' }}">{% else %}{{ (user.name | first | upper) if user and user.name else 'U' }}{% endif %}</span>
             <span class="user-info hide-collapsed"><strong>{{ user.name if user and user.name else 'Usuario' }}</strong><small>{{ 'Administrador' if session.get('user_role') == 'admin' else session.get('user_role', 'Usuario') | capitalize }}</small></span>
             <i class="bi bi-chevron-right hide-collapsed" aria-hidden="true"></i>
         </a>
@@ -43,41 +95,44 @@
     </div>
 
     <nav class="sidebar-nav">
-        <section class="nav-section" data-nav-group>
-            <span class="section-title hide-collapsed">Inicio</span>
+        <section class="nav-section" data-nav-group data-nav-section="home">
+            <button type="button" class="section-title nav-section-toggle hide-collapsed" aria-expanded="true"><span>Inicio</span><i class="bi bi-chevron-down" aria-hidden="true"></i></button>
             <div class="nav-items">
-                {% if can('dashboard.view') %}<a href="{{ url_for('dashboard_bp.dashboard') }}" class="nav-item {% if request.path == '/dashboard' %}active{% endif %}" data-nav-label="resumen inicio dashboard"><span class="nav-icon"><i class="bi bi-grid-1x2-fill"></i></span><span class="nav-label hide-collapsed">Resumen</span><span class="nav-tooltip">Resumen</span></a>{% endif %}
+                {% if can('dashboard.view') %}<a href="{{ url_for('dashboard_bp.dashboard') }}" class="nav-item {% if request.path == '/dashboard' %}active{% endif %}" data-nav-label="resumen inicio dashboard ejecutivo margen cartera kpi"><span class="nav-icon"><i class="bi bi-grid-1x2-fill"></i></span><span class="nav-label hide-collapsed">Resumen</span><span class="nav-tooltip">Resumen</span></a>{% endif %}
             </div>
         </section>
 
-        <section class="nav-section" data-nav-group>
-            <span class="section-title hide-collapsed">Ventas y clientes</span>
+        <section class="nav-section" data-nav-group data-nav-section="sales">
+            <button type="button" class="section-title nav-section-toggle hide-collapsed" aria-expanded="true"><span>Ventas y clientes</span><i class="bi bi-chevron-down" aria-hidden="true"></i></button>
             <div class="nav-items">
                 {% if can('sales.create') %}<a href="{{ url_for('sales_bp.create_sale') }}" class="nav-item nav-item--primary {% if request.path == '/sales/create' %}active{% endif %}" data-nav-label="nueva venta facturar cobrar"><span class="nav-icon"><i class="bi bi-plus-lg"></i></span><span class="nav-label hide-collapsed">Nueva venta</span><span class="nav-tooltip">Nueva venta</span></a>{% endif %}
                 {% if can('sales.view') %}<a href="{{ url_for('sales_bp.list_sales') }}" class="nav-item {% if request.path.startswith('/sales') and request.path != '/sales/create' %}active{% endif %}" data-nav-label="ventas historial cotizaciones"><span class="nav-icon"><i class="bi bi-receipt"></i></span><span class="nav-label hide-collapsed">Ventas</span><span class="nav-tooltip">Ventas</span></a>{% endif %}
                 {% if can('clients.view') %}<a href="{{ url_for('client_bp.list_clients') }}" class="nav-item {% if request.path.startswith('/clients') %}active{% endif %}" data-nav-label="clientes compradores contactos"><span class="nav-icon"><i class="bi bi-people"></i></span><span class="nav-label hide-collapsed">Clientes</span><span class="nav-tooltip">Clientes</span></a>{% endif %}
                 {% if can('crm.view') %}<a href="{{ url_for('crm_bp.crm_index') }}" class="nav-item {% if request.path.startswith('/crm') %}active{% endif %}" data-nav-label="crm seguimiento oportunidades tareas"><span class="nav-icon"><i class="bi bi-chat-square-heart"></i></span><span class="nav-label hide-collapsed">Seguimiento CRM</span><span class="nav-tooltip">CRM</span></a>{% endif %}
+                {% if can('sales.warranties') %}<a href="{{ url_for('retail_bp.warranties') }}" class="nav-item {% if request.path.startswith('/retail/warranties') %}active{% endif %}" data-nav-label="garantías postventa seriales imei reclamaciones"><span class="nav-icon"><i class="bi bi-shield-check"></i></span><span class="nav-label hide-collapsed">Garantías</span><span class="nav-tooltip">Garantías</span></a>{% endif %}
             </div>
         </section>
 
-        <section class="nav-section" data-nav-group>
-            <span class="section-title hide-collapsed">Inventario</span>
+        <section class="nav-section" data-nav-group data-nav-section="inventory">
+            <button type="button" class="section-title nav-section-toggle hide-collapsed" aria-expanded="true"><span>Inventario</span><i class="bi bi-chevron-down" aria-hidden="true"></i></button>
             <div class="nav-items">
                 {% if can('products.view') %}<a href="{{ url_for('products_bp.list_products') }}" class="nav-item {% if '/list_product' in request.path or '/product/' in request.path %}active{% endif %}" data-nav-label="productos catálogo servicios sku"><span class="nav-icon"><i class="bi bi-box-seam"></i></span><span class="nav-label hide-collapsed">Productos y servicios</span><span class="nav-tooltip">Productos</span></a>{% endif %}
                 {% if can('categories.view') %}<a href="{{ url_for('category_bp.list_categories') }}" class="nav-item {% if request.path.startswith('/category') %}active{% endif %}" data-nav-label="categorías organizar productos"><span class="nav-icon"><i class="bi bi-tags"></i></span><span class="nav-label hide-collapsed">Categorías</span><span class="nav-tooltip">Categorías</span></a>{% endif %}
                 {% if can('warehouses.view') %}<a href="{{ url_for('warehouse_bp.list_warehouses') }}" class="nav-item {% if '/warehouse' in request.path %}active{% endif %}" data-nav-label="almacenes sucursales existencias"><span class="nav-icon"><i class="bi bi-building"></i></span><span class="nav-label hide-collapsed">Almacenes</span><span class="nav-tooltip">Almacenes</span></a>{% endif %}
-                {% if can('transfers.view') %}<a href="{{ url_for('transfer_bp.transfers') }}" class="nav-item {% if '/transfers' in request.path %}active{% endif %}" data-nav-label="transferencias mover inventario"><span class="nav-icon"><i class="bi bi-arrow-left-right"></i></span><span class="nav-label hide-collapsed">Transferencias</span><span class="nav-tooltip">Transferencias</span></a>{% endif %}
-                {% if can('transfers.scanner') %}<a href="{{ url_for('transfer_bp.scanner_mode') }}" class="nav-item nav-item--scanner {% if request.path == '/transfers/scanner-mode' %}active{% endif %}" data-nav-label="escaner códigos barras validar ubicaciones transferencias"><span class="nav-icon"><i class="bi bi-upc-scan"></i></span><span class="nav-label hide-collapsed">Módulo escáner</span><span class="nav-tooltip">Escáner</span></a>{% endif %}
+                {% if can('transfers.view') %}<a href="{{ url_for('transfer_bp.transfers') }}" class="nav-item {% if request.path.startswith('/transfers') and not request.path.startswith('/transfers/scanner') %}active{% endif %}" data-nav-label="transferencias mover inventario"><span class="nav-icon"><i class="bi bi-arrow-left-right"></i></span><span class="nav-label hide-collapsed">Transferencias</span><span class="nav-tooltip">Transferencias</span></a>{% endif %}
+                {% if can('transfers.scanner') %}<a href="{{ url_for('transfer_bp.scanner_mode') }}" class="nav-item nav-item--scanner {% if request.path.startswith('/transfers/scanner-mode') %}active{% endif %}" data-nav-label="escaner códigos barras validar ubicaciones transferencias"><span class="nav-icon"><i class="bi bi-upc-scan"></i></span><span class="nav-label hide-collapsed">Módulo escáner</span><span class="nav-tooltip">Escáner</span></a>{% endif %}
                 {% if can('stock.view') %}
                 <a href="{{ url_for('stock_bp.stock_actual') }}" class="nav-item {% if request.path == '/stock' %}active{% endif %}" data-nav-label="stock actual existencias"><span class="nav-icon"><i class="bi bi-boxes"></i></span><span class="nav-label hide-collapsed">Existencias</span><span class="nav-tooltip">Existencias</span></a>
-                {% endif %}{% if can('stock.kardex') or can('audits.view') %}
+                {% endif %}
+                {% if can('stock.adjust') %}<a href="{{ url_for('retail_bp.quality_center') }}" class="nav-item {% if request.path.startswith('/retail/quality') %}active{% endif %}" data-nav-label="calidad cuarentena dañados devoluciones lotes series"><span class="nav-icon"><i class="bi bi-clipboard2-pulse"></i></span><span class="nav-label hide-collapsed">Control de calidad</span><span class="nav-tooltip">Calidad</span></a>{% endif %}{% if can('stock.kardex') or can('audits.view') %}
                 <a href="{{ url_for('stock_bp.kardex_general') }}" class="nav-item {% if '/kardex' in request.path %}active{% endif %}" data-nav-label="kardex movimientos historial"><span class="nav-icon"><i class="bi bi-list-check"></i></span><span class="nav-label hide-collapsed">Kardex</span><span class="nav-tooltip">Kardex</span></a>
+                {% if can('products.labels') %}<a href="{{ url_for('workspace_bp.labels') }}" class="nav-item {% if request.path == '/workspace/labels' %}active{% endif %}" data-nav-label="etiquetas códigos barras ean code128 imprimir"><span class="nav-icon"><i class="bi bi-upc"></i></span><span class="nav-label hide-collapsed">Etiquetas</span><span class="nav-tooltip">Etiquetas</span></a>{% endif %}
                 {% endif %}
             </div>
         </section>
 
-        <section class="nav-section" data-nav-group>
-            <span class="section-title hide-collapsed">Compras</span>
+        <section class="nav-section" data-nav-group data-nav-section="purchases">
+            <button type="button" class="section-title nav-section-toggle hide-collapsed" aria-expanded="true"><span>Compras</span><i class="bi bi-chevron-down" aria-hidden="true"></i></button>
             <div class="nav-items">
                 {% if can('purchases.view') %}<a href="{{ url_for('purchase_bp.purchase_list') }}" class="nav-item {% if request.path.startswith('/purchase') %}active{% endif %}" data-nav-label="compras órdenes recepción"><span class="nav-icon"><i class="bi bi-bag-check"></i></span><span class="nav-label hide-collapsed">Órdenes de compra</span><span class="nav-tooltip">Compras</span></a>{% endif %}
                 {% if can('suppliers.view') %}<a href="{{ url_for('supplier_bp.supplier_list') }}" class="nav-item {% if request.path.startswith('/suppliers') %}active{% endif %}" data-nav-label="proveedores suplidores compras"><span class="nav-icon"><i class="bi bi-truck"></i></span><span class="nav-label hide-collapsed">Proveedores</span><span class="nav-tooltip">Proveedores</span></a>{% endif %}
@@ -85,27 +140,38 @@
         </section>
 
         {% if can('reports.view') or can('cash.view') %}
-        <section class="nav-section" data-nav-group>
-            <span class="section-title hide-collapsed">Control</span>
+        <section class="nav-section" data-nav-group data-nav-section="control">
+            <button type="button" class="section-title nav-section-toggle hide-collapsed" aria-expanded="true"><span>Control</span><i class="bi bi-chevron-down" aria-hidden="true"></i></button>
             <div class="nav-items">
                 {% if can('reports.view') %}<a href="{{ url_for('reports_bp.index') }}" class="nav-item {% if request.path.startswith('/reports') %}active{% endif %}" data-nav-label="reportes analítica indicadores"><span class="nav-icon"><i class="bi bi-bar-chart"></i></span><span class="nav-label hide-collapsed">Reportes</span><span class="nav-tooltip">Reportes</span></a>{% endif %}
-                {% if can('cash.view') %}<a href="{{ url_for('cash_bp.close_cash') }}" class="nav-item {% if request.path.startswith('/cash') %}active{% endif %}" data-nav-label="caja cierre cuadre efectivo"><span class="nav-icon"><i class="bi bi-cash-coin"></i></span><span class="nav-label hide-collapsed">Cierre de caja</span><span class="nav-tooltip">Caja</span></a>{% endif %}
+                {% if can('cash.view') %}<a href="{{ url_for('cash_bp.register') }}" class="nav-item {% if request.path.startswith('/cash') %}active{% endif %}" data-nav-label="caja cierre cuadre efectivo"><span class="nav-icon"><i class="bi bi-cash-coin"></i></span><span class="nav-label hide-collapsed">Caja y arqueo</span><span class="nav-tooltip">Caja</span></a>{% endif %}
                 {% if can('finance.receivables') or can('finance.payables') or can('finance.expenses') or can('sales.returns') or can('stock.count') %}<a href="{{ url_for('backoffice_bp.overview') }}" class="nav-item {% if request.path.startswith('/backoffice') and '/notifications' not in request.path and '/security' not in request.path %}active{% endif %}" data-nav-label="centro operativo devoluciones cobros pagos gastos conteos"><span class="nav-icon"><i class="bi bi-command"></i></span><span class="nav-label hide-collapsed">Centro operativo</span><span class="nav-tooltip">Operaciones</span></a>{% endif %}
             </div>
         </section>
         {% endif %}
 
-        <section class="nav-section" data-nav-group>
-            <span class="section-title hide-collapsed">Configuración</span>
+        <section class="nav-section" data-nav-group data-nav-section="settings">
+            <button type="button" class="section-title nav-section-toggle hide-collapsed" aria-expanded="true"><span>Configuración</span><i class="bi bi-chevron-down" aria-hidden="true"></i></button>
             <div class="nav-items">
                 {% if can('company.settings') %}<a href="{{ url_for('company_bp.settings') }}" class="nav-item {% if '/settings' in request.path %}active{% endif %}" data-nav-label="empresa configuración datos fiscales"><span class="nav-icon"><i class="bi bi-gear"></i></span><span class="nav-label hide-collapsed">Mi empresa</span><span class="nav-tooltip">Mi empresa</span></a>{% endif %}
                 {% if can('company.settings') and user and user.company and not user.company.onboarding_completed %}<a href="{{ url_for('operations_bp.onboarding') }}" class="nav-item nav-item--primary" data-nav-label="configuración inicial asistente"><span class="nav-icon"><i class="bi bi-stars"></i></span><span class="nav-label hide-collapsed">Completar configuración</span><span class="nav-tooltip">Configurar</span></a>{% endif %}
                 {% if can('company.settings') %}<a href="{{ url_for('operations_bp.billing') }}" class="nav-item {% if request.path == '/operations/billing' %}active{% endif %}" data-nav-label="suscripción pagos facturación plan"><span class="nav-icon"><i class="bi bi-credit-card"></i></span><span class="nav-label hide-collapsed">Suscripción</span><span class="nav-tooltip">Suscripción</span></a>{% endif %}
                 {% if can('company.settings') %}<a href="{{ url_for('operations_bp.data_center') }}" class="nav-item {% if request.path == '/operations/data' %}active{% endif %}" data-nav-label="importar exportar csv datos"><span class="nav-icon"><i class="bi bi-arrow-down-up"></i></span><span class="nav-label hide-collapsed">Importar y exportar</span><span class="nav-tooltip">Datos</span></a>{% endif %}
+                {% if can('company.taxes') %}<a href="{{ url_for('workspace_bp.taxes') }}" class="nav-item {% if request.path == '/workspace/taxes' %}active{% endif %}" data-nav-label="impuestos itbis tasas productos categorías"><span class="nav-icon"><i class="bi bi-percent"></i></span><span class="nav-label hide-collapsed">Impuestos de venta</span><span class="nav-tooltip">Impuestos</span></a>{% endif %}
+                {% if can('sales.promotions') %}<a href="{{ url_for('workspace_bp.promotions') }}" class="nav-item {% if request.path == '/workspace/promotions' %}active{% endif %}" data-nav-label="promociones descuentos códigos ofertas"><span class="nav-icon"><i class="bi bi-ticket-perforated"></i></span><span class="nav-label hide-collapsed">Promociones</span><span class="nav-tooltip">Promociones</span></a>{% endif %}
+                {% if can('retail.settings') %}<a href="{{ url_for('retail_bp.overview') }}" class="nav-item {% if request.path == '/retail/' or (request.path.startswith('/retail/') and not request.path.startswith('/retail/warranties') and not request.path.startswith('/retail/quality')) %}active{% endif %}" data-nav-label="retail variantes unidades precios sucursales terminales lotes seriales api"><span class="nav-icon"><i class="bi bi-shop-window"></i></span><span class="nav-label hide-collapsed">Retail avanzado</span><span class="nav-tooltip">Retail avanzado</span></a>{% endif %}
+                {% if can('retail.settings') %}<a href="{{ url_for('retail_bp.configuration') }}#receiptDeviceConfig" class="nav-item {% if request.path == '/retail/configuration' %}active{% endif %}" data-nav-label="impresora tickets facturas termica 58 60 72 80 mm dispositivo"><span class="nav-icon"><i class="bi bi-printer"></i></span><span class="nav-label hide-collapsed">Impresora y tickets</span><span class="nav-tooltip">Impresora</span></a>{% endif %}
+                {% if can('company.documents') %}<a href="{{ url_for('workspace_bp.documents') }}" class="nav-item {% if request.path.startswith('/workspace/documents') %}active{% endif %}" data-nav-label="documentos archivos soportes adjuntos"><span class="nav-icon"><i class="bi bi-folder2-open"></i></span><span class="nav-label hide-collapsed">Documentos</span><span class="nav-tooltip">Documentos</span></a>{% endif %}
+                {% if can('company.recycle_bin') %}<a href="{{ url_for('workspace_bp.recycle_bin') }}" class="nav-item {% if request.path == '/workspace/recycle-bin' %}active{% endif %}" data-nav-label="papelera restaurar archivados"><span class="nav-icon"><i class="bi bi-trash3"></i></span><span class="nav-label hide-collapsed">Papelera</span><span class="nav-tooltip">Papelera</span></a>{% endif %}
                 {% if can('users.view') %}<a href="{{ url_for('users_bp.users') }}" class="nav-item {% if request.path.startswith('/users') %}active{% endif %}" data-nav-label="usuarios equipo permisos"><span class="nav-icon"><i class="bi bi-person-gear"></i></span><span class="nav-label hide-collapsed">Usuarios y permisos</span><span class="nav-tooltip">Usuarios</span></a>{% endif %}
-                {% if can('tablet.use') %}<a href="{{ url_for('launchpad_bp.launchpad') }}" class="nav-item" data-nav-label="modo tablet punto venta"><span class="nav-icon"><i class="bi bi-tablet-landscape"></i></span><span class="nav-label hide-collapsed">Modo tablet</span><span class="nav-tooltip">Modo tablet</span></a>{% endif %}
-                {% if can('notifications.view') %}<a href="{{ url_for('backoffice_bp.notifications') }}" class="nav-item {% if request.path == '/backoffice/notifications' %}active{% endif %}" data-nav-label="notificaciones alertas vencimientos stock"><span class="nav-icon"><i class="bi bi-bell"></i></span><span class="nav-label hide-collapsed">Notificaciones{% if unread_notifications %} · {{ unread_notifications }}{% endif %}</span><span class="nav-tooltip">Alertas</span></a>{% endif %}
+                {% if can('tablet.use') %}<a href="{{ url_for('dashboard_bp.enable_tablet_mode') }}" class="nav-item" data-nav-label="modo tablet punto venta"><span class="nav-icon"><i class="bi bi-tablet-landscape"></i></span><span class="nav-label hide-collapsed">Modo tablet</span><span class="nav-tooltip">Modo tablet</span></a>{% endif %}
+                {% if can('notifications.manage') %}<a href="{{ url_for('workspace_bp.notification_rules') }}" class="nav-item {% if request.path == '/workspace/notification-rules' %}active{% endif %}" data-nav-label="reglas alertas automatización stock cartera pagos"><span class="nav-icon"><i class="bi bi-bell-fill"></i></span><span class="nav-label hide-collapsed">Reglas de alertas</span><span class="nav-tooltip">Reglas</span></a>{% endif %}{% if can('notifications.view') %}<a href="{{ url_for('backoffice_bp.notifications') }}" class="nav-item {% if request.path == '/backoffice/notifications' %}active{% endif %}" data-nav-label="notificaciones alertas vencimientos stock"><span class="nav-icon"><i class="bi bi-bell"></i></span><span class="nav-label hide-collapsed">Notificaciones{% if unread_notifications %} · {{ unread_notifications }}{% endif %}</span><span class="nav-tooltip">Alertas</span></a>{% endif %}
                 {% if can('security.2fa') %}<a href="{{ url_for('backoffice_bp.security_settings') }}" class="nav-item {% if request.path == '/backoffice/security' %}active{% endif %}" data-nav-label="seguridad autenticación dos factores 2fa"><span class="nav-icon"><i class="bi bi-shield-check"></i></span><span class="nav-label hide-collapsed">Seguridad de acceso</span><span class="nav-tooltip">Seguridad</span></a>{% endif %}
+                {% if can('operations.integrity') %}<a href="{{ url_for('governance_bp.integrity_center') }}" class="nav-item {% if request.path == '/governance/integrity' %}active{% endif %}" data-nav-label="integridad inventario ventas pagos diagnóstico"><span class="nav-icon"><i class="bi bi-clipboard2-check"></i></span><span class="nav-label hide-collapsed">Centro de integridad</span><span class="nav-tooltip">Integridad</span></a>{% endif %}
+                {% if can('audits.view') %}<a href="{{ url_for('governance_bp.audit_explorer') }}" class="nav-item {% if request.path.startswith('/governance/audit') %}active{% endif %}" data-nav-label="auditoría actividad trazabilidad exportar"><span class="nav-icon"><i class="bi bi-journal-text"></i></span><span class="nav-label hide-collapsed">Auditoría general</span><span class="nav-tooltip">Auditoría</span></a>{% endif %}
+                {% if can('operations.status') %}<a href="{{ url_for('governance_bp.system_status') }}" class="nav-item {% if request.path == '/governance/system' %}active{% endif %}" data-nav-label="estado sistema base datos respaldo salud"><span class="nav-icon"><i class="bi bi-activity"></i></span><span class="nav-label hide-collapsed">Estado del sistema</span><span class="nav-tooltip">Estado</span></a>{% endif %}
+                {% if can('jobs.view') %}<a href="{{ url_for('governance_bp.processes') }}" class="nav-item {% if request.path == '/governance/processes' %}active{% endif %}" data-nav-label="procesos importaciones trabajos historial"><span class="nav-icon"><i class="bi bi-list-task"></i></span><span class="nav-label hide-collapsed">Procesos</span><span class="nav-tooltip">Procesos</span></a>{% endif %}
+                {% if can('sessions.manage') %}<a href="{{ url_for('governance_bp.sessions_view') }}" class="nav-item {% if request.path == '/governance/sessions' %}active{% endif %}" data-nav-label="sesiones dispositivos revocar seguridad"><span class="nav-icon"><i class="bi bi-display"></i></span><span class="nav-label hide-collapsed">Sesiones activas</span><span class="nav-tooltip">Sesiones</span></a>{% endif %}
             </div>
         </section>
         <p id="nav-empty" class="nav-empty hide-collapsed" hidden>No encontramos esa opción.</p>
@@ -118,8 +184,45 @@
     <button class="collapse-btn" id="collapse-toggle" type="button" aria-label="Contraer menú"><i class="bi bi-chevron-left"></i></button>
 </aside>
 
-{% if session.get('impersonating') %}<a class="support-mode" href="{{ url_for('superadmin_bp.admin_dashboard') }}"><i class="bi bi-shield-lock-fill"></i><span>Modo soporte activo · Volver al panel maestro</span></a>{% endif %}
-{% if session.get('tablet_mode') %}<a href="{{ url_for('launchpad_bp.launchpad') }}" class="btn-floating-tablet"><i class="bi bi-grid-3x3-gap-fill"></i><span>Volver al modo tablet</span></a>{% endif %}
+<header class="app-tablet-topbar" aria-label="Barra de modo tablet">
+    <a class="app-tablet-home" href="{{ url_for('launchpad_bp.launchpad') }}" aria-label="Abrir aplicaciones"><i class="bi bi-grid-3x3-gap-fill"></i></a>
+    <div class="app-tablet-brand">
+        <span class="app-tablet-brandmark">{% if user and user.company and user.company.logo %}<img src="{{ url_for('static', filename=user.company.logo) }}" alt="">{% else %}<img src="{{ url_for('static', filename='assets/isotipo.png') }}" alt="">{% endif %}</span>
+        <span><strong>{{ user.company.name if user and user.company else 'OrbisERP' }}</strong><small>Modo tablet</small></span>
+    </div>
+    <button class="app-tablet-search" id="tablet-search-trigger" type="button"><i class="bi bi-search"></i><span>Buscar</span></button>
+    <a class="app-tablet-profile" href="{{ url_for('perfil_bp.perfil') }}">
+        <span>{% if user and user.avatar_path %}<img src="{{ url_for('static', filename=user.avatar_path) }}" alt="">{% else %}{{ (user.name | first | upper) if user and user.name else 'U' }}{% endif %}</span>
+        <strong>{{ user.name if user else 'Usuario' }}</strong>
+    </a>
+    <a class="app-tablet-exit" href="{{ url_for('launchpad_bp.exit_tablet') }}" aria-label="Volver al modo escritorio"><i class="bi bi-pc-display"></i></a>
+</header>
+<nav class="app-tablet-dock" aria-label="Secciones del sistema">
+    <a href="{{ url_for('dashboard_bp.dashboard') }}" class="tablet-dock-home {{ 'active' if request.path == '/dashboard' else '' }}" aria-label="Inicio"><i class="bi bi-house-door"></i><span>Inicio</span></a>
+    <button type="button" class="tablet-dock-section" data-tablet-section="sales" aria-controls="tablet-section-sheet" aria-expanded="false"><i class="bi bi-receipt"></i><span>Ventas</span></button>
+    <button type="button" class="tablet-dock-section" data-tablet-section="inventory" aria-controls="tablet-section-sheet" aria-expanded="false"><i class="bi bi-box-seam"></i><span>Inventario</span></button>
+    <button type="button" class="tablet-dock-section" data-tablet-section="purchases" aria-controls="tablet-section-sheet" aria-expanded="false"><i class="bi bi-bag-check"></i><span>Compras</span></button>
+    <button type="button" class="tablet-dock-section" data-tablet-section="control" aria-controls="tablet-section-sheet" aria-expanded="false"><i class="bi bi-bar-chart"></i><span>Control</span></button>
+    <button type="button" class="tablet-dock-section" data-tablet-section="settings" aria-controls="tablet-section-sheet" aria-expanded="false"><i class="bi bi-sliders"></i><span>Ajustes</span></button>
+</nav>
+<div id="tablet-section-backdrop" class="tablet-section-backdrop" aria-hidden="true"></div>
+<section id="tablet-section-sheet" class="tablet-section-sheet" aria-hidden="true" aria-label="Opciones de sección">
+    <header class="tablet-section-sheet-head">
+        <div><small>SECCIÓN</small><strong id="tablet-section-title">Navegación</strong></div>
+        <button id="tablet-section-close" type="button" aria-label="Cerrar sección"><i class="bi bi-x-lg"></i></button>
+    </header>
+    <div id="tablet-section-links" class="tablet-section-links"></div>
+</section>
 
-<script src="{{ url_for('static', filename='js/left.js') }}"></script>
-<script src="{{ url_for('static', filename='js/commercial.js') }}"></script>
+<div id="global-search-modal" class="global-search-modal" aria-hidden="true">
+  <div class="global-search-panel" role="dialog" aria-modal="true" aria-label="Búsqueda global">
+    <div class="global-search-box"><i class="bi bi-search"></i><input id="global-search-input" type="search" placeholder="Buscar producto, cliente, proveedor, venta u orden..." autocomplete="off"><kbd>Esc</kbd></div>
+    <div id="global-search-results" class="global-search-results"><div class="search-empty">Escribe al menos 2 caracteres.</div></div>
+  </div>
+</div>
+
+{% if session.get('impersonating') %}<a class="support-mode" href="{{ url_for('superadmin_bp.admin_dashboard') }}"><i class="bi bi-shield-lock-fill"></i><span>Modo soporte activo · Volver al panel maestro</span></a>{% endif %}
+
+
+<script src="{{ url_for('static', filename='js/left.js', v='20260827-tablet10') }}"></script>
+<script src="{{ url_for('static', filename='js/commercial.js', v='20260827-tablet10') }}"></script>

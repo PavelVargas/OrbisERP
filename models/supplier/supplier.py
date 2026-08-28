@@ -1,3 +1,4 @@
+from services.time_utils import utcnow
 from datetime import datetime
 from db import db
 
@@ -12,7 +13,8 @@ class Supplier(db.Model):
     # Nuevo: Identificador de empresa
     company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    archived_at = db.Column(db.DateTime, nullable=True, index=True)
 
     def __repr__(self):
         return f'<Supplier {self.name}>'

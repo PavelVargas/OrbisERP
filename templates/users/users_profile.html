@@ -1,74 +1,80 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
+<html lang="es" class="{% if tablet_mode_active|default(session.get('tablet_mode')) %}tablet-mode tablet-full-width-profile{% endif %} {% if session.get('theme') == 'dark' %}dark{% endif %}">
+<head>{% set shell_assets_loaded = true %}{% include 'layouts/app_head_assets.html' %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/css/users_css/config_user.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <title>Configuración | {{user.name}}</title>
+    <title>{{ target_user.name }} · Actividad de usuario · OrbisERP</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/users_css/config_user.css', v='12') }}">
 </head>
 <body>
-    <script>
-        // Precarga de tema para evitar destellos blancos
-        if (localStorage.getItem('theme') === 'dark') {
-            document.body.classList.add('dark');
-        }
-    </script>
-    
-    {% include "layouts/left_bar.html" %}
+{% include "layouts/left_bar.html" %}
+<main class="user-activity-page">
+    <nav class="profile-breadcrumb"><a href="{{ url_for('users_bp.users') }}"><i class="bi bi-arrow-left"></i> Personal</a><span>Usuario #{{ target_user.id }}</span></nav>
 
-    <main>
-        <div class="top-nav">
-            <a href="/users" class="back-link">
-                <i class="bi bi-chevron-left"></i> VOLVER A USUARIOS
-            </a>
+    <header class="profile-hero">
+        <div class="profile-identity">
+            <span class="profile-avatar">{{ target_user.name[0]|upper }}</span>
+            <div><span class="eyebrow">OPERACIÓN Y TRAZABILIDAD</span><h1>{{ target_user.name }}</h1><p>{{ target_user.email }} · {{ target_user.role|capitalize }}</p></div>
         </div>
-
-        <header class="page-header">
-            <div class="user-header">
-                <div class="user-avatar">
-                    {{ user.name[0] | upper }}
-                </div>
-                <div class="user-title">
-                    <p class="subtitle">Ajustes de Cuenta</p>
-                    <h1>{{ user.name }}</h1>
-                </div>
-            </div>
-        </header>
-
-        <div class="content-grid">
-            <div class="config-card">
-                <h3><i class="bi bi-person-lines-fill"></i> Información General</h3>
-                <div class="info-row">
-                    <span class="label">Correo Electrónico</span>
-                    <span class="value">{{ user.email }}</span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Rol en el Sistema</span>
-                    <span class="value-badge">{{ user.role }}</span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Estado</span>
-                    <span class="value" style="color: #10b981;"><i class="bi bi-check-circle-fill"></i> Activo</span>
-                </div>
-            </div>
-
-            <div class="config-card">
-                <h3><i class="bi bi-shield-lock"></i> Seguridad</h3>
-                <p class="description">Administra el acceso y los permisos de este usuario.</p>
-                <div class="actions-list">
-                   <form action="{{ url_for('users_bp.request_password_reset', id=target_user.id) }}" method="POST">
-                        <button type="submit" class="btn-action" style="width: 100%; border: none; background: transparent; color: inherit; text-align: left; cursor: pointer; padding: 0; font-family: inherit;">
-                            <i class="bi bi-key"></i> Restablecer Contraseña
-                        </button>
-                    </form>
-                    <a href="#" class="btn-action danger">
-                        <i class="bi bi-trash"></i> Suspender Usuario
-                    </a>
-                </div>
-            </div>
+        <div class="profile-actions">
+            <span class="account-status {{ 'is-active' if target_user.is_active else 'is-disabled' }}"><i></i>{{ 'Activo' if target_user.is_active else 'Inactivo' }}</span>
+            {% if can('users.edit') %}<a class="profile-btn primary" href="{{ url_for('users_bp.edit_user', id=target_user.id) }}"><i class="bi bi-sliders"></i> Editar asignación</a>{% endif %}
         </div>
-    </main>
+    </header>
+
+    <section class="assignment-grid" aria-label="Asignación operativa">
+        <article><i class="bi bi-shop"></i><div><small>SUCURSAL</small><strong>{{ target_user.assigned_branch.name if target_user.assigned_branch else 'Sin asignar' }}</strong><span>{% if target_user.assigned_branch %}Sede fija del usuario{% else %}Requiere configuración{% endif %}</span></div></article>
+        <article><i class="bi bi-pc-display-horizontal"></i><div><small>TERMINAL POS</small><strong>{{ target_user.assigned_terminal.name if target_user.assigned_terminal else 'Sin asignar' }}</strong><span>{{ target_user.assigned_terminal.code if target_user.assigned_terminal else 'Sin terminal fija' }}</span></div></article>
+        <article><i class="bi bi-building"></i><div><small>ALMACÉN</small><strong>{{ target_user.assigned_warehouse.name if target_user.assigned_warehouse else 'Sin asignar' }}</strong><span>Origen de inventario permitido</span></div></article>
+        <article><i class="bi bi-cash-stack"></i><div><small>DIVISA</small><strong>{{ target_user.default_currency }}</strong><span>Preferencia operativa</span></div></article>
+    </section>
+
+    <section class="activity-stats">
+        <article><small>VENTAS COMPLETADAS</small><strong>{{ activity_stats.completed_sales }}</strong><span>RD$ {{ '{:,.2f}'.format(activity_stats.sales_total|float) }}</span></article>
+        <article><small>MOVIMIENTOS DE STOCK</small><strong>{{ activity_stats.movements }}</strong><span>Acciones atribuidas a este usuario</span></article>
+        <article><small>TRANSFERENCIAS</small><strong>{{ activity_stats.transfers }}</strong><span>Creadas o recibidas</span></article>
+        <article><small>PERMISOS ACTIVOS</small><strong>{{ target_user.permission_set()|length }}</strong><span>{{ target_user.role|capitalize }}</span></article>
+    </section>
+
+    <nav class="activity-tabs" aria-label="Actividad del usuario">
+        <button type="button" class="active" data-user-tab="sales"><i class="bi bi-receipt"></i> Ventas</button>
+        <button type="button" data-user-tab="warehouse"><i class="bi bi-boxes"></i> Almacén</button>
+        <button type="button" data-user-tab="transfers"><i class="bi bi-arrow-left-right"></i> Transferencias</button>
+        <button type="button" data-user-tab="audit"><i class="bi bi-clock-history"></i> Actividad</button>
+    </nav>
+
+    <section class="activity-panel active" data-user-panel="sales">
+        <div class="panel-heading"><div><span class="eyebrow">VENTAS</span><h2>Ventas realizadas por {{ target_user.name }}</h2></div><span>{{ sales|length }} recientes</span></div>
+        {% if sales %}<div class="activity-table-wrap"><table class="activity-table"><thead><tr><th>Venta</th><th>Fecha</th><th>Cliente</th><th>Terminal / sucursal</th><th>Estado</th><th>Total</th></tr></thead><tbody>{% for sale in sales %}<tr><td><a href="{{ url_for('sales_bp.sale_detail', sale_id=sale.id) }}">#{{ sale.id }}</a></td><td>{{ sale.created_at.strftime('%d/%m/%Y %H:%M') if sale.created_at else '—' }}</td><td>{{ sale.customer_name or (sale.client.name if sale.client else 'Consumidor final') }}</td><td>{{ sale.terminal.name if sale.terminal else 'Sin terminal' }}{% if sale.branch %}<small>{{ sale.branch.name }}</small>{% endif %}</td><td><span class="status-pill status-{{ sale.status|lower }}">{{ sale.status|title }}</span></td><td><strong>RD$ {{ '{:,.2f}'.format((sale.total or 0)|float) }}</strong></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty-activity"><i class="bi bi-receipt"></i><h3>Sin ventas registradas</h3><p>Las ventas nuevas de este usuario aparecerán aquí automáticamente.</p></div>{% endif %}
+    </section>
+
+    <section class="activity-panel" data-user-panel="warehouse" hidden>
+        <div class="panel-heading"><div><span class="eyebrow">ALMACÉN</span><h2>Inventario y movimientos del usuario</h2></div><span>{{ target_user.assigned_warehouse.name if target_user.assigned_warehouse else 'Sin almacén' }}</span></div>
+        <div class="warehouse-columns">
+            <article class="subpanel"><h3>Movimientos atribuidos</h3>{% if movements %}<div class="compact-list">{% for movement in movements %}<div><span class="movement-icon {{ movement.movement_type|lower }}"><i class="bi bi-arrow-{{ 'down' if movement.movement_type == 'IN' else 'up' }}"></i></span><span><strong>{{ movement.product.name if movement.product else 'Producto' }}</strong><small>{{ movement.reason or 'Movimiento de inventario' }} · {{ movement.created_at.strftime('%d/%m/%Y %H:%M') if movement.created_at else '—' }}</small></span><b>{{ '+' if movement.movement_type == 'IN' else '−' }}{{ display_quantity(movement.quantity) }}</b></div>{% endfor %}</div>{% else %}<div class="empty-mini">Aún no hay movimientos atribuidos a este usuario.</div>{% endif %}</article>
+            <article class="subpanel"><h3>Stock de su almacén asignado</h3>{% if warehouse_stock %}<div class="compact-list stock-list">{% for row in warehouse_stock %}<div><span class="movement-icon"><i class="bi bi-box-seam"></i></span><span><strong>{{ row.product.name if row.product else 'Producto' }}</strong><small>{{ row.product.sku if row.product and row.product.sku else 'Sin SKU' }}</small></span><b>{{ display_quantity(row.quantity) }}</b></div>{% endfor %}</div>{% else %}<div class="empty-mini">No hay existencias para mostrar en el almacén asignado.</div>{% endif %}</article>
+        </div>
+    </section>
+
+    <section class="activity-panel" data-user-panel="transfers" hidden>
+        <div class="panel-heading"><div><span class="eyebrow">TRANSFERENCIAS</span><h2>Transferencias creadas o recibidas</h2></div><span>{{ transfers|length }} recientes</span></div>
+        {% if transfers %}<div class="activity-table-wrap"><table class="activity-table"><thead><tr><th>ID</th><th>Producto</th><th>Origen</th><th>Destino</th><th>Cantidad</th><th>Participación</th><th>Estado</th></tr></thead><tbody>{% for transfer in transfers %}<tr><td>#{{ transfer.id }}</td><td>{{ transfer.product.name if transfer.product else 'Producto' }}</td><td>{{ transfer.from_warehouse.name }}</td><td>{{ transfer.to_warehouse.name }}</td><td>{{ display_quantity(transfer.quantity) }}</td><td>{% if transfer.created_by_id == target_user.id %}<span class="role-chip">Creó</span>{% endif %}{% if transfer.received_by_id == target_user.id %}<span class="role-chip">Recibió</span>{% endif %}</td><td><span class="status-pill status-{{ transfer.status|lower }}">{{ transfer.status|title }}</span></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty-activity"><i class="bi bi-arrow-left-right"></i><h3>Sin transferencias</h3><p>Las transferencias creadas o recibidas por esta persona aparecerán aquí.</p></div>{% endif %}
+    </section>
+
+    <section class="activity-panel" data-user-panel="audit" hidden>
+        <div class="panel-heading"><div><span class="eyebrow">TRAZABILIDAD</span><h2>Registro de acciones</h2></div><span>{{ logs|length }} eventos recientes</span></div>
+        {% if logs %}<div class="audit-list">{% for log in logs %}<article><span><i class="bi bi-clock-history"></i></span><div><strong>{{ log.action|replace('_',' ')|title }}</strong><p>{{ log.description or 'Acción registrada en el sistema.' }}</p><small>{{ log.created_at.strftime('%d/%m/%Y %H:%M') if log.created_at else '—' }}{% if log.ip_address %} · {{ log.ip_address }}{% endif %}</small></div></article>{% endfor %}</div>{% else %}<div class="empty-activity"><i class="bi bi-clock-history"></i><h3>Sin actividad de auditoría</h3><p>Los eventos auditables nuevos se mostrarán aquí.</p></div>{% endif %}
+        {% if can('users.edit') %}<div class="security-actions"><a class="profile-btn" href="{{ url_for('users_bp.edit_user', id=target_user.id) }}"><i class="bi bi-shield-lock"></i> Revisar permisos</a><form action="{{ url_for('users_bp.request_password_reset', id=target_user.id) }}" method="post"><button class="profile-btn" type="submit"><i class="bi bi-key"></i> Enviar restablecimiento</button></form></div>{% endif %}
+    </section>
+</main>
+<script nonce="{{ csp_nonce() if csp_nonce is defined else '' }}">
+(() => {
+    const buttons=[...document.querySelectorAll('[data-user-tab]')];
+    const panels=[...document.querySelectorAll('[data-user-panel]')];
+    const openTab=(name)=>{buttons.forEach(button=>button.classList.toggle('active',button.dataset.userTab===name));panels.forEach(panel=>{const active=panel.dataset.userPanel===name;panel.hidden=!active;panel.classList.toggle('active',active)});history.replaceState(null,'',`#${name}`)};
+    buttons.forEach(button=>button.addEventListener('click',()=>openTab(button.dataset.userTab)));
+    const requested=location.hash.slice(1);if(buttons.some(button=>button.dataset.userTab===requested))openTab(requested);
+})();
+</script>
 </body>
 </html>

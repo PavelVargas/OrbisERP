@@ -90,3 +90,967 @@ html.dark .theme-sun { display: inline; }
 @media (prefers-reduced-motion: reduce) {
     .sidebar, .nav-item, .user-widget { transition: none; }
 }
+
+
+/* Global search modal */
+/* Global search belongs to the application chrome, not a workspace page. */
+.global-search-modal { position: fixed; inset: 0; z-index: 10000; display: none; align-items: flex-start; justify-content: center; padding-top: 10vh; background: rgba(14,15,17,.58); backdrop-filter: blur(5px); }
+.global-search-modal.open { display: flex; }
+.global-search-panel { width: min(680px, 92vw); overflow: hidden; border: 1px solid var(--border); border-radius: 16px; background: var(--bg-card); box-shadow: 0 24px 80px rgba(0,0,0,.26); }
+.global-search-box { display: flex; align-items: center; gap: 11px; padding: 15px 17px; border-bottom: 1px solid var(--border); }
+.global-search-box > i { color: var(--primary); }
+.global-search-box input { flex: 1; min-width: 0; border: 0; outline: 0; color: var(--text-main); background: transparent; font: 650 14px/1.3 'Plus Jakarta Sans', sans-serif; }
+.global-search-box kbd { padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; color: var(--text-muted); background: var(--bg-hover); font-size: 8px; }
+.global-search-results { max-height: 58vh; overflow: auto; padding: 7px; }
+.global-search-result { display: flex; align-items: center; gap: 11px; padding: 10px; border-radius: 10px; color: var(--text-main); text-decoration: none; }
+.global-search-result:hover,.global-search-result.active { background: var(--bg-hover); }
+.global-search-result > i { width: 34px; height: 34px; flex: 0 0 34px; display: grid; place-items: center; border-radius: 9px; color: var(--primary); background: var(--primary-soft); }
+.global-search-result strong { display: block; font-size: 10px; }
+.global-search-result small { display: block; margin-top: 2px; color: var(--text-muted); font-size: 8px; }
+.search-empty { padding: 28px; color: var(--text-muted); text-align: center; font-size: 10px; }
+
+/* Real tablet shell: replaces desktop navigation while the session is in tablet mode. */
+.user-avatar img,.app-tablet-profile span img { width:100%; height:100%; object-fit:cover; }
+.user-avatar img { border-radius:9px; }
+.app-tablet-topbar,.app-tablet-dock { display:none; }
+
+html.tablet-mode .sidebar,
+html.tablet-mode .sidebar-mobile-trigger,
+html.tablet-mode .sidebar-overlay,
+html.tablet-mode .collapse-btn,
+html.tablet-mode .btn-floating-tablet { display:none !important; }
+html.tablet-mode body { min-height:100vh; }
+html.tablet-mode body > main,
+html.tablet-mode main.orbis-page {
+    width:100% !important;
+    margin-left:0 !important;
+    max-width:none;
+    padding-top:max(92px,calc(env(safe-area-inset-top) + 72px)) !important;
+    padding-bottom:max(104px,calc(env(safe-area-inset-bottom) + 88px)) !important;
+}
+html.tablet-mode .app-tablet-topbar {
+    position:fixed; inset:0 0 auto 0; z-index:1050; min-height:68px;
+    display:grid; grid-template-columns:46px minmax(150px,1fr) minmax(160px,320px) auto 46px;
+    align-items:center; gap:10px; padding:max(9px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) 9px max(18px,env(safe-area-inset-left));
+    border-bottom:1px solid var(--border); background:color-mix(in srgb,var(--bg-card) 94%,transparent); box-shadow:0 8px 28px rgba(20,32,31,.08); backdrop-filter:blur(16px);
+}
+html.tablet-mode .app-tablet-home,html.tablet-mode .app-tablet-exit {
+    width:44px; height:44px; display:grid; place-items:center; border:1px solid var(--border); border-radius:13px;
+    color:var(--text-main); background:var(--bg-input); text-decoration:none; font-size:18px;
+}
+html.tablet-mode .app-tablet-home { color:#fff; border-color:var(--primary); background:var(--primary); }
+html.tablet-mode .app-tablet-brand { min-width:0; display:flex; align-items:center; gap:10px; }
+html.tablet-mode .app-tablet-brandmark { width:38px; height:38px; flex:0 0 38px; display:grid; place-items:center; overflow:hidden; border:1px solid var(--border); border-radius:11px; background:#fff; }
+html.tablet-mode .app-tablet-brandmark img { width:100%; height:100%; object-fit:contain; }
+html.tablet-mode .app-tablet-brand > span:last-child { min-width:0; display:flex; flex-direction:column; }
+html.tablet-mode .app-tablet-brand strong { overflow:hidden; color:var(--text-main); font-size:11px; text-overflow:ellipsis; white-space:nowrap; }
+html.tablet-mode .app-tablet-brand small { margin-top:2px; color:var(--primary); font-size:8px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; }
+html.tablet-mode .app-tablet-search {
+    min-height:42px; display:flex; align-items:center; gap:9px; justify-content:flex-start; padding:0 13px;
+    border:1px solid var(--border); border-radius:12px; color:var(--text-muted); background:var(--bg-input); font:700 10px/1 'Plus Jakarta Sans',sans-serif; cursor:pointer;
+}
+html.tablet-mode .app-tablet-search i { color:var(--primary); }
+html.tablet-mode .app-tablet-profile { min-width:0; display:flex; align-items:center; gap:8px; color:var(--text-main); text-decoration:none; }
+html.tablet-mode .app-tablet-profile > span { width:40px; height:40px; flex:0 0 40px; display:grid; place-items:center; overflow:hidden; border-radius:12px; color:#fff; background:var(--primary); font-size:11px; font-weight:900; }
+html.tablet-mode .app-tablet-profile > span img { border-radius:12px; }
+html.tablet-mode .app-tablet-profile strong { max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:9px; }
+html.tablet-mode .app-tablet-dock {
+    position:fixed; z-index:1050; left:50%; bottom:max(14px,env(safe-area-inset-bottom)); transform:translateX(-50%);
+    width:min(620px,calc(100vw - 28px)); min-height:68px; display:flex; align-items:center; justify-content:space-around; gap:5px; padding:7px;
+    border:1px solid var(--border); border-radius:20px; background:color-mix(in srgb,var(--bg-card) 96%,transparent); box-shadow:0 18px 48px rgba(20,32,31,.18); backdrop-filter:blur(16px);
+}
+html.tablet-mode .app-tablet-dock a {
+    position:relative; min-width:76px; min-height:52px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    border-radius:14px; color:var(--text-muted); text-decoration:none; font-size:8px; font-weight:800; transition:.14s ease;
+}
+html.tablet-mode .app-tablet-dock a i { font-size:18px; }
+html.tablet-mode .app-tablet-dock a.active { color:var(--primary); background:var(--primary-soft); }
+html.tablet-mode .app-tablet-dock .tablet-dock-primary { color:#fff; background:var(--primary); box-shadow:0 8px 20px color-mix(in srgb,var(--primary) 24%,transparent); }
+html.tablet-mode .app-tablet-dock a b { position:absolute; top:3px; right:14px; min-width:16px; height:16px; display:grid; place-items:center; padding:0 4px; border-radius:999px; color:#fff; background:var(--danger); font-size:7px; }
+html.tablet-mode .workspace-page .workspace-btn,
+html.tablet-mode .workspace-page button.workspace-btn { min-height:44px; padding-inline:15px; }
+html.tablet-mode .workspace-page .workspace-icon-btn { width:42px; height:42px; }
+html.tablet-mode .workspace-page input:not([type="checkbox"]):not([type="radio"]),
+html.tablet-mode .workspace-page select { min-height:44px; }
+html.tablet-mode .workspace-page .workspace-header { margin-bottom:20px; }
+html.tablet-mode .global-search-modal { padding-top:88px; }
+
+@media (max-width:720px) {
+    html.tablet-mode .app-tablet-topbar { grid-template-columns:44px minmax(0,1fr) 44px; }
+    html.tablet-mode .app-tablet-brandmark,html.tablet-mode .app-tablet-profile,html.tablet-mode .app-tablet-search { display:none; }
+    html.tablet-mode .app-tablet-exit { grid-column:3; }
+    html.tablet-mode .app-tablet-dock a { min-width:56px; }
+}
+/* POS is a div-based full-screen workstation, so tablet mode needs an explicit shell offset. */
+html.tablet-mode .pos-topbar{left:0 !important;top:68px !important;z-index:90}
+html.tablet-mode .pos-layout{width:100% !important;height:calc(100vh - 68px) !important;margin-left:0 !important;margin-top:68px !important;padding-top:64px !important;padding-bottom:86px !important}
+html.tablet-mode .pos-right{padding-bottom:max(4px,env(safe-area-inset-bottom))}
+@media(max-width:820px){html.tablet-mode .pos-layout{min-height:calc(100vh - 68px);height:auto !important}html.tablet-mode .pos-topbar{padding-right:12px !important}}
+
+
+/* Tablet UX v2 */
+html.tablet-mode .app-tablet-dock{justify-content:flex-start;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;padding-inline:10px}html.tablet-mode .app-tablet-dock::-webkit-scrollbar{display:none}html.tablet-mode .app-tablet-dock a{flex:0 0 78px}html.tablet-mode .workspace-page .workspace-grid{grid-template-columns:repeat(2,minmax(0,1fr))}html.tablet-mode .workspace-page .workspace-columns,html.tablet-mode .workspace-page .workspace-columns.equal{grid-template-columns:1fr}html.tablet-mode .workspace-page .workspace-form{grid-template-columns:repeat(2,minmax(0,1fr))}html.tablet-mode .workspace-page .workspace-card{padding:18px}html.tablet-mode .workspace-page .workspace-header{align-items:flex-start}html.tablet-mode .workspace-page .workspace-header-actions{max-width:48%}
+@media(max-width:820px){html.tablet-mode .workspace-page .workspace-grid,html.tablet-mode .workspace-page .workspace-form{grid-template-columns:1fr}html.tablet-mode .workspace-page .workspace-header{flex-direction:column}html.tablet-mode .workspace-page .workspace-header-actions{max-width:none;width:100%;justify-content:flex-start}html.tablet-mode .app-tablet-dock{left:14px;right:14px;transform:none;width:auto}}
+
+/* Tablet viewport hardening: use VisualViewport-provided dimensions when the
+   on-screen keyboard or browser chrome changes the usable height. */
+html.tablet-mode body{min-height:var(--tablet-vh,100dvh)}
+html.tablet-mode .pos-layout{height:calc(var(--tablet-vh,100dvh) - 68px)!important}
+html.tablet-mode.tablet-keyboard-open .app-tablet-dock{transform:translateY(120%);pointer-events:none;opacity:0}
+html.tablet-mode.tablet-keyboard-open body>main,html.tablet-mode.tablet-keyboard-open main.orbis-page{padding-bottom:max(24px,env(safe-area-inset-bottom))!important}
+@media(max-width:820px){html.tablet-mode .pos-layout{min-height:calc(var(--tablet-vh,100dvh) - 68px);height:auto!important}}
+
+/* Tablet touch/overflow baseline for legacy authenticated modules that are not
+   yet workspace-based. The shell owns navigation offsets; module CSS only owns
+   its internal layout. */
+html.tablet-mode body>main{min-width:0;min-height:calc(var(--tablet-vh,100dvh) - 68px)}
+html.tablet-mode body>main button:not(.sidebar-mobile-trigger),
+html.tablet-mode body>main input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+html.tablet-mode body>main select{min-height:44px}
+html.tablet-mode body>main textarea{min-height:88px}
+html.tablet-mode body>main :where(.table-wrap,.table-responsive,[class*="table-wrap"],[class*="table-container"]){max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* Sidebar navigation UX v2 -------------------------------------------------
+   Compact grouping without forcing users to scroll through every module. */
+.sidebar-nav {
+    padding: 15px 11px 20px;
+}
+
+.nav-section {
+    margin-bottom: 12px;
+}
+
+.section-title.nav-section-toggle {
+    width: 100%;
+    min-height: 30px;
+    padding: 0 9px 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    border: 0;
+    border-radius: 8px;
+    color: #7f918f;
+    background: transparent;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .105em;
+    text-align: left;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.section-title.nav-section-toggle:hover,
+.section-title.nav-section-toggle:focus-visible {
+    color: #c2cfcd;
+    background: rgba(255,255,255,.04);
+    outline: none;
+}
+
+.section-title.nav-section-toggle > i {
+    flex: none;
+    font-size: 9px;
+    transition: transform .16s ease;
+}
+
+.nav-section.is-collapsed .section-title.nav-section-toggle > i {
+    transform: rotate(-90deg);
+}
+
+.nav-section.is-collapsed .nav-items {
+    display: none;
+}
+
+.nav-item {
+    min-height: 43px;
+    gap: 11px;
+    padding: 6px 9px;
+    border-radius: 11px;
+}
+
+.nav-icon {
+    width: 30px;
+    height: 30px;
+    flex-basis: 30px;
+    border: 1px solid rgba(255,255,255,.045);
+    border-radius: 9px;
+    background: rgba(255,255,255,.052);
+    font-size: 15px;
+}
+
+.nav-item:hover .nav-icon,
+.nav-item.active .nav-icon {
+    color: #fff;
+    border-color: color-mix(in srgb, var(--primary, #df7419) 35%, rgba(255,255,255,.08));
+    background: color-mix(in srgb, var(--primary, #df7419) 16%, rgba(255,255,255,.04));
+}
+
+.nav-label {
+    font-size: 11.5px;
+    font-weight: 600;
+}
+
+.nav-item--primary {
+    min-height: 46px;
+    margin-bottom: 7px;
+    border: 1px solid color-mix(in srgb, #fff 12%, transparent);
+    background: linear-gradient(135deg, var(--primary, #df7419), var(--primary-hover, #c96311));
+    box-shadow: 0 9px 22px color-mix(in srgb, var(--primary, #df7419) 22%, transparent);
+}
+
+.nav-item--primary .nav-icon {
+    border-color: rgba(255,255,255,.16);
+    background: rgba(255,255,255,.13);
+}
+
+.sidebar-footer .nav-item {
+    min-height: 40px;
+}
+
+.sidebar-footer .logout-item {
+    color: #d7a8a1;
+}
+
+.sidebar-footer .logout-item:hover {
+    color: #fff;
+    background: rgba(239,99,81,.13);
+}
+
+.sidebar.collapsed .nav-section.is-collapsed .nav-items {
+    display: grid;
+}
+
+.sidebar.collapsed .nav-section {
+    margin-bottom: 8px;
+}
+
+.sidebar.collapsed .nav-icon {
+    width: 34px;
+    height: 34px;
+    flex-basis: 34px;
+}
+
+@media (max-width: 1024px) {
+    .nav-item {
+        min-height: 48px;
+    }
+
+    .nav-icon {
+        width: 34px;
+        height: 34px;
+        flex-basis: 34px;
+        font-size: 16px;
+    }
+
+    .section-title.nav-section-toggle {
+        min-height: 34px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .section-title.nav-section-toggle > i {
+        transition: none;
+    }
+}
+
+/* Sidebar navigation UX v3 --------------------------------------------------
+   Stronger icon language and clearer grouping for high-frequency retail use. */
+.sidebar {
+    background:
+        radial-gradient(circle at 12% 0%, color-mix(in srgb, var(--primary, #df7419) 10%, transparent), transparent 30%),
+        #171a1f;
+}
+
+.nav-section:not(.is-collapsed) {
+    padding: 5px;
+    border: 1px solid rgba(255,255,255,.045);
+    border-radius: 13px;
+    background: rgba(255,255,255,.018);
+}
+
+.nav-section:not(.is-collapsed) .section-title.nav-section-toggle {
+    padding-inline: 7px;
+}
+
+.nav-section:not(.is-collapsed) .nav-items {
+    gap: 3px;
+}
+
+.nav-section.is-collapsed .section-title.nav-section-toggle {
+    min-height: 34px;
+    padding: 0 9px;
+}
+
+.nav-item {
+    isolation: isolate;
+    overflow: hidden;
+}
+
+.nav-item::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--primary, #df7419) 12%, transparent), transparent 72%);
+    opacity: 0;
+    transition: opacity .16s ease;
+}
+
+.nav-item:hover::after,
+.nav-item.active::after {
+    opacity: 1;
+}
+
+.nav-item.active {
+    border: 1px solid color-mix(in srgb, var(--primary, #df7419) 28%, rgba(255,255,255,.04));
+    background: color-mix(in srgb, var(--primary, #df7419) 10%, rgba(255,255,255,.025));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
+}
+
+.nav-item.active::before {
+    left: 3px;
+    width: 3px;
+    height: 22px;
+    border-radius: 999px;
+    box-shadow: 0 0 12px color-mix(in srgb, var(--primary, #df7419) 55%, transparent);
+}
+
+.nav-icon {
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.045);
+}
+
+.nav-icon > i {
+    position: relative;
+    z-index: 1;
+    line-height: 1;
+}
+
+.nav-item.active .nav-icon,
+.nav-item:hover .nav-icon {
+    box-shadow: 0 5px 14px color-mix(in srgb, var(--primary, #df7419) 13%, transparent), inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+.nav-item--primary,
+.nav-item--primary.active {
+    border-color: color-mix(in srgb, #fff 14%, transparent);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--primary, #df7419) 92%, #ffad62), var(--primary-hover, #c96311));
+}
+
+.nav-item--primary::after,
+.nav-item--primary.active::after {
+    display: none;
+}
+
+.nav-item--primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 28px color-mix(in srgb, var(--primary, #df7419) 28%, transparent);
+}
+
+.sidebar.collapsed .nav-section:not(.is-collapsed) {
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nav-item::after,
+    .nav-item--primary {
+        transition: none;
+    }
+}
+
+/* Navigation icon resilience v4 -------------------------------------------
+   Keeps the menu legible when a customer firewall blocks the icon CDN. */
+.nav-icon-fallback {
+    display: none;
+    position: relative;
+    z-index: 1;
+    font-size: 9px;
+    font-weight: 850;
+    letter-spacing: .025em;
+    line-height: 1;
+}
+
+html.icons-fallback .nav-icon > i {
+    display: none !important;
+}
+
+html.icons-fallback .nav-icon-fallback {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+html.icons-fallback .sidebar-mobile-trigger > i::after {
+    content: "☰";
+    font: 700 22px/1 ui-sans-serif, system-ui, sans-serif;
+}
+
+html.icons-fallback .section-title.nav-section-toggle > i::after {
+    content: "⌄";
+    font: 700 15px/1 ui-sans-serif, system-ui, sans-serif;
+}
+
+html.icons-fallback .collapse-btn > i::after {
+    content: "‹";
+    font: 500 24px/1 ui-sans-serif, system-ui, sans-serif;
+}
+
+html.icons-fallback .sidebar-search > i::after,
+html.icons-fallback .global-search-box > i::after {
+    content: "⌕";
+    font: 700 18px/1 ui-sans-serif, system-ui, sans-serif;
+}
+
+.global-search-result-icon {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    display: grid;
+    place-items: center;
+    border: 1px solid color-mix(in srgb, var(--primary, #df7419) 22%, rgba(128,128,128,.18));
+    border-radius: 11px;
+    color: var(--primary, #df7419);
+    background: color-mix(in srgb, var(--primary, #df7419) 9%, transparent);
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: .03em;
+}
+
+/* Local navigation icon system v5 ------------------------------------------
+   Inline SVG icons keep the menu professional and understandable offline. */
+.orbis-line-icon,
+.orbis-nav-icon,
+.orbis-search-icon,
+.orbis-content-icon {
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+}
+
+
+.orbis-content-icon {
+    width: 1.05em;
+    height: 1.05em;
+    flex: 0 0 auto;
+    display: inline-block;
+    vertical-align: -.14em;
+}
+
+button > .orbis-content-icon,
+a > .orbis-content-icon {
+    margin-right: .34em;
+}
+
+.nav-icon > .orbis-nav-icon {
+    position: relative;
+    z-index: 1;
+    width: 19px;
+    height: 19px;
+}
+
+.global-search-result-icon > .orbis-search-icon {
+    width: 19px;
+    height: 19px;
+}
+
+.nav-item--primary .orbis-nav-icon {
+    stroke-width: 2;
+}
+
+html.icons-fallback .nav-icon > .orbis-nav-icon {
+    display: block !important;
+}
+
+/* Navigation refinement v6 ---------------------------------------------------
+   Clearer grouping and keyboard/touch states without changing permissions. */
+.sidebar-nav {
+    scrollbar-gutter: stable;
+}
+
+.section-title.nav-section-toggle {
+    border-radius: 9px;
+    transition: background-color .16s ease, color .16s ease;
+}
+
+.section-title.nav-section-toggle:hover,
+.section-title.nav-section-toggle:focus-visible {
+    color: rgba(255,255,255,.9);
+    background: rgba(255,255,255,.045);
+}
+
+.section-title.nav-section-toggle:focus-visible,
+.nav-item:focus-visible,
+.collapse-btn:focus-visible,
+.sidebar-mobile-trigger:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--primary, #df7419) 68%, #fff);
+    outline-offset: 2px;
+}
+
+.nav-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nav-item.active .nav-label {
+    color: #fff;
+    font-weight: 800;
+}
+
+.nav-item.active .nav-icon {
+    color: #fff;
+    background: color-mix(in srgb, var(--primary, #df7419) 30%, rgba(255,255,255,.04));
+}
+
+.nav-section:not(.is-collapsed) + .nav-section {
+    margin-top: 7px;
+}
+
+@media (pointer: coarse) {
+    .nav-item {
+        min-height: 46px;
+    }
+
+    .section-title.nav-section-toggle {
+        min-height: 42px;
+    }
+}
+
+/* Tablet shell visual unification v7 ---------------------------------------
+   Uses the same graphite/orange language as the desktop navigation. */
+.orbis-shell-icon {
+    width: 1.15em;
+    height: 1.15em;
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+}
+
+.sidebar-search > .orbis-shell-icon,
+.global-search-box > .orbis-shell-icon {
+    width: 18px;
+    height: 18px;
+}
+
+.section-title.nav-section-toggle > .orbis-shell-icon {
+    width: 13px;
+    height: 13px;
+    transition: transform .16s ease;
+}
+
+.nav-section.is-collapsed .section-title.nav-section-toggle > .orbis-shell-icon {
+    transform: rotate(-90deg);
+}
+
+.collapse-btn > .orbis-shell-icon,
+.sidebar-mobile-trigger > .orbis-shell-icon {
+    width: 20px;
+    height: 20px;
+}
+
+html.tablet-mode .app-tablet-topbar {
+    color: #e8edef;
+    border-bottom-color: rgba(255,255,255,.075);
+    background:
+        radial-gradient(circle at 10% 0%, color-mix(in srgb,var(--primary,#f36b21) 15%,transparent),transparent 20rem),
+        rgba(23,26,31,.97);
+    box-shadow: 0 10px 32px rgba(0,0,0,.18);
+}
+
+html.tablet-mode .app-tablet-brand strong {
+    color: #fff;
+}
+
+html.tablet-mode .app-tablet-brand small {
+    color: #ff9a58;
+}
+
+html.tablet-mode .app-tablet-home,
+html.tablet-mode .app-tablet-exit,
+html.tablet-mode .app-tablet-search {
+    color: #dce4e7;
+    border-color: rgba(255,255,255,.09);
+    background: rgba(255,255,255,.055);
+}
+
+html.tablet-mode .app-tablet-home {
+    color: #fff;
+    border-color: color-mix(in srgb,var(--primary,#f36b21) 72%,#fff 8%);
+    background: linear-gradient(135deg,var(--primary,#f36b21),var(--primary-hover,#cf5c12));
+}
+
+html.tablet-mode .app-tablet-search {
+    color: #aeb9bd;
+}
+
+html.tablet-mode .app-tablet-search .orbis-shell-icon {
+    width: 18px;
+    height: 18px;
+    color: #ff9a58;
+}
+
+html.tablet-mode .app-tablet-profile {
+    color: #f4f7f8;
+}
+
+html.tablet-mode .app-tablet-profile > span {
+    border: 1px solid color-mix(in srgb,var(--primary,#f36b21) 68%,#fff 8%);
+    background: linear-gradient(135deg,var(--primary,#f36b21),var(--primary-hover,#cf5c12));
+    box-shadow: 0 7px 18px color-mix(in srgb,var(--primary,#f36b21) 20%,transparent);
+}
+
+html.tablet-mode .app-tablet-profile strong {
+    color: #fff;
+}
+
+html.tablet-mode .app-tablet-dock {
+    color: #dfe6e8;
+    border-color: rgba(255,255,255,.08);
+    background: rgba(23,26,31,.96);
+    box-shadow: 0 20px 54px rgba(0,0,0,.24);
+}
+
+html.tablet-mode .app-tablet-dock a {
+    color: #aab5b9;
+}
+
+html.tablet-mode .app-tablet-dock a .orbis-shell-icon {
+    width: 20px;
+    height: 20px;
+}
+
+html.tablet-mode .app-tablet-dock a:hover,
+html.tablet-mode .app-tablet-dock a:focus-visible {
+    color: #fff;
+    background: rgba(255,255,255,.055);
+    outline: none;
+}
+
+html.tablet-mode .app-tablet-dock a.active {
+    color: #fff;
+    background: color-mix(in srgb,var(--primary,#f36b21) 18%,rgba(255,255,255,.025));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb,var(--primary,#f36b21) 34%,transparent);
+}
+
+html.tablet-mode .app-tablet-dock .tablet-dock-primary,
+html.tablet-mode .app-tablet-dock .tablet-dock-primary.active {
+    color: #fff;
+    background: linear-gradient(135deg,var(--primary,#f36b21),var(--primary-hover,#cf5c12));
+    box-shadow: 0 9px 22px color-mix(in srgb,var(--primary,#f36b21) 27%,transparent);
+}
+
+html.tablet-mode .app-tablet-topbar :where(a,button):focus-visible,
+html.tablet-mode .app-tablet-dock a:focus-visible {
+    outline: 2px solid #ff9a58;
+    outline-offset: 2px;
+}
+
+@media (max-width: 720px) {
+    html.tablet-mode .app-tablet-topbar {
+        min-height: 64px;
+        padding-inline: max(12px,env(safe-area-inset-left));
+    }
+
+    html.tablet-mode .app-tablet-dock {
+        bottom: max(9px,env(safe-area-inset-bottom));
+        min-height: 66px;
+        border-radius: 18px;
+    }
+
+    html.tablet-mode .app-tablet-dock a {
+        flex-basis: 66px;
+        min-width: 66px;
+    }
+}
+
+/* Full-width tablet section dock v8 ---------------------------------------
+   In tablet mode the desktop sidebar is replaced by section navigation.
+   Each section opens a touch sheet populated from the permission-filtered
+   sidebar links, keeping one navigation source of truth. */
+html.tablet-mode .app-tablet-dock {
+    left: 50%;
+    right: auto;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    width: min(820px, calc(100% - 28px));
+    max-width: calc(100% - 28px);
+    min-height: 72px;
+    transform: translateX(-50%);
+    justify-content: space-between;
+    gap: 6px;
+    overflow: visible;
+    padding: 8px;
+    border-radius: 22px;
+}
+
+html.tablet-mode .app-tablet-dock :where(a,button) {
+    appearance: none;
+    position: relative;
+    min-width: 0;
+    min-height: 54px;
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin: 0;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: 15px;
+    color: #aab5b9;
+    background: transparent;
+    font: 800 8px/1.1 'Plus Jakarta Sans', sans-serif;
+    text-decoration: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html.tablet-mode .app-tablet-dock :where(a,button) :where(i,.orbis-shell-icon) {
+    width: 21px;
+    height: 21px;
+    font-size: 20px;
+}
+
+html.tablet-mode .app-tablet-dock :where(a,button):hover,
+html.tablet-mode .app-tablet-dock :where(a,button):focus-visible {
+    color: #fff;
+    background: rgba(255,255,255,.055);
+    outline: none;
+}
+
+html.tablet-mode .app-tablet-dock :where(a,button).active,
+html.tablet-mode .app-tablet-dock :where(a,button)[aria-expanded="true"] {
+    color: #fff;
+    background: color-mix(in srgb,var(--primary,#f36b21) 19%,rgba(255,255,255,.025));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb,var(--primary,#f36b21) 38%,transparent);
+}
+
+html.tablet-mode .tablet-section-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1040;
+    display: block;
+    visibility: hidden;
+    opacity: 0;
+    background: rgba(6,8,10,.38);
+    backdrop-filter: blur(2px);
+    transition: opacity .18s ease, visibility .18s ease;
+}
+
+html.tablet-mode .tablet-section-backdrop.open {
+    visibility: visible;
+    opacity: 1;
+}
+
+html.tablet-mode .tablet-section-sheet {
+    position: fixed;
+    left: 50%;
+    bottom: max(96px, calc(env(safe-area-inset-bottom) + 86px));
+    z-index: 1060;
+    width: min(820px, calc(100% - 28px));
+    max-height: min(62vh, 560px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,.09);
+    border-radius: 22px;
+    color: #eef3f5;
+    background:
+        radial-gradient(circle at 12% 0%, color-mix(in srgb,var(--primary,#f36b21) 14%,transparent), transparent 24rem),
+        rgba(23,26,31,.985);
+    box-shadow: 0 30px 80px rgba(0,0,0,.34);
+    transform: translate(-50%, calc(100% + 140px));
+    opacity: 0;
+    pointer-events: none;
+    transition: transform .2s ease, opacity .16s ease;
+}
+
+html.tablet-mode .tablet-section-sheet.open {
+    transform: translate(-50%, 0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+html.tablet-mode .tablet-section-sheet-head {
+    min-height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 16px 12px 18px;
+    border-bottom: 1px solid rgba(255,255,255,.075);
+}
+
+html.tablet-mode .tablet-section-sheet-head > div {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+html.tablet-mode .tablet-section-sheet-head small {
+    color: #ff9a58;
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: .12em;
+}
+
+html.tablet-mode .tablet-section-sheet-head strong {
+    overflow: hidden;
+    color: #fff;
+    font-size: 17px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+html.tablet-mode .tablet-section-sheet-head button {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255,255,255,.09);
+    border-radius: 13px;
+    color: #e3e9eb;
+    background: rgba(255,255,255,.055);
+    cursor: pointer;
+}
+
+html.tablet-mode .tablet-section-links {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 8px;
+    padding: 12px;
+    overflow: auto;
+    overscroll-behavior: contain;
+}
+
+html.tablet-mode .tablet-section-link {
+    min-width: 0;
+    min-height: 66px;
+    display: grid;
+    grid-template-columns: 42px minmax(0,1fr) 18px;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid rgba(255,255,255,.075);
+    border-radius: 15px;
+    color: #eef3f5;
+    background: rgba(255,255,255,.035);
+    text-decoration: none;
+}
+
+html.tablet-mode .tablet-section-link:hover,
+html.tablet-mode .tablet-section-link:focus-visible {
+    border-color: color-mix(in srgb,var(--primary,#f36b21) 50%,rgba(255,255,255,.08));
+    background: color-mix(in srgb,var(--primary,#f36b21) 10%,rgba(255,255,255,.04));
+    outline: none;
+}
+
+html.tablet-mode .tablet-section-link.active {
+    border-color: color-mix(in srgb,var(--primary,#f36b21) 56%,rgba(255,255,255,.08));
+    background: color-mix(in srgb,var(--primary,#f36b21) 15%,rgba(255,255,255,.04));
+}
+
+html.tablet-mode .tablet-section-link-icon {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    color: #ff9a58;
+    background: color-mix(in srgb,var(--primary,#f36b21) 13%,rgba(255,255,255,.025));
+}
+
+html.tablet-mode .tablet-section-link-icon :where(svg,i) {
+    width: 20px;
+    height: 20px;
+    font-size: 19px;
+}
+
+html.tablet-mode .tablet-section-link-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+html.tablet-mode .tablet-section-link-copy strong {
+    overflow: hidden;
+    color: #fff;
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+html.tablet-mode .tablet-section-link-copy small {
+    color: #97a5aa;
+    font-size: 8px;
+}
+
+html.tablet-mode .tablet-section-link-arrow {
+    color: #75858a;
+    font-size: 24px;
+    line-height: 1;
+}
+
+html.tablet-mode.tablet-keyboard-open .tablet-section-sheet,
+html.tablet-mode.tablet-keyboard-open .tablet-section-backdrop {
+    display: none !important;
+}
+
+@media (max-width: 720px) {
+    html.tablet-mode .app-tablet-dock {
+        left: 10px;
+        right: 10px;
+        width: auto;
+        max-width: none;
+        transform: none;
+        justify-content: flex-start;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    html.tablet-mode .app-tablet-dock::-webkit-scrollbar { display: none; }
+    html.tablet-mode .app-tablet-dock :where(a,button) { flex: 0 0 70px; }
+    html.tablet-mode .tablet-section-sheet { width: calc(100% - 20px); }
+    html.tablet-mode .tablet-section-links { grid-template-columns: 1fr; }
+}
+
+/* Specificity bridge over the legacy anchor-only dock rules above. */
+html.tablet-mode .app-tablet-dock > a,
+html.tablet-mode .app-tablet-dock > button {
+    min-width: 0;
+    min-height: 54px;
+    flex: 1 1 0;
+    color: #aab5b9;
+    background: transparent;
+    border: 0;
+}
+html.tablet-mode .app-tablet-dock > a.active,
+html.tablet-mode .app-tablet-dock > button.active,
+html.tablet-mode .app-tablet-dock > button[aria-expanded="true"] {
+    color: #fff;
+    background: color-mix(in srgb,var(--primary,#f36b21) 19%,rgba(255,255,255,.025));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb,var(--primary,#f36b21) 38%,transparent);
+}
+@media (max-width: 720px) {
+    html.tablet-mode .app-tablet-dock > a,
+    html.tablet-mode .app-tablet-dock > button {
+        min-width: 70px;
+        flex: 0 0 70px;
+    }
+}

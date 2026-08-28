@@ -1,5 +1,28 @@
+from services.time_utils import utcnow
 from db import db
 from datetime import datetime, timedelta
+
+
+PLAN_LIMITS = {
+    'BASIC': {
+        'max_warehouses': 1,
+        'max_users': 2,
+        'max_monthly_invoices': 500,
+        'storage_bytes': 524288000,
+    },
+    'PRO': {
+        'max_warehouses': 3,
+        'max_users': 10,
+        'max_monthly_invoices': 5000,
+        'storage_bytes': 2147483648,
+    },
+    'ULTRA': {
+        'max_warehouses': 10,
+        'max_users': 100,
+        'max_monthly_invoices': 999999,
+        'storage_bytes': 10737418240,
+    },
+}
 
 class GlobalAnnouncement(db.Model):
     """Anuncios que aparecen en todas las empresas (Broadcast)"""
@@ -8,7 +31,7 @@ class GlobalAnnouncement(db.Model):
     message = db.Column(db.String(500), nullable=False)
     is_active = db.Column(db.Boolean, default=True)
     type = db.Column(db.String(20), default='info') 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
 
 class SuperadminLog(db.Model):
     """Registro de auditoría privado para acciones de soporte y cambios maestros"""
@@ -19,7 +42,7 @@ class SuperadminLog(db.Model):
     action = db.Column(db.String(255), nullable=False) 
     description = db.Column(db.Text, nullable=True)
     ip_address = db.Column(db.String(50), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
 
     admin_user = db.relationship('User', foreign_keys=[admin_id])
     target_company = db.relationship('Company', foreign_keys=[company_id])
@@ -55,7 +78,7 @@ class Company(db.Model):
     status = db.Column(db.Boolean, default=True) 
     is_readonly = db.Column(db.Boolean, default=False)
     expiration_date = db.Column(db.DateTime, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
 
     # --- GESTIÓN DE ALMACENAMIENTO ---
     storage_limit = db.Column(db.BigInteger, default=524288000) 
@@ -83,7 +106,7 @@ class Company(db.Model):
     def is_active(self):
         if not self.status: 
             return False
-        ahora = datetime.utcnow()
+        ahora = utcnow()
         if self.expiration_date and self.expiration_date > ahora:
             return True
         if self.grace_period_until and self.grace_period_until > ahora:
@@ -91,36 +114,18 @@ class Company(db.Model):
         return False
 
     def get_plan_limits(self):
-        plans = {
-            'BASIC': {
-                'max_warehouses': 1, 
-                'max_users': 2, 
-                'max_monthly_invoices': 500,
-                'storage_bytes': 524288000 # 500MB
-            },
-            'PRO': {
-                'max_warehouses': 3, 
-                'max_users': 10, 
-                'max_monthly_invoices': 5000,
-                'storage_bytes': 2147483648 # 2GB
-            },
-            'ULTRA': {
-                'max_warehouses': 10, 
-                'max_users': 100, 
-                'max_monthly_invoices': 999999,
-                'storage_bytes': 10737418240 # 10GB
-            }
-        }
-        return plans.get(self.plan_name, plans['BASIC'])
+        # Return a copy so callers cannot accidentally mutate the shared commercial contract.
+        return dict(PLAN_LIMITS.get(self.plan_name, PLAN_LIMITS['BASIC']))
 
     def get_current_month_usage(self):
         from models.sales.sales import Sale 
-        ahora = datetime.utcnow()
+        ahora = utcnow()
         primer_dia_mes = ahora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         
         count = Sale.query.filter(
             Sale.company_id == self.id,
-            Sale.created_at >= primer_dia_mes
+            Sale.created_at >= primer_dia_mes,
+            Sale.status == 'COMPLETED',
         ).count()
         
         return count

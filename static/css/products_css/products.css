@@ -100,7 +100,7 @@
             align-items: center;
             flex-wrap: wrap;
             box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-            transition: all 0.3s ease;
+            transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
         }
 
         .filter-bar:hover {
@@ -132,11 +132,11 @@
             color: var(--fg);
             font-family: inherit;
             font-size: 15px;
-            transition: all 0.25s ease;
+            transition: color 0.25s ease, background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease, opacity 0.25s ease;
             box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
             }
 
-        body.dark .search-wrapper input {
+        html.dark body .search-wrapper input {
             background: rgba(20,20,23,0.5);
         }
 
@@ -167,10 +167,10 @@
             min-width: 200px;
             font-size: 15px;
             cursor: pointer;
-            transition: all 0.25s;
+            transition: color 0.25s, background-color 0.25s, border-color 0.25s, box-shadow 0.25s, transform 0.25s, opacity 0.25s;
         }
 
-        body.dark .filter-controls select {
+        html.dark body .filter-controls select {
             background: rgba(20,20,23,0.5);
         }
 
@@ -189,7 +189,7 @@
             font-weight: 700;
             font-size: 15px;
             cursor: pointer;
-            transition: all 0.25s ease;
+            transition: color 0.25s ease, background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease, opacity 0.25s ease;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
@@ -210,7 +210,7 @@
             border-radius: 50%;
             font-size: 1.6rem;
             cursor: pointer;
-            transition: all 0.25s ease;
+            transition: color 0.25s ease, background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease, opacity 0.25s ease;
             border: 1px solid rgba(231, 76, 60, 0.3);
         }
 
@@ -233,7 +233,7 @@
             border-radius :var(--radius);
             overflow: hidden;
             box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            transition: all 0.25s ease;
+            transition: color 0.25s ease, background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease, opacity 0.25s ease;
             display: flex;
             flex-direction: column;
             min-height: 10px;
@@ -345,7 +345,7 @@
             background: var(--card);
             color: var(--gray-text);
             border: 1px solid var(--border);
-            transition: all 0.2s ease;
+            transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
             font-size: 1.1rem;
         }
 

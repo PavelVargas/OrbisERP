@@ -1,0 +1,52 @@
+{% extends 'workspace/base.html' %}
+{% block title %}Impuestos de venta{% endblock %}
+{% block eyebrow %}Configuración comercial{% endblock %}
+{% block heading %}Impuestos de venta{% endblock %}
+{% block subtitle %}Administra las tasas que aplican a tus productos. La tasa utilizada queda registrada en cada línea vendida para conservar el histórico.{% endblock %}
+{% block content %}
+<section class="workspace-grid">
+    <article class="workspace-metric"><span><i class="bi bi-percent"></i> Tasas configuradas</span><strong>{{ taxes|length }}</strong><small>Incluye tasas activas y de referencia.</small></article>
+    <article class="workspace-metric"><span><i class="bi bi-star"></i> Predeterminada</span><strong>{{ (taxes|selectattr('is_default')|map(attribute='rate')|first)|default('—', true) }}{% if taxes|selectattr('is_default')|list %}%{% endif %}</strong><small>Se usa cuando el producto no tiene una tasa específica.</small></article>
+    <article class="workspace-metric"><span><i class="bi bi-box-seam"></i> Productos</span><strong>{{ products|length }}</strong><small>Disponibles para asignación individual.</small></article>
+    <article class="workspace-metric"><span><i class="bi bi-tags"></i> Categorías</span><strong>{{ categories|length }}</strong><small>Permiten asignación masiva.</small></article>
+</section>
+
+<div class="workspace-columns equal">
+    <section class="workspace-card">
+        <div class="workspace-card-head"><div><h2>Tasas configuradas</h2><p>Una sola tasa puede quedar como predeterminada para toda la empresa.</p></div></div>
+        <div class="config-stack">
+        {% for tax in taxes %}
+            <div class="config-row">
+                <span><strong>{{ tax.name }}</strong><small>{{ tax.rate }}% · {{ 'Incluido en el precio' if tax.price_included else 'Se suma al precio' }}</small></span>
+                <span class="workspace-table-actions">
+                    {% if tax.is_default %}<span class="workspace-tag ok"><i class="bi bi-star-fill"></i> Predeterminada</span>
+                    {% elif tax.active %}<form method="post" action="{{ url_for('workspace_bp.tax_set_default', tax_id=tax.id) }}"><button class="workspace-btn secondary" type="submit">Usar por defecto</button></form>{% endif %}
+                </span>
+            </div>
+        {% else %}<div class="workspace-empty"><i class="bi bi-percent"></i>Aún no hay tasas configuradas.</div>{% endfor %}
+        </div>
+    </section>
+
+    <section class="workspace-card workspace-card--flat">
+        <div class="workspace-card-head"><div><h2>Nueva tasa</h2><p>Define cómo se calcula el impuesto sobre el precio de venta.</p></div></div>
+        <form class="workspace-form compact" method="post">
+            <label>Nombre<input name="name" required maxlength="80" placeholder="Ej. ITBIS 18%"></label>
+            <label>Tasa %<input name="rate" type="number" min="0" max="100" step="0.01" required placeholder="18.00"></label>
+            <label class="workspace-check full"><input type="checkbox" name="price_included" checked><span>El precio publicado ya incluye este impuesto</span></label>
+            <label class="workspace-check full"><input type="checkbox" name="is_default"><span>Usar como tasa predeterminada</span></label>
+            <div class="actions"><button class="workspace-btn" type="submit"><i class="bi bi-plus-lg"></i> Crear tasa</button></div>
+        </form>
+    </section>
+</div>
+
+<section class="workspace-card">
+    <div class="workspace-card-head"><div><h2>Asignar impuesto</h2><p>Asigna una tasa a un producto concreto o a todos los productos activos de una categoría.</p></div></div>
+    <form class="workspace-form" method="post" action="{{ url_for('workspace_bp.tax_assign') }}">
+        <label>Tasa<select name="tax_id" required><option value="">Selecciona una tasa</option>{% for tax in taxes if tax.active %}<option value="{{ tax.id }}">{{ tax.name }} · {{ tax.rate }}%</option>{% endfor %}</select></label>
+        <label>Producto<select name="product_id"><option value="">Ninguno</option>{% for product in products %}<option value="{{ product.id }}">{{ product.name }} · {{ product.sku }}</option>{% endfor %}</select></label>
+        <label>Categoría<select name="category_id"><option value="">Ninguna</option>{% for category in categories %}<option value="{{ category.id }}">{{ category.name }}</option>{% endfor %}</select></label>
+        <p class="workspace-help full"><i class="bi bi-info-circle"></i> Si seleccionas producto y categoría, prevalece el producto. Para asignar en masa, deja el producto vacío.</p>
+        <div class="actions"><button class="workspace-btn" type="submit"><i class="bi bi-check2"></i> Aplicar tasa</button></div>
+    </form>
+</section>
+{% endblock %}

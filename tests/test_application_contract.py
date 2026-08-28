@@ -30,10 +30,10 @@ def test_refreshed_operational_screens_are_registered():
 
 
 def test_crm_state_layer_keeps_hidden_panels_hidden():
-    css = Path('static/css/crm_css/crm_state.css').read_text(encoding='utf-8')
+    css = Path('static/css/module_refresh.css').read_text(encoding='utf-8')
     template = Path('templates/crm/index.html').read_text(encoding='utf-8')
 
-    assert '.crm-page [hidden]' in css
+    assert '.crm-v3 [hidden]' in css
     assert 'display: none !important' in css
     assert 'id="errorState"' in template
     assert 'data-client-endpoint=' in template
@@ -50,8 +50,9 @@ def test_purchase_detail_uses_commercial_polish_layer():
     assert 'display: grid' in css
     assert '.progress-step {' in css
     assert 'class="order-progress"' in template
-    assert 'class="line-builder"' in template
-    assert 'class="configuration-column"' in template
+    assert 'class="line-builder line-builder--inline"' in template
+    assert 'class="purchase-inline-line"' in template
+    assert 'class="purchase-inline-product"' in template
     assert '.summary-card' in css
 
 
@@ -63,3 +64,29 @@ def test_purchase_list_has_compact_filters_and_operational_summary():
     assert 'class="filters-popover"' in template
     assert 'name="supplier_id"' in template
     assert '.purchases-table-wrap' in css
+
+
+def test_audit_template_does_not_shadow_flask_url_for_endpoint_argument():
+    template = Path('templates/governance/audit.html').read_text(encoding='utf-8')
+    governance = Path('routes/governance.py').read_text(encoding='utf-8')
+
+    # Flask.url_for(endpoint, **values) reserves the keyword ``endpoint``.
+    # Audit URLs must use a different query-string key to avoid passing the
+    # endpoint argument twice at render time.
+    assert "endpoint=request.args.get('endpoint'" not in template
+    assert 'audit_endpoint=' in template
+    assert "request.args.get('audit_endpoint') or request.args.get('endpoint')" in governance
+
+
+def test_product_catalog_keeps_money_math_decimal_safe():
+    route = Path('routes/products/products.py').read_text(encoding='utf-8')
+    template = Path('templates/products/products.html').read_text(encoding='utf-8')
+
+    assert "conversion_rate = _product_exchange_rate(selected_currency, company_id)" in route
+    assert "return Decimal('1')" in route
+    assert "min_price * conversion_rate" in route
+    assert "max_price * conversion_rate" in route
+    assert "product.price = float" not in route
+    assert "product.cost = float" not in route
+    assert "product.price / conversion_rate" in template
+    assert "product.cost / conversion_rate" in template

@@ -1,0 +1,129 @@
+/* ========================================================================
+   OrbisERP - full-width tablet application mode
+   ------------------------------------------------------------------------
+   Tablet mode is an application state. It always removes the desktop
+   sidebar, uses the complete physical viewport and applies the module
+   responsive rules for a 1024px tablet reference profile through
+   tablet_responsive.css. 1024px is a behavioral breakpoint reference only;
+   it is never used to letterbox or constrain the application width.
+   ======================================================================== */
+
+html.tablet-mode {
+    --tablet-profile-reference-width: 1024px;
+    --tablet-shell-top: 70px;
+    --tablet-shell-bottom: 92px;
+    width: 100%;
+    max-width: none;
+    background: var(--bg-page, var(--bg-main, #f3f5f7));
+}
+
+html.tablet-mode body:not(.pos-page) {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 320px;
+    min-height: var(--tablet-vh, 100dvh);
+    margin: 0 !important;
+    overflow-x: clip;
+    box-shadow: none !important;
+}
+
+/* Desktop navigation must never participate in tablet layout. */
+html.tablet-mode :where(
+    #app-sidebar,
+    .sidebar,
+    #sidebar-toggle,
+    .sidebar-mobile-trigger,
+    #sidebar-overlay,
+    .sidebar-overlay,
+    .collapse-btn,
+    .btn-floating-tablet
+) {
+    display: none !important;
+}
+
+/* Every authenticated page consumes the entire tablet workspace. */
+html.tablet-mode body:not(.pos-page) > main,
+html.tablet-mode body:not(.pos-page) > main.orbis-page,
+html.tablet-mode body:not(.pos-page) > .main-content,
+html.tablet-mode body:not(.pos-page) > .main-wrapper,
+html.tablet-mode body:not(.pos-page) > .main-viewport {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-sizing: border-box;
+}
+
+html.tablet-mode body:not(.pos-page) > main > *,
+html.tablet-mode body:not(.pos-page) > main.orbis-page > * {
+    max-width: 100% !important;
+}
+
+html.tablet-mode body:not(.pos-page) :where(
+    .workspace-page,
+    .bo-page,
+    .clients-page,
+    .sales-page,
+    .sales-hub,
+    .stock-page,
+    .supplier-page,
+    .suppliers-page,
+    .purchase-page,
+    .purchases-page,
+    .category-page,
+    .crm-page,
+    .reports-center,
+    .monthly-page,
+    .kardex-page,
+    .company-settings-page,
+    .staff-page,
+    .ops-page,
+    .module-page,
+    .orbis-page,
+    .main-content,
+    .main-wrapper,
+    .main-viewport
+) {
+    max-width: none !important;
+    min-width: 0 !important;
+    margin-left: 0 !important;
+}
+
+/* Inline max-width values are useful on desktop forms, but tablet mode owns
+   the complete work surface. */
+html.tablet-mode body:not(.pos-page) > main :where(
+    .workspace-card,
+    .module-page,
+    .sales-hub__shell,
+    .content-wrapper,
+    .content-container,
+    .page-container
+) {
+    max-width: 100% !important;
+}
+
+/* Tablet chrome is viewport chrome: full width, never centered/letterboxed. */
+html.tablet-mode body:not(.pos-page) .app-tablet-topbar {
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    transform: none !important;
+}
+
+html.tablet-mode.tablet-keyboard-open body:not(.pos-page) .app-tablet-topbar {
+    transform: translateY(-105%) !important;
+}
+
+html.tablet-mode body:not(.pos-page) :where(img, video, canvas, iframe) {
+    max-width: 100%;
+}
+
+/* POS already owns a purpose-built touch workstation; only the desktop
+   navigation suppression from this file applies to it. */
+html.tablet-mode body.pos-page {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+}

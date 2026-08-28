@@ -1,0 +1,46 @@
+{% extends 'workspace/base.html' %}
+{% block title %}Control de calidad · OrbisERP{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/retail.css') }}">{% endblock %}
+{% block eyebrow %}Inventario · Calidad{% endblock %}
+{% block heading %}Control de calidad{% endblock %}
+{% block subtitle %}Cuarentena, mercancía dañada y resolución trazable de devoluciones por lote o serial.{% endblock %}
+{% block actions %}<a class="workspace-btn secondary" href="{{ url_for('retail_bp.overview') }}"><i class="bi bi-grid-1x2"></i> Retail avanzado</a>{% endblock %}
+{% block content %}
+<div class="retail-shell">
+  {% include 'retail/_nav.html' %}
+<div class="workspace-kpis">
+  <article class="workspace-kpi"><span>Cuarentena</span><strong>{{ metrics.quarantine }}</strong><small>Stock no vendible</small></article>
+  <article class="workspace-kpi"><span>Dañado</span><strong>{{ metrics.damaged }}</strong><small>Pendiente de descarte</small></article>
+  <article class="workspace-kpi"><span>Trazados pendientes</span><strong>{{ metrics.tracked }}</strong><small>Lotes + seriales</small></article>
+</div>
+
+<section class="workspace-panel">
+  <div class="workspace-card-head"><div><h2>Resumen por producto y almacén</h2><p>Estas cantidades están físicamente presentes, pero quedan excluidas del stock vendible.</p></div></div>
+  <div class="workspace-table-wrap"><table class="workspace-table"><thead><tr><th>Producto</th><th>Almacén</th><th>Variante</th><th>Condición</th><th>Cantidad</th></tr></thead><tbody>
+    {% for row in condition_rows %}<tr><td><strong>{{ row.product.name }}</strong><small>{{ row.product.sku }}</small></td><td>{{ row.warehouse.name }}</td><td>{{ row.variant.name if row.variant else 'General' }}</td><td><span class="workspace-badge">{{ 'Cuarentena' if row.condition=='QUARANTINE' else 'Dañado' }}</span></td><td>{{ display_quantity(row.quantity) }}</td></tr>{% else %}<tr><td colspan="5"><div class="workspace-empty"><i class="bi bi-patch-check"></i>No hay stock retenido por calidad.</div></td></tr>{% endfor %}
+  </tbody></table></div>
+</section>
+
+<section class="workspace-panel">
+  <div class="workspace-card-head"><div><h2>Lotes devueltos pendientes</h2><p>La resolución conserva el lote exacto vendido. Los lotes vencidos nunca vuelven a Disponible.</p></div></div>
+  <div class="workspace-table-wrap"><table class="workspace-table"><thead><tr><th>Producto</th><th>Lote</th><th>Almacén</th><th>Cantidad</th><th>Estado</th><th>Acción</th></tr></thead><tbody>
+    {% for row in lot_rows %}<tr>
+      <td><strong>{{ row.return_item.product.name }}</strong><small>Venta #{{ row.sale_item.sale_id }} · devolución #{{ row.return_item.return_id }}</small></td>
+      <td>{{ row.lot.lot_number }}<small>Vence: {{ row.lot.expires_at or '—' }}</small></td>
+      <td>{{ row.return_item.warehouse.name if row.return_item.warehouse else '—' }}</td><td>{{ display_quantity(row.quantity) }}</td><td><span class="workspace-badge">{{ row.disposition }}</span></td>
+      <td><div class="workspace-inline-actions">{% if row.disposition=='QUARANTINE' %}<form method="post" action="{{ url_for('retail_bp.quality_lot_action', row_id=row.id, action='release') }}"><button class="workspace-btn secondary" type="submit">Liberar</button></form>{% endif %}<form method="post" action="{{ url_for('retail_bp.quality_lot_action', row_id=row.id, action='scrap') }}" data-confirm="¿Descartar definitivamente esta cantidad?" data-confirm-title="Descartar inventario" data-confirm-detail="La cantidad saldrá de cuarentena como merma y se registrará un movimiento auditable. Esta acción no puede revertirse automáticamente." data-confirm-action="Descartar cantidad"><button class="workspace-btn danger" type="submit">Descartar</button></form></div></td>
+    </tr>{% else %}<tr><td colspan="6"><div class="workspace-empty"><i class="bi bi-box-seam"></i>No hay lotes devueltos pendientes de calidad.</div></td></tr>{% endfor %}
+  </tbody></table></div>
+</section>
+
+<section class="workspace-panel">
+  <div class="workspace-card-head"><div><h2>Seriales / IMEI pendientes</h2><p>Cada unidad conserva su historial de venta, devolución y resolución.</p></div></div>
+  <div class="workspace-table-wrap"><table class="workspace-table"><thead><tr><th>Producto</th><th>Serial / IMEI</th><th>Almacén</th><th>Estado</th><th>Acción</th></tr></thead><tbody>
+    {% for row in serial_rows %}<tr>
+      <td><strong>{{ row.return_item.product.name }}</strong><small>Venta #{{ row.sale_item.sale_id }} · devolución #{{ row.return_item.return_id }}</small></td><td>{{ row.serial.serial_number }}</td><td>{{ row.return_item.warehouse.name if row.return_item.warehouse else '—' }}</td><td><span class="workspace-badge">{{ row.disposition }}</span></td>
+      <td><div class="workspace-inline-actions">{% if row.disposition=='QUARANTINE' %}<form method="post" action="{{ url_for('retail_bp.quality_serial_action', row_id=row.id, action='release') }}"><button class="workspace-btn secondary" type="submit">Liberar</button></form>{% endif %}<form method="post" action="{{ url_for('retail_bp.quality_serial_action', row_id=row.id, action='scrap') }}" data-confirm="¿Descartar definitivamente este serial?" data-confirm-title="Descartar serial" data-confirm-detail="El serial quedará marcado como descartado y no volverá a estar disponible para venta. Se conservará la trazabilidad." data-confirm-action="Descartar serial"><button class="workspace-btn danger" type="submit">Descartar</button></form></div></td>
+    </tr>{% else %}<tr><td colspan="5"><div class="workspace-empty"><i class="bi bi-upc-scan"></i>No hay seriales devueltos pendientes de calidad.</div></td></tr>{% endfor %}
+  </tbody></table></div>
+</section>
+</div>
+{% endblock %}

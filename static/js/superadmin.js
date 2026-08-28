@@ -1,31 +1,44 @@
- const html = document.documentElement;
-        const themeBtn = document.getElementById('themeToggle');
-        const themeIcon = document.getElementById('themeIcon');
-        const themeText = document.getElementById('themeText');
-        
-        const applyTheme = (theme) => {
-            if (theme === 'light') {
-                html.classList.remove('dark');
-                html.setAttribute('data-theme', 'light');
-                themeIcon.className = 'bi bi-moon-stars-fill';
-                themeText.innerText = 'Modo Oscuro';
-            } else {
-                html.classList.add('dark');
-                html.setAttribute('data-theme', 'dark');
-                themeIcon.className = 'bi bi-sun-fill';
-                themeText.innerText = 'Modo Claro';
-            }
-        };
+(() => {
+    'use strict';
+    const html = document.documentElement;
+    const themeBtn = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    const themeText = document.getElementById('themeText');
 
-        themeBtn.onclick = () => {
-            const current = html.classList.contains('dark') ? 'light' : 'dark';
-            localStorage.setItem('theme', current);
-            applyTheme(current);
-        };
+    const storedTheme = () => {
+        try {
+            const value = localStorage.getItem('theme') || localStorage.getItem('orbis-theme');
+            if (value === 'dark' || value === 'light') return value;
+        } catch (_error) {}
+        return html.classList.contains('dark') || html.dataset.theme === 'dark' ? 'dark' : 'light';
+    };
 
-        window.onload = () => {
-            applyTheme(localStorage.getItem('theme') || 'dark');
-        };
+    const applyTheme = (theme) => {
+        if (window.OrbisTheme) theme = window.OrbisTheme.set(theme);
+        else {
+            const dark = theme === 'dark';
+            html.classList.toggle('dark', dark);
+            html.dataset.theme = theme;
+            html.style.colorScheme = theme;
+            document.body?.classList.toggle('dark', dark);
+            if (document.body) document.body.dataset.theme = theme;
+            try {
+                localStorage.setItem('theme', theme);
+                localStorage.setItem('orbis-theme', theme);
+            } catch (_error) {}
+        }
+        const dark = theme === 'dark';
+        if (themeIcon) themeIcon.className = dark ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
+        if (themeText) themeText.innerText = dark ? 'Modo Claro' : 'Modo Oscuro';
+        return theme;
+    };
+
+    let theme = applyTheme(storedTheme());
+    if (themeBtn) themeBtn.onclick = () => { theme = applyTheme(theme === 'dark' ? 'light' : 'dark'); };
+    document.addEventListener('orbis:themechange', (event) => {
+        theme = event.detail?.theme || storedTheme();
+        applyTheme(theme);
+    });
 
         document.getElementById('masterSearch').oninput = (e) => {
             const query = e.target.value.toLowerCase();
@@ -69,3 +82,4 @@
         window.onclick = (e) => {
             if (e.target.id === 'companyModal') closeMasterModal();
         }
+})();

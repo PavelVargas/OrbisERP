@@ -1,356 +1,165 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="scanner-dark {% if tablet_mode_active|default(session.get('tablet_mode')) %}tablet-mode tablet-full-width-profile{% endif %}">
 <head>
+    {% set shell_assets_loaded = true %}
+    {% include 'layouts/app_head_assets.html' %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Validator Pro | OrbisERP</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-    <style>
-        :root { 
-            --primary: #10b981; 
-            --primary-glow: rgba(16, 185, 129, 0.4);
-            --bg-dark: #070b14; 
-            --bg-card: #111827; 
-            --text-main: #f8fafc; 
-            --text-muted: #64748b; 
-            --danger: #ef4444; 
-            --glass: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.1);
-        }
-
-        * { box-sizing: border-box; outline: none; }
-        
-        body { 
-            margin: 0; 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            background-color: var(--bg-dark); 
-            color: var(--text-main);
-            height: 100vh;
-            display: flex;
-            overflow: hidden;
-            background-image: radial-gradient(circle at top right, rgba(16, 185, 129, 0.05), transparent);
-        }
-
-        main { flex-grow: 1; display: flex; flex-direction: column; padding: 15px; position: relative; }
-
-        .odoo-toolbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            backdrop-filter: blur(10px);
-            padding: 15px;
-            border-radius: 20px;
-            margin-bottom: 20px;
-        }
-
-        .breadcrumb { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
-        .breadcrumb span { color: var(--primary); }
-
-        .status-badge {
-            background: var(--glass);
-            color: var(--text-muted);
-            padding: 6px 14px;
-            border-radius: 100px;
-            font-size: 0.65rem;
-            font-weight: 900;
-            border: 1px solid var(--glass-border);
-        }
-
-        .status-active { color: #ff7a2f; border-color: rgba(255, 122, 47, 0.3); }
-        .status-complete { color: var(--primary); border-color: var(--primary); }
-
-        .product-node {
-            background: var(--bg-card);
-            border-radius: 0px;
-            color: var(--text-main);
-            padding: 25px;
-            position: relative;
-            transition: transform 0.1s ease;
-            overflow: hidden;
-            border: 1px solid #dddddd33;
-        }
-
-        /* Efecto de golpe seco */
-        .product-node.bump { transform: scale(1.02); }
-
-        .sku-tag { 
-            font-size: 0.7rem; 
-            font-weight: 900; 
-            background: #f1f5f9; 
-            padding: 4px 12px; 
-            border-radius: 8px; 
-            color: var(--primary); 
-            display: inline-block;
-            margin-bottom: 10px;
-        }
-
-        .product-title { font-size: 1.4rem; font-weight: 900; line-height: 1.1; margin-bottom: 20px; }
-
-        /* Barra SIN animación para respuesta instantánea */
-        .progress-wrapper { height: 12px; background: var(--bg-input); border-radius: 20px; margin: 25px 0; overflow: hidden; }
-        .progress-fill { 
-            height: 100%; 
-            background: var(--primary); 
-            width: 0%; 
-            /* Eliminada la transición para que sea instantáneo */
-            transition: none; 
-            box-shadow: 0 0 10px var(--primary-glow);
-        }
-
-        .counter-box { display: flex; align-items: baseline; justify-content: left; gap: 5px; }
-        .qty-now { font-size: 6.5rem; font-weight: 900; color: var(--accent); letter-spacing: -5px; line-height: 1; }
-        .qty-total { font-size: 2.2rem; font-weight: 700; color: #cbd5e1; }
-
-        .route-path {
-            background: var(--glass);
-            border-radius: 20px;
-            padding: 15px;
-            border: 1px solid var(--glass-border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 15px;
-        }
-
-        .btn-validate {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 22px;
-            border-radius: 20px;
-            font-weight: 900;
-            font-size: 1.1rem;
-            width: 100%;
-            margin-top: 15px;
-            display: none;
-            cursor: pointer;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        #master-scanner { position: fixed; opacity: 0; pointer-events: none; }
-
-        .scanner-idle {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .error-flash { animation: flashRed 0.2s; }
-        .scan-guide { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:15px; }
-        .scan-step { border:1px solid var(--glass-border); background:var(--glass); border-radius:14px; padding:12px; color:var(--text-muted); display:flex; align-items:center; gap:9px; font-size:.72rem; font-weight:800; }
-        .scan-step i { font-size:1.15rem; }.scan-step.active{border-color:#ff7a2f;color:#ff7a2f}.scan-step.done{border-color:var(--primary);color:var(--primary)}
-        .scanner-help{color:var(--text-muted);font-size:.78rem;text-align:center;margin:10px 0}.scanner-help strong{color:var(--text-main)}
-        @media(max-width:700px){main{padding:10px}.scan-guide{grid-template-columns:1fr}.qty-now{font-size:4.5rem}.route-path{align-items:stretch;gap:8px}.product-node{padding:18px}}
-        @keyframes flashRed { 
-            50% { background-color: #450a0a; } 
-        }
-    </style>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/scanner.css') }}">
+    <meta name="color-scheme" content="dark">
+    <title>Esc&aacute;ner de transferencias | OrbisERP</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/scanner.css', v='20260825-dark5') }}">
+    <script src="{{ url_for('static', filename='js/scanner.js', v='20260825-dark5') }}" defer></script>
 </head>
-<body>
+<body class="scanner-mode-page">
     {% include 'layouts/left_bar.html' %}
 
-    <main id="main-frame">
-        <div class="odoo-toolbar">
-            <div class="breadcrumb">ORBIS / <span id="mode-text">ESPERANDO SCAN</span></div>
-            <div id="status-badge" class="status-badge">STANDBY</div>
-        </div>
+    <main
+        id="main-frame"
+        class="scanner-workstation"
+        data-details-url-template="{{ url_for('transfer_bp.api_get_transfer', code='__CODE__') }}"
+        data-receive-url-template="{{ url_for('transfer_bp.receive_transfer', transfer_id=0) }}"
+    >
+        <header class="scanner-toolbar">
+            <div>
+                <span class="scanner-eyebrow">Inventario &middot; recepci&oacute;n asistida</span>
+                <div class="scanner-breadcrumb">ORBIS / <strong id="mode-text">ESPERANDO CONDUCE</strong></div>
+            </div>
+            <div class="scanner-toolbar-actions">
+                <span class="scanner-theme-pill"><i class="bi bi-moon-stars-fill"></i> Modo operativo oscuro</span>
+                <span id="status-badge" class="status-badge">STANDBY</span>
+            </div>
+        </header>
 
-        <input type="text" id="master-scanner" autofocus autocomplete="off" inputmode="none">
-
-        <form class="manual-scan" id="manual-scan-form">
-            <i class="bi bi-upc-scan"></i>
-            <input id="manual-code" type="text" autocomplete="off" placeholder="Escanear o escribir código…" aria-label="Código escaneado">
-            <button type="submit">Procesar</button>
-        </form>
-
-        <div class="scan-guide">
-            <div class="scan-step active" id="step-transfer"><i class="bi bi-file-earmark-bar-graph"></i><span>1. Conduce</span></div>
-            <div class="scan-step" id="step-location"><i class="bi bi-geo-alt"></i><span>2. Ubicación destino</span></div>
-            <div class="scan-step" id="step-product"><i class="bi bi-box-seam"></i><span>3. Productos</span></div>
-        </div>
-
-        <div id="transfer-details" style="display: none; flex-direction: column;">
-            <div class="route-path">
-                <div style="text-align: center; flex: 1;">
-                    <span style="display:block; font-size:0.6rem; color:var(--text-muted); font-weight:800;">ORIGEN</span>
-                    <span id="orig" style="font-weight:900;">---</span>
+        <section class="scanner-shell" aria-labelledby="scanner-title">
+            <div class="scanner-heading">
+                <div>
+                    <h1 id="scanner-title">Validaci&oacute;n de transferencias</h1>
+                    <p>Escanea el conduce, valida la ubicaci&oacute;n y confirma la mercanc&iacute;a recibida.</p>
                 </div>
-                <i class="bi bi-arrow-right" style="color: var(--primary);"></i>
-                <div style="text-align: center; flex: 1;">
-                    <span style="display:block; font-size:0.6rem; color:var(--text-muted); font-weight:800;">DESTINO</span>
-                    <span id="dest" style="font-weight:900;">---</span>
-                </div>
+                <button id="reset-scanner" class="scanner-reset" type="button" hidden>
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                    Cambiar conduce
+                </button>
             </div>
 
-            <div class="product-node" id="product-card">
-                <div class="sku-tag" id="display-ref">REF: ---</div>
-                <div class="product-title" id="prod-name">Cargando datos...</div>
+            <input
+                id="master-scanner"
+                class="hardware-scanner-input"
+                type="text"
+                autocomplete="off"
+                autocapitalize="characters"
+                spellcheck="false"
+                inputmode="none"
+                aria-label="Entrada del lector de c&oacute;digos"
+            >
 
-                <div class="progress-wrapper">
-                    <div id="progress-bar" class="progress-fill"></div>
-                </div>
-
-                <div class="counter-box">
-                    <span id="count-scanned" class="qty-now">0</span>
-                    <span class="qty-total">/<span id="val-expected">0</span></span>
-                </div>
-            </div>
-            <p class="scanner-help" id="scanner-help">Escanea el código solicitado para continuar.</p>
-
-            <form id="confirm-form" method="POST">
-                <button type="submit" class="btn-validate" id="btn-final">
-                    <i class="bi bi-check-circle-fill"></i> VALIDAR Y CERRAR
+            <form class="manual-scan" id="manual-scan-form" autocomplete="off">
+                <i class="bi bi-upc-scan" aria-hidden="true"></i>
+                <input
+                    id="manual-code"
+                    type="text"
+                    autocomplete="off"
+                    autocapitalize="characters"
+                    spellcheck="false"
+                    placeholder="Escanear o escribir c&oacute;digo..."
+                    aria-label="C&oacute;digo de conduce, ubicaci&oacute;n o producto"
+                >
+                <button type="submit">
+                    <span>Procesar</span>
+                    <i class="bi bi-arrow-right" aria-hidden="true"></i>
                 </button>
             </form>
-        </div>
 
-        <div id="empty-state" class="scanner-idle">
-            <i class="bi bi-qr-code-scan" style="font-size: 5rem; color: var(--primary);"></i>
-            <h2 style="margin-top: 20px; font-weight: 900;">MODO SCANNER</h2>
-            <p style="color: var(--text-muted); font-weight: 600;">Escanee el código del conduce</p>
-        </div>
+            <ol class="scan-guide" aria-label="Progreso de validaci&oacute;n">
+                <li class="scan-step active" id="step-transfer">
+                    <span class="scan-step-number">1</span>
+                    <i class="bi bi-file-earmark-bar-graph" aria-hidden="true"></i>
+                    <span><strong>Conduce</strong><small>Identificar traslado</small></span>
+                </li>
+                <li class="scan-step" id="step-location">
+                    <span class="scan-step-number">2</span>
+                    <i class="bi bi-geo-alt" aria-hidden="true"></i>
+                    <span><strong>Ubicaci&oacute;n</strong><small>Validar destino</small></span>
+                </li>
+                <li class="scan-step" id="step-product">
+                    <span class="scan-step-number">3</span>
+                    <i class="bi bi-box-seam" aria-hidden="true"></i>
+                    <span><strong>Productos</strong><small>Comprobar cantidad</small></span>
+                </li>
+            </ol>
+
+            <div id="scanner-message" class="scanner-message" role="status" aria-live="polite" hidden></div>
+
+            <section id="empty-state" class="scanner-idle" aria-label="Esc&aacute;ner listo">
+                <span class="scanner-idle-icon"><i class="bi bi-qr-code-scan" aria-hidden="true"></i></span>
+                <h2>Modo esc&aacute;ner</h2>
+                <p>Escanea el c&oacute;digo del conduce para comenzar.</p>
+                <small>Tambi&eacute;n puedes escribir el c&oacute;digo en el campo superior.</small>
+            </section>
+
+            <section id="transfer-details" class="transfer-details" hidden>
+                <article class="route-path">
+                    <div class="route-point">
+                        <span>Origen</span>
+                        <strong id="orig">-</strong>
+                    </div>
+                    <div class="route-arrow"><i class="bi bi-arrow-right" aria-hidden="true"></i></div>
+                    <div class="route-point route-point-destination">
+                        <span>Destino</span>
+                        <strong id="dest">-</strong>
+                    </div>
+                </article>
+
+                <article class="product-node" id="product-card">
+                    <div class="product-head">
+                        <div>
+                            <span class="sku-tag" id="display-ref">REF: -</span>
+                            <h2 class="product-title" id="prod-name">Cargando datos...</h2>
+                            <p id="product-meta" class="product-meta">Producto pendiente de validar</p>
+                        </div>
+                        <span class="quantity-unit" id="quantity-unit">ud</span>
+                    </div>
+
+                    <div class="progress-wrapper" aria-hidden="true">
+                        <div id="progress-bar" class="progress-fill"></div>
+                    </div>
+
+                    <div class="counter-box" aria-label="Cantidad validada">
+                        <span id="count-scanned" class="qty-now">0</span>
+                        <span class="qty-separator">/</span>
+                        <span id="val-expected" class="qty-total">0</span>
+                    </div>
+
+                    <form id="fractional-form" class="fractional-entry" hidden>
+                        <label for="fractional-quantity">
+                            <span>Cantidad recibida</span>
+                            <small>Introduce la medida exacta con hasta 3 decimales.</small>
+                        </label>
+                        <div>
+                            <input
+                                id="fractional-quantity"
+                                type="number"
+                                min="0.001"
+                                step="0.001"
+                                inputmode="decimal"
+                                autocomplete="off"
+                            >
+                            <button type="submit">Registrar cantidad</button>
+                        </div>
+                    </form>
+                </article>
+
+                <p class="scanner-help" id="scanner-help">Escanea el c&oacute;digo solicitado para continuar.</p>
+
+                <form id="confirm-form" method="POST">
+                    <input type="hidden" name="return_to" value="scanner">
+                    <button type="submit" class="btn-validate" id="btn-final" hidden>
+                        <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+                        Confirmar recepci&oacute;n
+                    </button>
+                </form>
+            </section>
+        </section>
     </main>
-
-    <script>
-        const scannerInput = document.getElementById('master-scanner');
-        const transferDetails = document.getElementById('transfer-details');
-        const emptyState = document.getElementById('empty-state');
-        const statusBadge = document.getElementById('status-badge');
-        const productCard = document.getElementById('product-card');
-        const progressBar = document.getElementById('progress-bar');
-        const mainFrame = document.getElementById('main-frame');
-        
-        let mode = 'WAITING_TRANSFER', currentTransfer = null, scannedQty = 0;
-        let typingTimer;
-
-        const manualInput = document.getElementById('manual-code');
-        document.addEventListener('click', event => { if (!event.target.closest('input,button,a,select,textarea')) scannerInput.focus(); });
-        setInterval(() => { if(!['INPUT','BUTTON','SELECT','TEXTAREA'].includes(document.activeElement?.tagName)) scannerInput.focus(); }, 800);
-        document.getElementById('manual-scan-form').addEventListener('submit', event => {
-            event.preventDefault();
-            const code = manualInput.value.trim();
-            if (code) handleInput(code);
-            manualInput.value = '';
-            manualInput.focus();
-        });
-
-        scannerInput.addEventListener('input', () => {
-            clearTimeout(typingTimer);
-            typingTimer = setTimeout(() => {
-                const rawCode = scannerInput.value.trim();
-                if (rawCode) { handleInput(rawCode); scannerInput.value = ''; }
-            }, 50); // Reducido a 50ms para máxima velocidad
-        });
-
-        async function handleInput(code) {
-            const cleanCode = code.toUpperCase().replace(/[^A-Z0-9]/g, "");
-
-            if (mode === 'WAITING_TRANSFER') {
-                try {
-                    const res = await fetch(`/transfers/api/get_details/${cleanCode}`);
-                    const data = await res.json();
-                    if (data.success) {
-                        currentTransfer = data.transfer;
-                        renderUI();
-                        mode = currentTransfer.destination_location_barcode ? 'WAITING_LOCATION' : 'WAITING_PRODUCT';
-                        statusBadge.innerText = "EN CURSO";
-                        statusBadge.classList.add('status-active');
-                        setStep(mode === 'WAITING_LOCATION' ? 'location' : 'product');
-                        document.getElementById('scanner-help').innerHTML = mode === 'WAITING_LOCATION' ? '<strong>Escanea ahora la etiqueta de la ubicación destino.</strong>' : '<strong>Escanea cada unidad del producto.</strong>';
-                        beep(600, 0.1);
-                    } else { triggerError(); }
-                } catch (e) { triggerError(); }
-            } 
-            else if (mode === 'WAITING_LOCATION') {
-                const expectedLocation = (currentTransfer.destination_location_barcode || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-                if (cleanCode === expectedLocation) {
-                    mode = 'WAITING_PRODUCT';
-                    setStep('product');
-                    document.getElementById('scanner-help').innerHTML = '<strong>Ubicación validada.</strong> Escanea cada unidad del producto.';
-                    beep(720, 0.08);
-                } else { triggerError('La ubicación escaneada no es el destino de este traslado.'); }
-            }
-            else if (mode === 'WAITING_PRODUCT') {
-                const cleanSku = (currentTransfer.product_sku || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
-                const isMatch = (cleanCode === cleanSku || cleanCode === String(currentTransfer.product_id));
-                
-                // VALIDACIÓN: Solo sumar si el código coincide Y no hemos llegado al límite
-                if (isMatch && scannedQty < currentTransfer.expected_qty) {
-                    scannedQty++;
-                    updateCounter();
-                    bumpEffect();
-                    beep(800, 0.05);
-                } else {
-                    // Si intenta escanear más de la cuenta o el código está mal
-                    triggerError('El producto no coincide o la cantidad ya está completa.'); 
-                }
-            }
-        }
-
-        function renderUI() {
-            emptyState.style.display = 'none';
-            transferDetails.style.display = 'flex';
-            document.getElementById('display-ref').innerText = "REF: " + currentTransfer.ref_code;
-            document.getElementById('orig').innerText = currentTransfer.origin_location ? `${currentTransfer.origin} · ${currentTransfer.origin_location}` : currentTransfer.origin;
-            document.getElementById('dest').innerText = currentTransfer.destination_location ? `${currentTransfer.destination} · ${currentTransfer.destination_location}` : currentTransfer.destination;
-            document.getElementById('prod-name').innerText = currentTransfer.product_name;
-            document.getElementById('val-expected').innerText = currentTransfer.expected_qty;
-        }
-
-        function updateCounter() {
-            document.getElementById('count-scanned').innerText = scannedQty;
-            
-            // Cambio instantáneo de la barra
-            const progress = (scannedQty / currentTransfer.expected_qty) * 100;
-            progressBar.style.width = progress + "%";
-
-            if (scannedQty >= currentTransfer.expected_qty) {
-                document.getElementById('btn-final').style.display = 'block';
-                document.getElementById('confirm-form').action = `/transfers/receive/${currentTransfer.id}`;
-                statusBadge.innerText = "COMPLETO";
-                statusBadge.className = "status-badge status-complete";
-                document.getElementById('scanner-help').innerHTML = '<strong>Conteo completo.</strong> Confirma para registrar el stock y la trazabilidad.';
-            }
-        }
-
-        function setStep(active) {
-            ['transfer','location','product'].forEach((name, index) => {
-                const el = document.getElementById(`step-${name}`);
-                el.classList.toggle('active', name === active);
-                const order = {transfer:0,location:1,product:2};
-                el.classList.toggle('done', order[name] < order[active] || (name === 'location' && !currentTransfer?.destination_location_barcode));
-            });
-            document.getElementById('mode-text').innerText = active === 'location' ? 'VALIDAR UBICACIÓN' : active === 'product' ? 'CONTAR PRODUCTOS' : 'ESPERANDO CONDUCE';
-        }
-
-        function bumpEffect() {
-            productCard.classList.add('bump');
-            setTimeout(() => productCard.classList.remove('bump'), 100);
-        }
-
-        function triggerError(message = 'Código no reconocido.') {
-            mainFrame.classList.add('error-flash');
-            setTimeout(() => mainFrame.classList.remove('error-flash'), 200);
-            beep(150, 0.4); // Sonido de error más grave
-            if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
-            const help = document.getElementById('scanner-help');
-            if (help) { const previous = help.innerHTML; help.innerHTML = `<strong style="color:var(--danger)">${message}</strong>`; setTimeout(() => help.innerHTML = previous, 1800); }
-        }
-
-        function beep(freq, duration) {
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = audioCtx.createOscillator();
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            osc.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
-        }
-    </script>
 </body>
 </html>

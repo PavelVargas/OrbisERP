@@ -1,0 +1,30 @@
+{
+  "date": "2026-08-27",
+  "profile": "tablet-full-width",
+  "browser_smoke": {
+    "physical_viewport": "1512x900",
+    "body_width": 1512,
+    "main_width": 1512,
+    "topbar_width": 1512,
+    "sidebar_display": "none",
+    "dock_display": "flex",
+    "tablet_reference_width": 1024,
+    "dashboard_metric_columns": 2,
+    "sales_section_sheet_opened": true,
+    "sales_section_links_in_fixture": 2
+  },
+  "launchpad_smoke": {
+    "physical_viewport": "1512x900",
+    "shell_width": 1512,
+    "dock_display": "flex",
+    "tablet_reference_width": 1024,
+    "app_grid_columns": 3
+  },
+  "tests": {
+    "tablet_and_release_contracts": "32 passed",
+    "client_ui_audit": "OK",
+    "ui_consistency_audit": "OK",
+    "static_release_audit": "OK",
+    "javascript_syntax": "OK"
+  }
+}

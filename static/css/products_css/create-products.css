@@ -86,13 +86,13 @@ input, select, textarea {
     font-family: inherit;
     font-size: 0.9rem;
     outline: none;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
 }
 
 input:focus, select:focus, textarea:focus {
     border-color: var(--primary);
     background: var(--bg-card);
-    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 10%, transparent);
 }
 
 textarea {

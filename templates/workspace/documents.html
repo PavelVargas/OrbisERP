@@ -1,0 +1,179 @@
+{% extends 'workspace/base.html' %}
+{% block title %}Documentos{% endblock %}
+{% block eyebrow %}Archivo privado{% endblock %}
+{% block heading %}Documentos{% endblock %}
+{% block subtitle %}Un espacio de archivos privado para organizar soportes, contratos y adjuntos por carpetas, como un drive interno de OrbisERP.{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/module_refresh.css') }}">{% endblock %}
+{% block actions %}
+<button class="workspace-btn secondary" type="button" data-drive-open="folder"><i class="bi bi-folder-plus"></i> Nueva carpeta</button>
+<button class="workspace-btn" type="button" data-drive-open="upload"><i class="bi bi-cloud-arrow-up"></i> Subir archivo</button>
+{% endblock %}
+{% block content %}
+<div class="module-page drive-v2" data-drive-root>
+    <section class="drive-toolbar workspace-card">
+        <div class="drive-breadcrumb" aria-label="Ruta de carpetas">
+            <a href="{{ url_for('workspace_bp.documents') }}"><i class="bi bi-house-door"></i> Mi unidad</a>
+            {% for item in breadcrumb %}<i class="bi bi-chevron-right"></i><a href="{{ url_for('workspace_bp.documents', folder=item.id) }}">{{ item.name }}</a>{% endfor %}
+        </div>
+        <form method="get" class="drive-search">
+            {% if current_folder %}<input type="hidden" name="folder" value="{{ current_folder.id }}">{% endif %}
+            <i class="bi bi-search"></i><input type="search" name="q" value="{{ q }}" placeholder="Buscar en documentos..." autocomplete="off">
+            {% if q %}<a href="{{ url_for('workspace_bp.documents', folder=current_folder.id if current_folder else None) }}" title="Limpiar"><i class="bi bi-x-lg"></i></a>{% endif %}
+        </form>
+        <div class="drive-view-switch" role="group" aria-label="Visualización">
+            <button type="button" data-drive-view="grid" aria-pressed="true" title="Cuadrícula"><i class="bi bi-grid"></i></button>
+            <button type="button" data-drive-view="list" aria-pressed="false" title="Lista"><i class="bi bi-list-ul"></i></button>
+        </div>
+    </section>
+
+    <div class="drive-layout">
+        <aside class="drive-sidebar workspace-card">
+            <button class="drive-upload-big" type="button" data-drive-open="upload"><i class="bi bi-plus-lg"></i><span>Nuevo archivo</span></button>
+            <nav class="drive-nav">
+                <a class="{{ 'active' if not kind and not entity_type else '' }}" href="{{ url_for('workspace_bp.documents', folder=current_folder.id if current_folder else None) }}"><i class="bi bi-folder2-open"></i><span>Todos los archivos</span></a>
+                <a class="{{ 'active' if kind=='pdf' else '' }}" href="{{ url_for('workspace_bp.documents', folder=current_folder.id if current_folder else None, kind='pdf') }}"><i class="bi bi-file-earmark-pdf"></i><span>PDF</span></a>
+                <a class="{{ 'active' if kind=='image' else '' }}" href="{{ url_for('workspace_bp.documents', folder=current_folder.id if current_folder else None, kind='image') }}"><i class="bi bi-image"></i><span>Imágenes</span></a>
+                <a class="{{ 'active' if kind=='sheet' else '' }}" href="{{ url_for('workspace_bp.documents', folder=current_folder.id if current_folder else None, kind='sheet') }}"><i class="bi bi-file-earmark-spreadsheet"></i><span>Hojas de cálculo</span></a>
+                <a class="{{ 'active' if kind=='document' else '' }}" href="{{ url_for('workspace_bp.documents', folder=current_folder.id if current_folder else None, kind='document') }}"><i class="bi bi-file-earmark-text"></i><span>Documentos</span></a>
+            </nav>
+            <div class="drive-sidebar-sep"></div>
+            <p class="drive-side-label">Relacionados</p>
+            <nav class="drive-nav compact">
+                {% for value, label, icon in [('CLIENT','Clientes','bi-people'),('SUPPLIER','Proveedores','bi-truck'),('SALE','Ventas','bi-receipt'),('PURCHASE','Compras','bi-bag-check')] %}
+                <a class="{{ 'active' if entity_type==value else '' }}" href="{{ url_for('workspace_bp.documents', entity_type=value) }}"><i class="bi {{ icon }}"></i><span>{{ label }}</span></a>
+                {% endfor %}
+            </nav>
+            <div class="drive-storage">
+                {% set storage_limit = user.company.storage_limit if user and user.company and user.company.storage_limit else 0 %}
+                {% set usage_pct = ((total_bytes / storage_limit * 100) if storage_limit else 0) %}
+                <div><span><i class="bi bi-device-ssd"></i> Almacenamiento</span><strong>{{ '%.1f'|format(total_bytes / 1024 / 1024) }} MB</strong></div>
+                <div class="module-progress"><i style="width:{{ [usage_pct,100]|min|round|int }}%"></i></div>
+                <small>{% if storage_limit %}de {{ '%.1f'|format(storage_limit / 1024 / 1024) }} MB disponibles{% else %}{{ total_docs }} archivo(s) almacenados{% endif %}</small>
+            </div>
+        </aside>
+
+        <section class="drive-main">
+            <div class="drive-section-head">
+                <div><h2>{{ current_folder.name if current_folder else ('Resultados de búsqueda' if q else 'Mi unidad') }}</h2><p>{{ folders|length }} carpeta(s) · {{ documents|length }} archivo(s){% if q %} para “{{ q }}”{% endif %}</p></div>
+                <div class="drive-sort">
+                    <span>Ordenar</span>
+                    <select onchange="location.href=this.value">
+                        {% for key,label in [('recent','Recientes'),('name','Nombre'),('oldest','Más antiguos'),('size','Tamaño')] %}
+                        <option value="{{ url_for('workspace_bp.documents', folder=current_folder.id if current_folder else None, q=q or None, kind=kind or None, entity_type=entity_type or None, entity_id=entity_id or None, sort=key) }}" {% if sort==key %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if current_folder %}<button type="button" class="workspace-icon-btn" data-drive-open="folderEdit" title="Renombrar o mover carpeta"><i class="bi bi-pencil"></i></button><form method="post" action="{{ url_for('workspace_bp.document_folder_delete', folder_id=current_folder.id) }}" data-confirm="¿Eliminar esta carpeta?" data-confirm-title="Eliminar carpeta" data-confirm-detail="Solo se eliminará si está vacía. Los documentos no se borrarán silenciosamente." data-confirm-action="Eliminar carpeta"><button class="workspace-icon-btn" title="Eliminar carpeta"><i class="bi bi-trash3"></i></button></form>{% endif %}
+                </div>
+            </div>
+
+            {% if folders %}
+            <section class="drive-folders">
+                {% for folder in folders %}
+                <a class="drive-folder" href="{{ url_for('workspace_bp.documents', folder=folder.id) }}">
+                    <span><i class="bi bi-folder-fill"></i></span>
+                    <div><strong>{{ folder.name }}</strong><small>{{ folder.documents|length }} archivo(s) · {{ folder.children|length }} carpeta(s)</small></div>
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+                {% endfor %}
+            </section>
+            {% endif %}
+
+            <section class="drive-files" data-drive-files data-view="grid">
+                <div class="drive-list-head"><span>Nombre</span><span>Relacionado</span><span>Propietario</span><span>Modificado</span><span>Tamaño</span><span></span></div>
+                {% for doc in documents %}
+                {% set name_lower = doc.display_name|lower %}
+                {% set is_pdf = 'pdf' in (doc.mime_type or '') or name_lower.endswith('.pdf') %}
+                {% set is_image = (doc.mime_type or '').startswith('image/') %}
+                {% set is_sheet = name_lower.endswith(('.csv','.xlsx')) %}
+                {% set is_doc = name_lower.endswith(('.docx','.txt')) %}
+                <article class="drive-file">
+                    <a class="drive-file-open" href="{{ url_for('workspace_bp.document_preview', document_id=doc.id) }}" target="_blank" rel="noopener">
+                        <span class="drive-file-icon {{ 'pdf' if is_pdf else 'image' if is_image else 'sheet' if is_sheet else 'doc' if is_doc else '' }}"><i class="bi {{ 'bi-file-earmark-pdf' if is_pdf else 'bi-file-earmark-image' if is_image else 'bi-file-earmark-spreadsheet' if is_sheet else 'bi-file-earmark-text' }}"></i></span>
+                        <span class="drive-file-name"><strong title="{{ doc.display_name }}">{{ doc.display_name }}</strong><small>{{ doc.mime_type or 'Archivo' }}</small></span>
+                    </a>
+                    <span class="drive-related"><span class="module-chip subtle">{{ doc.entity_type }}</span>{% if doc.entity_id %}<small>#{{ doc.entity_id }}</small>{% endif %}</span>
+                    <span class="drive-owner">
+                        <span class="drive-owner-avatar">{% if doc.user and doc.user.avatar_path %}<img src="{{ url_for('static', filename=doc.user.avatar_path) }}" alt="">{% else %}{{ (doc.user.name[:1] if doc.user and doc.user.name else 'U')|upper }}{% endif %}</span>
+                        <small>{{ doc.user.name if doc.user else 'Usuario' }}</small>
+                    </span>
+                    <time>{{ (doc.updated_at or doc.created_at).strftime('%d/%m/%Y') if (doc.updated_at or doc.created_at) else '—' }}</time>
+                    <span class="drive-size">{% if doc.size_bytes >= 1048576 %}{{ '%.1f'|format(doc.size_bytes/1048576) }} MB{% else %}{{ '%.0f'|format(doc.size_bytes/1024) }} KB{% endif %}</span>
+                    <details class="drive-file-menu">
+                        <summary class="workspace-icon-btn"><i class="bi bi-three-dots-vertical"></i></summary>
+                        <div class="drive-menu-popover">
+                            <a href="{{ url_for('workspace_bp.document_preview', document_id=doc.id) }}" target="_blank" rel="noopener"><i class="bi bi-eye"></i> Abrir</a>
+                            <a href="{{ url_for('workspace_bp.document_download', document_id=doc.id) }}"><i class="bi bi-download"></i> Descargar</a>
+                            <button type="button" data-drive-edit="{{ doc.id }}"><i class="bi bi-pencil"></i> Renombrar / mover</button>
+                            <form method="post" action="{{ url_for('workspace_bp.document_delete', document_id=doc.id) }}" data-confirm="¿Enviar este archivo a la papelera?" data-confirm-title="Eliminar documento" data-confirm-detail="El archivo se moverá a la papelera y podrá restaurarse mientras no se purgue definitivamente." data-confirm-action="Mover a papelera"><button class="danger" type="submit"><i class="bi bi-trash3"></i> Eliminar</button></form>
+                        </div>
+                    </details>
+                    <div class="drive-edit-panel" data-drive-edit-panel="{{ doc.id }}" hidden>
+                        <form method="post" action="{{ url_for('workspace_bp.document_update', document_id=doc.id) }}">
+                            <label><span>Nombre</span><input name="display_name" value="{{ doc.display_name }}" maxlength="180" required></label>
+                            <label><span>Carpeta</span><select name="folder_id"><option value="">Mi unidad</option>{% for folder in all_folders %}<option value="{{ folder.id }}" {% if doc.folder_id==folder.id %}selected{% endif %}>{{ folder.name }}</option>{% endfor %}</select></label>
+                            <div><button class="workspace-btn secondary" type="button" data-drive-edit-cancel>Cancelar</button><button class="workspace-btn" type="submit">Guardar</button></div>
+                        </form>
+                    </div>
+                </article>
+                {% else %}
+                {% if not folders %}<div class="module-empty drive-empty"><i class="bi bi-folder2-open"></i><h3>Esta ubicación está vacía</h3><p>Sube un archivo o crea una carpeta para empezar a organizar documentos.</p><button class="workspace-btn" type="button" data-drive-open="upload"><i class="bi bi-cloud-arrow-up"></i> Subir archivo</button></div>{% endif %}
+                {% endfor %}
+            </section>
+        </section>
+    </div>
+
+    <dialog class="drive-dialog" id="drive-upload-dialog">
+        <form method="post" enctype="multipart/form-data" action="{{ url_for('workspace_bp.document_upload') }}">
+            <header><div><span>DOCUMENTOS</span><h2>Subir archivo</h2><p>Se guardará de forma privada dentro de OrbisERP.</p></div><button type="button" data-drive-close><i class="bi bi-x-lg"></i></button></header>
+            <input type="hidden" name="folder_id" value="{{ current_folder.id if current_folder else '' }}">
+            <label class="drive-dropzone" data-drive-dropzone><i class="bi bi-cloud-arrow-up"></i><strong>Arrastra un archivo aquí o toca para seleccionarlo</strong><small data-drive-file-name>PDF, imágenes, CSV, XLSX, DOCX o TXT · hasta {{ (config.MAX_CONTENT_LENGTH/1024/1024)|int if config else 10 }} MB</small><input type="file" name="file" required accept=".pdf,.png,.jpg,.jpeg,.webp,.csv,.xlsx,.docx,.txt"></label>
+            <div class="drive-upload-note"><i class="bi bi-shield-lock"></i><span><strong>Archivo de la empresa</strong><small>No necesitas conocer ningún ID interno. Podrás organizarlo en carpetas y descargarlo cuando quieras.</small></span></div>
+            <footer><button class="workspace-btn secondary" type="button" data-drive-close>Cancelar</button><button class="workspace-btn" type="submit"><i class="bi bi-cloud-arrow-up"></i> Subir</button></footer>
+        </form>
+    </dialog>
+
+    {% if current_folder %}
+    <dialog class="drive-dialog small" id="drive-folder-edit-dialog">
+        <form method="post" action="{{ url_for('workspace_bp.document_folder_update', folder_id=current_folder.id) }}">
+            <header><div><span>ORGANIZACIÓN</span><h2>Editar carpeta</h2><p>Renombra o mueve esta carpeta sin perder sus archivos.</p></div><button type="button" data-drive-close><i class="bi bi-x-lg"></i></button></header>
+            <label class="drive-field"><span>Nombre</span><input name="name" maxlength="120" value="{{ current_folder.name }}" required></label>
+            <label class="drive-field"><span>Mover a</span><select name="parent_id"><option value="">Mi unidad</option>{% for folder in all_folders if folder.id != current_folder.id %}<option value="{{ folder.id }}" {% if current_folder.parent_id==folder.id %}selected{% endif %}>{{ folder.name }}</option>{% endfor %}</select></label>
+            <footer><button class="workspace-btn secondary" type="button" data-drive-close>Cancelar</button><button class="workspace-btn" type="submit"><i class="bi bi-check2"></i> Guardar</button></footer>
+        </form>
+    </dialog>
+    {% endif %}
+
+    <dialog class="drive-dialog small" id="drive-folder-dialog">
+        <form method="post" action="{{ url_for('workspace_bp.document_folder_create') }}">
+            <header><div><span>ORGANIZACIÓN</span><h2>Nueva carpeta</h2><p>{{ 'Dentro de ' ~ current_folder.name if current_folder else 'En Mi unidad' }}</p></div><button type="button" data-drive-close><i class="bi bi-x-lg"></i></button></header>
+            <input type="hidden" name="parent_id" value="{{ current_folder.id if current_folder else '' }}">
+            <label class="drive-field"><span>Nombre de la carpeta</span><input name="name" maxlength="120" placeholder="Ej. Contratos 2026" required autofocus></label>
+            <footer><button class="workspace-btn secondary" type="button" data-drive-close>Cancelar</button><button class="workspace-btn" type="submit"><i class="bi bi-folder-plus"></i> Crear carpeta</button></footer>
+        </form>
+    </dialog>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(() => {
+  const root = document.querySelector('[data-drive-root]'); if (!root) return;
+  const files = root.querySelector('[data-drive-files]');
+  const viewButtons = [...root.querySelectorAll('[data-drive-view]')];
+  const setView = value => { const view = value === 'list' ? 'list' : 'grid'; files.dataset.view = view; viewButtons.forEach(b => { const on=b.dataset.driveView===view; b.classList.toggle('active',on); b.setAttribute('aria-pressed',on?'true':'false'); }); try{localStorage.setItem('orbis-drive-view',view)}catch(e){} };
+  let saved='grid'; try{saved=localStorage.getItem('orbis-drive-view')||'grid'}catch(e){} setView(saved);
+  viewButtons.forEach(b => b.addEventListener('click', () => setView(b.dataset.driveView)));
+  const dialogs={upload:document.getElementById('drive-upload-dialog'),folder:document.getElementById('drive-folder-dialog'),folderEdit:document.getElementById('drive-folder-edit-dialog')};
+  root.querySelectorAll('[data-drive-open]').forEach(b=>b.addEventListener('click',()=>dialogs[b.dataset.driveOpen]?.showModal()));
+  root.querySelectorAll('[data-drive-close]').forEach(b=>b.addEventListener('click',()=>b.closest('dialog')?.close()));
+  Object.values(dialogs).forEach(d=>d?.addEventListener('click',e=>{if(e.target===d)d.close()}));
+  root.querySelectorAll('[data-drive-edit]').forEach(b=>b.addEventListener('click',()=>{const p=root.querySelector(`[data-drive-edit-panel="${b.dataset.driveEdit}"]`); if(p){p.hidden=false;p.querySelector('input')?.focus();} b.closest('details')?.removeAttribute('open');}));
+  root.querySelectorAll('[data-drive-edit-cancel]').forEach(b=>b.addEventListener('click',()=>{b.closest('.drive-edit-panel').hidden=true;}));
+  const dropzone=root.querySelector('[data-drive-dropzone]'), fileInput=dropzone?.querySelector('input[type="file"]'), fileName=dropzone?.querySelector('[data-drive-file-name]');
+  const showFile=()=>{if(fileInput?.files?.[0]&&fileName){fileName.textContent=`${fileInput.files[0].name} · ${(fileInput.files[0].size/1024/1024).toFixed(2)} MB`;dropzone.classList.add('has-file')}};
+  fileInput?.addEventListener('change',showFile);
+  ['dragenter','dragover'].forEach(type=>dropzone?.addEventListener(type,e=>{e.preventDefault();dropzone.classList.add('is-dragging')}));
+  ['dragleave','drop'].forEach(type=>dropzone?.addEventListener(type,e=>{e.preventDefault();dropzone.classList.remove('is-dragging')}));
+  dropzone?.addEventListener('drop',e=>{if(e.dataTransfer?.files?.length&&fileInput){fileInput.files=e.dataTransfer.files;showFile();}});
+})();
+</script>
+{% endblock %}

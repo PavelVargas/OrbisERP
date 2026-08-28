@@ -1,21 +1,19 @@
 <!DOCTYPE html>
-<html lang="es" class="{% if session.get('theme') == 'dark' %}dark{% endif %}">
-<head>
+<html lang="es" class="{% if tablet_mode_active|default(session.get('tablet_mode')) %}tablet-mode tablet-full-width-profile{% endif %} {% if session.get('theme') == 'dark' %}dark{% endif %}">
+<head>{% set shell_assets_loaded = true %}{% include 'layouts/app_head_assets.html' %}
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Nueva transferencia · OrbisERP</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tranfer_css/create_tranfer.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tranfer_css/create_tranfer.css') }}">
 </head>
 <body>{% include 'layouts/left_bar.html' %}
 <main class="transfer-page">
     {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div class="flash-stack">{% for category,message in messages %}<div class="flash flash-{{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}{% endwith %}
     <header class="transfer-header">
         <div><a href="{{ url_for('transfer_bp.transfers') }}" class="back-link"><i class="bi bi-chevron-left"></i> Transferencias</a><span class="eyebrow">Movimiento de inventario</span><h1>Nueva transferencia</h1><p>Selecciona el punto exacto de salida y llegada. Después agrega los productos que deseas mover.</p></div>
-        <div class="operator-chip"><span class="operator-avatar">{{ (user.name or 'U')[0]|upper }}</span><span><small>Responsable</small><strong>{{ user.name }}</strong></span></div>
+        <div class="operator-chip"><span class="operator-avatar">{{ (user.name or 'U')[0]|upper }}</span><span><small>Responsable</small><strong>{{ user.name if user is defined and user else 'Sistema' }}</strong></span></div>
     </header>
 
     <form id="transfer-form" method="POST" action="{{ url_for('transfer_bp.create_transfer') }}">
-        <input type="hidden" name="user_id" value="{{ user.id }}">
         <input type="hidden" name="from_warehouse" id="from-warehouse"><input type="hidden" name="from_location_id" id="from-location">
         <input type="hidden" name="to_warehouse" id="to-warehouse"><input type="hidden" name="to_location_id" id="to-location">
         <section class="route-card">
@@ -34,17 +32,254 @@
         <footer class="transfer-actions"><div class="action-note"><i class="bi bi-shield-check"></i><span>Comprobaremos el stock exacto del origen antes de crear la orden.</span></div><button type="button" id="btn-master" class="btn-submit"><i class="bi bi-check2-circle"></i><span>Comprobar disponibilidad</span></button></footer>
     </form>
 </main>
-<script>
-const allProducts=[{% for p in products %}{id:"{{p.id}}",name:{{p.name|tojson|safe}},sku:{{(p.sku or 'S/N')|tojson|safe}}},{% endfor %}];
-const originNode=document.getElementById('origin-node'),destinationNode=document.getElementById('destination-node'),fromWh=document.getElementById('from-warehouse'),toWh=document.getElementById('to-warehouse'),fromLocation=document.getElementById('from-location'),toLocation=document.getElementById('to-location'),searchInput=document.getElementById('product-search'),resultsBox=document.getElementById('search-results'),itemsTable=document.getElementById('transfer-items'),emptyState=document.getElementById('empty-state'),btnMaster=document.getElementById('btn-master'),searchWrapper=document.getElementById('search-wrapper');let isVerified=false;
-function syncNode(select,warehouseInput,locationInput){const [warehouse='',location='']=select.value.split(':');warehouseInput.value=warehouse;locationInput.value=location;resetStatus()}
-originNode.addEventListener('change',()=>syncNode(originNode,fromWh,fromLocation));destinationNode.addEventListener('change',()=>syncNode(destinationNode,toWh,toLocation));document.getElementById('btn-add-line').addEventListener('click',()=>{searchWrapper.classList.add('visible');searchInput.focus()});
-function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]))}
-searchInput.addEventListener('input',event=>{const query=event.target.value.toLowerCase().trim();resultsBox.innerHTML='';if(!query){resultsBox.classList.remove('visible');return}const filtered=allProducts.filter(p=>p.name.toLowerCase().includes(query)||p.sku.toLowerCase().includes(query)).slice(0,7);filtered.forEach(product=>{const item=document.createElement('button');item.type='button';item.className='result-item';item.innerHTML=`<span><strong>${escapeHtml(product.name)}</strong><small>SKU · ${escapeHtml(product.sku)}</small></span><i class="bi bi-plus-circle-fill"></i>`;item.onclick=()=>addItem(product);resultsBox.appendChild(item)});resultsBox.classList.toggle('visible',filtered.length>0)});
-function addItem(product){if(document.getElementById(`row-${product.id}`))return;emptyState.style.display='none';const row=document.createElement('tr');row.id=`row-${product.id}`;row.innerHTML=`<td><div class="product-cell"><span class="product-icon"><i class="bi bi-box"></i></span><span><strong>${escapeHtml(product.name)}</strong><small>SKU · ${escapeHtml(product.sku)}</small></span></div><input type="hidden" name="product_ids[]" value="${product.id}"></td><td><input class="qty-input" type="number" name="quantities[]" value="1" min="1" oninput="resetStatus()"></td><td><span class="unit-chip">Unidades</span></td><td><span class="stock-status pending" id="st-${product.id}">Sin comprobar</span></td><td><button type="button" class="btn-remove" onclick="removeRow('${product.id}')"><i class="bi bi-trash3"></i></button></td>`;itemsTable.appendChild(row);searchInput.value='';resultsBox.classList.remove('visible');searchWrapper.classList.remove('visible');resetStatus()}
-function removeRow(id){document.getElementById(`row-${id}`)?.remove();if(!itemsTable.querySelector('tr:not(#empty-state)'))emptyState.style.display='table-row';resetStatus()}
-function resetStatus(){isVerified=false;btnMaster.className='btn-submit';btnMaster.type='button';btnMaster.innerHTML='<i class="bi bi-check2-circle"></i><span>Comprobar disponibilidad</span>';document.querySelectorAll('.stock-status').forEach(b=>{b.className='stock-status pending';b.textContent='Sin comprobar'})}
-searchInput.addEventListener('keydown',event=>{if(event.key!=='Enter')return;event.preventDefault();const code=searchInput.value.trim().toLowerCase(),exact=allProducts.find(p=>p.sku.toLowerCase()===code||p.name.toLowerCase()===code);if(exact)addItem(exact)});
-btnMaster.addEventListener('click',async()=>{if(isVerified){document.getElementById('transfer-form').submit();return}syncNode(originNode,fromWh,fromLocation);syncNode(destinationNode,toWh,toLocation);const rows=[...itemsTable.querySelectorAll('tr:not(#empty-state)')];if(!fromWh.value||!toWh.value){alert('Selecciona el origen y el destino.');return}if(originNode.value===destinationNode.value){alert('El origen y el destino deben ser diferentes.');return}if(!rows.length){alert('Agrega al menos un producto.');return}btnMaster.disabled=true;btnMaster.innerHTML='<i class="bi bi-arrow-repeat spin"></i><span>Comprobando stock…</span>';let allOk=true;for(const row of rows){const productId=row.querySelector('[name="product_ids[]"]').value,quantity=parseInt(row.querySelector('[name="quantities[]"]').value,10),badge=document.getElementById(`st-${productId}`);try{const locationQuery=fromLocation.value?`&location_id=${fromLocation.value}`:'',response=await fetch(`/api/get-stock?product_id=${productId}&warehouse_id=${fromWh.value}${locationQuery}`),data=await response.json();if(response.ok&&data.stock>=quantity){badge.className='stock-status available';badge.textContent=`Disponible · ${data.stock}`}else{badge.className='stock-status unavailable';badge.textContent=`Solo ${data.stock||0}`;allOk=false}}catch(error){badge.className='stock-status unavailable';badge.textContent='Error de consulta';allOk=false}}if(allOk){isVerified=true;btnMaster.className='btn-submit ready';btnMaster.innerHTML='<i class="bi bi-send-check-fill"></i><span>Crear transferencia</span>'}else{btnMaster.innerHTML='<i class="bi bi-exclamation-circle"></i><span>Revisar cantidades</span>';setTimeout(resetStatus,2200)}btnMaster.disabled=false});
-document.addEventListener('click',event=>{if(!searchWrapper.contains(event.target)&&event.target.id!=='btn-add-line')resultsBox.classList.remove('visible')});syncNode(originNode,fromWh,fromLocation);syncNode(destinationNode,toWh,toLocation);
+<script nonce="{{ g.csp_nonce }}">
+const allProducts = [
+    {% for p in products %}
+    {
+        id: "{{ p.id }}",
+        name: {{ p.name|tojson|safe }},
+        sku: {{ (p.sku or 'S/N')|tojson|safe }},
+        allowFraction: {{ 'true' if p.tracking != 'SERIAL' and (p.sale_mode == 'WEIGHT' or (p.base_uom and p.base_uom.allow_fraction)) else 'false' }},
+        unit: {{ ((p.base_uom.symbol if p.base_uom else '') or ('kg' if p.sale_mode == 'WEIGHT' else 'unid.'))|tojson|safe }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
+const originNode = document.getElementById('origin-node');
+const destinationNode = document.getElementById('destination-node');
+const fromWh = document.getElementById('from-warehouse');
+const toWh = document.getElementById('to-warehouse');
+const fromLocation = document.getElementById('from-location');
+const toLocation = document.getElementById('to-location');
+const searchInput = document.getElementById('product-search');
+const resultsBox = document.getElementById('search-results');
+const itemsTable = document.getElementById('transfer-items');
+const emptyState = document.getElementById('empty-state');
+const btnMaster = document.getElementById('btn-master');
+const searchWrapper = document.getElementById('search-wrapper');
+let isVerified = false;
+
+function syncNode(select, warehouseInput, locationInput) {
+    const [warehouse = '', location = ''] = select.value.split(':');
+    warehouseInput.value = warehouse;
+    locationInput.value = location;
+    resetStatus();
+}
+
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[char]);
+}
+
+function showTransferFeedback({type = 'warning', title, message, detail = ''}) {
+    if (window.OrbisFeedback?.show) {
+        window.OrbisFeedback.show({
+            type,
+            context: 'Nueva transferencia',
+            title,
+            message,
+            detail
+        });
+        return;
+    }
+    console.error(title, message, detail);
+}
+
+function resetStatus() {
+    isVerified = false;
+    btnMaster.className = 'btn-submit';
+    btnMaster.type = 'button';
+    btnMaster.innerHTML = '<i class="bi bi-check2-circle"></i><span>Comprobar disponibilidad</span>';
+    document.querySelectorAll('.stock-status').forEach(badge => {
+        badge.className = 'stock-status pending';
+        badge.textContent = 'Sin comprobar';
+    });
+}
+
+function removeRow(id) {
+    document.getElementById(`row-${id}`)?.remove();
+    emptyState.hidden = Boolean(itemsTable.querySelector('tr:not(#empty-state)'));
+    resetStatus();
+}
+
+function addItem(product) {
+    if (document.getElementById(`row-${product.id}`)) return;
+    emptyState.hidden = true;
+    const step = product.allowFraction ? '0.001' : '1';
+    const row = document.createElement('tr');
+    row.id = `row-${product.id}`;
+    row.dataset.allowFraction = String(product.allowFraction);
+    row.innerHTML = `
+        <td>
+            <div class="product-cell"><span class="product-icon"><i class="bi bi-box"></i></span>
+                <span><strong>${escapeHtml(product.name)}</strong><small>SKU · ${escapeHtml(product.sku)}</small></span>
+            </div>
+            <input type="hidden" name="product_ids[]" value="${product.id}">
+        </td>
+        <td><input class="qty-input" type="number" name="quantities[]" value="1" min="${step}" step="${step}" inputmode="${product.allowFraction ? 'decimal' : 'numeric'}" required></td>
+        <td><span class="unit-chip">${escapeHtml(product.unit)}</span></td>
+        <td><span class="stock-status pending" id="st-${product.id}">Sin comprobar</span></td>
+        <td><button type="button" class="btn-remove" aria-label="Quitar ${escapeHtml(product.name)}"><i class="bi bi-trash3"></i></button></td>`;
+    row.querySelector('.qty-input').addEventListener('input', resetStatus);
+    row.querySelector('.btn-remove').addEventListener('click', () => removeRow(product.id));
+    itemsTable.appendChild(row);
+    searchInput.value = '';
+    resultsBox.classList.remove('visible');
+    searchWrapper.classList.remove('visible');
+    resetStatus();
+}
+
+function validateRowQuantity(row) {
+    const input = row.querySelector('[name="quantities[]"]');
+    const quantity = Number(input.value);
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+        input.focus();
+        throw new Error('Todas las cantidades deben ser mayores que cero.');
+    }
+    if (row.dataset.allowFraction !== 'true' && !Number.isInteger(quantity)) {
+        input.focus();
+        throw new Error('Ese producto solo admite cantidades enteras.');
+    }
+    const decimals = (input.value.split('.')[1] || '').length;
+    if (row.dataset.allowFraction === 'true' && decimals > 3) {
+        input.focus();
+        throw new Error('Las cantidades fraccionarias admiten hasta 3 decimales.');
+    }
+    return quantity;
+}
+
+originNode.addEventListener('change', () => syncNode(originNode, fromWh, fromLocation));
+destinationNode.addEventListener('change', () => syncNode(destinationNode, toWh, toLocation));
+document.getElementById('btn-add-line').addEventListener('click', () => {
+    searchWrapper.classList.add('visible');
+    searchInput.focus();
+});
+
+searchInput.addEventListener('input', event => {
+    const query = event.target.value.toLowerCase().trim();
+    resultsBox.replaceChildren();
+    if (!query) {
+        resultsBox.classList.remove('visible');
+        return;
+    }
+    const filtered = allProducts.filter(product =>
+        product.name.toLowerCase().includes(query) || product.sku.toLowerCase().includes(query)
+    ).slice(0, 7);
+    filtered.forEach(product => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'result-item';
+        item.innerHTML = `<span><strong>${escapeHtml(product.name)}</strong><small>SKU · ${escapeHtml(product.sku)}</small></span><i class="bi bi-plus-circle-fill"></i>`;
+        item.addEventListener('click', () => addItem(product));
+        resultsBox.appendChild(item);
+    });
+    resultsBox.classList.toggle('visible', filtered.length > 0);
+});
+
+searchInput.addEventListener('keydown', event => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    const code = searchInput.value.trim().toLowerCase();
+    const exact = allProducts.find(product =>
+        product.sku.toLowerCase() === code || product.name.toLowerCase() === code
+    );
+    if (exact) addItem(exact);
+});
+
+btnMaster.addEventListener('click', async () => {
+    if (isVerified) {
+        document.getElementById('transfer-form').submit();
+        return;
+    }
+    syncNode(originNode, fromWh, fromLocation);
+    syncNode(destinationNode, toWh, toLocation);
+    const rows = [...itemsTable.querySelectorAll('tr:not(#empty-state)')];
+    if (!fromWh.value || !toWh.value) {
+        showTransferFeedback({
+            title: 'Ruta incompleta',
+            message: 'Selecciona tanto el origen como el destino de la transferencia.',
+            detail: 'El sistema necesita ambos puntos para comprobar la disponibilidad y registrar correctamente el movimiento de inventario.'
+        });
+        return;
+    }
+    if (originNode.value === destinationNode.value) {
+        showTransferFeedback({
+            title: 'Ruta no válida',
+            message: 'El origen y el destino deben ser diferentes.',
+            detail: 'Selecciona otro almacén o una ubicación distinta dentro del almacén de destino.'
+        });
+        return;
+    }
+    if (!rows.length) {
+        showTransferFeedback({
+            title: 'Transferencia sin productos',
+            message: 'Agrega al menos un producto antes de comprobar la disponibilidad.',
+            detail: 'Usa el botón “Agregar producto” y define la cantidad que saldrá del origen.'
+        });
+        return;
+    }
+
+    try {
+        rows.forEach(validateRowQuantity);
+    } catch (error) {
+        showTransferFeedback({
+            type: 'danger',
+            title: 'Cantidad no válida',
+            message: error.message || 'Revisa las cantidades de la transferencia.',
+            detail: 'Los productos por unidad requieren números enteros. Solo los productos configurados como fraccionables admiten hasta tres decimales.'
+        });
+        return;
+    }
+
+    btnMaster.disabled = true;
+    btnMaster.innerHTML = '<i class="bi bi-arrow-repeat spin"></i><span>Comprobando stock…</span>';
+    let allOk = true;
+    for (const row of rows) {
+        const productId = row.querySelector('[name="product_ids[]"]').value;
+        const quantity = validateRowQuantity(row);
+        const badge = document.getElementById(`st-${productId}`);
+        try {
+            const params = new URLSearchParams({product_id: productId, warehouse_id: fromWh.value});
+            if (fromLocation.value) params.set('location_id', fromLocation.value);
+            const response = await fetch(`/api/get-stock?${params.toString()}`, {headers: {'Accept': 'application/json'}});
+            const data = await response.json();
+            const available = Number(data.stock);
+            if (response.ok && Number.isFinite(available) && available >= quantity) {
+                badge.className = 'stock-status available';
+                badge.textContent = `Disponible · ${data.stock}`;
+            } else {
+                badge.className = 'stock-status unavailable';
+                badge.textContent = `Solo ${Number.isFinite(available) ? data.stock : 0}`;
+                allOk = false;
+            }
+        } catch (error) {
+            badge.className = 'stock-status unavailable';
+            badge.textContent = 'Error de consulta';
+            allOk = false;
+        }
+    }
+
+    if (allOk) {
+        isVerified = true;
+        btnMaster.className = 'btn-submit ready';
+        btnMaster.innerHTML = '<i class="bi bi-send-check-fill"></i><span>Crear transferencia</span>';
+    } else {
+        btnMaster.innerHTML = '<i class="bi bi-exclamation-circle"></i><span>Revisar cantidades</span>';
+        showTransferFeedback({
+            title: 'No hay stock suficiente',
+            message: 'Uno o más productos superan la disponibilidad del punto de origen.',
+            detail: 'Revisa las filas marcadas en rojo, reduce la cantidad o selecciona otro origen. No se creó ningún movimiento.'
+        });
+        setTimeout(resetStatus, 2200);
+    }
+    btnMaster.disabled = false;
+});
+
+document.addEventListener('click', event => {
+    if (!searchWrapper.contains(event.target) && event.target.id !== 'btn-add-line') {
+        resultsBox.classList.remove('visible');
+    }
+});
+syncNode(originNode, fromWh, fromLocation);
+syncNode(destinationNode, toWh, toLocation);
 </script></body></html>

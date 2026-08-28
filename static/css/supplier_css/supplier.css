@@ -42,9 +42,9 @@ main { flex: 1; margin-left: 290px; padding: 33px; min-height: 100vh; }
 .act-btn.view:hover { background: var(--primary-blue); color: white; }
 
 /* MODO OSCURO */
-body.dark .modern-table th { background: #1c1c1f; }
-body.dark .order-id { background: #252529; }
-body.dark .info-card { border-color: #252529; }
+html.dark body .modern-table th { background: #1c1c1f; }
+html.dark body .order-id { background: #252529; }
+html.dark body .info-card { border-color: #252529; }
 
 /* ESTADO VACÍO */
 .empty-state { text-align: center; padding: 60px !important; color: var(--gray-text); }

@@ -1,3 +1,4 @@
+from services.time_utils import utcnow
 from datetime import datetime
 from db import db
 
@@ -15,13 +16,13 @@ class PurchaseOrder(db.Model):
     supplier_name = db.Column(db.String(150), nullable=False)
 
     status = db.Column(db.String(20), default='PENDING')
-    total_items = db.Column(db.Integer, default=0)
+    total_items = db.Column(db.Numeric(14, 3), default=0)
     subtotal = db.Column(db.Numeric(12, 2), default=0)
     tax_total = db.Column(db.Numeric(12, 2), default=0)
     total_cost = db.Column(db.Numeric(12, 2), default=0)
     company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
 
     supplier = db.relationship('Supplier', backref='purchase_orders')
 

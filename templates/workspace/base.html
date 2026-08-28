@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es" class="{% if tablet_mode_active|default(session.get('tablet_mode')) %}tablet-mode tablet-full-width-profile{% endif %} {% if session.get('theme') == 'dark' %}dark{% endif %}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>{% block title %}Gestión{% endblock %} &middot; OrbisERP</title>
+    {% set shell_assets_loaded = true %}
+    {% include 'layouts/app_head_assets.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/workspace.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    {% include 'layouts/left_bar.html' %}
+    <main class="workspace-page orbis-page">
+        <header class="workspace-header">
+            <div class="workspace-heading">
+                {% block back_link %}{% endblock %}
+                <span class="workspace-eyebrow">{% block eyebrow %}Gestión{% endblock %}</span>
+                <h1>{% block heading %}Gestión{% endblock %}</h1>
+                <p>{% block subtitle %}Información organizada para trabajar con claridad.{% endblock %}</p>
+            </div>
+            <div class="workspace-header-actions">{% block actions %}{% endblock %}</div>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <section class="workspace-alerts" aria-live="polite">
+                {% for category, message in messages %}
+                <div class="workspace-alert workspace-alert--{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </section>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

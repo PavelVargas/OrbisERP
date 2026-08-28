@@ -1,0 +1,54 @@
+{% extends 'workspace/base.html' %}
+{% block title %}Papelera{% endblock %}
+{% block eyebrow %}Recuperación{% endblock %}
+{% block heading %}Papelera{% endblock %}
+{% block subtitle %}Recupera archivos, clientes y proveedores eliminados sin perder información por accidente.{% endblock %}
+{% block content %}
+<section class="workspace-grid">
+    <article class="workspace-metric"><span><i class="bi bi-box-seam"></i> Productos archivados</span><strong>{{ archived_product_count }}</strong><small>{% if can('products.view') %}<a href="{{ url_for('products_bp.list_products', scope='archived') }}">Gestionar en Productos</a>{% else %}Administrados en el catálogo de productos.{% endif %}</small></article>
+    <article class="workspace-metric"><span><i class="bi bi-people"></i> Clientes archivados</span><strong>{{ clients|length }}</strong><small>No aparecen en nuevas operaciones.</small></article>
+    <article class="workspace-metric"><span><i class="bi bi-truck"></i> Proveedores archivados</span><strong>{{ suppliers|length }}</strong><small>No aparecen en nuevas compras.</small></article>
+    <article class="workspace-metric"><span><i class="bi bi-file-earmark-arrow-up"></i> Archivos eliminados</span><strong>{{ documents|length }}</strong><small>PDF, imágenes, hojas y otros documentos.</small></article>
+</section>
+
+<section class="workspace-card recycle-documents">
+  <div class="workspace-card-head"><div><h2><i class="bi bi-files"></i> Archivos eliminados</h2><p>Los archivos permanecen privados y recuperables hasta que decidas eliminarlos definitivamente.</p></div><span class="recycle-count">{{ documents|length }}</span></div>
+  <div class="recycle-file-list">
+  {% for doc in documents %}
+    {% set ext = doc.display_name.rsplit('.',1)[-1]|lower if '.' in doc.display_name else '' %}
+    <article class="recycle-file-row">
+      <span class="recycle-file-icon"><i class="bi {{ 'bi-file-earmark-pdf' if ext=='pdf' else ('bi-file-earmark-image' if ext in ['png','jpg','jpeg','webp'] else ('bi-file-earmark-spreadsheet' if ext in ['csv','xlsx'] else 'bi-file-earmark-text')) }}"></i></span>
+      <span class="recycle-file-meta"><strong>{{ doc.display_name }}</strong><small>{{ doc.mime_type or 'Archivo' }} · {% if doc.size_bytes >= 1048576 %}{{ '%.1f'|format(doc.size_bytes/1048576) }} MB{% else %}{{ '%.0f'|format(doc.size_bytes/1024) }} KB{% endif %}</small></span>
+      <div class="recycle-file-actions">
+        <a class="workspace-icon-btn" href="{{ url_for('workspace_bp.document_preview', document_id=doc.id) }}" target="_blank" rel="noopener" title="Vista previa"><i class="bi bi-eye"></i></a>
+        <form method="post" action="{{ url_for('workspace_bp.restore_document', document_id=doc.id) }}"><button class="workspace-btn secondary" type="submit"><i class="bi bi-arrow-counterclockwise"></i> Restaurar</button></form>
+        <form method="post" action="{{ url_for('workspace_bp.purge_document', document_id=doc.id) }}" data-confirm="¿Eliminar este archivo definitivamente?" data-confirm-title="Eliminación permanente" data-confirm-detail="El archivo dejará de estar disponible y no podrá restaurarse desde la aplicación." data-confirm-action="Eliminar definitivamente"><button class="workspace-icon-btn recycle-purge" type="submit" title="Eliminar definitivamente"><i class="bi bi-trash3"></i></button></form>
+      </div>
+    </article>
+  {% else %}<div class="workspace-empty"><i class="bi bi-check2-circle"></i>No hay archivos en la papelera.</div>{% endfor %}
+  </div>
+</section>
+
+<div class="recycle-grid">
+{% for title, kind, rows, icon in [('Clientes','CLIENT',clients,'bi-people'),('Proveedores','SUPPLIER',suppliers,'bi-truck')] %}
+<section class="workspace-card workspace-card--flat">
+    <div class="workspace-card-head">
+        <div><h2><i class="bi {{ icon }}"></i> {{ title }}</h2><p>Elementos archivados de este módulo.</p></div>
+        <span class="recycle-count">{{ rows|length }}</span>
+    </div>
+    <div class="workspace-mini-list">
+    {% for row in rows %}
+        <div class="workspace-mini-row">
+            <span><strong>{{ row.name }}</strong><small>Archivado {{ row.archived_at.strftime('%d/%m/%Y %H:%M') if row.archived_at else '---' }}</small></span>
+            <form method="post" action="{{ url_for('workspace_bp.restore_entity', entity_type=kind, entity_id=row.id) }}">
+                <button class="workspace-icon-btn" type="submit" title="Restaurar"><i class="bi bi-arrow-counterclockwise"></i></button>
+            </form>
+        </div>
+    {% else %}
+        <div class="workspace-empty"><i class="bi bi-check2-circle"></i>No hay elementos archivados.</div>
+    {% endfor %}
+    </div>
+</section>
+{% endfor %}
+</div>
+{% endblock %}

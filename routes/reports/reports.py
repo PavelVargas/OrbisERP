@@ -12,13 +12,15 @@ from fpdf import FPDF
 
 from db import db
 from models.sales.sales import Sale
+from models.sales.sale_item import SaleItem
 from models.cash.cash_closing import CashClosing
 from models.products.products import Product
 from models.user.user import User
 from models.divisas.divisas import ExchangeRate
+from models.warehouse_stock.warehouse_stock import WarehouseStock
+from models.retail import Branch, PosTerminal, InventoryConditionStock, InventoryLot
 
-# Configuración de Logging
-logging.basicConfig(level=logging.INFO)
+# Use the application logging configuration; never reconfigure the root logger here.
 logger = logging.getLogger(__name__)
 
 reports_bp = Blueprint('reports_bp', __name__, url_prefix='/reports')
@@ -78,10 +80,9 @@ def get_company_context():
 
     if exchange:
         symbol = exchange.symbol
-        rate = Decimal(str(exchange.rate))
     else:
         symbol = "RD$"
-        rate = Decimal('1.0')
+    rate = Decimal(str(ExchangeRate.get_rate_or_default(selected_currency, company_id)))
 
     return company_id, symbol, rate
 
@@ -309,17 +310,125 @@ def inventory_health():
             WarehouseStock.company_id == company_id
         ).scalar() or 0
 
-        # Guardamos el entero en el objeto para el HTML
-        p.calculated_stock = int(stock_qty)
+        # Conservar precisión retail (kg, litros, metros, etc.).
+        p.calculated_stock = Decimal(str(stock_qty)).quantize(Decimal('0.001'))
         
         # Calcular valor total acumulado del almacén
-        total_value += (Decimal(str(p.calculated_stock)) * cost)
+        total_value += (p.calculated_stock * cost)
         
     return render_template(
         'reports/inventory_health.html', 
         products=products, 
         total_value=float(total_value),
         currency_symbol=currency_symbol
+    )
+
+
+@reports_bp.route('/retail-performance')
+def retail_performance():
+    company_id, currency_symbol, rate = get_company_context()
+    if not company_id:
+        return redirect(url_for('login_bp.login'))
+    rate = Decimal(str(rate or 1))
+    days = request.args.get('days', type=int) or 90
+    days = days if days in {30, 90, 180, 365} else 90
+    start = datetime.now() - timedelta(days=days)
+
+    product_rows = db.session.query(
+        Product.id, Product.name, Product.sku, Product.cost,
+        func.coalesce(func.sum(SaleItem.quantity), 0).label('sold_qty'),
+        func.coalesce(func.sum(SaleItem.quantity * SaleItem.price), 0).label('revenue'),
+        func.coalesce(func.sum(SaleItem.quantity * SaleItem.cost_snapshot), 0).label('cost_value'),
+        func.max(Sale.created_at).label('last_sale'),
+    ).join(SaleItem, SaleItem.product_id == Product.id).join(Sale, Sale.id == SaleItem.sale_id).filter(
+        Product.company_id == company_id,
+        Sale.company_id == company_id,
+        Sale.status == 'COMPLETED',
+        Sale.created_at >= start,
+    ).group_by(Product.id, Product.name, Product.sku, Product.cost).all()
+
+    ranked = []
+    total_revenue = sum((Decimal(str(row.revenue or 0)) for row in product_rows), Decimal('0'))
+    cumulative = Decimal('0')
+    for row in sorted(product_rows, key=lambda r: Decimal(str(r.revenue or 0)), reverse=True):
+        revenue = Decimal(str(row.revenue or 0))
+        cost_value = Decimal(str(row.cost_value or 0))
+        cumulative += revenue
+        share = (cumulative / total_revenue * Decimal('100')) if total_revenue > 0 else Decimal('100')
+        abc = 'A' if share <= 80 else ('B' if share <= 95 else 'C')
+        ranked.append({
+            'id': row.id, 'name': row.name, 'sku': row.sku,
+            'quantity': Decimal(str(row.sold_qty or 0)),
+            'revenue': revenue / rate,
+            'cost': cost_value / rate,
+            'margin': (revenue - cost_value) / rate,
+            'margin_pct': ((revenue - cost_value) / revenue * 100) if revenue > 0 else Decimal('0'),
+            'abc': abc, 'last_sale': row.last_sale,
+        })
+
+    stock_rows = db.session.query(
+        Product.id, Product.name, Product.sku,
+        func.coalesce(func.sum(WarehouseStock.quantity), 0).label('stock'),
+        Product.cost,
+    ).outerjoin(WarehouseStock, (WarehouseStock.product_id == Product.id) & (WarehouseStock.company_id == company_id)).filter(
+        Product.company_id == company_id, Product.archived_at.is_(None), Product.status.is_(True)
+    ).group_by(Product.id, Product.name, Product.sku, Product.cost).all()
+    # Slow/dead stock must use the real last sale, not only the selected report
+    # window. Otherwise a 30-day report would incorrectly mark a product sold
+    # 40 days ago as "never sold".
+    last_sale_rows = db.session.query(
+        SaleItem.product_id, func.max(Sale.created_at).label('last_sale')
+    ).join(Sale, Sale.id == SaleItem.sale_id).filter(
+        Sale.company_id == company_id, Sale.status == 'COMPLETED'
+    ).group_by(SaleItem.product_id).all()
+    recent_sales = {product_id: last_sale for product_id, last_sale in last_sale_rows}
+    slow_cutoff = datetime.now() - timedelta(days=60)
+    slow_movers = []
+    inventory_value = Decimal('0')
+    for row in stock_rows:
+        stock = Decimal(str(row.stock or 0))
+        inventory_value += stock * Decimal(str(row.cost or 0))
+        last_sale = recent_sales.get(row.id)
+        if stock > 0 and (not last_sale or last_sale < slow_cutoff):
+            slow_movers.append({'id': row.id, 'name': row.name, 'sku': row.sku, 'stock': stock, 'last_sale': last_sale})
+    slow_movers.sort(key=lambda r: (r['last_sale'] is not None, r['last_sale'] or datetime.min, -r['stock']))
+
+    branch_rows = db.session.query(
+        Branch.name, func.count(Sale.id), func.coalesce(func.sum(Sale.total), 0)
+    ).join(Sale, Sale.branch_id == Branch.id).filter(
+        Branch.company_id == company_id, Sale.company_id == company_id,
+        Sale.status == 'COMPLETED', Sale.created_at >= start,
+    ).group_by(Branch.name).order_by(func.sum(Sale.total).desc()).all()
+    terminal_rows = db.session.query(
+        PosTerminal.name, func.count(Sale.id), func.coalesce(func.sum(Sale.total), 0)
+    ).join(Sale, Sale.terminal_id == PosTerminal.id).filter(
+        PosTerminal.company_id == company_id, Sale.company_id == company_id,
+        Sale.status == 'COMPLETED', Sale.created_at >= start,
+    ).group_by(PosTerminal.name).order_by(func.sum(Sale.total).desc()).all()
+
+    conditioned = db.session.query(
+        InventoryConditionStock.condition,
+        func.coalesce(func.sum(InventoryConditionStock.quantity), 0),
+    ).filter(InventoryConditionStock.company_id == company_id).group_by(InventoryConditionStock.condition).all()
+    condition_totals = {condition: Decimal(str(qty or 0)) for condition, qty in conditioned}
+    expiry_limit = datetime.now().date() + timedelta(days=30)
+    expiring_lots = InventoryLot.query.filter(
+        InventoryLot.company_id == company_id,
+        InventoryLot.quantity > 0,
+        InventoryLot.expires_at.isnot(None),
+        InventoryLot.expires_at <= expiry_limit,
+    ).order_by(InventoryLot.expires_at.asc()).limit(50).all()
+
+    total_margin = sum((row['margin'] for row in ranked), Decimal('0'))
+    return render_template(
+        'reports/retail_performance.html', user=db.session.get(User, session.get('user_id')),
+        days=days, currency_symbol=currency_symbol,
+        revenue=total_revenue / rate, margin=total_margin,
+        inventory_value=inventory_value / rate,
+        ranked=ranked[:100], slow_movers=slow_movers[:50],
+        branches=[(name, count, Decimal(str(total or 0)) / rate) for name, count, total in branch_rows],
+        terminals=[(name, count, Decimal(str(total or 0)) / rate) for name, count, total in terminal_rows],
+        condition_totals=condition_totals, expiring_lots=expiring_lots,
     )
     
 @reports_bp.route('/closings-history')

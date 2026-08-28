@@ -1,152 +1,67 @@
-<!DOCTYPE html>
-<html lang="es" class="{% if session.get('theme') == 'dark' %}dark{% endif %}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perfil de Cliente | OrbisERP</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base_css/base.css') }}">
-    <link rel="stylesheet" href="/static/css/client_css/detail_client.css">
-</head>
-<body class="{% if session.get('theme') == 'dark' %}dark{% endif %}">
+{% extends 'workspace/base.html' %}
+{% block title %}{{ client.name }}{% endblock %}
+{% block eyebrow %}Cliente 360°{% endblock %}
+{% block heading %}{{ client.name }}{% endblock %}
+{% block subtitle %}{{ client.email or 'Sin correo' }} · {{ client.phone or 'Sin teléfono' }} · {{ client.status|default('Activo', true) }}{% endblock %}
+{% block back_link %}<a class="workspace-back" href="{{ url_for('client_bp.list_clients') }}"><i class="bi bi-arrow-left"></i> Volver a clientes</a>{% endblock %}
+{% block actions %}
+{% if can('clients.edit') %}<a class="workspace-btn secondary" href="{{ url_for('client_bp.edit_client', client_id=client.id) }}"><i class="bi bi-pencil"></i> Editar</a>{% endif %}
+{% if can('crm.view') %}<a class="workspace-btn" href="{{ url_for('crm_bp.crm_index') }}"><i class="bi bi-chat-square-heart"></i> Abrir CRM</a>{% endif %}
+{% endblock %}
+{% block content %}
+<section class="workspace-grid">
+    <article class="workspace-metric"><span><i class="bi bi-receipt"></i> Ventas acumuladas</span><strong>{{ currency_symbol }} {{ '{:,.2f}'.format(total_spent) }}</strong><small>{{ total_sales }} {{ 'venta completada' if total_sales == 1 else 'ventas completadas' }}.</small></article>
+    <article class="workspace-metric"><span><i class="bi bi-calculator"></i> Ticket promedio</span><strong>{{ currency_symbol }} {{ '{:,.2f}'.format(total_spent / total_sales if total_sales else 0) }}</strong><small>Promedio histórico en {{ selected_currency }}.</small></article>
+    <article class="workspace-metric"><span><i class="bi bi-wallet2"></i> Saldo por cobrar</span>{% if can_finance %}<strong>{{ currency_symbol }} {{ '{:,.2f}'.format(receivable_balance or 0) }}</strong><small><a href="{{ url_for('backoffice_bp.receivables') }}">Abrir cartera</a></small>{% else %}<strong>Restringido</strong><small>Requiere permiso de cartera.</small>{% endif %}</article>
+    <article class="workspace-metric"><span><i class="bi bi-calendar2-check"></i> Última compra</span><strong>{{ last_sale.strftime('%d/%m/%Y') if last_sale else '—' }}</strong><small><a href="{{ url_for('sales_bp.list_sales', status='QUOTATION', search=client.name) }}">{{ quotes|length }} cotización{{ '' if quotes|length == 1 else 'es' }} abierta{{ '' if quotes|length == 1 else 's' }}</a></small></article>
+    <article class="workspace-metric"><span><i class="bi bi-credit-card-2-front"></i> Crédito disponible</span><strong>{% if client.credit_enabled %}RD$ {{ '{:,.2f}'.format(credit_available) }}{% else %}No habilitado{% endif %}</strong><small>{% if client.credit_hold %}Bloqueado{% elif client.credit_enabled %}Límite RD$ {{ '{:,.2f}'.format(client.credit_limit or 0) }} · {{ client.payment_terms_days }} días{% else %}Venta a crédito desactivada{% endif %}</small></article>
+    <article class="workspace-metric"><span><i class="bi bi-stars"></i> Fidelidad</span><strong>{{ display_decimal(client.loyalty_points or 0, 4) }} pts</strong><small>{{ client.price_list.name if client.price_list else 'Precio público' }}</small></article>
+</section>
 
-    {% include 'layouts/left_bar.html' %}
+<div class="workspace-columns">
+    <section class="workspace-card">
+        <div class="workspace-card-head"><div><h2>Historial comercial</h2><p>Ventas completadas vinculadas directamente con este cliente.</p></div>{% if can('sales.view') %}<a class="workspace-btn secondary" href="{{ url_for('sales_bp.list_sales', search=client.name) }}">Ver en Ventas</a>{% endif %}</div>
+        <div class="workspace-table-wrap"><table class="workspace-table"><thead><tr><th>Venta</th><th>Fecha</th><th>Total</th><th></th></tr></thead><tbody>
+        {% for sale in sales %}<tr><td><strong>#{{ '%05d'|format(sale.id) }}</strong></td><td>{{ sale.created_at.strftime('%d/%m/%Y · %H:%M') }}</td><td>{{ currency_symbol }} {{ '{:,.2f}'.format(sale.total) }}</td><td><div class="workspace-table-actions"><a class="workspace-icon-btn" href="{{ url_for('sales_bp.sale_detail', sale_id=sale.id) }}" title="Ver venta"><i class="bi bi-eye"></i></a></div></td></tr>{% else %}<tr><td colspan="4"><div class="workspace-empty"><i class="bi bi-receipt"></i>Este cliente todavía no tiene ventas completadas.</div></td></tr>{% endfor %}
+        </tbody></table></div>
+    </section>
 
-    <main class="main-content" style="padding: 40px;">
-        <header style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px;">
-            <div>
-                <a href="/clients" class="btn-back" style="text-decoration: none; color: var(--text-muted); font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; gap: 8px; margin-bottom: 15px;">
-                    <i class="bi bi-chevron-left"></i> VOLVER A CLIENTES
-                </a>
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <h1 style="font-weight: 900; font-size: 2.5rem; margin: 0;">{{ client.name }}</h1>
-                    <span class="currency-badge">{{ selected_currency }} TASA: {{ conversion_rate }}</span>
-                </div>
-                <p style="color: var(--text-muted); font-weight: 500; margin-top: 5px;">ID de Cliente: #{{ client.id }} • Registrado en Orbis {{ client.created_at.strftime('%Y') }}</p>
-            </div>
+    <aside class="workspace-card workspace-card--flat">
+        <div class="workspace-card-head"><div><h2>Seguimiento CRM</h2><p>Tareas próximas e interacciones recientes sin duplicar la vista completa del CRM.</p></div></div>
+        <h3>Próximas tareas</h3>
+        <div class="workspace-mini-list">{% for task in tasks[:6] %}<div class="workspace-mini-row"><span><strong>{{ task.title }}</strong><small>{{ task.due_date.strftime('%d/%m/%Y') if task.due_date else 'Sin fecha' }}</small></span><span class="workspace-tag {{ 'ok' if task.is_completed else 'warn' }}">{{ 'Hecha' if task.is_completed else task.priority }}</span></div>{% else %}<div class="workspace-empty"><i class="bi bi-check2-circle"></i>Sin tareas pendientes.</div>{% endfor %}</div>
+        <h3 class="workspace-section-gap">Últimas interacciones</h3>
+        <div class="workspace-mini-list">{% for interaction in interactions[:5] %}<div class="workspace-mini-row"><span><strong>{{ interaction.type }}</strong><small>{{ interaction.content }}</small></span><small>{{ interaction.created_at.strftime('%d/%m') if interaction.created_at else '—' }}</small></div>{% else %}<div class="workspace-empty"><i class="bi bi-chat-left-text"></i>Sin actividad CRM.</div>{% endfor %}</div>
+    </aside>
+</div>
 
-            <div style="display: flex; gap: 10px;">
-                <a href="/clients/edit/{{ client.id }}" class="btn-plan btn-primary" style="padding: 10px 20px; border-radius: 12px; text-decoration: none; display: inline-block;">
-                    <i class="bi bi-pencil"></i> Editar
-                </a>
-            </div>
-        </header>
+<div class="workspace-columns equal">
+    <section class="workspace-card">
+        <div class="workspace-card-head"><div><h2>Pagos y devoluciones</h2><p>Movimiento financiero relacionado con este cliente.</p></div></div>
+        {% if can_finance %}<h3>Pagos recientes</h3><div class="workspace-mini-list">{% for payment in payments[:8] %}<div class="workspace-mini-row"><span><strong>Venta #{{ payment.sale_id }}</strong><small>{{ payment.method }} · {{ payment.created_at.strftime('%d/%m/%Y') if payment.created_at else '—' }}</small></span><b>{{ currency_symbol }} {{ '{:,.2f}'.format((payment.amount|float) / (conversion_rate|float)) }}</b></div>{% else %}<div class="workspace-empty"><i class="bi bi-wallet2"></i>No hay pagos separados registrados.</div>{% endfor %}</div>{% else %}<div class="workspace-empty"><i class="bi bi-lock"></i>La información de cartera está restringida para este perfil.</div>{% endif %}
+        <h3 class="workspace-section-gap">Devoluciones</h3><div class="workspace-mini-list">{% for ret in returns[:8] %}<div class="workspace-mini-row"><span><strong>Venta #{{ ret.sale_id }}</strong><small>{{ ret.reason or 'Sin motivo indicado' }}</small></span><b class="workspace-negative">− {{ currency_symbol }} {{ '{:,.2f}'.format((ret.total_refund|float) / (conversion_rate|float)) }}</b></div>{% else %}<div class="workspace-empty"><i class="bi bi-arrow-counterclockwise"></i>Sin devoluciones.</div>{% endfor %}</div>
+    </section>
 
-        <section class="info-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 40px;">
-            <div class="metric-card">
-                <span style="color: var(--text-muted); font-weight: 700; font-size: 0.75rem; text-transform: uppercase;">Inversión Acumulada</span>
-                <div class="total-highlight" id="total_spent_display">
-                    <small style="font-size: 1rem;">{{ currency_symbol }}</small> 0.00
-                </div>
-                <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
-                    <i class="bi bi-graph-up-arrow" style="color: var(--success-emerald);"></i>
-                    <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Basado en {{ total_sales }} facturas</span>
-                </div>
-            </div>
+    <section class="workspace-card">
+        <div class="workspace-card-head"><div><h2>Documentos</h2><p>Archivos privados asociados al cliente.</p></div>{% if can_documents %}<a class="workspace-btn secondary" href="{{ url_for('workspace_bp.documents', entity_type='CLIENT', entity_id=client.id) }}">Abrir archivo</a>{% endif %}</div>
+        {% if can_documents %}
+        <form method="post" enctype="multipart/form-data" action="{{ url_for('workspace_bp.document_upload') }}" class="workspace-form compact"><input type="hidden" name="entity_type" value="CLIENT"><input type="hidden" name="entity_id" value="{{ client.id }}"><label class="full">Adjuntar archivo<input type="file" name="file" required accept=".pdf,.png,.jpg,.jpeg,.webp,.csv,.xlsx,.docx,.txt"></label><div class="actions"><button class="workspace-btn secondary" type="submit"><i class="bi bi-cloud-arrow-up"></i> Subir</button></div></form>
+        <div class="workspace-mini-list">{% for doc in documents[:8] %}<div class="workspace-mini-row"><span><strong>{{ doc.display_name }}</strong><small>{{ doc.created_at.strftime('%d/%m/%Y') if doc.created_at else '—' }}</small></span><a class="workspace-icon-btn" href="{{ url_for('workspace_bp.document_download', document_id=doc.id) }}" title="Descargar"><i class="bi bi-download"></i></a></div>{% else %}<div class="workspace-empty"><i class="bi bi-folder2-open"></i>Sin documentos.</div>{% endfor %}</div>
+        {% else %}<div class="workspace-empty"><i class="bi bi-lock"></i>Documentos privados disponibles solo para perfiles autorizados.</div>{% endif %}
+    </section>
+</div>
 
-            <div class="metric-card">
-                <span style="color: var(--text-muted); font-weight: 700; font-size: 0.75rem; text-transform: uppercase;">Promedio por Ticket</span>
-                <div class="total-highlight" id="avg_ticket_display" style="color: var(--accent-gold);">
-                    <small style="font-size: 1rem;">{{ currency_symbol }}</small> 0.00
-                </div>
-                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 10px; font-weight: 600;">Moneda de visualización: {{ selected_currency }}</p>
-            </div>
+<section class="workspace-card">
+    <div class="workspace-card-head"><div><h2>Cotizaciones abiertas</h2><p>Propuestas del cliente. La gestión completa se realiza dentro de la vista única de Ventas.</p></div>{% if can('sales.view') %}<a class="workspace-btn secondary" href="{{ url_for('sales_bp.list_sales', status='QUOTATION', search=client.name) }}">Gestionar en Ventas</a>{% endif %}</div>
+    <div class="workspace-table-wrap"><table class="workspace-table"><thead><tr><th>Cotización</th><th>Fecha</th><th>Total</th><th>Vigencia</th><th>Notas</th></tr></thead><tbody>{% for q in quotes %}<tr><td><strong>#{{ '%05d'|format(q.id) }}</strong></td><td>{{ q.created_at.strftime('%d/%m/%Y') }}</td><td>{{ currency_symbol }} {{ '{:,.2f}'.format((q.total|float) / (conversion_rate|float)) }}</td><td>{% if q.quote_valid_until %}<span class="workspace-tag {{ 'danger' if q.quote_valid_until < today else 'ok' }}">{{ q.quote_valid_until.strftime('%d/%m/%Y') }}</span>{% else %}<span class="workspace-tag warn">Sin fecha</span>{% endif %}</td><td>{{ q.quote_notes or '—' }}</td></tr>{% else %}<tr><td colspan="5"><div class="workspace-empty"><i class="bi bi-file-earmark-text"></i>Sin cotizaciones abiertas.</div></td></tr>{% endfor %}</tbody></table></div>
+</section>
 
-            <div class="metric-card">
-                <span style="color: var(--text-muted); font-weight: 700; font-size: 0.75rem; text-transform: uppercase;">Última Operación</span>
-                <div class="total-highlight" style="font-size: 1.8rem; margin-top: 10px;">
-                    {{ last_sale.strftime('%d %b') if last_sale else 'N/A' }}
-                </div>
-                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 10px; font-weight: 600;">Estado: Activo</p>
-            </div>
-        </section>
-
-        <div class="content-wrapper" style="display: grid; grid-template-columns: 350px 1fr; gap: 30px;">
-            <aside class="details-section" style="background: var(--bg-card); border-radius: 20px; padding: 30px; height: fit-content; border: 1px solid var(--border);">
-                <h3 style="font-size: 0.9rem; font-weight: 800; margin-bottom: 25px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">INFORMACIÓN PERSONAL</h3>
-                
-                <div style="display: flex; flex-direction: column; gap: 20px;">
-                    <div>
-                        <label style="display: block; font-size: 0.65rem; font-weight: 800; color: var(--text-muted); margin-bottom: 5px;">EMAIL</label>
-                        <strong style="font-size: 0.9rem;">{{ client.email or 'Sin correo' }}</strong>
-                    </div>
-                    <div>
-                        <label style="display: block; font-size: 0.65rem; font-weight: 800; color: var(--text-muted); margin-bottom: 5px;">TELÉFONO / WHATSAPP</label>
-                        <strong style="font-size: 0.9rem;">{{ client.phone or 'Sin teléfono' }}</strong>
-                    </div>
-                    <div>
-                        <label style="display: block; font-size: 0.65rem; font-weight: 800; color: var(--text-muted); margin-bottom: 5px;">FECHA REGISTRO</label>
-                        <strong style="font-size: 0.9rem;">{{ client.created_at.strftime('%d de %B, %Y') }}</strong>
-                    </div>
-                </div>
-            </aside>
-
-            <section class="table-section">
-                <div style="margin-bottom: 20px;">
-                    <h3 style="font-weight: 900; font-size: 1.2rem;">Historial de Auditoría</h3>
-                    <p style="color: var(--text-muted); font-size: 0.85rem;">Todos los montos han sido convertidos a la tasa actual ({{ conversion_rate }}).</p>
-                </div>
-
-                <div class="table-container" style="background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); overflow: hidden;">
-                    <table class="custom-table" style="width: 100%; border-collapse: collapse;">
-                        <thead style="background: rgba(0,0,0,0.1);">
-                            <tr style="text-align: left;">
-                                <th style="padding: 20px; font-size: 0.7rem; font-weight: 800; color: var(--text-muted);">REF</th>
-                                <th style="padding: 20px; font-size: 0.7rem; font-weight: 800; color: var(--text-muted);">FECHA</th>
-                                <th style="padding: 20px; font-size: 0.7rem; font-weight: 800; color: var(--text-muted);">ESTADO</th>
-                                <th style="padding: 20px; font-size: 0.7rem; font-weight: 800; color: var(--text-muted);">MONTO ({{ selected_currency }})</th>
-                                <th style="padding: 20px; text-align: center;"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for sale in sales %}
-                            <tr style="border-bottom: 1px solid var(--border);">
-                                <td style="padding: 20px; font-weight: 700; color: var(--accent-gold);">#{{ sale.id }}</td>
-                                <td style="padding: 20px; font-size: 0.9rem; font-weight: 500;">{{ sale.created_at.strftime('%d/%m/%Y') }}</td>
-                                <td style="padding: 20px;"><span class="status-pill">COMPLETADO</span></td>
-                                <td style="padding: 20px; font-weight: 800; font-size: 1rem;" class="convert-monto" data-valor="{{ sale.total }}">
-                                    </td>
-                                <td style="padding: 20px; text-align: center;">
-                                    <a href="/sales/{{ sale.id }}" style="color: var(--text-muted); font-size: 1.2rem;"><i class="bi bi-arrow-right-circle"></i></a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-        </div>
-    </main>
-
-    <script>
-        // Lógica de conversión dinámica de OrbisERP
-        const tasa = {{ conversion_rate }};
-        const simbolo = "{{ currency_symbol }}";
-
-        // Función para formatear dinero
-        const formatMoney = (val) => {
-            return simbolo + " " + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        };
-
-        // 1. Convertir montos de la tabla
-        const montosTabla = document.querySelectorAll('.convert-monto');
-        let totalAcumulado = 0;
-
-        montosTabla.forEach(el => {
-            const valorOriginal = parseFloat(el.getAttribute('data-valor'));
-            const valorConvertido = valorOriginal / tasa;
-            totalAcumulado += valorConvertido;
-            el.innerHTML = formatMoney(valorConvertido);
-        });
-
-        // 2. Actualizar tarjetas superiores
-        document.getElementById('total_spent_display').innerHTML = formatMoney(totalAcumulado);
-        
-        const totalSales = {{ total_sales }};
-        const avg = totalSales > 0 ? totalAcumulado / totalSales : 0;
-        document.getElementById('avg_ticket_display').innerHTML = formatMoney(avg);
-    </script>
-</body>
-</html>
+<section class="workspace-card">
+    <div class="workspace-card-head"><div><h2>Relación retail</h2><p>Crédito, apartados, tarjetas regalo y movimientos de fidelidad del cliente.</p></div></div>
+    <div class="workspace-columns equal">
+        <div><h3>Apartados</h3><div class="workspace-mini-list">{% for layaway in layaways[:8] %}<div class="workspace-mini-row"><span><strong>Apartado #{{ layaway.id }}</strong><small>Venta #{{ layaway.sale_id }} · {{ layaway.status }}</small></span><b>RD$ {{ '{:,.2f}'.format(layaway.balance or 0) }}</b></div>{% else %}<div class="workspace-empty"><i class="bi bi-bookmark"></i>Sin apartados.</div>{% endfor %}</div></div>
+        <div><h3>Gift cards</h3><div class="workspace-mini-list">{% for card in gift_cards[:8] %}<div class="workspace-mini-row"><span><strong>{{ card.code }}</strong><small>{{ card.status }}</small></span><b>RD$ {{ '{:,.2f}'.format(card.balance or 0) }}</b></div>{% else %}<div class="workspace-empty"><i class="bi bi-gift"></i>Sin tarjetas regalo.</div>{% endfor %}</div></div>
+    </div>
+    <h3 class="workspace-section-gap">Fidelidad</h3><div class="workspace-mini-list">{% for tx in loyalty_transactions[:8] %}<div class="workspace-mini-row"><span><strong>{{ tx.event_type }}</strong><small>{{ tx.notes or ('Venta #' ~ tx.sale_id if tx.sale_id else 'Ajuste') }}</small></span><b>{{ display_decimal(tx.points, 4) }} pts</b></div>{% else %}<div class="workspace-empty"><i class="bi bi-stars"></i>Sin movimientos de puntos.</div>{% endfor %}</div>
+</section>
+{% endblock %}

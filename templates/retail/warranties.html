@@ -1,0 +1,58 @@
+{% extends 'workspace/base.html' %}
+{% block title %}Garantías · OrbisERP{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/retail.css') }}">{% endblock %}
+{% block eyebrow %}Ventas · Postventa{% endblock %}
+{% block heading %}Garantías{% endblock %}
+{% block subtitle %}Controla la reclamación sin mezclarla con una devolución de inventario.{% endblock %}
+{% block actions %}<a class="workspace-btn secondary" href="{{ url_for('retail_bp.overview') }}"><i class="bi bi-grid-1x2"></i> Retail avanzado</a>{% endblock %}
+{% block content %}
+<div class="retail-shell">
+  {% include 'retail/_nav.html' %}
+
+  <section class="warranty-inventory-guide">
+    <div class="warranty-guide-head"><span class="warranty-guide-icon"><i class="bi bi-shield-check"></i></span><div><span>REGLA DE INVENTARIO</span><h2>Una garantía no devuelve automáticamente el producto al stock.</h2><p>El producto permanece vinculado a la venta. Usa <strong>Devoluciones</strong> si la mercancía regresa físicamente a inventario.</p></div></div>
+    <div class="warranty-guide-grid">
+      <article><i class="bi bi-hourglass-split"></i><strong>Abierta / revisión</strong><span>Serial en estado GARANTÍA. No vendible.</span></article>
+      <article><i class="bi bi-tools"></i><strong>Reparada</strong><span>Original vuelve al cliente. Sin entrada de stock.</span></article>
+      <article><i class="bi bi-arrow-left-right"></i><strong>Reemplazada</strong><span>Sale 1 unidad/serial de reemplazo; original queda descartado.</span></article>
+      <article><i class="bi bi-box-arrow-in-down"></i><strong>Producto recibido</strong><span>Regístralo en Devoluciones: Disponible, Cuarentena o Dañado.</span></article>
+    </div>
+    <a class="workspace-btn secondary" href="{{ url_for('backoffice_bp.returns') }}"><i class="bi bi-arrow-return-left"></i> Ir a Devoluciones</a>
+  </section>
+
+  <div class="workspace-kpis">
+    <article class="workspace-kpi"><span>Abiertas</span><strong>{{ counts.get('OPEN', 0) }}</strong><small>Pendientes de revisión</small></article>
+    <article class="workspace-kpi"><span>En revisión</span><strong>{{ counts.get('IN_REVIEW', 0) + counts.get('APPROVED', 0) }}</strong><small>Fuera de stock vendible</small></article>
+    <article class="workspace-kpi"><span>Resueltas</span><strong>{{ counts.get('REPAIRED', 0) + counts.get('REPLACED', 0) + counts.get('REJECTED', 0) + counts.get('CLOSED', 0) }}</strong><small>Histórico cerrado</small></article>
+  </div>
+
+  <section class="workspace-panel">
+    <form method="get" class="workspace-filterbar">
+      <label class="workspace-search"><i class="bi bi-search"></i><input name="q" value="{{ q }}" placeholder="Producto, SKU o serial"></label>
+      <select name="status"><option value="">Todos los estados</option>{% for value, label in [('OPEN','Abierta'),('IN_REVIEW','En revisión'),('APPROVED','Aprobada'),('REPAIRED','Reparada'),('REPLACED','Reemplazada'),('REJECTED','Rechazada'),('CLOSED','Cerrada')] %}<option value="{{ value }}" {% if status==value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+      <button class="workspace-btn secondary">Filtrar</button>{% if q or status %}<a class="workspace-btn ghost" href="{{ url_for('retail_bp.warranties') }}">Limpiar</a>{% endif %}
+    </form>
+    <div class="workspace-table-wrap"><table class="workspace-table warranty-table"><thead><tr><th>Reclamación</th><th>Artículo / venta</th><th>Cliente</th><th>Estado e impacto</th><th>Resolución</th><th>Acciones</th></tr></thead><tbody>
+    {% for claim in claims %}<tr>
+      <td><strong>#{{ claim.id }}</strong><small>{{ claim.opened_at.strftime('%d/%m/%Y') if claim.opened_at else '' }}</small><small>{{ claim.reason }}</small></td>
+      <td><strong>{{ claim.sale_item.product.name }}</strong><small>{% if claim.sale_item.variant %}{{ claim.sale_item.variant.name }} · {% endif %}{{ claim.serial.serial_number if claim.serial else 'Sin serial' }}</small><a href="{{ url_for('sales_bp.sale_detail', sale_id=claim.sale_item.sale_id) }}">Venta #{{ claim.sale_item.sale_id }}</a></td>
+      <td>{{ claim.client.name if claim.client else 'Consumidor final' }}</td>
+      <td><span class="workspace-badge">{{ claim.status }}</span>
+        {% if claim.status in ['OPEN','IN_REVIEW','APPROVED'] %}<small class="warranty-stock-effect hold"><i class="bi bi-pause-circle"></i> No vendible / en garantía</small>
+        {% elif claim.status == 'REPLACED' %}<small class="warranty-stock-effect out"><i class="bi bi-box-arrow-up-right"></i> Reemplazo descontado del stock</small>
+        {% elif claim.status == 'REPAIRED' %}<small class="warranty-stock-effect"><i class="bi bi-tools"></i> Sin entrada de stock</small>
+        {% else %}<small class="warranty-stock-effect"><i class="bi bi-info-circle"></i> Sin reintegro automático</small>{% endif %}
+      </td>
+      <td>{{ claim.resolution or '—' }}{% if claim.replacement_serial %}<small>Reemplazo: {{ claim.replacement_serial.serial_number }}</small>{% endif %}{% if claim.resolver %}<small>por {{ claim.resolver.name }}</small>{% endif %}</td>
+      <td>{% if claim.status not in ['REPAIRED','REPLACED','REJECTED','CLOSED'] %}
+        <form method="post" action="{{ url_for('retail_bp.warranty_update', claim_id=claim.id, action='review') }}" class="workspace-stack warranty-action-stack">
+          <input name="resolution" placeholder="Nota / resolución">
+          {% if claim.serial %}<select name="replacement_serial_id"><option value="">Serial de reemplazo (solo al reemplazar)</option>{% for serial in replacement_options.get(claim.id, []) %}<option value="{{ serial.id }}">{{ serial.serial_number }} · {{ serial.warehouse.name if serial.warehouse else 'Sin almacén' }}</option>{% endfor %}</select>{% endif %}
+          <div class="workspace-inline-actions"><button class="workspace-btn secondary" type="submit">Revisar</button><button class="workspace-btn" type="submit" formaction="{{ url_for('retail_bp.warranty_update', claim_id=claim.id, action='repair') }}">Reparado</button><button class="workspace-btn" type="submit" formaction="{{ url_for('retail_bp.warranty_update', claim_id=claim.id, action='replace') }}">Reemplazar</button><button class="workspace-btn danger" type="submit" formaction="{{ url_for('retail_bp.warranty_update', claim_id=claim.id, action='reject') }}">Rechazar</button></div>
+        </form>
+      {% else %}<span class="workspace-muted">Resuelta</span>{% endif %}</td>
+    </tr>{% else %}<tr><td colspan="6"><div class="workspace-empty"><i class="bi bi-shield-check"></i>No hay reclamaciones con estos filtros.</div></td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+</div>
+{% endblock %}

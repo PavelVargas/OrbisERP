@@ -115,7 +115,7 @@ def dashboard():
     # -------- DIVISA --------
 
     selected_currency = session.get('selected_currency', 'DOP')
-    rate = float(ExchangeRate.get_rate(selected_currency, company_id))
+    rate = float(ExchangeRate.get_rate_or_default(selected_currency, company_id))
 
     # -------- PLAN Y LIMITES --------
 
@@ -202,6 +202,10 @@ def dashboard():
         pending_sales_query = pending_sales_query.filter(Sale.user_id == user_id)
     total_tickets_count = completed_sales_query.count()
     pending_count = pending_sales_query.count()
+    quote_query = Sale.query.filter_by(company_id=company_id, status='QUOTATION')
+    if not is_admin:
+        quote_query = quote_query.filter(Sale.user_id == user_id)
+    quote_count = quote_query.count()
 
     low_stock_products = db.session.query(WarehouseStock).filter(
         WarehouseStock.company_id == company_id,
@@ -323,8 +327,8 @@ def dashboard():
         Product.name, Product.sku, Product.image_path
     ).order_by(desc('qty')).limit(5).all()
 
-    total_clients_count = Client.query.filter_by(company_id=company_id).count()
-    recent_clients = Client.query.filter_by(company_id=company_id).order_by(Client.created_at.desc()).limit(5).all()
+    total_clients_count = Client.query.filter_by(company_id=company_id).filter(Client.archived_at.is_(None)).count()
+    recent_clients = Client.query.filter_by(company_id=company_id).filter(Client.archived_at.is_(None)).order_by(Client.created_at.desc()).limit(5).all()
 
     return render_template(
         'dashboard/dashboard.html',
@@ -344,6 +348,7 @@ def dashboard():
 
         total_tickets_count=total_tickets_count,
         pending_count=pending_count,
+        quote_count=quote_count,
         low_stock_products=low_stock_products,
         total_clients_count=total_clients_count,
         recent_clients=recent_clients,
@@ -409,7 +414,7 @@ def realtime_stats():
 
     selected_currency = session.get('selected_currency', 'DOP')
 
-    rate = float(ExchangeRate.get_rate(selected_currency, company_id))
+    rate = float(ExchangeRate.get_rate_or_default(selected_currency, company_id))
 
     user = db.session.get(User, user_id)
 
@@ -448,12 +453,48 @@ def realtime_stats():
         "receipt_status": db.session.get(Company, company_id).receipt_status
     })
 
+TABLET_MODE_COOKIE = 'orbis_ui_mode'
+LEGACY_TABLET_MODE_COOKIE = 'orbis_tablet_mode'
+TABLET_MODE_COOKIE_MAX_AGE = 60 * 60 * 24 * 30
+
+
+def _tablet_preference_response(response, enabled):
+    response.set_cookie(
+        TABLET_MODE_COOKIE,
+        'tablet' if enabled else 'desktop',
+        max_age=TABLET_MODE_COOKIE_MAX_AGE,
+        path='/',
+        samesite='Lax',
+        secure=request.is_secure,
+        httponly=False,
+    )
+    response.set_cookie(
+        LEGACY_TABLET_MODE_COOKIE,
+        '1' if enabled else '0',
+        max_age=TABLET_MODE_COOKIE_MAX_AGE,
+        path='/',
+        samesite='Lax',
+        secure=request.is_secure,
+        httponly=False,
+    )
+    return response
+
+
 @dashboard_bp.route('/tablet/enable')
 def enable_tablet_mode():
+    # Tablet mode is a durable application profile. The Flask session drives
+    # server rendering while the dedicated preference cookie survives every
+    # module navigation and lets app.py restore the profile if a route happens
+    # to rebuild non-security session context.
     session['tablet_mode'] = True
-    return redirect(url_for('launchpad_bp.index'))
+    session.modified = True
+    response = redirect(url_for('launchpad_bp.launchpad'))
+    return _tablet_preference_response(response, True)
+
 
 @dashboard_bp.route('/tablet/disable')
 def disable_tablet_mode():
     session.pop('tablet_mode', None)
-    return redirect(url_for('dashboard_bp.dashboard'))
+    session.modified = True
+    response = redirect(url_for('dashboard_bp.dashboard'))
+    return _tablet_preference_response(response, False)

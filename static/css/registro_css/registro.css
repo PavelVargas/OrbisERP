@@ -181,3 +181,226 @@ body {
     .side-form { padding-top: 100px; }
     .mode-text { display: none; }
 }
+
+/* --- EMAIL VERIFICATION / same visual language as auth --- */
+.verify-page .verify-card {
+    width: 100%;
+    max-width: 460px;
+}
+
+.verify-page .verify-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 18px;
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .02em;
+}
+
+.verify-page .verify-kicker-icon {
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border: 1px solid color-mix(in srgb, var(--primary) 24%, var(--border));
+    border-radius: 8px;
+    color: var(--primary);
+    background: color-mix(in srgb, var(--primary) 8%, var(--bg-card));
+    font-size: 13px;
+}
+
+.verify-page .verify-header {
+    margin-bottom: 20px;
+}
+
+.verify-page .verify-header h2 {
+    color: var(--text-main);
+}
+
+.verify-page .verify-email-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 22px;
+    padding: 11px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg-input);
+}
+
+.verify-page .verify-email-copy {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.verify-page .verify-email-copy > i {
+    flex: 0 0 auto;
+    color: var(--primary);
+    font-size: 15px;
+}
+
+.verify-page .verify-email-copy div {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+}
+
+.verify-page .verify-email-copy span {
+    color: var(--text-muted);
+    font-size: 9px;
+    font-weight: 600;
+}
+
+.verify-page .verify-email-copy strong {
+    overflow: hidden;
+    color: var(--text-main);
+    font-size: 11px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.verify-page .verify-email-row > a {
+    flex: 0 0 auto;
+    color: var(--primary);
+    font-size: 10px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.verify-page .verify-email-row > a:hover {
+    text-decoration: underline;
+}
+
+.verify-page .verify-code-fieldset {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.verify-page .verify-code-fieldset legend {
+    margin-bottom: 8px;
+    color: var(--text-main);
+    font-size: 10px;
+    font-weight: 650;
+}
+
+.verify-page .verify-code-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.verify-page .verify-digit {
+    width: 100%;
+    min-width: 0;
+    height: 56px;
+    box-sizing: border-box;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    outline: 0;
+    color: var(--text-main);
+    background: var(--bg-input);
+    font-family: inherit;
+    font-size: 21px;
+    font-weight: 750;
+    text-align: center;
+    transition: border-color .18s ease, box-shadow .18s ease, background .18s ease, transform .18s ease;
+}
+
+.verify-page .verify-digit:focus {
+    border-color: color-mix(in srgb, var(--primary) 68%, var(--border));
+    background: var(--bg-card);
+    box-shadow: 0 0 0 3px rgba(223, 116, 25, .11);
+}
+
+.verify-page .verify-digit-error {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, .1);
+    transform: translateY(-1px);
+}
+
+.verify-page .verify-submit {
+    min-height: 43px;
+    margin-top: 18px;
+    padding: 10px 14px;
+    border-radius: 9px;
+    font-size: 12px;
+    box-shadow: 0 6px 16px rgba(223, 116, 25, .17);
+}
+
+.verify-page .verify-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 16px;
+    padding: 11px 0 0;
+    color: var(--text-muted);
+    font-size: 10px;
+    line-height: 1.55;
+}
+
+.verify-page .verify-note i {
+    flex: 0 0 auto;
+    margin-top: 1px;
+    color: var(--text-muted);
+}
+
+.verify-page .verify-note strong {
+    color: var(--text-main);
+    font-weight: 700;
+}
+
+.verify-page .verify-footer-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 9px;
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+}
+
+.verify-page .verify-footer-actions form {
+    margin: 0;
+}
+
+.verify-page .verify-resend,
+.verify-page .verify-back {
+    width: 100%;
+    min-height: 39px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    color: var(--text-main);
+    background: var(--bg-card);
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: border-color .18s ease, background .18s ease, color .18s ease;
+}
+
+.verify-page .verify-resend:hover,
+.verify-page .verify-back:hover {
+    border-color: color-mix(in srgb, var(--primary) 38%, var(--border));
+    color: var(--primary);
+    background: color-mix(in srgb, var(--primary) 4%, var(--bg-card));
+}
+
+@media (max-width: 540px) {
+    .verify-page .verify-code-grid { gap: 8px; }
+    .verify-page .verify-digit { height: 52px; font-size: 19px; }
+    .verify-page .verify-email-row { align-items: flex-start; }
+}

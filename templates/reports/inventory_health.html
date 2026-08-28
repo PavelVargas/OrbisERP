@@ -1,194 +1,96 @@
-<!DOCTYPE html>
-<html lang="es" class="{% if session.get('theme') == 'dark' %}dark{% endif %}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Salud de Inventario | OrbisERP</title>
+{% extends 'workspace/base.html' %}
+{% block title %}Salud de inventario{% endblock %}
+{% block eyebrow %}Informes · Inventario{% endblock %}
+{% block heading %}Salud de inventario{% endblock %}
+{% block subtitle %}Revisa valor, disponibilidad y productos que necesitan atención sin salir del lenguaje visual del sistema.{% endblock %}
+{% block back_link %}<a class="workspace-back" href="{{ url_for('reports_bp.index') }}"><i class="bi bi-arrow-left"></i> Informes</a>{% endblock %}
+{% block content %}
+<section class="workspace-grid workspace-grid--three">
+    <article class="workspace-metric">
+        <span><i class="bi bi-cash-stack"></i> Valor total del inventario</span>
+        <strong>{{ currency_symbol | default('RD$') }} {{ "{:,.2f}".format(total_value | default(0)) }}</strong>
+        <small>Costo acumulado de las existencias actuales.</small>
+    </article>
+    <article class="workspace-metric">
+        <span><i class="bi bi-box-seam"></i> Productos registrados</span>
+        <strong>{{ products | length }}</strong>
+        <small>Productos incluidos en este análisis.</small>
+    </article>
+    <article class="workspace-metric">
+        <span><i class="bi bi-exclamation-triangle"></i> Requieren atención</span>
+        <strong id="inventoryAttentionCount">0</strong>
+        <small>Productos agotados o con 5 unidades o menos.</small>
+    </article>
+</section>
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
-                    colors: {
-                        orbis: { DEFAULT: '#faa200', dark: '#d98c00' },
-                        carbon: {
-                            700: '#1e2328',
-                            800: '#16191c', 
-                            900: '#0f1113'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-
-    <style>
-        body {
-            background-color: #f3f4f6;
-            color: #111827;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            overflow-x: hidden;
-        }
-        .dark body { 
-            background-color: #0f1113; 
-            color: #e5e7eb; 
-        }
-
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .dark ::-webkit-scrollbar-thumb { background: #1e2328; }
-
-        .odoo-card {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-        }
-        .dark .odoo-card {
-            background: #16191c;
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        }
-    </style>
-</head>
-
-<body class="flex">
-
-    {% include 'layouts/left_bar.html' %}
-
-    <main class="flex-grow h-screen overflow-y-auto p-4 lg:p-6 space-y-6">
-        
-        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-gray-200 dark:border-white/5">
-            <div>
-                <div class="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    <span>Informes</span>
-                    <i class="bi bi-chevron-right text-[10px]"></i>
-                    <a href="{{ url_for('reports_bp.index') }}" class="hover:text-orbis">Auditoría</a>
-                    <i class="bi bi-chevron-right text-[10px]"></i>
-                    <span class="text-orbis">Salud de Inventario</span>
-                </div>
-                <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white mt-1">
-                    Análisis de Existencias
-                </h1>
-            </div>
-
-            <div class="flex items-center gap-2 w-full sm:w-auto">
-                <div class="relative w-full sm:w-64">
-                    <i class="bi bi-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>
-                    <input type="text" id="inventorySearch" placeholder="Buscar producto o SKU..." class="w-full bg-white dark:bg-carbon-800 text-sm border border-gray-300 dark:border-white/10 rounded-lg pl-9 pr-4 py-2 focus:outline-none focus:border-orbis text-gray-700 dark:text-gray-200">
-                </div>
-                <a href="{{ url_for('reports_bp.index') }}" class="flex items-center justify-center gap-2 bg-white dark:bg-carbon-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-carbon-700 px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition-colors">
-                    <i class="bi bi-arrow-left"></i> Atrás
-                </a>
-            </div>
-        </header>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div class="odoo-card rounded-xl p-4 flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Valor Total del Almacén</p>
-                    <h3 class="text-2xl font-extrabold text-gray-900 dark:text-white mt-1">
-                        {{ currency_symbol | default('RD$') }} {{ "{:,.2f}".format(total_value | default(0)) }}
-                    </h3>
-                </div>
-                <div class="p-3 bg-amber-50 dark:bg-orbis/10 text-orbis rounded-lg">
-                    <i class="bi bi-currency-dollar text-xl"></i>
-                </div>
-            </div>
-            
-            <div class="odoo-card rounded-xl p-4 flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total de Ítems Registrados</p>
-                    <h3 class="text-2xl font-extrabold text-gray-900 dark:text-white mt-1">
-                        {{ products | length }}
-                    </h3>
-                </div>
-                <div class="p-3 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-lg">
-                    <i class="bi bi-box-seam text-xl"></i>
-                </div>
-            </div>
+<section class="workspace-card">
+    <div class="workspace-card-head inventory-health-head">
+        <div>
+            <h2>Existencias por producto</h2>
+            <p>Busca por nombre o SKU. El stock global suma las existencias de todos los almacenes de la empresa.</p>
         </div>
-
-        <div class="odoo-card rounded-xl overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-gray-50 dark:bg-carbon-800 text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wider border-b border-gray-200 dark:border-white/5">
-                            <th class="py-3.5 px-4">Producto / SKU</th>
-                            <th class="py-3.5 px-4 text-right">Costo Compra</th>
-                            <th class="py-3.5 px-4 text-right">Precio Venta</th>
-                            <th class="py-3.5 px-4 text-center">Stock Global</th>
-                            <th class="py-3.5 px-4 text-center">Estado de Salud</th>
-                        </tr>
-                    </thead>
-                    <tbody id="inventoryTableBody" class="divide-y divide-gray-200 dark:divide-white/5 text-sm">
-                        {% for p in products %}
-                        <tr class="hover:bg-gray-50/50 dark:hover:bg-white/[0.01] transition-colors inventory-row">
-                            <td class="py-3.5 px-4">
-                                <div class="font-bold text-gray-900 dark:text-gray-100 search-field">{{ p.name }}</div>
-                                <div class="text-xs text-gray-400 search-field">{{ p.sku | default('Sin SKU') }}</div>
-                            </td>
-                            <td class="py-3.5 px-4 text-right font-medium text-gray-500 dark:text-gray-400">
-                                {{ currency_symbol | default('RD$') }} 
-                                {% if p.purchase_price is defined and p.purchase_price %}
-                                    {{ "{:,.2f}".format(p.purchase_price) }}
-                                {% elif p.cost is defined and p.cost %}
-                                    {{ "{:,.2f}".format(p.cost) }}
-                                {% else %}
-                                    0.00
-                                {% endif %}
-                            </td>
-                            <td class="py-3.5 px-4 text-right font-bold text-gray-900 dark:text-white">
-                                {{ currency_symbol | default('RD$') }} {{ "{:,.2f}".format(p.sale_price | default(0)) }}
-                            </td>
-                            <td class="py-3.5 px-4 text-center font-extrabold text-gray-700 dark:text-gray-300">
-                                {{ p.calculated_stock | default(0) }}
-                            </td>
-                            <td class="py-3.5 px-4 text-center">
-                                {% set current_stock = p.calculated_stock | default(0) %}
-                                {% if current_stock <= 0 %}
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/20">Agotado</span>
-                                {% elif current_stock <= 5 %}
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20">Crítico</span>
-                                {% else %}
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">Óptimo</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="5" class="py-8 text-center text-sm text-gray-400 italic">
-                                No se encontraron productos cargados en este inventario.
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </main>
-
-    <script>
-        document.getElementById('inventorySearch').addEventListener('input', function(e) {
-            const term = e.target.value.toLowerCase().trim();
-            const rows = document.querySelectorAll('.inventory-row');
-            
-            rows.forEach(row => {
-                const fields = row.querySelectorAll('.search-field');
-                let match = false;
-                fields.forEach(f => {
-                    if(f.textContent.toLowerCase().includes(term)) match = true;
-                });
-                row.style.display = match ? '' : 'none';
-            });
+        <label class="workspace-quick-search" for="inventorySearch">
+            <i class="bi bi-search"></i>
+            <input type="search" id="inventorySearch" placeholder="Buscar producto o SKU…" autocomplete="off">
+        </label>
+    </div>
+    <div class="workspace-table-wrap">
+        <table class="workspace-table" id="inventoryHealthTable">
+            <thead>
+                <tr>
+                    <th>Producto / SKU</th>
+                    <th class="text-right">Costo compra</th>
+                    <th class="text-right">Precio venta</th>
+                    <th class="text-center">Stock global</th>
+                    <th class="text-center">Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in products %}
+                {% set current_stock = p.calculated_stock | default(0) %}
+                <tr class="inventory-row" data-search="{{ (p.name ~ ' ' ~ (p.sku or ''))|lower }}" data-attention="{{ 'true' if current_stock <= 5 else 'false' }}">
+                    <td><strong>{{ p.name }}</strong><br><small>{{ p.sku or 'Sin SKU' }}</small></td>
+                    <td class="text-right">
+                        {{ currency_symbol | default('RD$') }}
+                        {% if p.purchase_price is defined and p.purchase_price %}{{ "{:,.2f}".format(p.purchase_price) }}
+                        {% elif p.cost is defined and p.cost %}{{ "{:,.2f}".format(p.cost) }}
+                        {% else %}0.00{% endif %}
+                    </td>
+                    <td class="text-right"><strong>{{ currency_symbol | default('RD$') }} {{ "{:,.2f}".format(p.sale_price | default(0)) }}</strong></td>
+                    <td class="text-center"><strong>{{ display_quantity(current_stock) }}</strong></td>
+                    <td class="text-center">
+                        {% if current_stock <= 0 %}<span class="workspace-tag danger"><i class="bi bi-x-octagon"></i> Agotado</span>
+                        {% elif current_stock <= 5 %}<span class="workspace-tag warn"><i class="bi bi-exclamation-triangle"></i> Crítico</span>
+                        {% else %}<span class="workspace-tag ok"><i class="bi bi-check-circle"></i> Óptimo</span>{% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="workspace-empty"><i class="bi bi-box-seam"></i>No hay productos para analizar.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div id="inventoryNoResults" class="workspace-empty" hidden><i class="bi bi-search"></i>No hay productos que coincidan con la búsqueda.</div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script nonce="{{ g.csp_nonce }}">
+(() => {
+    const search = document.getElementById('inventorySearch');
+    const rows = [...document.querySelectorAll('.inventory-row')];
+    const empty = document.getElementById('inventoryNoResults');
+    const attention = document.getElementById('inventoryAttentionCount');
+    if (attention) attention.textContent = rows.filter(row => row.dataset.attention === 'true').length;
+    search?.addEventListener('input', () => {
+        const term = search.value.toLocaleLowerCase('es').trim();
+        let visible = 0;
+        rows.forEach(row => {
+            const match = !term || row.dataset.search.includes(term);
+            row.hidden = !match;
+            if (match) visible += 1;
         });
-    </script>
-</body>
-</html>
+        if (empty) empty.hidden = visible !== 0 || rows.length === 0;
+    });
+})();
+</script>
+{% endblock %}

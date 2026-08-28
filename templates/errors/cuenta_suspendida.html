@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="dark" class="dark">
-<head>
+<html lang="es">
+<head>{% include 'layouts/theme_prepaint.html' %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Suscripción Vencida | OrbisERP</title>
@@ -109,7 +109,7 @@
             </form>
 
             <div style="display: flex; flex-direction: column; gap: 15px;">
-                <a href="https://wa.me/8494940074" target="_blank" style="color: #faa200; font-size: 0.85rem; text-decoration: none; font-weight: 600;">
+                <a href="https://wa.me/8494940074" target="_blank" rel="noopener" style="color: #faa200; font-size: 0.85rem; text-decoration: none; font-weight: 600;">
                     <i class="bi bi-whatsapp"></i> Hablar con Soporte Técnico
                 </a>
                 <form method="post" action="{{ url_for('login_bp.logout') }}" style="display:inline"><button type="submit" style="border:0;background:none;color:#64748b;font-size:.8rem;cursor:pointer">
@@ -118,37 +118,6 @@
             </div>
         </div>
     </div>
-
-    <script>
-        const html = document.documentElement;
-        const themeBtn = document.getElementById('themeToggle');
-        const themeIcon = document.getElementById('themeIcon');
-        const themeText = document.getElementById('themeText');
-        
-        const updateUI = (isDark) => {
-            if (isDark) {
-                html.classList.add('dark');
-                html.setAttribute('data-theme', 'dark');
-                themeIcon.className = 'bi bi-sun-fill';
-                themeText.innerText = 'Modo Claro';
-            } else {
-                html.classList.remove('dark');
-                html.setAttribute('data-theme', 'light');
-                themeIcon.className = 'bi bi-moon-stars-fill';
-                themeText.innerText = 'Modo Oscuro';
-            }
-        };
-
-        themeBtn.onclick = () => {
-            const isDark = !html.classList.contains('dark');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            updateUI(isDark);
-        };
-
-        window.onload = () => {
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            updateUI(savedTheme === 'dark');
-        };
-    </script>
+    <script src="{{ url_for('static', filename='js/public-theme-toggle.js') }}" defer></script>
 </body>
 </html>

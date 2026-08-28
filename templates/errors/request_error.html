@@ -1,1 +1,54 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>No pudimos completar la solicitud · OrbisERP</title><link rel="stylesheet" href="{{ url_for('static',filename='css/operations.css') }}"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"></head><body>{% if user %}{% include 'layouts/left_bar.html' %}{% endif %}<main class="ops-page" {% if not user %}style="margin-left:0;max-width:760px;margin-inline:auto"{% endif %}><article class="ops-card" style="margin-top:12vh;text-align:center"><span style="font-size:42px;color:var(--o)"><i class="bi bi-exclamation-triangle"></i></span><h1>{% if error.code==429 %}Demasiados intentos{% elif error.code==400 %}La solicitud venció{% else %}Algo no salió como esperábamos{% endif %}</h1><p style="color:var(--muted)">{{ error.description if error.code in [400,429] else 'No se perdió tu sesión. Intenta nuevamente y, si continúa, comparte el código con soporte.' }}</p><p style="font-family:monospace;color:var(--muted)">Código: {{ request_id }}</p><a href="{{ request.referrer or url_for('index') }}" style="display:inline-block;padding:12px 18px;border-radius:10px;background:var(--o);color:#fff;text-decoration:none">Volver e intentar</a></article></main></body></html>
+<!DOCTYPE html>
+<html lang="es" class="{% if tablet_mode_active|default(session.get('tablet_mode')) %}tablet-mode tablet-full-width-profile{% endif %}">
+<head>
+  {% set shell_assets_loaded = true %}
+  {% include 'layouts/app_head_assets.html' %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>No pudimos completar la solicitud · OrbisERP</title>
+  <link rel="stylesheet" href="{{ url_for('static',filename='css/operations.css') }}">
+  <style nonce="{{ csp_nonce }}">
+    .request-error-page{min-height:100dvh;display:grid;place-items:center;padding:32px 20px}.request-error-card{width:min(680px,100%);border:1px solid var(--line);border-radius:24px;background:var(--card);box-shadow:0 26px 70px rgba(0,0,0,.16);overflow:hidden}.request-error-head{display:flex;align-items:flex-start;gap:16px;padding:26px 28px 18px}.request-error-icon{width:54px;height:54px;flex:0 0 54px;border-radius:16px;display:grid;place-items:center;background:color-mix(in srgb,var(--o) 13%,transparent);color:var(--o);font-size:24px}.request-error-head small{display:block;color:var(--muted);font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}.request-error-head h1{margin:0;font-size:clamp(22px,4vw,31px);line-height:1.12}.request-error-body{padding:0 28px 26px}.request-error-explanation{padding:16px 18px;border-radius:15px;background:var(--surface-2,var(--bg));border:1px solid var(--line);font-size:15px;line-height:1.55}.request-error-next{margin:18px 0 0;padding-left:20px;color:var(--muted);line-height:1.6}.request-error-reference{display:flex;gap:10px;align-items:center;margin-top:18px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}.request-error-reference code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--text);overflow-wrap:anywhere}.request-error-actions{display:flex;gap:10px;flex-wrap:wrap;padding:18px 28px;background:var(--surface-2,var(--bg));border-top:1px solid var(--line)}.request-error-actions a{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 16px;border-radius:12px;text-decoration:none;font-weight:800}.request-error-actions .primary{background:var(--o);color:#fff}.request-error-actions .secondary{border:1px solid var(--line);color:var(--text);background:var(--card)}@media(max-width:680px){.request-error-page{padding:16px}.request-error-card{border-radius:18px}.request-error-head,.request-error-body,.request-error-actions{padding-left:18px;padding-right:18px}.request-error-actions a{flex:1 1 100%}}
+  </style>
+</head>
+<body>
+{% if user %}{% include 'layouts/left_bar.html' %}{% endif %}
+<main class="request-error-page" {% if user %}style="margin-left:var(--sidebar-space,0)"{% endif %}>
+  <article class="request-error-card" role="alert">
+    <header class="request-error-head">
+      <span class="request-error-icon"><i class="bi bi-exclamation-triangle"></i></span>
+      <div>
+        <small>Error {{ error.code or 500 }}</small>
+        <h1>
+          {% if error.code == 429 %}Demasiados intentos
+          {% elif error.code == 400 %}Revisa los datos de esta operación
+          {% elif error.code == 409 %}La operación entra en conflicto con el estado actual
+          {% else %}No pudimos completar la operación{% endif %}
+        </h1>
+      </div>
+    </header>
+    <div class="request-error-body">
+      <div class="request-error-explanation">
+        {% if error.code in [400,409,429] and error.description %}
+          {{ error.description }}
+        {% elif error.code == 500 %}
+          Ocurrió un error interno mientras procesábamos la solicitud. Para proteger datos sensibles no mostramos detalles técnicos ni trazas en pantalla; el código de referencia permite localizar el incidente exacto en los registros del servidor.
+        {% else %}
+          La solicitud no pudo completarse con el estado o los datos actuales.
+        {% endif %}
+      </div>
+      <ul class="request-error-next">
+        <li>Revisa el dato o condición indicada arriba antes de repetir la acción.</li>
+        <li>Comprueba el estado actual del registro para evitar duplicar una operación.</li>
+        <li>Si continúa, entrega a soporte el código de referencia de esta pantalla.</li>
+      </ul>
+      <div class="request-error-reference"><i class="bi bi-fingerprint"></i><span>Referencia: <code>{{ request_id or 'sin-referencia' }}</code></span></div>
+    </div>
+    <footer class="request-error-actions">
+      <a class="primary" href="{{ request.referrer or url_for('index') }}"><i class="bi bi-arrow-left"></i> Volver y corregir</a>
+      <a class="secondary" href="{{ url_for('dashboard_bp.dashboard') if user else url_for('index') }}"><i class="bi bi-house"></i> Ir al inicio</a>
+    </footer>
+  </article>
+</main>
+</body>
+</html>

@@ -1,10 +1,104 @@
-<!DOCTYPE html><html lang="es" class="{% if session.get('theme') == 'dark' %}dark{% endif %}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CRM · OrbisERP</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"></head><body>{% include 'layouts/left_bar.html' %}<link rel="stylesheet" href="{{ url_for('static', filename='css/crm_css/crm.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/crm_css/crm_state.css') }}">
-<main class="crm-page" data-client-endpoint="{{ url_for('crm_bp.get_client_details', client_id=0) }}"><header class="crm-page-header"><div><span class="eyebrow">Relaciones comerciales</span><h1>CRM</h1><p>Organiza clientes, seguimientos y oportunidades desde un solo espacio.</p></div><button type="button" class="mobile-clients-btn" id="mobileClientsBtn"><i class="bi bi-people"></i> Clientes</button></header>
-<section class="crm-stats"><article><i class="bi bi-people"></i><span>Clientes</span><strong>{{ stats.clients }}</strong></article><article><i class="bi bi-person-plus"></i><span>Leads</span><strong>{{ stats.leads }}</strong></article><article><i class="bi bi-chat-square-text"></i><span>Negociación</span><strong>{{ stats.negotiation }}</strong></article><article><i class="bi bi-trophy"></i><span>Ganados</span><strong>{{ stats.won }}</strong></article><article><i class="bi bi-calendar-check"></i><span>Tareas próximas</span><strong>{{ stats.pending_tasks }}</strong></article></section>
-<section class="crm-workspace" id="crmWrapper"><aside class="crm-sidebar"><div class="sidebar-head"><div><small>CARTERA</small><h2>Clientes</h2></div><button type="button" id="closeClients"><i class="bi bi-x-lg"></i></button></div><label class="client-search"><i class="bi bi-search"></i><input id="searchClient" type="search" placeholder="Nombre, teléfono o estado…"></label><div class="stage-filters"><button class="active" data-stage="all">Todos</button><button data-stage="Lead">Leads</button><button data-stage="Negociacion">En proceso</button></div><div class="client-list" id="clientList">{% for c in clientes %}<button type="button" class="client-card" data-client-id="{{ c.id }}" data-name="{{ c.name|lower }} {{ (c.phone or '')|lower }}" data-stage="{{ c.status or 'Lead' }}"><span class="avatar-sm">{{ c.name[:1]|upper }}</span><span class="client-copy"><strong>{{ c.name }}</strong><small>{{ c.phone or 'Sin teléfono' }}</small></span><span class="stage">{{ c.status or 'Lead' }}</span></button>{% else %}<div class="clients-empty"><i class="bi bi-person-plus"></i><p>Aún no hay clientes.</p></div>{% endfor %}</div></aside>
-<section class="crm-content"><div id="loader" class="loader-overlay" hidden><span></span><p>Cargando ficha del cliente…</p></div><div id="emptyState" class="crm-empty"><span><i class="bi bi-person-workspace"></i></span><h2>Selecciona un cliente</h2><p>Aquí verás sus ventas, deuda, tareas y actividad.</p></div><div id="errorState" class="crm-empty crm-error-state" hidden><span><i class="bi bi-exclamation-triangle"></i></span><h2>No pudimos cargar la ficha</h2><p id="errorMessage">Inténtalo nuevamente.</p><button type="button" id="retryClient"><i class="bi bi-arrow-clockwise"></i> Reintentar</button></div><div id="clientView" class="client-view" hidden>
-<article class="client-hero"><div class="client-main"><span id="vAvatar" class="avatar-large">?</span><div><small id="vID">#REF-0000</small><h2 id="vName">—</h2><p><span id="vPhone">Sin teléfono</span> · <span id="vEmail">Sin correo</span></p></div></div><div class="ltv"><span>Ventas acumuladas</span><strong id="vLTV">RD$ 0.00</strong></div></article><article id="vDebtBanner" class="debt-banner" hidden><span><i class="bi bi-exclamation-circle"></i></span><div><strong>Cuenta por cobrar</strong><small>Este cliente mantiene facturas pendientes.</small></div><b id="vDebtAmount">RD$ 0.00</b></article>
-<div class="crm-detail-grid"><article class="crm-card"><div class="card-title"><div><small>EMBUDO</small><h3>Fase comercial</h3></div><i class="bi bi-bar-chart-steps"></i></div><div class="pipeline-nav"><button id="step-Lead" data-status="Lead">Lead</button><button id="step-Negociacion" data-status="Negociacion">Negociación</button><button id="step-Ganado" data-status="Ganado">Ganado</button><button id="step-Perdido" data-status="Perdido">Perdido</button></div></article><article class="crm-card"><div class="card-title"><div><small>SEGUIMIENTO</small><h3>Próximas tareas</h3></div><button type="button" class="btn-add-task" id="openTaskModal"><i class="bi bi-plus-lg"></i> Tarea</button></div><div id="taskList" class="task-list"></div></article></div>
-<article class="crm-card"><div class="card-title"><div><small>HISTORIAL</small><h3>Actividad del cliente</h3></div><i class="bi bi-clock-history"></i></div><div class="note-composer"><textarea id="noteInput" maxlength="2000" placeholder="Resume una llamada, acuerdo o próximo paso…"></textarea><div><select id="noteType"><option>Nota</option><option>Llamada</option><option>Correo</option><option>Reunión</option></select><button type="button" id="btnSave"><i class="bi bi-send"></i> Registrar</button></div></div><div id="vTimeline" class="timeline"></div></article></div></section></section></main>
-<div class="modal-backdrop" id="taskModal" hidden><section class="modal-card" role="dialog" aria-modal="true"><header><div><small>NUEVO SEGUIMIENTO</small><h2>Programar tarea</h2></div><button type="button" data-close-task><i class="bi bi-x-lg"></i></button></header><form id="taskForm"><label><span>Asunto *</span><input id="taskName" maxlength="200" required placeholder="Ej. Llamar para confirmar propuesta"></label><div class="form-grid"><label><span>Fecha *</span><input id="taskDate" type="date" required></label><label><span>Prioridad</span><select id="taskPriority"><option>Baja</option><option selected>Media</option><option>Alta</option></select></label></div><p id="taskError" class="form-error"></p><footer><button type="button" class="btn-secondary" data-close-task>Cancelar</button><button type="submit" class="btn-primary"><i class="bi bi-calendar-plus"></i> Crear tarea</button></footer></form></section></div><div class="toast" id="crmToast"></div><script src="{{ url_for('static', filename='js/crm/crm.js') }}"></script></body></html>
+{% extends 'workspace/base.html' %}
+{% block title %}CRM{% endblock %}
+{% block eyebrow %}Ventas y clientes{% endblock %}
+{% block heading %}Seguimiento CRM{% endblock %}
+{% block subtitle %}Clientes, etapas comerciales, tareas y conversaciones en un espacio claro para saber qué sigue con cada relación.{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/module_refresh.css') }}">{% endblock %}
+{% block actions %}
+<button type="button" class="workspace-btn secondary crm-mobile-directory" id="mobileClientsBtn"><i class="bi bi-people"></i> Clientes</button>
+{% if can('clients.create') %}<a class="workspace-btn" href="{{ url_for('client_bp.create_client') }}"><i class="bi bi-person-plus"></i> Nuevo cliente</a>{% endif %}
+{% endblock %}
+{% block content %}
+<div class="module-page crm-v3" data-crm-root data-client-endpoint="{{ url_for('crm_bp.get_client_details', client_id=0) }}">
+    <section class="crm-v3-stats">
+        <article><span><i class="bi bi-people"></i> Clientes</span><strong>{{ stats.clients }}</strong><small>Cartera activa</small></article>
+        <article><span><i class="bi bi-person-plus"></i> Leads</span><strong>{{ stats.leads }}</strong><small>Por calificar</small></article>
+        <article><span><i class="bi bi-chat-dots"></i> Negociación</span><strong>{{ stats.negotiation }}</strong><small>En seguimiento</small></article>
+        <article><span><i class="bi bi-trophy"></i> Ganados</span><strong>{{ stats.won }}</strong><small>Relaciones convertidas</small></article>
+        <article><span><i class="bi bi-calendar-check"></i> Tareas</span><strong>{{ stats.pending_tasks }}</strong><small>Pendientes</small></article>
+    </section>
+
+    <section class="crm-v3-shell" id="crmWrapper">
+        <aside class="crm-directory">
+            <header><div><span>CARTERA COMERCIAL</span><h2>Clientes</h2><p>Selecciona una relación para trabajarla.</p></div><button type="button" id="closeClients" aria-label="Cerrar clientes"><i class="bi bi-x-lg"></i></button></header>
+            <label class="crm-directory-search"><i class="bi bi-search"></i><input id="searchClient" type="search" placeholder="Buscar cliente o teléfono…" autocomplete="off"></label>
+            <div class="crm-stage-tabs" role="group">
+                <button class="active" type="button" data-stage="all">Todos</button>
+                <button type="button" data-stage="Lead">Lead</button>
+                <button type="button" data-stage="Negociacion">Negociación</button>
+                <button type="button" data-stage="Ganado">Ganado</button>
+                <button type="button" data-stage="Perdido">Perdido</button>
+            </div>
+            <div class="crm-client-list" id="clientList">
+                {% for c in clientes %}
+                {% set stage = c.status if c.status in ['Lead','Negociacion','Ganado','Perdido'] else 'Lead' %}
+                <button type="button" class="crm-client-item" data-client-id="{{ c.id }}" data-name="{{ (c.name ~ ' ' ~ (c.phone or '') ~ ' ' ~ (c.email or ''))|lower }}" data-stage="{{ stage }}">
+                    <span class="crm-client-avatar">{{ c.name[:1]|upper }}</span>
+                    <span class="crm-client-copy"><strong>{{ c.name }}</strong><small>{{ c.phone or c.email or 'Sin contacto registrado' }}</small></span>
+                    <span class="crm-stage-badge stage-{{ stage|lower }}">{{ 'Negociación' if stage=='Negociacion' else stage }}</span>
+                </button>
+                {% else %}<div class="module-empty"><i class="bi bi-person-plus"></i><h3>Sin clientes</h3><p>Crea el primer cliente para empezar el seguimiento.</p></div>{% endfor %}
+            </div>
+        </aside>
+
+        <section class="crm-detail" aria-live="polite">
+            <div class="crm-loading" id="loader" hidden><span></span><strong>Cargando cliente…</strong></div>
+            <div class="crm-v3-empty" id="emptyState"><span><i class="bi bi-person-workspace"></i></span><h2>Selecciona un cliente</h2><p>Verás su etapa comercial, ventas, saldo, tareas y actividad reciente.</p></div>
+            <div class="crm-v3-empty error" id="errorState" hidden><span><i class="bi bi-exclamation-triangle"></i></span><h2>No pudimos cargar la ficha</h2><p id="errorMessage">Inténtalo nuevamente.</p><button class="workspace-btn secondary" type="button" id="retryClient">Reintentar</button></div>
+
+            <div class="crm-client-view" id="clientView" hidden>
+                <header class="crm-client-hero">
+                    <button type="button" class="crm-detail-back" id="detailBack"><i class="bi bi-chevron-left"></i></button>
+                    <span id="vAvatar" class="crm-avatar-lg">?</span>
+                    <div class="crm-client-heading"><div><small id="vID">#REF-0000</small><h2 id="vName">—</h2><p><span id="vPhone">Sin teléfono</span><i></i><span id="vEmail">Sin correo</span></p></div><span id="vStageHero" class="module-chip">Lead</span></div>
+                    <a id="vDetailLink" class="workspace-btn secondary" href="#"><i class="bi bi-person-vcard"></i> Cliente 360°</a>
+                </header>
+
+                <section class="crm-client-kpis">
+                    <article><span>Ventas acumuladas</span><strong id="vLTV">RD$ 0.00</strong><small id="vSalesCount">0 ventas</small></article>
+                    <article><span>Saldo pendiente</span><strong id="vDebtAmount">RD$ 0.00</strong><small id="vDebtLabel">Sin deuda</small></article>
+                    <article><span>Ticket promedio</span><strong id="vAverageTicket">RD$ 0.00</strong><small>Ventas completadas</small></article>
+                    <article><span>Última compra</span><strong id="vLastSale">—</strong><small id="vPendingTasks">0 tareas pendientes</small></article>
+                </section>
+
+                <div class="crm-v3-columns">
+                    <article class="crm-v3-card">
+                        <div class="crm-card-head"><div><span>EMBUDO COMERCIAL</span><h3>Etapa del cliente</h3><p>Cambia la fase cuando avance o se cierre la oportunidad.</p></div><i class="bi bi-signpost-split"></i></div>
+                        <div class="crm-pipeline" id="pipelineNav">
+                            <button type="button" data-status="Lead"><span>1</span><strong>Lead</strong></button>
+                            <button type="button" data-status="Negociacion"><span>2</span><strong>Negociación</strong></button>
+                            <button type="button" data-status="Ganado"><span>3</span><strong>Ganado</strong></button>
+                            <button type="button" data-status="Perdido"><span>4</span><strong>Perdido</strong></button>
+                        </div>
+                    </article>
+                    <article class="crm-v3-card">
+                        <div class="crm-card-head"><div><span>PRÓXIMOS PASOS</span><h3>Tareas pendientes</h3><p>Acciones que mantienen el seguimiento en movimiento.</p></div><button type="button" class="crm-add-task" id="openTaskModal"><i class="bi bi-plus-lg"></i> Nueva tarea</button></div>
+                        <div class="crm-task-list" id="taskList"></div>
+                    </article>
+                </div>
+
+                <article class="crm-v3-card crm-activity-card">
+                    <div class="crm-card-head"><div><span>HISTORIAL</span><h3>Actividad del cliente</h3><p>Registra llamadas, correos, reuniones, acuerdos y notas importantes.</p></div><i class="bi bi-clock-history"></i></div>
+                    <div class="crm-composer">
+                        <textarea id="noteInput" maxlength="2000" placeholder="¿Qué ocurrió y cuál es el próximo paso?"></textarea>
+                        <div><select id="noteType"><option>Nota</option><option>Llamada</option><option>Correo</option><option>Reunión</option></select><span id="noteCounter">0 / 2000</span><button type="button" id="btnSave"><i class="bi bi-send"></i> Registrar actividad</button></div>
+                    </div>
+                    <div class="crm-timeline" id="vTimeline"></div>
+                </article>
+            </div>
+        </section>
+    </section>
+
+    <dialog class="crm-task-dialog" id="taskModal">
+        <form id="taskForm" method="dialog">
+            <header><div><span>SEGUIMIENTO</span><h2>Nueva tarea</h2><p>Programa el siguiente paso con este cliente.</p></div><button type="button" data-close-task><i class="bi bi-x-lg"></i></button></header>
+            <label><span>Asunto *</span><input id="taskName" maxlength="200" required placeholder="Ej. Confirmar propuesta enviada"></label>
+            <div class="crm-dialog-grid"><label><span>Fecha *</span><input id="taskDate" type="date" required></label><label><span>Prioridad</span><select id="taskPriority"><option>Baja</option><option selected>Media</option><option>Alta</option></select></label></div>
+            <p id="taskError" class="crm-form-error"></p>
+            <footer><button type="button" class="workspace-btn secondary" data-close-task>Cancelar</button><button type="submit" class="workspace-btn"><i class="bi bi-calendar-plus"></i> Crear tarea</button></footer>
+        </form>
+    </dialog>
+    <div class="crm-toast" id="crmToast" role="status" aria-live="polite"></div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/crm/crm.js') }}"></script>{% endblock %}

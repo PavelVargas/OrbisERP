@@ -34,3 +34,16 @@ body.auth-page { min-height: 100vh; color: var(--text-main); background: var(--b
 .auth-page .links-footer a strong, .auth-page .links-footer a:hover { color: var(--primary); }
 @media (max-width: 920px) { .auth-page .split-layout { grid-template-columns: 1fr; } .auth-page .side-visual { display: none; } .auth-page .side-form { padding-top: 34px; } }
 @media (max-width: 540px) { .auth-page .side-form { align-items: flex-start; padding: 18px; } .auth-page :where(.login-card, .register-card) { padding: 22px 18px; } .auth-page .mode-text { display: none; } }
+
+/* Authentication feedback: shared by login and public registration. */
+.auth-page .auth-flash-stack { display: grid; gap: 9px; margin: 0 0 18px; }
+.auth-page .auth-flash { display: flex; align-items: flex-start; gap: 10px; padding: 11px 12px; border: 1px solid var(--border); border-radius: 9px; color: var(--text-main); background: var(--bg-input); font-size: 11px; font-weight: 600; line-height: 1.45; }
+.auth-page .auth-flash i { flex: 0 0 auto; margin-top: 1px; font-size: 14px; }
+.auth-page .auth-flash--danger { border-color: rgba(220, 53, 69, .35); background: rgba(220, 53, 69, .08); }
+.auth-page .auth-flash--danger i { color: #dc3545; }
+.auth-page .auth-flash--success { border-color: rgba(25, 135, 84, .35); background: rgba(25, 135, 84, .08); }
+.auth-page .auth-flash--success i { color: #198754; }
+.auth-page .auth-flash--warning { border-color: rgba(223, 116, 25, .42); background: rgba(223, 116, 25, .09); }
+.auth-page .auth-flash--warning i { color: var(--primary); }
+.auth-page .auth-flash--info { border-color: rgba(13, 110, 253, .3); background: rgba(13, 110, 253, .07); }
+.auth-page .auth-flash--info i { color: #0d6efd; }

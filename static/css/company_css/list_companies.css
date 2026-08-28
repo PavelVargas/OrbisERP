@@ -21,7 +21,7 @@
     margin-left: 280px;
     min-height: 100vh;
     background-color: var(--bg-main);
-    transition: all 0.3s var(--ease);
+    transition: color 0.3s var(--ease), background-color 0.3s var(--ease), border-color 0.3s var(--ease), box-shadow 0.3s var(--ease), transform 0.3s var(--ease), opacity 0.3s var(--ease);
 }
 
 /* Header & Badges */
@@ -92,7 +92,7 @@
     color: var(--text-main);
     font-size: 15px;
     box-shadow: var(--shadow-sm);
-    transition: all 0.3s var(--ease);
+    transition: color 0.3s var(--ease), background-color 0.3s var(--ease), border-color 0.3s var(--ease), box-shadow 0.3s var(--ease), transform 0.3s var(--ease), opacity 0.3s var(--ease);
 }
 
 .search-box input:focus {
@@ -113,7 +113,7 @@
     font-weight: 700;
     font-size: 14px;
     cursor: pointer;
-    transition: all 0.2s var(--ease);
+    transition: color 0.2s var(--ease), background-color 0.2s var(--ease), border-color 0.2s var(--ease), box-shadow 0.2s var(--ease), transform 0.2s var(--ease), opacity 0.2s var(--ease);
 }
 
 .pill:hover { border-color: var(--primary); color: var(--primary); }
@@ -131,7 +131,7 @@
     border: 1px solid var(--border);
     border-radius: 28px;
     padding: 28px;
-    transition: all 0.4s var(--ease);
+    transition: color 0.4s var(--ease), background-color 0.4s var(--ease), border-color 0.4s var(--ease), box-shadow 0.4s var(--ease), transform 0.4s var(--ease), opacity 0.4s var(--ease);
     display: flex;
     flex-direction: column;
 }
@@ -173,8 +173,8 @@
     border-radius: 50px;
 }
 
-.status-indicator .dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
-.status-indicator .status-text { font-size: 12px; font-weight: 800; color: #10b981; }
+.status-indicator .dot { width: 8px; height: 8px; background: var(--primary); border-radius: 50%; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
+.status-indicator .status-text { font-size: 12px; font-weight: 800; color: var(--primary); }
 
 .card-main { margin-bottom: 24px; }
 .company-title { font-size: 22px; font-weight: 800; margin: 0 0 8px 0; color: var(--text-main); line-height: 1.2; }
@@ -201,7 +201,7 @@
     align-items: center;
     justify-content: center;
     border-radius: 14px;
-    transition: all 0.3s var(--ease);
+    transition: color 0.3s var(--ease), background-color 0.3s var(--ease), border-color 0.3s var(--ease), box-shadow 0.3s var(--ease), transform 0.3s var(--ease), opacity 0.3s var(--ease);
     cursor: pointer;
     border: 1px solid var(--border);
     text-decoration: none;
@@ -263,7 +263,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    transition: all 0.3s var(--ease);
+    transition: color 0.3s var(--ease), background-color 0.3s var(--ease), border-color 0.3s var(--ease), box-shadow 0.3s var(--ease), transform 0.3s var(--ease), opacity 0.3s var(--ease);
 }
 
 .btn-stop-impersonate:hover {

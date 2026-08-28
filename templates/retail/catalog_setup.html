@@ -1,0 +1,20 @@
+{% extends 'workspace/base.html' %}
+{% block title %}Unidades y variantes{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/retail.css') }}">{% endblock %}
+{% block eyebrow %}Retail avanzado{% endblock %}
+{% block heading %}Unidades y variantes{% endblock %}
+{% block subtitle %}Controla precisión de cantidades, conversiones y atributos sin mezclarlo con el resto de Retail avanzado.{% endblock %}
+{% block content %}
+<div class="retail-shell">{% include 'retail/_nav.html' %}
+  <div class="retail-subgrid">
+    <section class="workspace-card"><div class="workspace-card-head"><div><h2>Unidades de medida</h2><p>Las unidades discretas no admiten decimales; peso y medida sí pueden hacerlo.</p></div></div>
+      <div class="retail-list-scroll">{% for u in uoms %}<div class="retail-record"><span><strong>{{ u.name }} ({{ u.symbol }})</strong><small>{{ u.category }} · factor {{ display_quantity(u.factor_to_reference) }} · redondeo {{ display_quantity(u.rounding) }}</small></span><span class="retail-chip">{{ 'Decimal' if u.allow_fraction else 'Entera' }}</span></div>{% else %}<div class="workspace-empty">No hay unidades.</div>{% endfor %}</div>
+      <form method="post" action="{{ url_for('retail_bp.uom_create') }}" class="retail-inline-form retail-form-divider"><label>Nombre<input name="name" required></label><label>Símbolo<input name="symbol" required></label><label>Categoría<input name="category" placeholder="UNIT"></label><label>Factor<input type="number" step="0.000001" min="0.001" name="factor_to_reference" value="1"></label><label>Redondeo<input type="number" step="0.001" min="0.001" name="rounding" value="1"></label><label><span><input type="checkbox" name="allow_fraction" value="1"> Admite decimal</span></label><div class="actions"><button class="workspace-btn secondary">Crear unidad</button></div></form>
+    </section>
+    <section class="workspace-card"><div class="workspace-card-head"><div><h2>Atributos de variantes</h2><p>Tallas, colores, capacidad y presentaciones.</p></div></div>
+      <div class="retail-list-scroll">{% for attr in attributes %}<div class="retail-attribute-block"><div class="retail-record"><span><strong>{{ attr.name }}</strong><small>{{ attr.values|length }} valores</small></span></div><div class="retail-chip-row">{% for v in attr.values %}<span class="retail-chip">{{ v.value }}</span>{% endfor %}</div><form method="post" action="{{ url_for('retail_bp.attribute_value_create', attribute_id=attr.id) }}" class="retail-inline-form"><label class="wide">Nuevo valor<input name="value" placeholder="Azul, XL, 500 ml" required></label><label>Color<input name="color_hex" type="color"></label><div class="actions"><button class="workspace-btn secondary">Añadir</button></div></form></div>{% else %}<div class="workspace-empty">No hay atributos.</div>{% endfor %}</div>
+      <form method="post" action="{{ url_for('retail_bp.attribute_create') }}" class="retail-inline-form retail-form-divider"><label class="wide">Nuevo atributo<input name="name" placeholder="Talla, Color, Presentación" required></label><label>Visual<select name="display_type"><option value="SELECT">Selector</option><option value="COLOR">Color</option><option value="RADIO">Opciones</option></select></label><div class="actions"><button class="workspace-btn secondary">Crear atributo</button></div></form>
+    </section>
+  </div>
+</div>
+{% endblock %}

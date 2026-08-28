@@ -1,13 +1,14 @@
 {
   "name": "orbis-erp",
-  "version": "1.0.0",
+  "version": "2026.8.13",
   "description": "Desktop version of OrbisERP System",
   "main": "main.js",
   "scripts": {
     "flask": "source .venv/bin/activate && python app.py",
     "electron": "electron .",
     "start": "concurrently \"npm run flask\" \"npm run electron\"",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "python -m pytest -q -rs",
+    "quality": "python -m compileall -q . && python -m pytest -q -rs"
   },
   "repository": {
     "type": "git",

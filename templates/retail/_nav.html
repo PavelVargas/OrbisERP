@@ -1,0 +1,12 @@
+<nav class="retail-nav" aria-label="Secciones de Retail avanzado">
+  <a class="{{ 'active' if request.endpoint=='retail_bp.overview' }}" href="{{ url_for('retail_bp.overview') }}"><i class="bi bi-grid-1x2"></i><span>Resumen</span></a>
+  {% if can('retail.settings') %}<a class="{{ 'active' if request.endpoint=='retail_bp.configuration' }}" href="{{ url_for('retail_bp.configuration') }}"><i class="bi bi-sliders"></i><span>Configuración</span></a>{% endif %}
+  {% if can('branches.manage') or can('terminals.manage') %}<a class="{{ 'active' if request.endpoint=='retail_bp.locations' }}" href="{{ url_for('retail_bp.locations') }}"><i class="bi bi-diagram-3"></i><span>Sucursales y POS</span></a>{% endif %}
+  {% if can('retail.settings') %}<a class="{{ 'active' if request.endpoint=='retail_bp.catalog_setup' }}" href="{{ url_for('retail_bp.catalog_setup') }}"><i class="bi bi-rulers"></i><span>Unidades y variantes</span></a>{% endif %}
+  {% if can('products.pricing') %}<a class="{{ 'active' if request.endpoint=='retail_bp.pricing' }}" href="{{ url_for('retail_bp.pricing') }}"><i class="bi bi-tags"></i><span>Precios</span></a>{% endif %}
+  {% if can('sales.giftcards') or can('sales.layaway') or can('clients.loyalty') %}<a class="{{ 'active' if request.endpoint=='retail_bp.customer_programs' }}" href="{{ url_for('retail_bp.customer_programs') }}"><i class="bi bi-person-heart"></i><span>Clientes</span></a>{% endif %}
+  {% if can('inventory.replenishment') or can('approvals.manage') %}<a class="{{ 'active' if request.endpoint=='retail_bp.operations_center' }}" href="{{ url_for('retail_bp.operations_center') }}"><i class="bi bi-activity"></i><span>Operación</span></a>{% endif %}
+  {% if can('sales.warranties') %}<a class="{{ 'active' if request.endpoint=='retail_bp.warranties' }}" href="{{ url_for('retail_bp.warranties') }}"><i class="bi bi-shield-check"></i><span>Garantías</span></a>{% endif %}
+  {% if can('stock.adjust') %}<a class="{{ 'active' if request.endpoint=='retail_bp.quality_center' }}" href="{{ url_for('retail_bp.quality_center') }}"><i class="bi bi-patch-check"></i><span>Calidad</span></a>{% endif %}
+  {% if can('integrations.manage') %}<a class="{{ 'active' if request.endpoint=='retail_bp.integrations' }}" href="{{ url_for('retail_bp.integrations') }}"><i class="bi bi-braces"></i><span>Integraciones</span></a>{% endif %}
+</nav>

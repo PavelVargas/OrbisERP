@@ -1,12 +1,87 @@
-<!DOCTYPE html><html lang="es" class="{% if session.get('theme') == 'dark' %}dark{% endif %}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ventas · OrbisERP</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"><link rel="stylesheet" href="{{ url_for('static', filename='css/sales_css/sales.css') }}"></head>
-<body>{% include 'layouts/left_bar.html' %}<main class="sales-page">
-    <header class="sales-header"><div><span class="eyebrow">Gestión comercial</span><h1>Ventas</h1><p>Consulta operaciones, cotizaciones y cuentas pendientes desde un solo lugar.</p></div>{% if usage < limits.max_monthly_invoices and can('sales.create') %}<a href="{{ url_for('sales_bp.create_sale') }}" class="btn-new-sale"><i class="bi bi-plus-lg"></i> Nueva venta</a>{% endif %}</header>
-    <section class="sales-summary"><article><span>Resultados</span><strong>{{ sales|length }}</strong><small>operaciones encontradas</small></article><article><span>Total filtrado</span><strong>{{ currency_symbol }} {{ "{:,.2f}".format(filtered_total) }}</strong><small>en {{ selected_currency }}</small></article><article><span>Uso mensual</span><strong>{{ usage }} / {{ limits.max_monthly_invoices }}</strong><small>Plan {{ plan_name }}</small></article></section>
-    <section class="sales-toolbar"><form method="GET" class="sales-search-form"><label class="search-box"><i class="bi bi-search"></i><input name="search" value="{{ search_query }}" placeholder="Buscar venta, cliente, vendedor o producto"><button type="submit" aria-label="Buscar"><i class="bi bi-arrow-right"></i></button></label><details class="filter-popover" {% if current_status or selected_seller or selected_payment or date_from or date_to or min_total is not none or max_total is not none %}open{% endif %}><summary><i class="bi bi-sliders2"></i><span>Filtros</span>{% if current_status or selected_seller or selected_payment or date_from or date_to or min_total is not none or max_total is not none %}<b>•</b>{% endif %}</summary><div class="filter-panel">
-        <label><span>Estado</span><select name="status"><option value="">Todos</option><option value="COMPLETED" {% if current_status=='COMPLETED' %}selected{% endif %}>Completadas</option><option value="QUOTATION" {% if current_status=='QUOTATION' %}selected{% endif %}>Cotizaciones</option><option value="PENDING" {% if current_status=='PENDING' %}selected{% endif %}>Por cobrar</option><option value="CANCELLED" {% if current_status=='CANCELLED' %}selected{% endif %}>Anuladas</option></select></label>
-        {% if is_admin %}<label><span>Vendedor</span><select name="seller_id"><option value="">Todos</option>{% for seller in sellers %}<option value="{{ seller.id }}" {% if selected_seller==seller.id %}selected{% endif %}>{{ seller.name }}</option>{% endfor %}</select></label>{% endif %}
-        <label><span>Método de pago</span><select name="payment_method"><option value="">Todos</option><option value="CASH" {% if selected_payment=='CASH' %}selected{% endif %}>Efectivo</option><option value="CARD" {% if selected_payment=='CARD' %}selected{% endif %}>Tarjeta</option><option value="TRANSFER" {% if selected_payment=='TRANSFER' %}selected{% endif %}>Transferencia</option><option value="CREDIT" {% if selected_payment=='CREDIT' %}selected{% endif %}>Crédito</option></select></label>
-        <label><span>Desde</span><input type="date" name="date_from" value="{{ date_from }}"></label><label><span>Hasta</span><input type="date" name="date_to" value="{{ date_to }}"></label><label><span>Total mínimo</span><input type="number" min="0" step="0.01" name="min_total" value="{{ min_total if min_total is not none else '' }}"></label><label><span>Total máximo</span><input type="number" min="0" step="0.01" name="max_total" value="{{ max_total if max_total is not none else '' }}"></label><div class="filter-actions"><a href="{{ url_for('sales_bp.list_sales') }}">Limpiar</a><button type="submit"><i class="bi bi-funnel"></i> Aplicar filtros</button></div>
-    </div></details></form></section>
-    <section class="sales-card"><div class="table-wrap"><table><thead><tr><th>Venta</th><th>Fecha</th><th>Cliente</th><th>Vendedor</th><th>Unidad</th><th class="amount">Total</th><th>Estado</th><th class="actions-title">Acciones</th></tr></thead><tbody>{% for sale in sales %}<tr><td data-label="Venta"><span class="sale-reference">#{{ "%05d"|format(sale.id) }}</span></td><td data-label="Fecha"><div class="date-cell"><strong>{{ sale.created_at.strftime('%d %b %Y') }}</strong><small>{{ sale.created_at.strftime('%I:%M %p') }}</small></div></td><td data-label="Cliente"><div class="client-cell"><span class="client-avatar"><i class="bi bi-person"></i></span><span><strong>{{ sale.client.name if sale.client else (sale.customer_name or 'Consumidor final') }}</strong>{% if sale.client and sale.client.rnc %}<small>{{ sale.client.rnc }}</small>{% endif %}</span></div></td><td data-label="Vendedor"><div class="seller-cell"><span>{{ (sale.user.name if sale.user else 'U')[0]|upper }}</span><strong>{{ sale.user.name if sale.user else 'Usuario' }}</strong></div></td><td data-label="Unidad"><span class="unit-name">{{ sale.operating_unit.name if sale.operating_unit else 'Almacén central' }}</span></td><td data-label="Total" class="amount"><strong>{{ currency_symbol }} {{ "{:,.2f}".format(sale.total / conversion_rate) }}</strong>{% if sale.balance and sale.balance>0 %}<small class="debt">Pendiente {{ currency_symbol }} {{ "{:,.2f}".format(sale.balance / conversion_rate) }}</small>{% endif %}</td><td data-label="Estado"><span class="status status-{{ sale.status|lower }}">{% if sale.status=='COMPLETED' %}Completada{% elif sale.status=='QUOTATION' %}Cotización{% elif sale.status=='PENDING' %}Por cobrar{% elif sale.status=='CANCELLED' %}Anulada{% else %}{{ sale.status|title }}{% endif %}</span></td><td data-label="Acciones"><div class="row-actions"><a href="{{ url_for('sales_bp.sale_detail', sale_id=sale.id) }}" title="Ver detalle"><i class="bi bi-eye"></i></a>{% if sale.status not in ['COMPLETED','CANCELLED'] and can('sales.resume') %}<a href="{{ url_for('sales_bp.resume_sale', sale_id=sale.id) }}" title="Retomar"><i class="bi bi-play-fill"></i></a>{% endif %}{% if can('sales.print') %}<a href="{{ url_for('sales_bp.export_pdf', sale_id=sale.id) }}" target="_blank" title="Imprimir"><i class="bi bi-printer"></i></a>{% endif %}</div></td></tr>{% else %}<tr><td colspan="8"><div class="empty-sales"><span><i class="bi bi-receipt"></i></span><h3>No encontramos ventas</h3><p>Prueba cambiando los filtros o registra una operación nueva.</p></div></td></tr>{% endfor %}</tbody></table></div></section>
-</main></body></html>
+<!DOCTYPE html>
+<html lang="es" class="{% if tablet_mode_active|default(session.get('tablet_mode')) %}tablet-mode tablet-full-width-profile{% endif %} {% if session.get('theme') == 'dark' %}dark{% endif %}">
+<head>{% set shell_assets_loaded = true %}{% include 'layouts/app_head_assets.html' %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Ventas · OrbisERP</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sales_css/sales.css') }}">
+</head>
+<body>
+{% include 'layouts/left_bar.html' %}
+<main class="sales-page orbis-page">
+    <header class="sales-header">
+        <div>
+            <span class="eyebrow">Gestión comercial</span>
+            <h1>{{ 'Cotizaciones' if current_status == 'QUOTATION' else 'Ventas' }}</h1>
+            <p>{% if current_status == 'QUOTATION' %}Revisa vigencias, actualiza propuestas y conviértelas en ventas sin salir del historial comercial.{% else %}Consulta ventas, cotizaciones y cuentas pendientes desde un solo lugar.{% endif %}</p>
+        </div>
+        {% if usage < limits.max_monthly_invoices and can('sales.create') %}
+        <a href="{{ url_for('sales_bp.create_sale') }}" class="btn-new-sale"><i class="bi bi-plus-lg"></i> {{ 'Nueva cotización' if current_status == 'QUOTATION' else 'Nueva venta' }}</a>
+        {% endif %}
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<section class="sales-messages" aria-live="polite">{% for category,message in messages %}<div class="sales-message sales-message--{{ category }}">{{ message }}</div>{% endfor %}</section>{% endif %}
+    {% endwith %}
+
+    <nav class="sales-status-tabs" aria-label="Estado de las operaciones">
+        {% for value,label,count_icon in [('', 'Todas','bi-receipt'),('COMPLETED','Completadas','bi-check2-circle'),('QUOTATION','Cotizaciones','bi-file-earmark-text'),('PENDING','Pendientes','bi-hourglass-split'),('CANCELLED','Anuladas','bi-x-circle')] %}
+        <a href="{{ url_for('sales_bp.list_sales', status=value) }}" class="{{ 'is-active' if current_status == value else '' }}"><i class="bi {{ count_icon }}"></i>{{ label }}</a>
+        {% endfor %}
+    </nav>
+
+    <section class="sales-summary" aria-label="Resumen del filtro">
+        <article><span>Resultados</span><strong>{{ sales|length }}</strong><small>{{ 'cotizaciones' if current_status == 'QUOTATION' else 'operaciones' }} encontradas</small></article>
+        <article><span>Total filtrado</span><strong>{{ currency_symbol }} {{ "{:,.2f}".format(filtered_total) }}</strong><small>en {{ selected_currency }}</small></article>
+        <article><span>Uso del plan</span><strong>{{ usage }}/{{ limits.max_monthly_invoices }}</strong><small>facturas del mes · {{ plan_name }}</small></article>
+    </section>
+
+    <section class="sales-toolbar">
+        <form method="get" action="{{ url_for('sales_bp.list_sales') }}" class="sales-search-form">
+            {% if current_status %}<input type="hidden" name="status" value="{{ current_status }}">{% endif %}
+            <label class="search-box" aria-label="Buscar ventas"><i class="bi bi-search"></i><input type="search" name="search" placeholder="Buscar por número, cliente, vendedor, producto o SKU…" value="{{ search_query }}"><button type="submit" aria-label="Buscar"><i class="bi bi-arrow-right"></i></button></label>
+            <details class="filter-popover" {% if selected_seller or selected_payment or date_from or date_to or min_total is not none or max_total is not none %}open{% endif %}>
+                <summary><i class="bi bi-sliders2"></i><span>Filtros</span>{% if selected_seller or selected_payment or date_from or date_to or min_total is not none or max_total is not none %}<b>•</b>{% endif %}</summary>
+                <div class="filter-panel">
+                    {% if is_admin %}<label><span>Vendedor</span><select name="seller_id"><option value="">Todos</option>{% for seller in sellers %}<option value="{{ seller.id }}" {% if selected_seller == seller.id %}selected{% endif %}>{{ seller.name }}</option>{% endfor %}</select></label>{% endif %}
+                    <label><span>Método de pago</span><select name="payment_method"><option value="">Todos</option>{% for value,label in [('CASH','Efectivo'),('CARD','Tarjeta'),('TRANSFER','Transferencia'),('CREDIT','Crédito')] %}<option value="{{ value }}" {% if selected_payment == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+                    <label><span>Desde</span><input type="date" name="date_from" value="{{ date_from }}"></label>
+                    <label><span>Hasta</span><input type="date" name="date_to" value="{{ date_to }}"></label>
+                    <label><span>Total mínimo</span><input type="number" min="0" step="0.01" name="min_total" value="{{ min_total if min_total is not none else '' }}"></label>
+                    <label><span>Total máximo</span><input type="number" min="0" step="0.01" name="max_total" value="{{ max_total if max_total is not none else '' }}"></label>
+                    <div class="filter-actions"><a href="{{ url_for('sales_bp.list_sales', status=current_status) }}">Limpiar</a><button type="submit"><i class="bi bi-funnel"></i> Aplicar filtros</button></div>
+                </div>
+            </details>
+        </form>
+    </section>
+
+    <section class="sales-card">
+        <div class="table-wrap"><table><thead><tr><th>Operación</th><th>Fecha</th><th>Cliente</th><th>Vendedor</th><th>{{ 'Vigencia' if current_status == 'QUOTATION' else 'Unidad' }}</th><th class="amount">Total</th><th>Estado</th><th class="actions-title">Acciones</th></tr></thead><tbody>
+        {% for sale in sales %}
+        <tr>
+            <td data-label="Operación"><span class="sale-reference">#{{ "%05d"|format(sale.id) }}</span>{% if sale.status=='QUOTATION' %}<small class="operation-kind">Cotización</small>{% endif %}</td>
+            <td data-label="Fecha"><div class="date-cell"><strong>{{ sale.created_at.strftime('%d %b %Y') }}</strong><small>{{ sale.created_at.strftime('%I:%M %p') }}</small></div></td>
+            <td data-label="Cliente"><div class="client-cell"><span class="client-avatar"><i class="bi bi-person"></i></span><span><strong>{{ sale.client.name if sale.client else (sale.customer_name or 'Consumidor final') }}</strong>{% if sale.client and sale.client.rnc %}<small>{{ sale.client.rnc }}</small>{% elif sale.status=='QUOTATION' and sale.quote_notes %}<small class="quote-note">{{ sale.quote_notes }}</small>{% endif %}</span></div></td>
+            <td data-label="Vendedor"><div class="seller-cell"><span>{{ (sale.user.name if sale.user else 'U')[0]|upper }}</span><strong>{{ sale.user.name if sale.user else 'Usuario' }}</strong></div></td>
+            <td data-label="{{ 'Vigencia' if current_status == 'QUOTATION' else 'Unidad' }}">
+                {% if current_status == 'QUOTATION' %}
+                    {% if sale.quote_valid_until %}<span class="quote-validity {{ 'is-expired' if sale.quote_valid_until < today else '' }}"><i class="bi {{ 'bi-exclamation-circle' if sale.quote_valid_until < today else 'bi-calendar2-check' }}"></i>{{ sale.quote_valid_until.strftime('%d/%m/%Y') }}</span>{% else %}<span class="quote-validity is-missing"><i class="bi bi-calendar2-x"></i> Sin fecha</span>{% endif %}
+                {% else %}<span class="unit-name" title="{{ sale.warehouse_names|join(', ') }}"><i class="bi bi-building"></i> {{ sale.warehouse_display }}</span>{% endif %}
+            </td>
+            <td data-label="Total" class="amount"><strong>{{ currency_symbol }} {{ "{:,.2f}".format(sale.total / conversion_rate) }}</strong>{% if sale.discount_amount %}<small class="discount-meta">Desc. {{ currency_symbol }} {{ "{:,.2f}".format(sale.discount_amount / conversion_rate) }}</small>{% elif sale.balance and sale.balance>0 %}<small class="debt">Pendiente {{ currency_symbol }} {{ "{:,.2f}".format(sale.balance / conversion_rate) }}</small>{% endif %}</td>
+            <td data-label="Estado"><span class="status status-{{ sale.status|lower }}">{% if sale.status=='COMPLETED' %}Completada{% elif sale.status=='QUOTATION' %}Cotización{% elif sale.status=='PENDING' %}Por cobrar{% elif sale.status=='CANCELLED' %}Anulada{% else %}{{ sale.status|title }}{% endif %}</span></td>
+            <td data-label="Acciones"><div class="row-actions">
+                <a href="{{ url_for('sales_bp.sale_detail', sale_id=sale.id) }}" title="Ver detalle"><i class="bi bi-eye"></i></a>
+                {% if sale.status == 'QUOTATION' and can('sales.quote') %}
+                <details class="quote-editor"><summary title="Editar vigencia y notas"><i class="bi bi-pencil"></i></summary><form method="post" action="{{ url_for('sales_bp.quote_update', sale_id=sale.id) }}"><label>Vigencia<input type="date" name="valid_until" value="{{ sale.quote_valid_until.isoformat() if sale.quote_valid_until else '' }}"></label><label>Notas<input name="notes" maxlength="500" value="{{ sale.quote_notes or '' }}" placeholder="Notas de la propuesta"></label><button type="submit"><i class="bi bi-check2"></i> Guardar</button></form></details>
+                {% endif %}
+                {% if sale.status == 'QUOTATION' and can('sales.resume') %}<form class="row-action-form" method="post" action="{{ url_for('sales_bp.quote_convert', sale_id=sale.id) }}" data-confirm="¿Convertir esta cotización en venta pendiente?" data-confirm-title="Convertir cotización" data-confirm-detail="La cotización quedará disponible como venta pendiente y podrá seguir editándose antes del cobro." data-confirm-action="Convertir en venta" data-confirm-type="warning"><button type="submit" title="Convertir en venta"><i class="bi bi-arrow-right-circle"></i></button></form>{% elif sale.status not in ['COMPLETED','CANCELLED'] and can('sales.resume') %}<a href="{{ url_for('sales_bp.resume_sale', sale_id=sale.id) }}" title="Retomar"><i class="bi bi-play-fill"></i></a>{% endif %}
+                {% if can('sales.print') %}<a href="{{ url_for('sales_bp.export_pdf', sale_id=sale.id) }}" target="_blank" rel="noopener" title="Imprimir"><i class="bi bi-printer"></i></a>{% endif %}
+            </div></td>
+        </tr>
+        {% else %}<tr><td colspan="8"><div class="empty-sales"><span><i class="bi {{ 'bi-file-earmark-text' if current_status=='QUOTATION' else 'bi-receipt' }}"></i></span><h3>{{ 'No hay cotizaciones abiertas' if current_status=='QUOTATION' else 'No encontramos ventas' }}</h3><p>{{ 'Las propuestas guardadas aparecerán aquí.' if current_status=='QUOTATION' else 'Prueba cambiando los filtros o registra una operación nueva.' }}</p></div></td></tr>{% endfor %}
+        </tbody></table></div>
+    </section>
+</main>
+</body>
+</html>

@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from barcode import Code128
 from barcode.writer import ImageWriter
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, send_file
+from flask import Blueprint, current_app, render_template, request, redirect, url_for, flash, session, send_file
 from db import db
 from models.products.products import Product, ProductType
 from models.warehouse.warehouse import Warehouse
@@ -12,6 +12,9 @@ from models.warehouse_location.warehouse_location import LocationMovement, Locat
 from models.warehouse_stock.warehouse_stock import WarehouseStock
 from models.stock_transfer.stock_transfer import StockTransfer
 from models.user.user import User
+from services.validation import BusinessRuleError, tenant_id
+from services.quantity import product_quantity, as_decimal
+from sqlalchemy.exc import SQLAlchemyError
 
 warehouse_bp = Blueprint('warehouse_bp', __name__, url_prefix='/warehouses')
 
@@ -90,8 +93,14 @@ def create_warehouse():
                 flash(f"Límite alcanzado para el plan {plan_name}. Máximo: {plan_limits['max_warehouses']}.", 'warning')
                 return redirect(url_for('warehouse_bp.list_warehouses'))
 
-        name = request.form['name']
-        location = request.form.get('location')
+        name = (request.form.get('name') or '').strip()
+        location = (request.form.get('location') or '').strip() or None
+        if not name or len(name) > 150:
+            flash('El nombre del almacén es obligatorio y admite hasta 150 caracteres.', 'danger')
+            return redirect(url_for('warehouse_bp.create_warehouse'))
+        if location and len(location) > 255:
+            flash('La ubicación admite hasta 255 caracteres.', 'danger')
+            return redirect(url_for('warehouse_bp.create_warehouse'))
 
         is_main = (current_wares_count == 0)
 
@@ -108,9 +117,10 @@ def create_warehouse():
             db.session.commit()
             flash(f'Almacén "{name}" creado correctamente', 'success')
             return redirect(url_for('warehouse_bp.list_warehouses'))
-        except Exception as e:
+        except SQLAlchemyError:
             db.session.rollback()
-            flash(f'Error al crear almacén: {str(e)}', 'danger')
+            current_app.logger.exception('No se pudo crear el almacén para la empresa %s', company_id)
+            flash('No se pudo crear el almacén. Revisa que sus datos no estén duplicados.', 'danger')
 
     return render_template('warehouse/create.html', user=user, plan_limits=plan_limits, current_count=current_wares_count)
 
@@ -135,15 +145,24 @@ def edit_warehouse(id):
     warehouse = Warehouse.query.filter_by(id=id, company_id=company_id).first_or_404()
     
     if request.method == 'POST':
-        warehouse.name = request.form['name']
-        warehouse.location = request.form.get('location')
+        name = (request.form.get('name') or '').strip()
+        location = (request.form.get('location') or '').strip() or None
+        if not name or len(name) > 150:
+            flash('El nombre del almacén es obligatorio y admite hasta 150 caracteres.', 'danger')
+            return redirect(url_for('warehouse_bp.edit_warehouse', id=warehouse.id))
+        if location and len(location) > 255:
+            flash('La ubicación admite hasta 255 caracteres.', 'danger')
+            return redirect(url_for('warehouse_bp.edit_warehouse', id=warehouse.id))
+        warehouse.name = name
+        warehouse.location = location
         try:
             db.session.commit()
             flash('Almacén actualizado correctamente', 'success')
             return redirect(url_for('warehouse_bp.list_warehouses'))
-        except Exception as e:
+        except SQLAlchemyError:
             db.session.rollback()
-            flash(f'Error al actualizar: {str(e)}', 'danger')
+            current_app.logger.exception('No se pudo actualizar el almacén %s', warehouse.id)
+            flash('No se pudo actualizar el almacén. Revisa los datos e inténtalo nuevamente.', 'danger')
         
     return render_template('warehouse/edit.html', warehouse=warehouse, user=user)
 
@@ -169,7 +188,7 @@ def warehouse_stock(id):
         return redirect(url_for('warehouse_bp.list_warehouses'))
 
     # Obtener stock
-    stocks = WarehouseStock.query.filter_by(warehouse_id=id).all()
+    stocks = WarehouseStock.query.filter_by(warehouse_id=id, company_id=company_id).all()
     
     return render_template('warehouse/stock.html', warehouse=warehouse, stocks=stocks, user=user)
 
@@ -251,7 +270,7 @@ def warehouse_locations(warehouse_id):
         Product.product_type != ProductType.SERVICE
     ).order_by(Product.name.asc()).all()
     aggregate_stocks = {
-        row.product_id: int(row.quantity or 0)
+        row.product_id: as_decimal(row.quantity)
         for row in WarehouseStock.query.filter_by(warehouse_id=warehouse.id, company_id=company_id).all()
     }
     allocated = {}
@@ -259,7 +278,7 @@ def warehouse_locations(warehouse_id):
         WarehouseLocation.warehouse_id == warehouse.id,
         LocationStock.company_id == company_id,
     ).all():
-        allocated[row.product_id] = allocated.get(row.product_id, 0) + int(row.quantity or 0)
+        allocated[row.product_id] = allocated.get(row.product_id, as_decimal(0)) + as_decimal(row.quantity)
     reserved = {}
     reserved_rows = db.session.query(
         StockTransfer.product_id,
@@ -271,7 +290,7 @@ def warehouse_locations(warehouse_id):
         StockTransfer.status == 'PENDING',
     ).group_by(StockTransfer.product_id).all()
     for product_id, quantity in reserved_rows:
-        reserved[product_id] = int(quantity or 0)
+        reserved[product_id] = as_decimal(quantity or 0)
     unassigned = {
         product_id: max(quantity - allocated.get(product_id, 0) - reserved.get(product_id, 0), 0)
         for product_id, quantity in aggregate_stocks.items()
@@ -297,17 +316,28 @@ def allocate_location_stock(location_id):
         return redirect(url_for('warehouse_bp.list_warehouses'))
 
     location = WarehouseLocation.query.filter_by(id=location_id, company_id=company_id, status=True).first_or_404()
-    product_id = request.form.get('product_id', type=int)
-    quantity = request.form.get('quantity', type=int)
-    if not product_id or quantity is None or quantity <= 0:
-        flash('Selecciona un producto y una cantidad mayor que cero.', 'danger')
+    try:
+        product_id = tenant_id(request.form.get('product_id'), 'Producto')
+    except BusinessRuleError as exc:
+        flash(str(exc), 'danger')
+        return redirect(url_for('warehouse_bp.warehouse_locations', warehouse_id=location.warehouse_id))
+
+    product = Product.query.filter_by(id=product_id, company_id=company_id, status=True).filter(Product.archived_at.is_(None)).first()
+    if not product or product.product_type == ProductType.SERVICE:
+        flash('El producto no es válido para inventario.', 'danger')
+        return redirect(url_for('warehouse_bp.warehouse_locations', warehouse_id=location.warehouse_id))
+
+    try:
+        quantity = product_quantity(request.form.get('quantity'), 'Cantidad', product=product, uom=product.base_uom)
+    except BusinessRuleError as exc:
+        flash(str(exc), 'danger')
         return redirect(url_for('warehouse_bp.warehouse_locations', warehouse_id=location.warehouse_id))
 
     warehouse_stock = WarehouseStock.query.filter_by(
         warehouse_id=location.warehouse_id,
         product_id=product_id,
         company_id=company_id,
-    ).first()
+    ).with_for_update().first()
     allocated = db.session.query(db.func.coalesce(db.func.sum(LocationStock.quantity), 0)).join(
         WarehouseLocation, LocationStock.location_id == WarehouseLocation.id
     ).filter(
@@ -322,12 +352,14 @@ def allocate_location_stock(location_id):
         StockTransfer.from_location_id.is_(None),
         StockTransfer.status == 'PENDING',
     ).scalar()
-    available = int(warehouse_stock.quantity or 0) - int(allocated or 0) - int(reserved or 0) if warehouse_stock else 0
+    available = as_decimal(warehouse_stock.quantity) - as_decimal(allocated or 0) - as_decimal(reserved or 0) if warehouse_stock else as_decimal(0)
     if quantity > available:
         flash(f'Solo quedan {available} unidades sin ubicación asignada.', 'danger')
         return redirect(url_for('warehouse_bp.warehouse_locations', warehouse_id=location.warehouse_id))
 
-    row = LocationStock.query.filter_by(location_id=location.id, product_id=product_id).first()
+    row = LocationStock.query.filter_by(
+        location_id=location.id, product_id=product_id, company_id=company_id
+    ).with_for_update().first()
     if not row:
         row = LocationStock(location_id=location.id, product_id=product_id, company_id=company_id, quantity=0)
         db.session.add(row)

@@ -1,0 +1,21 @@
+{% extends 'workspace/base.html' %}
+{% block title %}Sucursales y POS{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/retail.css') }}">{% endblock %}
+{% block eyebrow %}Retail avanzado{% endblock %}
+{% block heading %}Sucursales y terminales{% endblock %}
+{% block subtitle %}Define dónde existe el inventario y desde qué caja se descuenta al vender.{% endblock %}
+{% block content %}
+<div class="retail-shell">{% include 'retail/_nav.html' %}
+  <div class="retail-subgrid">
+    <section class="workspace-card"><div class="workspace-card-head"><div><h2>Sucursales</h2><p>Establecimientos comerciales de la empresa.</p></div><span class="retail-chip">{{ branches|length }}</span></div>
+      <div class="retail-list-scroll">{% for branch in branches %}<div class="retail-record"><span><strong>{{ branch.name }}</strong><small>{{ branch.code }} · {{ branch.address or 'Sin dirección' }}{% if branch.phone %} · {{ branch.phone }}{% endif %}</small></span>{% if branch.is_main %}<span class="retail-chip">Principal</span>{% endif %}</div>{% else %}<div class="workspace-empty">Sin sucursales.</div>{% endfor %}</div>
+      <form method="post" action="{{ url_for('retail_bp.branch_create') }}" class="retail-inline-form retail-form-divider"><label>Nombre<input name="name" required></label><label>Código<input name="code" placeholder="NORTE"></label><label class="wide">Dirección<input name="address"></label><label>Teléfono<input name="phone"></label><label><span><input type="checkbox" name="is_main" value="1"> Principal</span></label><div class="actions"><button class="workspace-btn secondary">Añadir sucursal</button></div></form>
+    </section>
+    <section class="workspace-card"><div class="workspace-card-head"><div><h2>Terminales / cajas</h2><p>Cada caja debe apuntar a un almacén concreto.</p></div><span class="retail-chip">{{ terminals|length }}</span></div>
+      <div class="retail-list-scroll">{% for terminal in terminals %}<div class="retail-record"><span><strong>{{ terminal.name }}</strong><small>{{ terminal.code }} · {{ terminal.warehouse.name }}{% if terminal.branch %} · {{ terminal.branch.name }}{% endif %}</small></span><span class="retail-chip">{{ terminal.receipt_width }} mm</span></div>{% else %}<div class="workspace-empty">Sin terminales configuradas.</div>{% endfor %}</div>
+      <form method="post" action="{{ url_for('retail_bp.terminal_create') }}" class="retail-inline-form retail-form-divider"><label>Nombre<input name="name" required></label><label>Código<input name="code"></label><label>Almacén<select name="warehouse_id" required>{% for w in warehouses %}<option value="{{ w.id }}">{{ w.name }}{% if w.is_main %} · Principal{% endif %}</option>{% endfor %}</select></label><label>Sucursal<select name="branch_id"><option value="">Sin asignar</option>{% for b in branches %}<option value="{{ b.id }}">{{ b.name }}</option>{% endfor %}</select></label><label>Ancho ticket (mm)<input type="number" name="receipt_width" min="40" max="112" step="1" value="80" required></label><div class="actions"><button class="workspace-btn secondary">Añadir terminal</button></div></form>
+    </section>
+  </div>
+  <div class="retail-core-note"><i class="bi bi-info-circle"></i><div><strong>Stock inicial y POS</strong><small>Al crear un producto ahora eliges el almacén donde entra el stock. Si una terminal vende desde otro almacén, primero debes transferir existencias.</small></div></div>
+</div>
+{% endblock %}

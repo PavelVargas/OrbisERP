@@ -1,221 +1,154 @@
-<!DOCTYPE html>
-<html lang="es" class="{% if session.get('theme') == 'dark' %}dark{% endif %}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ product.name }} | OrbisERP</title>
-    
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <style>
-        :root {
-            --primary: #faa200;
-            --bg-main: #0c0d0f; 
-            --bg-card: #15171a; 
-            --border: rgba(255, 255, 255, 0.05);
-            --text-main: #ffffff;
-            --text-dim: #8a8f98;
-            --success: #10b981;
-            --radius: 20px;
-            --sidebar-width: 260px; /* Ancho estándar de tu barra lateral */
-        }
+{% extends 'workspace/base.html' %}
+{% block title %}{{ product.name }}{% endblock %}
+{% block eyebrow %}Producto{% endblock %}
+{% block heading %}{{ product.name }}{% endblock %}
+{% block subtitle %}SKU {{ product.sku }} · {{ product.category.name if product.category else 'Sin categoría' }}{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/module_refresh.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/retail.css') }}">
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        
-        body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            background: var(--bg-main); 
-            color: var(--text-main);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
+{% endblock %}
+{% block back_link %}<a class="workspace-back" href="{{ url_for('products_bp.list_products', scope='archived' if product.archived_at else 'active') }}"><i class="bi bi-chevron-left"></i> Volver al catálogo</a>{% endblock %}
+{% block actions %}
+{% if product.archived_at %}
+    {% if can('products.delete') %}<form method="post" action="{{ url_for('products_bp.restore_product', id=product.id) }}"><button class="workspace-btn" type="submit"><i class="bi bi-arrow-counterclockwise"></i> Restaurar producto</button></form>{% endif %}
+{% else %}
+    {% if can('products.edit') %}<a class="workspace-btn secondary" href="{{ url_for('products_bp.edit_product', id=product.id) }}"><i class="bi bi-pencil"></i> Editar</a>{% endif %}
+    {% if product.product_type.name != 'SERVICE' %}<a class="workspace-btn" href="{{ url_for('products_bp.product_stock_detail', id=product.id) }}"><i class="bi bi-boxes"></i> Ver stock</a>{% endif %}
+{% endif %}
+{% endblock %}
 
-        /* --- LAYOUT FIX --- */
-        .app-wrapper {
-            display: block; /* Cambiado de flex a block para evitar conflictos con fixed sidebars */
-            width: 100%;
-        }
+{% block content %}
+<div class="module-page">
+{% if product.archived_at %}<div class="workspace-alert workspace-alert--warning"><strong>Producto archivado.</strong> No aparece en operaciones nuevas; historial, lotes, series y existencias se conservan.</div>{% endif %}
 
-        .main-content {
-            /* Este margen debe ser igual al ancho de tu sidebar para que no se encime */
-            margin-left: var(--sidebar-width); 
-            padding: 2rem;
-            min-height: 100vh;
-            transition: all 0.3s ease;
-        }
+<section class="workspace-grid">
+    <article class="workspace-metric"><span><i class="bi bi-cash-stack"></i> Precio</span><strong>{{ currency_symbol }} {{ '{:,.2f}'.format(display_price) }}</strong><small>{{ selected_currency }}</small></article>
+    {% if can('products.costs') %}<article class="workspace-metric"><span><i class="bi bi-cart-dash"></i> Costo</span><strong>{{ currency_symbol }} {{ '{:,.2f}'.format(display_cost) }}</strong><small>{{ retail_settings.costing_method if retail_settings else 'AVERAGE' }}</small></article>{% endif %}
+    <article class="workspace-metric"><span><i class="bi bi-box-seam"></i> Existencia</span><strong>{{ 'N/A' if product.product_type.name=='SERVICE' else display_quantity(product.total_stock) }}</strong><small>{{ product.base_uom.symbol if product.base_uom else 'unidades' }}</small></article>
+    <article class="workspace-metric"><span><i class="bi bi-diagram-3"></i> Variantes</span><strong>{{ variants|length }}</strong><small>{{ barcodes|length }} códigos</small></article>
+</section>
 
-        /* RESPONSIVE: Si el sidebar se oculta en móvil, quitamos el margen */
-        @media (max-width: 1024px) {
-            .main-content {
-                margin-left: 0;
-                padding: 1rem;
-            }
-        }
+<nav class="product-tabs" aria-label="Secciones del producto">
+    <button class="product-tab active" type="button" data-product-tab="general">General</button>
+    {% if retail_settings.enable_variants %}<button class="product-tab" type="button" data-product-tab="variants">Variantes</button>{% endif %}
+    <button class="product-tab" type="button" data-product-tab="pricing">Precios</button>
+    <button class="product-tab" type="button" data-product-tab="codes">Códigos</button>
+    {% if retail_settings.enable_lots or retail_settings.enable_serials %}<button class="product-tab" type="button" data-product-tab="tracking">Lotes / Series</button>{% endif %}
+    <button class="product-tab" type="button" data-product-tab="suppliers">Proveedores</button>
+    {% if retail_settings.enable_bundles %}<button class="product-tab" type="button" data-product-tab="bundle">Kit / Combo</button>{% endif %}
+</nav>
 
-        /* --- NAVEGACIÓN Y HEADER --- */
-        .top-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
+<section class="product-panel active" data-product-panel="general">
+<div class="workspace-columns">
+    <article class="workspace-card">
+        <div class="workspace-card-head"><div><h2>Ficha comercial</h2><p>La ficha central concentra la configuración del producto, al estilo de un ERP modular.</p></div>{% if product.archived_at %}<span class="module-chip warning">ARCHIVADO</span>{% else %}<span class="module-chip success">ACTIVO</span>{% endif %}</div>
+        {% set current_image = product_image_url(product) %}<div class="module-image">{% if current_image %}<img src="{{ current_image }}" alt="{{ product.name }}" referrerpolicy="no-referrer">{% else %}<div class="module-image-placeholder"><i class="bi bi-image"></i><span>Sin foto</span></div>{% endif %}</div>
+        <dl class="module-kv" data-ui-style="ud6f2af6e0a">
+            <div><dt>SKU</dt><dd>{{ product.sku }}</dd></div><div><dt>Marca</dt><dd>{{ product.brand or '—' }}</dd></div>
+            <div><dt>Categoría</dt><dd>{{ product.category.name if product.category else 'Sin categoría' }}</dd></div>
+            <div><dt>Tipo</dt><dd>{{ 'Servicio' if product.product_type.name=='SERVICE' else 'Consumible' if product.product_type.name=='CONSUMABLE' else 'Inventariable' }}</dd></div>
+            <div><dt>Venta</dt><dd>{{ 'Peso / fracción' if product.sale_mode=='WEIGHT' else 'Unidades' }}</dd></div>
+            <div><dt>Trazabilidad</dt><dd>{{ {'NONE':'Sin seguimiento','LOT':'Por lote','SERIAL':'Por serie/IMEI'}.get(product.tracking, product.tracking) }}</dd></div>
+            <div><dt>U.M. base</dt><dd>{{ product.base_uom.name if product.base_uom else 'Unidad' }}</dd></div>
+            <div><dt>U.M. venta</dt><dd>{{ product.sale_uom.name if product.sale_uom else (product.base_uom.name if product.base_uom else 'Unidad') }}</dd></div>
+            <div><dt>U.M. compra</dt><dd>{{ product.purchase_uom.name if product.purchase_uom else (product.base_uom.name if product.base_uom else 'Unidad') }}</dd></div>
+            <div><dt>Garantía</dt><dd>{{ product.warranty_days }} días</dd></div>
+        </dl>
+        {% if product.description %}<div class="module-note" data-ui-style="ud6f2af6e0a"><strong>Descripción</strong><br>{{ product.description }}</div>{% endif %}
+    </article>
+    <aside class="workspace-card">
+        <div class="workspace-card-head"><div><h2>Disponibilidad por almacén</h2><p>Existencia física de la referencia.</p></div></div>
+        <div class="module-list">{% for s in stocks %}<div class="module-row"><div class="module-row-copy"><strong>{{ s.warehouse.name }}</strong><small>{{ s.warehouse.location or 'Sin ubicación' }}</small></div><strong class="module-stock">{{ display_quantity(s.quantity) }} {{ product.base_uom.symbol if product.base_uom else '' }}</strong></div>{% else %}<div class="module-empty"><p>{{ 'Los servicios no manejan existencias.' if product.product_type.name=='SERVICE' else 'Sin stock registrado.' }}</p></div>{% endfor %}</div>
+        {% if condition_stocks %}<div class="module-note" data-ui-style="ud6f2af6e0a"><strong>Stock no vendible</strong><div class="module-list" data-ui-style="u8a77e5a311">{% for row in condition_stocks if row.quantity > 0 %}<div class="module-row"><div class="module-row-copy"><strong>{{ 'Cuarentena' if row.condition=='QUARANTINE' else 'Dañado' }}</strong><small>{{ row.warehouse.name }}{% if row.variant %} · {{ row.variant.name }}{% endif %}</small></div><div data-ui-style="u36764d1e63"><b>{{ display_quantity(row.quantity) }}</b>{% if can('stock.adjust') and product.tracking=='NONE' %}<form method="post" action="{{ url_for('retail_bp.condition_stock_action', row_id=row.id, action='release' if row.condition=='QUARANTINE' else 'scrap') }}" data-ui-style="u31a824a217"><input type="number" name="quantity" min="0.001" max="{{ display_quantity(row.quantity) }}" step="0.001" value="{{ display_quantity(row.quantity) }}" data-ui-style="u581be415aa" required><button class="workspace-btn secondary" type="submit">{{ 'Liberar' if row.condition=='QUARANTINE' else 'Descartar' }}</button>{% if row.condition=='QUARANTINE' %}<button class="workspace-btn danger" type="submit" formaction="{{ url_for('retail_bp.condition_stock_action', row_id=row.id, action='scrap') }}">Descartar</button>{% endif %}</form>{% elif product.tracking!='NONE' %}<small><a href="{{ url_for('retail_bp.quality_center') }}">Gestionar en Control de calidad</a></small>{% endif %}</div></div>{% endfor %}</div></div>{% endif %}
+        {% if not product.archived_at and can('products.delete') %}<form method="post" action="{{ url_for('products_bp.delete_product', id=product.id) }}" data-ui-style="u1b0f4999d2" data-confirm="¿Archivar este producto?" data-confirm-title="Archivar producto" data-confirm-detail="Dejará de estar disponible en operaciones nuevas; la trazabilidad histórica se conserva." data-confirm-action="Archivar producto" data-confirm-type="warning"><button class="workspace-btn danger" type="submit"><i class="bi bi-archive"></i> Archivar producto</button></form>{% endif %}
+    </aside>
+</div>
+{% if retail_settings.enable_uom and product.base_uom %}
+<div class="workspace-card" data-ui-style="u1b0f4999d2">
+  <div class="retail-section-intro"><div><h2>Unidades y conversiones del producto</h2><p class="retail-muted">Define empaques por producto. Ejemplo: 1 caja = 24 {{ product.base_uom.symbol }}. La conversión no afecta a otros productos.</p></div><span class="retail-pill">Base: {{ product.base_uom.name }}</span></div>
+  <form class="retail-inline-form retail-form" method="post" action="{{ url_for('retail_bp.product_uom_conversion_save', product_id=product.id) }}">
+    <input type="hidden" name="return_tab" value="general">
+    <div><label>Unidad</label><select name="uom_id" required><option value="">Seleccionar…</option>{% for u in uoms if u.category == product.base_uom.category and u.id != product.base_uom_id %}<option value="{{ u.id }}">{{ u.name }} ({{ u.symbol }})</option>{% endfor %}</select></div>
+    <div><label>Equivale a</label><input name="factor_to_base" type="number" min="0.000001" step="0.000001" placeholder="24" required><small class="retail-muted">{{ product.base_uom.symbol }} por unidad seleccionada</small></div>
+    <label data-ui-style="uac6ea07e92"><span><input type="checkbox" name="allow_sale" value="1" checked> Venta</span></label>
+    <label data-ui-style="uac6ea07e92"><span><input type="checkbox" name="allow_purchase" value="1" checked> Compra</span></label>
+    <button class="workspace-btn" type="submit">Guardar conversión</button>
+  </form>
+  <table class="retail-table" data-ui-style="ud6f2af6e0a"><thead><tr><th>Unidad</th><th>Conversión</th><th>Venta</th><th>Compra</th><th></th></tr></thead><tbody>
+    <tr><td><strong>{{ product.base_uom.name }}</strong></td><td>1 {{ product.base_uom.symbol }} = 1 {{ product.base_uom.symbol }}</td><td>Sí</td><td>Sí</td><td><span class="retail-pill ok">Base</span></td></tr>
+    {% for row in uom_conversions %}<tr><td>{{ row.uom.name }} ({{ row.uom.symbol }})</td><td>1 {{ row.uom.symbol }} = <strong>{{ row.factor_to_base }}</strong> {{ product.base_uom.symbol }}</td><td>{{ 'Sí' if row.allow_sale else 'No' }}</td><td>{{ 'Sí' if row.allow_purchase else 'No' }}</td><td>{% if can('products.edit') %}<form method="post" action="{{ url_for('retail_bp.product_uom_conversion_delete', product_id=product.id, conversion_id=row.id) }}" data-confirm="¿Eliminar esta conversión de unidad?" data-confirm-title="Eliminar conversión" data-confirm-detail="Las operaciones nuevas dejarán de ofrecer esta unidad. Los documentos anteriores conservan el factor utilizado." data-confirm-action="Eliminar conversión" data-confirm-type="warning"><input type="hidden" name="return_tab" value="general"><button class="workspace-icon-btn" type="submit" title="Eliminar"><i class="bi bi-trash"></i></button></form>{% endif %}</td></tr>{% endfor %}
+  </tbody></table>
+</div>
+{% endif %}
+</section>
 
-        .back-btn-area {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
+{% if retail_settings.enable_variants %}
+<section class="product-panel" data-product-panel="variants">
+<div class="workspace-card">
+<div class="retail-section-intro"><div><h2>Variantes y atributos</h2><p class="retail-muted">Talla, color, capacidad o cualquier combinación. Cada variante mantiene SKU, precio extra y stock propio.</p></div><span class="retail-pill">{{ variants|length }} variantes</span></div>
+{% if attributes %}
+<form class="retail-form" method="post" action="{{ url_for('retail_bp.product_generate_variants', product_id=product.id) }}">
+    <input type="hidden" name="return_tab" value="variants">
+    <div class="retail-grid-3">{% for attribute in attributes %}<div><label>{{ attribute.name }}</label><select name="attribute_value_ids" multiple size="{{ [attribute.values|length, 5]|min }}">{% for value in attribute.values if value.active %}<option value="{{ value.id }}">{{ value.value }}</option>{% endfor %}</select><small class="retail-muted">Ctrl/Cmd para seleccionar varios.</small></div>{% endfor %}</div>
+    <div data-ui-style="u56f4356299"><button class="workspace-btn" type="submit"><i class="bi bi-diagram-3"></i> Generar combinaciones</button></div>
+</form>
+{% else %}<div class="module-empty"><p>Crea atributos como Talla o Color desde <a href="{{ url_for('retail_bp.overview') }}">Configuración Retail</a>.</p></div>{% endif %}
 
-        .btn-circle-back {
-            width: 42px; height: 42px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 50%;
-            color: white;
-            display: flex; align-items: center; justify-content: center;
-            text-decoration: none; transition: 0.2s;
-        }
-        .btn-circle-back:hover { background: var(--primary); color: #000; }
+<div class="retail-grid-3" data-ui-style="u86de7ac63a">{% for variant in variants %}<article class="variant-card"><strong>{{ variant.name }}</strong><span class="retail-muted">{{ variant.sku }} · {{ variant.attribute_summary or 'Sin atributos' }}</span><div class="variant-stocks">{% for stock in stocks %}<span class="retail-pill">{{ stock.warehouse.name }}: {{ display_quantity(variant_stock_map.get((variant.id, stock.warehouse_id), 0)) }}</span>{% endfor %}</div><form class="retail-inline-form retail-form" method="post" action="{{ url_for('retail_bp.variant_stock_update', product_id=product.id) }}" data-ui-style="ud2c171b18b"><input type="hidden" name="return_tab" value="variants"><input type="hidden" name="variant_id" value="{{ variant.id }}"><select name="warehouse_id" required>{% for stock in stocks %}<option value="{{ stock.warehouse_id }}">{{ stock.warehouse.name }}</option>{% endfor %}</select><input name="quantity" type="number" min="0" step="0.001" value="0" required><button class="workspace-btn secondary" type="submit">Ajustar</button></form></article>{% else %}<div class="module-empty"><p>No hay variantes. El producto funciona como referencia simple.</p></div>{% endfor %}</div>
+</div>
+</section>
+{% endif %}
 
-        /* --- BENTO GRID --- */
-        .bento-grid {
-            display: grid;
-            grid-template-columns: repeat(12, 1fr);
-            gap: 1.25rem;
-        }
+<section class="product-panel" data-product-panel="pricing">
+<div class="workspace-card"><div class="retail-section-intro"><div><h2>Precios y volumen</h2><p class="retail-muted">Precio público, listas mayoristas/VIP y reglas por cantidad.</p></div><a class="workspace-btn secondary" href="{{ url_for('retail_bp.overview') }}#pricing">Administrar listas</a></div>
+<table class="retail-table"><thead><tr><th>Lista</th><th>Aplica a</th><th>Desde</th><th>Regla</th><th>Valor</th></tr></thead><tbody>{% for rule in price_rules %}<tr><td>{{ rule.price_list.name }}</td><td>{{ rule.variant.name if rule.variant else product.name }}</td><td>{{ display_quantity(rule.min_quantity) }}</td><td>{{ rule.rule_type }}</td><td>{% if rule.rule_type=='FIXED' %}{{ rule.fixed_price }}{% else %}{{ rule.percent }}%{% endif %}</td></tr>{% else %}<tr><td colspan="5" class="retail-muted">Sin reglas específicas. Se utiliza el precio base {{ product.price }}.</td></tr>{% endfor %}</tbody></table>
+</div>
+</section>
 
-        .glass-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 1.5rem;
-            overflow: hidden;
-        }
+<section class="product-panel" data-product-panel="codes">
+<div class="workspace-card"><div class="retail-section-intro"><div><h2>Códigos de barras</h2><p class="retail-muted">EAN, UPC, Code128, códigos internos o del proveedor. Pueden apuntar a una variante concreta.</p></div></div>
+<form class="retail-inline-form retail-form" method="post" action="{{ url_for('retail_bp.barcode_add', product_id=product.id) }}"><input type="hidden" name="return_tab" value="codes"><div><label>Código</label><input name="code" required></div><div><label>Tipo</label><select name="barcode_type"><option>EAN13</option><option>EAN8</option><option>UPC</option><option selected>CODE128</option><option>QR</option><option>INTERNAL</option><option>SUPPLIER</option></select></div><div><label>Variante</label><select name="variant_id"><option value="">Producto general</option>{% for v in variants %}<option value="{{ v.id }}">{{ v.name }}</option>{% endfor %}</select></div><div><label>Principal</label><select name="is_primary"><option value="0">No</option><option value="1">Sí</option></select></div><button class="workspace-btn" type="submit">Añadir</button></form>
+<table class="retail-table" data-ui-style="u1b0f4999d2"><thead><tr><th>Código</th><th>Tipo</th><th>Variante</th><th></th></tr></thead><tbody>{% for code in barcodes %}<tr><td><strong>{{ code.code }}</strong></td><td>{{ code.barcode_type }}</td><td>{{ code.variant.name if code.variant else 'General' }}</td><td>{% if code.is_primary %}<span class="retail-pill ok">Principal</span>{% endif %}</td></tr>{% else %}<tr><td colspan="4" class="retail-muted">Todavía no hay códigos adicionales.</td></tr>{% endfor %}</tbody></table>
+</div>
+</section>
 
-        .col-4 { grid-column: span 4; }
-        .col-8 { grid-column: span 8; }
-        .row-2 { grid-row: span 2; }
+{% if retail_settings.enable_lots or retail_settings.enable_serials %}
+<section class="product-panel" data-product-panel="tracking">
+<div class="retail-grid-2">
+{% if retail_settings.enable_lots %}<article class="workspace-card"><div class="retail-section-intro"><div><h2>Lotes y vencimientos</h2><p class="retail-muted">FEFO usa primero el lote disponible que vence antes.</p></div></div>
+{% if product.tracking=='LOT' %}<form class="retail-form retail-grid-2" method="post" action="{{ url_for('retail_bp.lot_add', product_id=product.id) }}"><input type="hidden" name="return_tab" value="tracking"><div><label>Almacén</label><select name="warehouse_id" required>{% for stock in stocks %}<option value="{{ stock.warehouse_id }}">{{ stock.warehouse.name }}</option>{% endfor %}</select></div><div><label>Variante</label><select name="variant_id"><option value="">General</option>{% for v in variants %}<option value="{{ v.id }}">{{ v.name }}</option>{% endfor %}</select></div><div><label>Lote</label><input name="lot_number" required></div><div><label>Cantidad</label><input name="quantity" type="number" step="0.001" min="0.001" required></div><div><label>Fabricación</label><input name="manufactured_at" type="date"></div><div><label>Vence</label><input name="expires_at" type="date"></div><button class="workspace-btn" type="submit">Registrar entrada</button></form>{% else %}<div class="workspace-alert workspace-alert--warning">Activa trazabilidad <strong>Por lote</strong> al editar el producto para registrar lotes.</div>{% endif %}
+<table class="retail-table" data-ui-style="ud6f2af6e0a"><thead><tr><th>Lote</th><th>Almacén</th><th>Cant.</th><th>Vence</th><th>Estado</th></tr></thead><tbody>{% for lot in lots %}<tr><td>{{ lot.lot_number }}</td><td>{{ lot.warehouse.name }}</td><td>{{ display_quantity(lot.quantity) }}</td><td>{{ lot.expires_at or '—' }}</td><td><span class="retail-pill {{ 'warn' if lot.status!='AVAILABLE' else 'ok' }}">{{ lot.status }}</span></td></tr>{% else %}<tr><td colspan="5" class="retail-muted">Sin lotes.</td></tr>{% endfor %}</tbody></table></article>{% endif %}
+{% if retail_settings.enable_serials %}<article class="workspace-card"><div class="retail-section-intro"><div><h2>Series / IMEI</h2><p class="retail-muted">Seguimiento unitario y base para garantías.</p></div></div>
+{% if product.tracking=='SERIAL' %}<form class="retail-form" method="post" action="{{ url_for('retail_bp.serials_add', product_id=product.id) }}"><input type="hidden" name="return_tab" value="tracking"><div class="retail-grid-2"><div><label>Almacén</label><select name="warehouse_id" required>{% for stock in stocks %}<option value="{{ stock.warehouse_id }}">{{ stock.warehouse.name }}</option>{% endfor %}</select></div><div><label>Variante</label><select name="variant_id"><option value="">General</option>{% for v in variants %}<option value="{{ v.id }}">{{ v.name }}</option>{% endfor %}</select></div></div><label data-ui-style="ud2c171b18b">Series/IMEI (una por línea)</label><textarea name="serial_numbers" rows="5" required></textarea><button class="workspace-btn" data-ui-style="ud2c171b18b" type="submit">Registrar series</button></form>{% else %}<div class="workspace-alert workspace-alert--warning">Activa trazabilidad <strong>Por serie/IMEI</strong> para este producto.</div>{% endif %}
+<table class="retail-table" data-ui-style="ud6f2af6e0a"><thead><tr><th>Serie</th><th>Almacén</th><th>Estado</th><th>Garantía</th></tr></thead><tbody>{% for serial in serials %}<tr><td>{{ serial.serial_number }}</td><td>{{ serial.warehouse.name if serial.warehouse else '—' }}</td><td>{{ serial.status }}</td><td>{{ serial.warranty_until or '—' }}</td></tr>{% else %}<tr><td colspan="4" class="retail-muted">Sin series.</td></tr>{% endfor %}</tbody></table></article>{% endif %}
+</div>
+{% if warranty_claims %}<div class="workspace-card" data-ui-style="u1b0f4999d2"><h2>Garantías</h2><table class="retail-table"><thead><tr><th>Venta</th><th>Serie</th><th>Motivo</th><th>Estado</th></tr></thead><tbody>{% for claim in warranty_claims %}<tr><td>#{{ claim.sale_item.sale_id }}</td><td>{{ claim.serial.serial_number if claim.serial else '—' }}</td><td>{{ claim.reason }}</td><td>{{ claim.status }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+</section>
+{% endif %}
 
-        @media (max-width: 1200px) {
-            .col-4 { grid-column: span 6; }
-            .col-8 { grid-column: span 12; }
-        }
+<section class="product-panel" data-product-panel="suppliers">
+<div class="workspace-card"><div class="retail-section-intro"><div><h2>Proveedores del producto</h2><p class="retail-muted">Costo, SKU del proveedor, mínimo y tiempo de entrega para reposición.</p></div></div>
+<form class="retail-inline-form retail-form" method="post" action="{{ url_for('retail_bp.supplier_link_add', product_id=product.id) }}"><input type="hidden" name="return_tab" value="suppliers"><div><label>Proveedor</label><select name="supplier_id" required>{% for supplier in suppliers %}<option value="{{ supplier.id }}">{{ supplier.name }}</option>{% endfor %}</select></div><div><label>SKU proveedor</label><input name="supplier_sku"></div><div><label>Costo</label><input name="unit_cost" type="number" min="0" step="0.01" required></div><div><label>Mínimo</label><input name="min_quantity" type="number" min="0.001" step="0.001" value="1"></div><div><label>Entrega (días)</label><input name="lead_time_days" type="number" min="0" max="3650" step="1" inputmode="numeric" value="0"></div><div><label>Preferido</label><select name="preferred"><option value="0">No</option><option value="1">Sí</option></select></div><button class="workspace-btn" type="submit">Vincular</button></form>
+<table class="retail-table" data-ui-style="ud6f2af6e0a"><thead><tr><th>Proveedor</th><th>SKU</th><th>Costo</th><th>Mínimo</th><th>Lead time</th></tr></thead><tbody>{% for link in supplier_links %}<tr><td>{{ link.supplier.name }} {% if link.preferred %}<span class="retail-pill ok">Preferido</span>{% endif %}</td><td>{{ link.supplier_sku or '—' }}</td><td>{{ link.unit_cost }}</td><td>{{ display_quantity(link.min_quantity) }}</td><td>{{ link.lead_time_days }} días</td></tr>{% else %}<tr><td colspan="5" class="retail-muted">Sin proveedores vinculados.</td></tr>{% endfor %}</tbody></table></div>
+</section>
 
-        @media (max-width: 768px) {
-            .col-4, .col-8 { grid-column: span 12; }
-            .row-2 { grid-row: auto; }
-            .top-nav { flex-direction: column; align-items: flex-start; }
-        }
-
-        /* Contenido de Cards */
-        .card-label {
-            font-size: 11px; font-weight: 700; color: var(--text-dim);
-            text-transform: uppercase; margin-bottom: 15px;
-            display: flex; align-items: center; gap: 8px;
-        }
-        .card-value { font-size: clamp(1.8rem, 3vw, 2.2rem); font-weight: 800; letter-spacing: -1px; display: block; }
-        .card-sub { font-size: 12px; color: var(--text-dim); margin-top: 5px; }
-
-        /* --- ACCIONES --- */
-        .action-list { display: flex; flex-direction: column; gap: 8px; }
-        .action-item {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 12px 16px; background: rgba(255,255,255,0.02);
-            border: 1px solid var(--border); border-radius: 12px;
-            color: white; text-decoration: none; font-weight: 600; font-size: 14px;
-            transition: 0.2s;
-        }
-        .action-item:hover { background: var(--primary); color: #000; }
-        .action-item.danger { color: #ff4d4d; border-color: rgba(255,77,77,0.1); }
-        .action-item.danger:hover { background: #ff4d4d; color: white; }
-
-        .chart-box { height: 260px; width: 100%; margin-top: 10px; }
-
-    </style>
-</head>
-
-<body>
-    {% include "layouts/left_bar.html" %}
-
-    <main class="main-content product-detail-page">
-            <nav class="top-nav">
-                <div class="back-btn-area">
-                    <a href="javascript:history.back()" class="btn-circle-back">
-                        <i class="bi bi-chevron-left"></i>
-                    </a>
-                    <div>
-                        <span style="color: var(--primary); font-size: 10px; font-weight: 800; text-transform: uppercase;">Gestión / Inventario</span>
-                        <h1 style="margin:0; font-size: clamp(1.4rem, 4vw, 2.1rem); line-height: 1.1;">{{ product.name }}</h1>
-                    </div>
-                </div>
-                <div style="background: rgba(16, 185, 129, 0.1); color: var(--success); padding: 6px 14px; border-radius: 10px; font-size: 11px; font-weight: 800;">
-                    <i class="bi bi-circle-fill" style="font-size: 7px; vertical-align: middle; margin-right: 5px;"></i> PRODUCTO ACTIVO
-                </div>
-            </nav>
-
-            <div class="bento-grid">
-                <div class="glass-card col-4">
-                    <div class="card-label"><i class="bi bi-currency-dollar"></i> Venta</div>
-                    <span class="card-value">RD${{ "{:,.2f}".format(display_price) }}</span>
-                    {% if can('products.costs') %}<span class="card-sub">Costo: RD${{ display_cost }}</span>{% endif %}
-                </div>
-
-                <div class="glass-card col-4">
-                    <div class="card-label"><i class="bi bi-box-seam"></i> Existencia</div>
-                    <span class="card-value" style="color: var(--primary)">{{ product.total_stock }}</span>
-                    <span class="card-sub">Unidades en sistema</span>
-                </div>
-
-                <div class="glass-card col-4">
-                    <div class="card-label"><i class="bi bi-graph-up"></i> Margen</div>
-                    <span class="card-value" style="color: var(--success)">
-                        {{ "{:,.1f}".format(((display_price - display_cost) / display_price * 100) if display_price > 0 else 0) }}%
-                    </span>
-                    <span class="card-sub">Utilidad calculada</span>
-                </div>
-
-                <div class="glass-card col-8 row-2 product-overview-card">
-                    <div class="product-detail-media">
-                        {% if product.image_path %}
-                        <img src="{{ url_for('static', filename=product.image_path) }}" alt="{{ product.name }}">
-                        {% else %}
-                        <div class="product-image-placeholder"><i class="bi bi-box-seam"></i><span>Este producto todavía no tiene foto</span></div>
-                        {% endif %}
-                    </div>
-                    <div class="product-detail-copy">
-                        <div class="card-label"><i class="bi bi-card-text"></i> Información del producto</div>
-                        <dl class="product-facts">
-                            <div><dt>SKU</dt><dd>{{ product.sku }}</dd></div>
-                            <div><dt>Categoría</dt><dd>{{ product.category.name if product.category else 'Sin categoría' }}</dd></div>
-                            <div><dt>Tipo</dt><dd>{{ 'Servicio' if product.product_type.name == 'SERVICE' else 'Consumible' if product.product_type.name == 'CONSUMABLE' else 'Producto con inventario' }}</dd></div>
-                        </dl>
-                        <p class="product-description">{{ product.description or 'No se ha agregado una descripción para este producto.' }}</p>
-                    </div>
-                </div>
-
-                <div class="glass-card col-4 row-2">
-                    <div class="card-label"><i class="bi bi-sliders"></i> Acciones</div>
-                    <div class="action-list">
-                        {% if can('products.edit') %}<a href="{{ url_for('products_bp.edit_product', id=product.id) }}" class="action-item">
-                            <span>Editar Datos</span> <i class="bi bi-pencil-square"></i>
-                        </a>{% endif %}
-                        <a href="{{ url_for('products_bp.product_stock_detail', id=product.id) }}" class="action-item">
-                            <span>Stock Físico</span> <i class="bi bi-arrow-left-right"></i>
-                        </a>
-                        {% if session.get('user_role') == 'admin' %}
-                        {% if can('products.delete') %}<form action="{{ url_for('products_bp.delete_product', id=product.id) }}" method="POST">
-                            <button type="submit" class="action-item danger" style="width: 100%; border: none; font-family: inherit; cursor: pointer;" onclick="return confirm('¿Eliminar producto?')">
-                                <span>Eliminar Registro</span> <i class="bi bi-trash3"></i>
-                            </button>
-                        </form>{% endif %}
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-    </main>
-
-</body>
-</html>
+{% if retail_settings.enable_bundles %}
+<section class="product-panel" data-product-panel="bundle">
+<div class="workspace-card"><div class="retail-section-intro"><div><h2>Kit / Combo</h2><p class="retail-muted">El producto puede venderse como una referencia comercial y consumir componentes del inventario.</p></div></div>
+<form class="retail-inline-form retail-form" method="post" action="{{ url_for('retail_bp.bundle_item_add', product_id=product.id) }}"><input type="hidden" name="return_tab" value="bundle"><div><label>Componente</label><select name="component_product_id" required>{% for p in component_products %}<option value="{{ p.id }}">{{ p.name }} · {{ p.sku }}</option>{% endfor %}</select></div><div><label>Cantidad</label><input name="quantity" type="number" min="0.001" step="0.001" value="1" required></div><button class="workspace-btn" type="submit">Añadir componente</button></form>
+<table class="retail-table" data-ui-style="ud6f2af6e0a"><thead><tr><th>Componente</th><th>SKU</th><th>Cantidad</th></tr></thead><tbody>{% for item in bundle_items %}<tr><td>{{ item.component.name }}</td><td>{{ item.component_variant.sku if item.component_variant else item.component.sku }}</td><td>{{ display_quantity(item.quantity) }}</td></tr>{% else %}<tr><td colspan="3" class="retail-muted">Sin componentes: se trata como producto normal.</td></tr>{% endfor %}</tbody></table></div>
+</section>
+{% endif %}
+</div>
+<script nonce="{{ csp_nonce }}">
+(function(){
+ const tabs=[...document.querySelectorAll('[data-product-tab]')];
+ const panels=[...document.querySelectorAll('[data-product-panel]')];
+ function activate(name){tabs.forEach(t=>t.classList.toggle('active',t.dataset.productTab===name));panels.forEach(p=>p.classList.toggle('active',p.dataset.productPanel===name));history.replaceState(null,'','#'+name);}
+ tabs.forEach(t=>t.addEventListener('click',()=>activate(t.dataset.productTab)));
+ const requested=(location.hash||'').slice(1)||new URLSearchParams(location.search).get('tab');
+ if(requested && panels.some(p=>p.dataset.productPanel===requested)) activate(requested);
+})();
+</script>
+{% endblock %}

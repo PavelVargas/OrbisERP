@@ -49,17 +49,6 @@
             wrapper.appendChild(table);
         });
 
-        // Prevent accidental double submissions in financial and inventory operations.
-        main.querySelectorAll('form').forEach((form) => {
-            form.addEventListener('submit', () => {
-                const button = form.querySelector('button[type="submit"]');
-                if (!button || button.dataset.allowMultiple === 'true') return;
-                button.dataset.originalText = button.innerHTML;
-                button.setAttribute('aria-busy', 'true');
-                setTimeout(() => { button.disabled = true; }, 0);
-            });
-        });
-
         main.addEventListener('pointerdown', (event) => {
             const control = event.target.closest('button, .btn, [class*="btn-"], .product-card, .ware-card');
             if (!control) return;

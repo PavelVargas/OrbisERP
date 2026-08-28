@@ -12,7 +12,7 @@ main {
     margin-left: 0;
     min-height: 100vh;
     padding: 20px;
-    transition: all 0.3s ease;
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
 }
 
 @media (min-width: 1025px) {
@@ -103,7 +103,7 @@ main {
     position: absolute;
     bottom: -5px;
     right: -5px;
-    background: #10b981;
+    background: var(--primary);
     color: white;
     font-size: 11px;
     padding: 5px 12px;
@@ -165,7 +165,7 @@ main {
     color: var(--text-main);
 }
 
-.stat-value.active { color: #10b981; }
+.stat-value.active { color: var(--primary); }
 
 /* ==========================================================================
    GRID DE INFORMACIÓN
@@ -184,7 +184,7 @@ main {
     display: flex;
     align-items: center;
     gap: 18px;
-    transition: all 0.3s ease;
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
 }
 
 .info-card:hover {

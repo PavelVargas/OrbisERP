@@ -1,0 +1,81 @@
+{
+  "desktop-light": {
+    "metrics": {
+      "rootDark": false,
+      "rootTablet": false,
+      "scrollWidth": 1512,
+      "clientWidth": 1512,
+      "bodyBg": "rgb(244, 246, 247)",
+      "cardBg": "rgb(255, 255, 255)",
+      "cardCount": 6,
+      "localNavIcons": 41,
+      "minAddHeight": 40,
+      "cartHidden": false,
+      "offenders": []
+    },
+    "errors": [],
+    "interaction": {
+      "cardBodyDidNotSubmit": true,
+      "addUpdatedCart": true,
+      "clientRepricedWithoutReload": true,
+      "removeUpdatedCart": true,
+      "businessErrorPopup": true
+    }
+  },
+  "desktop-dark": {
+    "metrics": {
+      "rootDark": true,
+      "rootTablet": false,
+      "scrollWidth": 1512,
+      "clientWidth": 1512,
+      "bodyBg": "rgb(14, 15, 17)",
+      "cardBg": "rgb(23, 25, 28)",
+      "cardCount": 6,
+      "localNavIcons": 41,
+      "minAddHeight": 40,
+      "cartHidden": false,
+      "offenders": []
+    },
+    "errors": [],
+    "interaction": {}
+  },
+  "tablet-landscape": {
+    "metrics": {
+      "rootDark": false,
+      "rootTablet": true,
+      "scrollWidth": 1180,
+      "clientWidth": 1180,
+      "bodyBg": "rgb(244, 246, 247)",
+      "cardBg": "rgb(255, 255, 255)",
+      "cardCount": 6,
+      "localNavIcons": 41,
+      "minAddHeight": 46,
+      "cartHidden": false,
+      "offenders": []
+    },
+    "errors": [],
+    "interaction": {}
+  },
+  "tablet-portrait-dark": {
+    "metrics": {
+      "rootDark": true,
+      "rootTablet": true,
+      "scrollWidth": 820,
+      "clientWidth": 820,
+      "bodyBg": "rgb(14, 15, 17)",
+      "cardBg": "rgb(23, 25, 28)",
+      "cardCount": 6,
+      "localNavIcons": 41,
+      "minAddHeight": 48,
+      "cartHidden": true,
+      "offenders": []
+    },
+    "errors": [],
+    "interaction": {
+      "drawerStartsClosed": true,
+      "drawerOpensInsideViewport": true,
+      "drawerOverlayActive": true,
+      "drawerCloses": true
+    }
+  }
+}

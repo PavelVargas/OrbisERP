@@ -1,0 +1,44 @@
+{
+  "desktop_1778x858": {
+    "layoutX": 268,
+    "layoutWidth": 1510,
+    "searchPaddingLeft": 46,
+    "clientPaddingLeft": 42,
+    "promoInputWidth": 254.15625,
+    "promoButtonWidth": 100,
+    "promoFormWidth": 362.15625,
+    "overlapSearch": false,
+    "overlapClient": false
+  },
+  "desktop_collapsed": {
+    "layoutX": 76,
+    "topbarX": 76
+  },
+  "tablet_900x800": {
+    "layoutX": 0,
+    "layoutWidth": 900,
+    "topbarX": 0
+  },
+  "mobile_387x857": {
+    "viewport": 387,
+    "clientPaddingLeft": 42,
+    "promoInputWidth": 255,
+    "promoButtonWidth": 96,
+    "promoFormWidth": 359,
+    "promotionColumns": "255px 96px",
+    "overlapClient": false
+  },
+  "checks": {
+    "desktop_sidebar_offset": true,
+    "collapsed_sidebar_offset": true,
+    "tablet_uses_full_width": true,
+    "search_icon_clear": true,
+    "client_icon_clear_desktop": true,
+    "coupon_input_not_collapsed_desktop": true,
+    "coupon_button_not_full_width_desktop": true,
+    "client_icon_clear_mobile": true,
+    "coupon_input_not_collapsed_mobile": true,
+    "coupon_button_not_full_width_mobile": true
+  },
+  "passed": true
+}

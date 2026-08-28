@@ -1,70 +1,21 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/css/client_css/client.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <title>Editar Cliente</title>
-</head>
-<body>
-
-    {% include 'layouts/left_bar.html' %}
-
-    <main>
-        <div class="top-nav">
-            <a href="{{ url_for('client_bp.list_clients') }}" class="back-link">
-                <i class="bi bi-arrow-left"></i> Volver al listado
-            </a>
-        </div>
-
-        <div class="page-header">
-            <div class="title-group">
-                <h2>Editar Cliente</h2>
-                <p>Modifica la información del perfil de <strong>{{ client.name }}</strong>.</p>
-            </div>
-        </div>
-
-        <div class="table-card" style="padding: 40px; max-width: 600px;">
-            <form method="POST">
-                
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label style="display: block; font-weight: 700; font-size: 12px; text-transform: uppercase; color: var(--gray-text); margin-bottom: 8px;">
-                        Nombre Completo *
-                    </label>
-                    <input type="text" name="name" class="form-control" value="{{ client.name }}" required
-                           style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--fg); outline: none; font-family: inherit;">
-                </div>
-
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label style="display: block; font-weight: 700; font-size: 12px; text-transform: uppercase; color: var(--gray-text); margin-bottom: 8px;">
-                        Email
-                    </label>
-                    <input type="email" name="email" class="form-control" value="{{ client.email }}"
-                           style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--fg); outline: none; font-family: inherit;">
-                </div>
-
-                <div class="form-group" style="margin-bottom: 35px;">
-                    <label style="display: block; font-weight: 700; font-size: 12px; text-transform: uppercase; color: var(--gray-text); margin-bottom: 8px;">
-                        Teléfono
-                    </label>
-                    <input type="text" name="phone" class="form-control" value="{{ client.phone }}"
-                           style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--fg); outline: none; font-family: inherit;">
-                </div>
-
-                <div style="display: flex; gap: 15px; align-items: center;">
-                    <button type="submit" class="btn-primary" style="border: none; cursor: pointer; font-family: 'Montserrat', sans-serif;">
-                        <i class="bi bi-arrow-clockwise"></i> Actualizar Datos
-                    </button>
-                    
-                    <a href="{{ url_for('client_bp.list_clients') }}" 
-                       style="text-decoration: none; color: var(--gray-text); font-weight: 600; font-size: 14px; transition: 0.2s;">
-                        Cancelar
-                    </a>
-                </div>
-            </form>
-        </div>
-    </main>
-
-</body>
-</html>
+{% extends 'workspace/base.html' %}
+{% block title %}Editar {{ client.name }}{% endblock %}
+{% block eyebrow %}Clientes{% endblock %}
+{% block heading %}Editar cliente{% endblock %}
+{% block subtitle %}{{ client.name }} · política comercial y de crédito.{% endblock %}
+{% block back_link %}<a class="workspace-back" href="{{ url_for('client_bp.client_detail', client_id=client.id) }}"><i class="bi bi-chevron-left"></i> Volver a Cliente 360</a>{% endblock %}
+{% block content %}
+<section class="workspace-card" style="max-width:920px">
+<form method="post" class="workspace-form">
+    <label>Nombre *<input type="text" name="name" value="{{ client.name }}" required></label>
+    <label>Correo<input type="email" name="email" value="{{ client.email or '' }}"></label>
+    <label>Teléfono<input type="text" name="phone" value="{{ client.phone or '' }}"></label>
+    <label>Lista de precios<select name="price_list_id"><option value="">Precio público</option>{% for pl in price_lists %}<option value="{{ pl.id }}" {% if client.price_list_id==pl.id %}selected{% endif %}>{{ pl.name }}{% if pl.is_default %} · predeterminada{% endif %}</option>{% endfor %}</select></label>
+    <label>Crédito<select name="credit_enabled"><option value="0" {% if not client.credit_enabled %}selected{% endif %}>No habilitado</option><option value="1" {% if client.credit_enabled %}selected{% endif %}>Habilitado</option></select></label>
+    <label>Límite de crédito<input name="credit_limit" type="number" min="0" step="0.01" value="{{ client.credit_limit or 0 }}"></label>
+    <label>Plazo (días)<input name="payment_terms_days" type="number" min="0" max="3650" step="1" inputmode="numeric" value="{{ client.payment_terms_days or 0 }}"></label>
+    <label>Bloqueo de crédito<select name="credit_hold"><option value="0" {% if not client.credit_hold %}selected{% endif %}>No</option><option value="1" {% if client.credit_hold %}selected{% endif %}>Sí, bloquear nuevas ventas a crédito</option></select></label>
+    <div class="actions full"><a class="workspace-btn secondary" href="{{ url_for('client_bp.client_detail', client_id=client.id) }}">Cancelar</a><button class="workspace-btn" type="submit"><i class="bi bi-check2"></i> Guardar cambios</button></div>
+</form>
+</section>
+{% endblock %}

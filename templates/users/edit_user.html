@@ -1,20 +1,12 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
+<html lang="es" class="{% if tablet_mode_active|default(session.get('tablet_mode')) %}tablet-mode tablet-full-width-profile{% endif %}">
+<head>{% set shell_assets_loaded = true %}{% include 'layouts/app_head_assets.html' %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perfil de Seguridad | OrbisERP</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/users_css/edit_user.css">
 </head>
 <body> 
-    <script>
-        if (localStorage.getItem('theme') === 'dark') {
-            document.body.classList.add('dark');
-        }
-    </script>
-
     {% include "layouts/left_bar.html" %}
 
     <main class="main-content">
@@ -25,7 +17,7 @@
                 </a>
             </div>
             <div class="nav-right">
-                <a href="{{ url_for('divisas_bp.listar_divisas') }}" class="btn-setup-currency" style="margin-right: 15px; text-decoration: none; color: #3498db; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 5px;">
+                <a href="{{ url_for('divisas_bp.listar_divisas') }}" class="btn-setup-currency" data-ui-style="u06964290dd">
                     <i class="bi bi-gear-fill"></i> CONFIGURAR TASAS
                 </a>
                 <span class="status-indicator active">
@@ -152,7 +144,7 @@
                         <div class="input-grid">
                             <div class="form-group">
                                 <label>Nivel de Autorización</label>
-                                <select name="role" class="custom-select">
+                                <select name="role" id="roleSelect" class="custom-select">
                                     <option value="user" {% if target_user.role == 'user' %}selected{% endif %}>User (Operativo)</option>
                                     <option value="admin" {% if target_user.role == 'admin' %}selected{% endif %}>Administrator (Control Total)</option>
                                 </select>
@@ -160,7 +152,7 @@
 
                             <div class="form-group">
                                 <label>Sede / Almacén de Origen</label>
-                                <select name="warehouse_id" class="custom-select">
+                                <select name="warehouse_id" id="warehouseSelect" class="custom-select">
                                     <option value="">-- Sin asignar --</option>
                                     {% for wh in warehouses %}
                                         <option value="{{ wh.id }}" {% if target_user.warehouse_id == wh.id %}selected{% endif %}>
@@ -171,9 +163,30 @@
                             </div>
 
                             <div class="form-group">
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <label>Sucursal</label>
+                                <select name="branch_id" id="branchSelect" class="custom-select">
+                                    <option value="">-- Sin sucursal fija --</option>
+                                    {% for branch in branches %}
+                                        <option value="{{ branch.id }}" {% if target_user.branch_id == branch.id %}selected{% endif %}>{{ branch.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Terminal POS</label>
+                                <select name="terminal_id" id="terminalSelect" class="custom-select">
+                                    <option value="">-- Sin terminal fija --</option>
+                                    {% for terminal in terminals %}
+                                        <option value="{{ terminal.id }}" data-warehouse="{{ terminal.warehouse_id }}" data-branch="{{ terminal.branch_id or '' }}" {% if target_user.terminal_id == terminal.id %}selected{% endif %}>{{ terminal.name }} · {{ terminal.warehouse.name if terminal.warehouse else 'Sin almacén' }}{% if terminal.branch %} · {{ terminal.branch.name }}{% endif %}</option>
+                                    {% endfor %}
+                                </select>
+                                <span class="input-tip">La terminal fija bloquea el POS a su almacén y sucursal. En usuarios operativos, sucursal y terminal son obligatorias.</span>
+                            </div>
+
+                            <div class="form-group">
+                                <div data-ui-style="u682380449d">
                                     <label>Divisa de Preferencia</label>
-                                    <a href="{{ url_for('divisas_bp.listar_divisas') }}" style="font-size: 11px; text-decoration: none; color: #3498db;">Gestionar lista</a>
+                                    <a href="{{ url_for('divisas_bp.listar_divisas') }}" data-ui-style="u34843c0f53">Gestionar lista</a>
                                 </div>
                                 <div class="input-with-icon">
                                     <i class="bi bi-cash-stack"></i>
@@ -260,8 +273,16 @@
             });
         });
         checks.forEach(input => input.addEventListener('change', syncCount));
-        roleSelect.addEventListener('change', syncRole);
-        syncRole(); syncCount();
+        const warehouseSelect=document.getElementById('warehouseSelect');
+        const branchSelect=document.getElementById('branchSelect');
+        const terminalSelect=document.getElementById('terminalSelect');
+        const terminalOptions=[...terminalSelect.options].slice(1);
+        const syncAssignmentRequirements=()=>{const operational=roleSelect.value==='user';branchSelect.required=operational;terminalSelect.required=operational;};
+        const filterTerminals=()=>{const wid=warehouseSelect.value,bid=branchSelect.value;terminalOptions.forEach(option=>{option.hidden=Boolean((wid&&option.dataset.warehouse!==wid)||(bid&&option.dataset.branch&&option.dataset.branch!==bid))});if(terminalSelect.selectedOptions[0]?.hidden)terminalSelect.value='';};
+        terminalSelect.addEventListener('change',()=>{const option=terminalSelect.selectedOptions[0];if(!option?.value)return;if(option.dataset.warehouse)warehouseSelect.value=option.dataset.warehouse;if(option.dataset.branch)branchSelect.value=option.dataset.branch;filterTerminals();});
+        warehouseSelect.addEventListener('change',filterTerminals);branchSelect.addEventListener('change',filterTerminals);
+        roleSelect.addEventListener('change',()=>{syncRole();syncAssignmentRequirements();});
+        syncRole(); syncAssignmentRequirements(); filterTerminals(); syncCount();
     </script>
 </body>
 </html>

@@ -1,6 +1,36 @@
-{% extends 'backoffice/base.html' %}{% block title %}Notificaciones{% endblock %}{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static',filename='css/notifications.css') }}">{% endblock %}{% block heading %}Notificaciones{% endblock %}{% block subtitle %}Alertas automáticas que te avisan qué requiere atención y te llevan directamente al módulo correcto.{% endblock %}{% block actions %}{% if unread %}<form method="post" action="{{ url_for('backoffice_bp.notifications_read_all') }}"><button class="bo-secondary"><i class="bi bi-check2-all"></i> Marcar todas como leídas</button></form>{% endif %}{% endblock %}{% block content %}
-<section class="notification-explainer"><i class="bi bi-lightbulb"></i><div><strong>¿Cómo funciona este centro?</strong><p>OrbisERP crea avisos cuando detecta <b>stock por debajo del mínimo</b> o <b>cuentas de proveedores vencidas</b>. Al abrir uno queda marcado como leído. Si el problema se resuelve, la alerta pendiente se cierra automáticamente.</p></div></section>
-<section class="notification-kpis"><article><span>Pendientes</span><strong>{{ unread }}</strong></article><article><span>Atención inmediata</span><strong>{{ danger }}</strong></article><article><span>Advertencias</span><strong>{{ warning }}</strong></article><article><span>Historial visible</span><strong>{{ rows|length }}</strong></article></section>
-<section class="notification-toolbar"><div role="group"><button class="active" data-filter="unread">Pendientes</button><button data-filter="all">Todas</button><button data-filter="DANGER">Críticas</button><button data-filter="WARNING">Advertencias</button></div><span><i class="bi bi-arrow-repeat"></i> Se actualizan al entrar</span></section>
-<section class="notification-list" id="notificationList">{% for row in rows %}<article class="notification-item level-{{ row.level|lower }} {{ 'is-read' if row.read_at else '' }}" data-level="{{ row.level }}" data-read="{{ 'yes' if row.read_at else 'no' }}"><span class="notification-icon"><i class="bi {{ 'bi-exclamation-octagon' if row.level=='DANGER' else 'bi-exclamation-triangle' if row.level=='WARNING' else 'bi-info-circle' }}"></i></span><div class="notification-copy"><div><span>{{ 'Crítica' if row.level=='DANGER' else 'Advertencia' if row.level=='WARNING' else 'Información' }}</span><time>{{ row.created_at.strftime('%d/%m/%Y · %I:%M %p') if row.created_at else 'Sin fecha' }}</time></div><h2>{{ row.title }}</h2><p>{{ row.message }}</p></div><span class="read-state">{{ 'Leída' if row.read_at else 'Pendiente' }}</span><form method="post" action="{{ url_for('backoffice_bp.notification_open',notification_id=row.id) }}"><button>{{ 'Ver detalle' if not row.read_at else 'Abrir módulo' }} <i class="bi bi-arrow-right"></i></button></form></article>{% else %}<div class="notification-empty"><i class="bi bi-bell-slash"></i><h2>Todo está al día</h2><p>No hay alertas operativas en este momento.</p></div>{% endfor %}</section>
-{% endblock %}{% block scripts %}<script>(()=>{const buttons=[...document.querySelectorAll('[data-filter]')],items=[...document.querySelectorAll('.notification-item')];function apply(value){buttons.forEach(b=>b.classList.toggle('active',b.dataset.filter===value));items.forEach(item=>item.hidden=!(value==='all'||value==='unread'&&item.dataset.read==='no'||item.dataset.level===value))}buttons.forEach(b=>b.addEventListener('click',()=>apply(b.dataset.filter)));apply({{ "'unread'" if unread else "'all'" }})})();</script>{% endblock %}
+{% extends 'workspace/base.html' %}
+{% block title %}Notificaciones{% endblock %}
+{% block eyebrow %}Centro de alertas{% endblock %}
+{% block heading %}Notificaciones{% endblock %}
+{% block subtitle %}Avisos generados por las reglas de OrbisERP. Las alertas personalizadas y las reglas operativas aparecen aquí y se cierran cuando deja de cumplirse su condición.{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/module_refresh.css') }}">{% endblock %}
+{% block actions %}
+{% if can('notifications.manage') %}<a class="workspace-btn secondary" href="{{ url_for('workspace_bp.notification_rules') }}"><i class="bi bi-sliders2"></i> Reglas</a>{% endif %}
+{% if unread %}<form method="post" action="{{ url_for('backoffice_bp.notifications_read_all') }}"><button class="workspace-btn" type="submit"><i class="bi bi-check2-all"></i> Marcar leídas</button></form>{% endif %}
+{% endblock %}
+{% block content %}
+<div class="module-page notifications-v2">
+    <section class="workspace-grid">
+        <article class="workspace-metric"><span><i class="bi bi-bell"></i> Pendientes</span><strong>{{ unread }}</strong><small>Avisos sin revisar</small></article>
+        <article class="workspace-metric"><span><i class="bi bi-exclamation-octagon"></i> Críticas</span><strong>{{ danger }}</strong><small>Requieren atención inmediata</small></article>
+        <article class="workspace-metric"><span><i class="bi bi-exclamation-triangle"></i> Advertencias</span><strong>{{ warning }}</strong><small>Condiciones a vigilar</small></article>
+        <article class="workspace-metric"><span><i class="bi bi-clock-history"></i> Historial</span><strong>{{ rows|length }}</strong><small>Alertas visibles</small></article>
+    </section>
+    <section class="workspace-card notifications-card">
+        <div class="workspace-card-head"><div><h2>Bandeja de alertas</h2><p>Abre una notificación para marcarla como leída y saltar directamente al módulo relacionado.</p></div><div class="notification-tabs" role="group"><button class="active" type="button" data-filter="unread">Pendientes</button><button type="button" data-filter="all">Todas</button><button type="button" data-filter="DANGER">Críticas</button><button type="button" data-filter="WARNING">Advertencias</button><button type="button" data-filter="INFO">Informativas</button></div></div>
+        <div class="notification-feed" id="notificationList">
+            {% for row in rows %}
+            <article class="notification-row {{ 'is-read' if row.read_at else '' }}" data-level="{{ row.level }}" data-read="{{ 'yes' if row.read_at else 'no' }}">
+                <span class="notification-row-icon level-{{ row.level|lower }}"><i class="bi {{ 'bi-exclamation-octagon' if row.level=='DANGER' else 'bi-exclamation-triangle' if row.level=='WARNING' else 'bi-info-circle' }}"></i></span>
+                <div class="notification-row-copy">
+                    <div><span class="module-chip {{ 'danger' if row.level=='DANGER' else 'warning' if row.level=='WARNING' else '' }}">{{ 'Crítica' if row.level=='DANGER' else 'Advertencia' if row.level=='WARNING' else 'Información' }}</span>{% if not row.read_at %}<span class="notification-unread-dot"></span>{% endif %}<time>{{ row.created_at.strftime('%d/%m/%Y · %H:%M') if row.created_at else 'Sin fecha' }}</time></div>
+                    <h3>{{ row.title }}</h3><p>{{ row.message }}</p>
+                </div>
+                <form method="post" action="{{ url_for('backoffice_bp.notification_open', notification_id=row.id) }}"><button class="workspace-btn secondary" type="submit">{{ 'Revisar' if not row.read_at else 'Abrir' }} <i class="bi bi-arrow-right"></i></button></form>
+            </article>
+            {% else %}<div class="module-empty"><i class="bi bi-bell-slash"></i><h3>Todo está al día</h3><p>No hay alertas operativas en este momento.</p></div>{% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}
+{% block scripts %}<script>(()=>{const buttons=[...document.querySelectorAll('[data-filter]')],items=[...document.querySelectorAll('.notification-row')];function apply(value){buttons.forEach(b=>b.classList.toggle('active',b.dataset.filter===value));items.forEach(item=>item.hidden=!(value==='all'||value==='unread'&&item.dataset.read==='no'||item.dataset.level===value))}buttons.forEach(b=>b.addEventListener('click',()=>apply(b.dataset.filter)));apply({{ "'unread'" if unread else "'all'" }})})();</script>{% endblock %}

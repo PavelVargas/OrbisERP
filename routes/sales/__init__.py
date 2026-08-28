@@ -1,11 +1,10 @@
-from flask import Blueprint
+"""Sales package public blueprint.
+
+The blueprint is defined and populated in ``routes.sales.sales``.  Re-export the
+same object here so ``from routes.sales import sales_bp`` registers the routes
+that core/actions/views/exports/quotes decorate.
+"""
+
 from .sales import sales_bp
-sales_bp = Blueprint('sales_bp', __name__, url_prefix='/sales')
 
-
-
-from .core import *
-from .actions import *
-from .views import *
-from .exports import *
-
+__all__ = ['sales_bp']

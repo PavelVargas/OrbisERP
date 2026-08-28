@@ -43,8 +43,8 @@ main { flex: 1; margin-left: 290px; padding: 33px; min-height: 100vh; }
 .b-cancelled { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
 
 /* MODO OSCURO */
-body.dark .modern-table th { background: #1c1c1f; }
-body.dark .modern-table td { border-bottom-color: #252529; }
+html.dark body .modern-table th { background: #1c1c1f; }
+html.dark body .modern-table td { border-bottom-color: #252529; }
 
 /* ESTADO VACÍO */
 .empty-state { text-align: center; padding: 60px !important; color: var(--gray-text); }
@@ -87,7 +87,7 @@ body.dark .modern-table td { border-bottom-color: #252529; }
     color: var(--fg);
     font-family: inherit;
     font-size: 14px;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
 }
 
 .modern-form input:focus {
@@ -97,12 +97,12 @@ body.dark .modern-table td { border-bottom-color: #252529; }
 }
 
 /* Soporte Modo Oscuro para Inputs de Almacén */
-body.dark .modern-form input {
+html.dark body .modern-form input {
     background: #141417;
     border-color: #252529;
 }
 
-body.dark .modern-form input:focus {
+html.dark body .modern-form input:focus {
     background: #1c1c1f;
     border-color: #ffffff;
 }

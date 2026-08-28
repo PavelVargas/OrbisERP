@@ -1,0 +1,14 @@
+{% extends 'workspace/base.html' %}
+{% block title %}API e integraciones{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/retail.css') }}">{% endblock %}
+{% block eyebrow %}Retail avanzado{% endblock %}
+{% block heading %}API e integraciones{% endblock %}
+{% block subtitle %}Credenciales y eventos externos aislados de la configuración operativa diaria.{% endblock %}
+{% block content %}
+<div class="retail-shell">{% include 'retail/_nav.html' %}
+  <div class="retail-subgrid">
+    <section class="workspace-card"><div class="workspace-card-head"><div><h2>API keys</h2><p>Acceso programático por scopes.</p></div></div>{% if generated_api_key %}<div class="workspace-alert workspace-alert--warning"><strong>Cópiala ahora; no volverá a mostrarse.</strong><div class="retail-secret">{{ generated_api_key }}</div></div>{% endif %}<div class="retail-list-scroll">{% for key in api_keys %}<div class="retail-record"><span><strong>{{ key.name }}</strong><small>{{ key.key_prefix }}… · {{ key.scopes }}</small></span>{% if key.active %}<form method="post" action="{{ url_for('retail_bp.api_key_revoke', key_id=key.id) }}"><button class="workspace-btn secondary">Revocar</button></form>{% else %}<span class="retail-chip">Revocada</span>{% endif %}</div>{% else %}<div class="workspace-empty">Sin API keys.</div>{% endfor %}</div><form method="post" action="{{ url_for('retail_bp.api_key_create') }}" class="retail-inline-form retail-form-divider"><label>Nombre<input name="name" value="Integración"></label><label class="wide">Scopes<input name="scopes" value="products:read,inventory:read,clients:read,sales:read"></label><div class="actions"><button class="workspace-btn">Crear API key</button></div></form></section>
+    <section class="workspace-card"><div class="workspace-card-head"><div><h2>Webhooks salientes</h2><p>Notifica eventos a sistemas externos.</p></div></div><div class="retail-list-scroll">{% for w in webhooks %}<div class="retail-record"><span><strong>{{ w.name }}</strong><small>{{ w.event_types }} · {{ w.target_url }}</small></span><span class="retail-chip">{{ 'Activo' if w.active else 'Pausado' }}</span></div>{% else %}<div class="workspace-empty">Sin webhooks.</div>{% endfor %}</div><form method="post" action="{{ url_for('retail_bp.webhook_create') }}" class="retail-inline-form retail-form-divider"><label>Nombre<input name="name" value="E-commerce"></label><label class="wide">URL HTTPS<input type="url" name="target_url" required></label><label class="full">Eventos<input name="event_types" value="sale.completed,inventory.changed"></label><div class="actions"><button class="workspace-btn secondary">Crear webhook</button></div></form></section>
+  </div>
+</div>
+{% endblock %}

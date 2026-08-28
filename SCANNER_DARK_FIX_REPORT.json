@@ -1,0 +1,54 @@
+{
+  "date": "2026-08-25",
+  "scope": "Transfer scanner dark-mode regression and workflow hardening",
+  "status": "passed_available_checks",
+  "theme_contract": {
+    "fixed_dark_workstation": true,
+    "independent_of_global_theme": true,
+    "background": "#0c0e11",
+    "surface": "#15191f",
+    "brand_accent": "#f36b21",
+    "green_reserved_for_success": true,
+    "asset_version": "20260825-dark5",
+    "global_important_rules_overridden": true
+  },
+  "browser_validation": {
+    "engine": "Chromium headless",
+    "desktop_viewport": "1650x928",
+    "mobile_viewport": "390x844",
+    "global_theme_during_test": "light",
+    "computed_body_background": "rgb(12, 14, 17)",
+    "computed_surface_background": "rgb(21, 25, 31)",
+    "computed_primary_action": "rgb(243, 107, 33)",
+    "unit_workflow": "passed",
+    "fractional_workflow_0_375_kg": "passed",
+    "exclusive_navigation_state": "passed",
+    "mobile_horizontal_overflow": false,
+    "global_stylesheets_loaded": [
+      "quality-accessibility.css",
+      "base.css",
+      "left.css",
+      "commercial.css",
+      "ui_unification.css",
+      "ux_polish.css",
+      "ui_inline_migrations.css",
+      "scanner.css"
+    ],
+    "computed_manual_input_background": "rgb(21, 25, 31)",
+    "computed_fractional_input_background": "rgb(32, 38, 46)",
+    "global_main_padding_override": "30px"
+  },
+  "automated_validation": {
+    "scanner_contract_tests": 6,
+    "applicable_static_contract_tests": 98,
+    "transfer_scanner_release_audit": "passed",
+    "static_release_audit": "passed",
+    "ui_consistency_audit": "passed",
+    "javascript_syntax": "passed",
+    "python_compile": "passed"
+  },
+  "runtime_limitations": [
+    "The complete Flask/PostgreSQL suite was not executed because Flask dependencies and a PostgreSQL test database were unavailable in the isolated review environment.",
+    "Network access was unavailable, so missing Python dependencies could not be installed during validation."
+  ]
+}

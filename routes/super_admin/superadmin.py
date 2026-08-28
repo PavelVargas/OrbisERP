@@ -1,6 +1,9 @@
+from services.time_utils import utcnow
 import os
 import logging
-from flask import Blueprint, render_template, session, redirect, url_for, flash, request
+import hmac
+from flask import Blueprint, abort, current_app, render_template, session, redirect, url_for, flash, request, send_file
+from pathlib import Path
 from models.user.user import User
 from models.company.company import Company, GlobalAnnouncement, SuperadminLog # Importados
 from models.divisas.divisas import ExchangeRate
@@ -24,6 +27,19 @@ def superadmin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
+def cron_or_superadmin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if session.get('user_role') == 'superadmin':
+            return f(*args, **kwargs)
+        configured = current_app.config.get('CRON_SECRET', '')
+        supplied = request.headers.get('X-Orbis-Cron-Secret', '')
+        if configured and len(configured) >= 32 and hmac.compare_digest(configured, supplied):
+            return f(*args, **kwargs)
+        abort(403)
+    return decorated_function
+
 # --- UTILIDADES DE INFRAESTRUCTURA ---
 
 def get_dir_size(company_id):
@@ -36,7 +52,29 @@ def get_dir_size(company_id):
                 fp = os.path.join(dirpath, f)
                 if not os.path.islink(fp):
                     total_size += os.path.getsize(fp)
+    private_path = Path(current_app.config['STORAGE_ROOT']) / f'company_{company_id}'
+    if private_path.exists():
+        total_size += sum(item.stat().st_size for item in private_path.rglob('*') if item.is_file())
     return total_size
+
+
+@superadmin_bp.get('/superadmin/receipts/<int:company_id>')
+@superadmin_required
+def download_receipt(company_id):
+    company = Company.query.filter_by(id=company_id).first_or_404()
+    stored = company.last_receipt_path or ''
+    if stored.startswith('private:'):
+        root = Path(current_app.config['STORAGE_ROOT']).resolve()
+        target = (root / stored.removeprefix('private:')).resolve()
+        expected_company_root = (root / f'company_{company.id}').resolve()
+        if expected_company_root not in target.parents or not target.is_file():
+            abort(404)
+        return send_file(target, as_attachment=False, download_name=target.name)
+    # Compatibility with receipts uploaded before private storage existed.
+    legacy = (Path(current_app.static_folder).resolve() / stored).resolve()
+    if Path(current_app.static_folder).resolve() not in legacy.parents or not legacy.is_file():
+        abort(404)
+    return send_file(legacy, as_attachment=False, download_name=legacy.name)
 
 # --- RUTAS DEL DASHBOARD MAESTRO ---
 
@@ -50,7 +88,7 @@ def admin_dashboard():
 
     companies = Company.query.all()
     total_users = User.query.count()
-    ahora = datetime.utcnow()
+    ahora = utcnow()
     limite_vencimiento = ahora + timedelta(days=3)
 
     # --- LÓGICA DE INFRAESTRUCTURA REAL (RAILWAY) ---
@@ -256,9 +294,10 @@ def delete_company(id):
 
 # --- CRON ---
 
-@superadmin_bp.route('/superadmin/cron/check-expirations')
+@superadmin_bp.post('/superadmin/cron/check-expirations')
+@cron_or_superadmin_required
 def cron_check_expirations():
-    ahora = datetime.utcnow()
+    ahora = utcnow()
     expired_companies = Company.query.filter(
         Company.expiration_date < ahora,
         Company.status == True,
@@ -285,7 +324,7 @@ def view_payments():
 @superadmin_required
 def approve_payment(id):
     company = Company.query.get_or_404(id)
-    ahora = datetime.utcnow()
+    ahora = utcnow()
     
     is_plan_change = company.requested_plan and company.requested_plan != company.plan_name
     
@@ -324,7 +363,7 @@ def approve_payment(id):
 @superadmin_required
 def renew_plan(id):
     company = Company.query.get_or_404(id)
-    ahora = datetime.utcnow()
+    ahora = utcnow()
     
     if not company.expiration_date or company.expiration_date < ahora:
         company.expiration_date = ahora + timedelta(days=30)

@@ -36,7 +36,7 @@ main { flex: 1; margin-left: 290px; padding: 33px; min-height: 100vh; }
 /* --- ESTILO DE FILA (CARD) --- */
 .supplier-row {
     background: var(--bg-card);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .supplier-row td {
@@ -97,7 +97,7 @@ main { flex: 1; margin-left: 290px; padding: 33px; min-height: 100vh; }
 
 .dock-btn:hover { background: var(--primary); color: white; border-color: var(--primary); transform: translateY(-2px); }
 .dock-btn.delete:hover { background: #ef4444; border-color: #ef4444; }
-.dock-btn.history:hover { background: #6366f1; border-color: #6366f1; }
+.dock-btn.history:hover { background: #f36b21; border-color: #f36b21; }
 
 /* --- RESPONSIVE MOBILE --- */
 @media (max-width: 768px) {
@@ -145,7 +145,7 @@ main { flex: 1; margin-left: 290px; padding: 33px; min-height: 100vh; }
 }
 /* BADGES Y IDS */
 .order-id { font-weight: 700; font-family: monospace; background: var(--gray-light); padding: 4px 10px; border-radius: 6px; color: var(--gray-text); }
-body.dark .order-id { background: #252529; }
+html.dark body .order-id { background: #252529; }
 
 /* GRUPO DE ACCIONES */
 .actions-group { display: flex; gap: 8px; justify-content: flex-end; }
@@ -162,8 +162,8 @@ body.dark .order-id { background: #252529; }
 .empty-state i { font-size: 40px; opacity: 0.2; display: block; margin-bottom: 10px; }
 
 /* MODO OSCURO EXTRA */
-body.dark .modern-table th { background: #000; }
-body.dark .act-btn { background: #252529; color: #a0a0ab; }
+html.dark body .modern-table th { background: #000; }
+html.dark body .act-btn { background: #252529; color: #a0a0ab; }
 
 @media (max-width: 1100px) {
     main { margin-left: 0; padding: 30px 20px; }
@@ -202,7 +202,7 @@ body.dark .act-btn { background: #252529; color: #a0a0ab; }
     color: var(--fg);
     font-family: inherit;
     font-size: 14px;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
 }
 
 .modern-form input:focus {
@@ -212,12 +212,12 @@ body.dark .act-btn { background: #252529; color: #a0a0ab; }
 }
 
 /* Modo Oscuro para Inputs */
-body.dark .modern-form input {
+html.dark body .modern-form input {
     background: #141417;
     border-color: #252529;
 }
 
-body.dark .modern-form input:focus {
+html.dark body .modern-form input:focus {
     border-color: var(--accent);
     box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.05);
 }

@@ -1,0 +1,99 @@
+{% extends 'workspace/base.html' %}
+{% block title %}Reglas de alertas{% endblock %}
+{% block eyebrow %}Automatización{% endblock %}
+{% block heading %}Reglas de alertas{% endblock %}
+{% block subtitle %}Decide qué debe vigilar OrbisERP, con qué severidad y quién debe recibir cada aviso. Las condiciones activas alimentan directamente Notificaciones.{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/module_refresh.css') }}">{% endblock %}
+{% block actions %}
+<form method="post" action="{{ url_for('workspace_bp.notification_rules_evaluate') }}"><button class="workspace-btn secondary" type="submit"><i class="bi bi-arrow-repeat"></i> Evaluar ahora</button></form>
+<a class="workspace-btn" href="{{ url_for('backoffice_bp.notifications') }}"><i class="bi bi-bell"></i> Notificaciones</a>
+{% endblock %}
+{% block content %}
+<div class="module-page alert-rules-v2">
+    {% set active_count = rules|selectattr('enabled')|list|length %}
+    {% set custom_count = rules|selectattr('rule_type','equalto','CUSTOM')|list|length %}
+    <section class="workspace-grid alert-rule-kpis">
+        <article class="workspace-metric"><span><i class="bi bi-bell-fill"></i> Reglas activas</span><strong>{{ active_count }}</strong><small>de {{ rules|length }} configuradas</small></article>
+        <article class="workspace-metric"><span><i class="bi bi-stars"></i> Personalizadas</span><strong>{{ custom_count }}</strong><small>Condiciones creadas por tu equipo</small></article>
+        <article class="workspace-metric"><span><i class="bi bi-diagram-3"></i> Fuentes disponibles</span><strong>{{ custom_sources|length }}</strong><small>Fuentes operativas configurables</small></article>
+        <article class="workspace-metric"><span><i class="bi bi-inboxes"></i> Destino</span><strong>Notificaciones</strong><small>Las alertas se publican en la bandeja del ERP</small></article>
+    </section>
+
+    <form method="post" class="alert-rule-settings">
+        <section class="workspace-card">
+            <div class="workspace-card-head"><div><h2>Reglas configuradas</h2><p>Activa, desactiva y ajusta cada condición. Puedes dirigir una alerta a un usuario concreto o dejarla visible para toda la empresa.</p></div><button class="workspace-btn" type="submit"><i class="bi bi-check2"></i> Guardar cambios</button></div>
+            <div class="alert-rule-list">
+                {% for rule in rules %}
+                {% set is_custom = rule.rule_type == 'CUSTOM' %}
+                {% set automatic_threshold = rule.rule_type in ['STOCK_OUT','PAYABLE_OVERDUE'] %}
+                <article class="alert-rule-row {{ 'is-disabled' if not rule.enabled else '' }}">
+                    <div class="alert-rule-icon"><i class="bi {{ 'bi-stars' if is_custom else 'bi-box-seam' if 'STOCK' in rule.rule_type else 'bi-wallet2' if 'RECEIVABLE' in rule.rule_type else 'bi-credit-card' if 'PAYABLE' in rule.rule_type else 'bi-receipt' if 'SALE' in rule.rule_type else 'bi-cash-stack' }}"></i></div>
+                    <div class="alert-rule-main">
+                        <div class="alert-rule-title">
+                            <div>
+                                <input class="alert-rule-name" name="name_{{ rule.id }}" maxlength="120" value="{{ rule.name or labels.get(rule.rule_type,rule.rule_type) }}" aria-label="Nombre de la regla">
+                                <p>{{ descriptions.get(rule.rule_type,'Regla automatizada de OrbisERP.') }}</p>
+                            </div>
+                            <label class="toggle-control"><input type="checkbox" name="enabled_{{ rule.id }}" {% if rule.enabled %}checked{% endif %}><span></span></label>
+                        </div>
+                        <div class="alert-rule-fields">
+                            {% if is_custom %}
+                            <label><span>Fuente</span><select name="source_{{ rule.id }}">{% for value, info in custom_sources.items() %}<option value="{{ value }}" {% if rule.custom_source==value %}selected{% endif %}>{{ info.label }}</option>{% endfor %}</select></label>
+                            <label><span>Condición</span><select name="operator_{{ rule.id }}">{% for value,symbol in operators.items() %}<option value="{{ value }}" {% if rule.operator==value %}selected{% endif %}>{{ symbol }}</option>{% endfor %}</select></label>
+                            {% endif %}
+                            <label><span>{{ 'Umbral' if not automatic_threshold else 'Umbral automático' }}</span><input type="number" min="0" max="2147483647" step="1" inputmode="numeric" name="threshold_{{ rule.id }}" value="{{ rule.threshold }}" {% if automatic_threshold %}readonly{% endif %}></label>
+                            <label><span>Severidad</span><select name="level_{{ rule.id }}"><option value="INFO" {% if rule.level=='INFO' %}selected{% endif %}>Informativa</option><option value="WARNING" {% if rule.level=='WARNING' %}selected{% endif %}>Advertencia</option><option value="DANGER" {% if rule.level=='DANGER' %}selected{% endif %}>Crítica</option></select></label>
+                            <label><span>Destinatario</span><select name="target_user_{{ rule.id }}"><option value="">Toda la empresa</option>{% for member in users %}<option value="{{ member.id }}" {% if rule.target_user_id==member.id %}selected{% endif %}>{{ member.name }}</option>{% endfor %}</select></label>
+                            {% if rule.rule_type in ['EXPENSE_AMOUNT_ABOVE','SALE_AMOUNT_ABOVE','CUSTOM'] %}<label><span>Período (días)</span><input type="number" min="0" max="3650" step="1" inputmode="numeric" name="lookback_{{ rule.id }}" value="{{ rule.lookback_days or 30 }}"></label>{% else %}<input type="hidden" name="lookback_{{ rule.id }}" value="{{ rule.lookback_days or 30 }}">{% endif %}
+                        </div>
+                        {% if is_custom %}
+                        <div class="alert-rule-custom-fields">
+                            <label><span>Mensaje</span><input name="message_{{ rule.id }}" maxlength="255" value="{{ rule.message or '' }}" placeholder="Ej. {name}: valor {value} supera {threshold}"></label>
+                            <label><span>Enlace al abrir · opcional</span><input name="link_{{ rule.id }}" maxlength="255" value="{{ rule.link or '' }}" placeholder="/backoffice/receivables"></label>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% if is_custom or rule.rule_type in ['RECEIVABLE_AMOUNT_ABOVE','EXPENSE_AMOUNT_ABOVE','SALE_AMOUNT_ABOVE'] %}
+                    <button class="alert-rule-delete" type="submit" formaction="{{ url_for('workspace_bp.notification_rule_delete', rule_id=rule.id) }}" formmethod="post" title="Eliminar regla" data-confirm="¿Eliminar esta regla y sus alertas generadas?" data-confirm-title="Eliminar regla de alerta" data-confirm-detail="La automatización dejará de ejecutarse y se eliminarán las alertas generadas por esta regla." data-confirm-action="Eliminar regla"><i class="bi bi-trash3"></i></button>
+                    {% endif %}
+                </article>
+                {% endfor %}
+            </div>
+            <div class="alert-save-mobile"><button class="workspace-btn" type="submit"><i class="bi bi-check2"></i> Guardar cambios</button></div>
+        </section>
+    </form>
+
+    <section class="workspace-columns equal alert-builder-columns">
+        <article class="workspace-card">
+            <div class="workspace-card-head"><div><h2>Agregar regla predefinida</h2><p>Activa controles adicionales sin tener que construir la condición manualmente.</p></div><i class="bi bi-lightning-charge alert-builder-icon"></i></div>
+            {% if optional_types %}
+            <div class="alert-template-list">
+                {% for rule_type in optional_types %}
+                <form method="post" action="{{ url_for('workspace_bp.notification_rule_add') }}">
+                    <input type="hidden" name="rule_type" value="{{ rule_type }}">
+                    <div><strong>{{ labels[rule_type] }}</strong><small>{{ descriptions[rule_type] }}</small></div>
+                    <button class="workspace-icon-btn" type="submit"><i class="bi bi-plus-lg"></i></button>
+                </form>
+                {% endfor %}
+            </div>
+            {% else %}<div class="module-empty"><i class="bi bi-check2-circle"></i><p>Ya agregaste todas las reglas predefinidas adicionales.</p></div>{% endif %}
+        </article>
+
+        <article class="workspace-card alert-custom-builder">
+            <div class="workspace-card-head"><div><h2>Crear alerta personalizada</h2><p>Elige una fuente, una comparación y el mensaje que verá el destinatario.</p></div><i class="bi bi-stars alert-builder-icon"></i></div>
+            <form method="post" action="{{ url_for('workspace_bp.notification_rule_custom_create') }}" class="workspace-form compact">
+                <label class="full"><span>Nombre *</span><input name="name" maxlength="120" required placeholder="Ej. Venta mayor a RD$ 100,000"></label>
+                <label><span>Fuente *</span><select name="source" required>{% for value, info in custom_sources.items() %}<option value="{{ value }}">{{ info.label }}</option>{% endfor %}</select></label>
+                <label><span>Condición *</span><select name="operator" required>{% for value,symbol in operators.items() %}<option value="{{ value }}" {% if value=='GTE' %}selected{% endif %}>{{ symbol }}</option>{% endfor %}</select></label>
+                <label><span>Umbral *</span><input type="number" min="0" max="2147483647" step="1" inputmode="numeric" name="threshold" value="0" required></label>
+                <label><span>Analizar últimos días</span><input type="number" min="0" max="3650" step="1" inputmode="numeric" name="lookback_days" value="30"></label>
+                <label><span>Severidad</span><select name="level"><option value="INFO">Informativa</option><option value="WARNING" selected>Advertencia</option><option value="DANGER">Crítica</option></select></label>
+                <label><span>Destinatario</span><select name="target_user_id"><option value="">Toda la empresa</option>{% for member in users %}<option value="{{ member.id }}">{{ member.name }}</option>{% endfor %}</select></label>
+                <label class="full"><span>Mensaje · admite {name}, {value}, {threshold}, {operator}</span><input name="message" maxlength="255" placeholder="{name}: {value} cumple la condición {operator} {threshold}."></label>
+                <label class="full"><span>Enlace al abrir · opcional</span><input name="link" maxlength="255" placeholder="/sales"></label>
+                <div class="actions"><button class="workspace-btn" type="submit"><i class="bi bi-plus-lg"></i> Crear y evaluar</button></div>
+            </form>
+        </article>
+    </section>
+</div>
+{% endblock %}

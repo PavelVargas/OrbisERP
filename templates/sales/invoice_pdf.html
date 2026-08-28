@@ -3,289 +3,250 @@
 <head>
     <meta charset="UTF-8">
     <style>
-        @page { margin: 0; size: letter; }
-        
-        body { 
-            font-family: "SF Pro Display", -apple-system, sans-serif; 
-            color: #000; 
-            margin: 0; 
-            padding: 0; 
-            background-color: #fff;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        .receipt {
-            padding: 100px 80px;
-            max-width: 750px;
-            margin: auto;
-        }
-        .fiscal-notice { border: 1px solid #ff5a24; color: #c93e0b; padding: 10px 14px; margin-bottom: 24px; text-align: center; font-size: 10px; font-weight: 900; letter-spacing: 2px; }
-
-        /* --- HEADER: EL IMPACTO --- */
-        .top-header {
-            border-bottom: 2px solid #000;
-            padding-bottom: 40px;
-            margin-bottom: 60px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-        }
-
-        .brand-info h1 {
-            font-size: 24px;
-            font-weight: 800;
-            letter-spacing: -1px;
-            margin: 0 0 10px 0;
-            text-transform: uppercase;
-        }
-
-        .brand-info p {
+        @page { size: letter; margin: 15mm 14mm 17mm; }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            color: #202833;
+            background: #fff;
+            font-family: "Segoe UI", Arial, sans-serif;
             font-size: 11px;
-            color: #666;
-            margin: 2px 0;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            line-height: 1.45;
         }
-
-        .total-hero {
-            text-align: right;
-        }
-
-        .total-hero label {
-            font-size: 10px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        .total-hero h2 {
-            font-size: 64px;
-            font-weight: 800;
-            letter-spacing: -4px;
-            margin: 0;
-            line-height: 0.8;
-        }
-
-        /* --- META INFO: GRID LIMPIO --- */
-        .meta-grid {
-            display: grid;
-            grid-template-columns: 1.5fr 1fr 1fr;
-            gap: 50px;
-            margin-bottom: 80px;
-        }
-
-        .meta-item label {
+        .invoice { width: 100%; max-width: 790px; margin: 0 auto; }
+        .accent-line { height: 4px; background: #f36b21; margin-bottom: 20px; }
+        .fiscal-notice {
+            margin-bottom: 14px;
+            padding: 8px 12px;
+            border: 1px solid #f3cbb5;
+            background: #fff8f3;
+            color: #b94e16;
+            text-align: center;
             font-size: 9px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: #999;
-            display: block;
-            margin-bottom: 12px;
-        }
-
-        .meta-item p {
-            font-size: 14px;
             font-weight: 700;
-            margin: 0;
-        }
-
-        .meta-item .client-name {
-            font-size: 22px;
-            letter-spacing: -0.5px;
-        }
-
-        /* --- LINE ITEMS: LISTA DE LUJO --- */
-        .items-list {
-            margin-bottom: 60px;
-        }
-
-        .list-header {
-            font-size: 10px;
-            font-weight: 900;
+            letter-spacing: .06em;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 15px;
+        }
+        .header { width: 100%; border-collapse: collapse; margin-bottom: 22px; }
+        .header td { vertical-align: top; }
+        .company-cell { width: 60%; padding-right: 24px; }
+        .invoice-cell { width: 40%; text-align: right; }
+        .brand { display: table; width: 100%; }
+        .brand-logo, .brand-info { display: table-cell; vertical-align: top; }
+        .brand-logo { width: 82px; padding-right: 14px; }
+        .logo-box {
+            width: 68px;
+            height: 68px;
+            border: 1px solid #e3e8ed;
+            display: table;
+            text-align: center;
+            background: #fafbfc;
+        }
+        .logo-box img { width: 100%; height: 100%; object-fit: contain; }
+        .logo-fallback { display: table-cell; vertical-align: middle; color: #f36b21; font-size: 28px; font-weight: 800; }
+        .company-name { margin: 0 0 7px; font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+        .company-info { margin: 2px 0; color: #66717d; font-size: 10px; }
+        .invoice-title { margin: 0 0 7px; color: #202833; font-size: 27px; font-weight: 800; letter-spacing: -.03em; text-transform: uppercase; }
+        .invoice-number { margin-bottom: 10px; color: #f36b21; font-size: 14px; font-weight: 800; }
+        .meta-table { margin-left: auto; border-collapse: collapse; min-width: 215px; }
+        .meta-table td { padding: 3px 0 3px 12px; font-size: 10px; }
+        .meta-table .label { color: #77818b; font-weight: 600; text-align: left; }
+        .meta-table .value { color: #202833; font-weight: 700; text-align: right; }
+        .section-label {
+            margin: 0 0 7px;
+            color: #69737e;
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+        .client-box {
             margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
+            padding: 13px 15px;
+            border: 1px solid #e4e8ed;
+            background: #fbfcfd;
         }
-
-        .product-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            padding: 25px 0;
-            border-bottom: 1px solid #f9f9f9;
-        }
-
-        .product-info { width: 60%; }
-        
-        .product-name {
-            font-size: 18px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            margin-bottom: 5px;
-        }
-
-        .product-meta {
-            font-size: 12px;
-            color: #888;
-            font-weight: 500;
-        }
-
-        .product-pricing {
-            text-align: right;
-            width: 40%;
-        }
-
-        .main-price {
-            font-size: 18px;
-            font-weight: 800;
-            display: block;
-        }
-
-        .unit-details {
-            font-size: 11px;
-            color: #999;
-            font-weight: 600;
-        }
-
-        /* --- FINAL SUMMARY --- */
-        .summary {
-            display: flex;
-            justify-content: flex-end;
-            border-top: 1px solid #000;
-            padding-top: 30px;
-        }
-
-        .summary-table {
-            width: 280px;
-        }
-
-        .summary-line {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 12px;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .summary-line.tax { color: #888; font-weight: 500; }
-        
-        .summary-line.total-final { 
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px double #eee;
-            font-size: 18px;
-            font-weight: 800;
-        }
-
-        .notes-footer {
-            margin-top: 100px;
-            font-size: 11px;
-            color: #aaa;
-            line-height: 1.6;
-            max-width: 400px;
-        }
-
-        /* --- FOOTER FIXED --- */
-        .footer-tiny {
-            position: absolute;
-            bottom: 60px;
-            left: 80px;
+        .client-name { margin: 0 0 5px; font-size: 15px; font-weight: 800; }
+        .client-info { margin: 2px 0; color: #66717d; font-size: 10px; }
+        .items { width: 100%; border-collapse: collapse; margin-bottom: 18px; }
+        .items th {
+            padding: 9px 10px;
+            border-top: 1px solid #dfe4e9;
+            border-bottom: 1px solid #dfe4e9;
+            background: #f7f8fa;
+            color: #525d68;
             font-size: 9px;
-            font-weight: 700;
+            font-weight: 800;
+            text-align: left;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #ccc;
+            letter-spacing: .05em;
         }
+        .items td {
+            padding: 11px 10px;
+            border-bottom: 1px solid #edf0f3;
+            vertical-align: top;
+            font-size: 10px;
+        }
+        .items .right { text-align: right; }
+        .item-name { margin-bottom: 3px; font-size: 11px; font-weight: 700; color: #202833; }
+        .item-meta { color: #7b858f; font-size: 9px; }
+        .bottom { width: 100%; border-collapse: collapse; margin-top: 4px; }
+        .bottom td { vertical-align: top; }
+        .notes-cell { width: 55%; padding-right: 26px; }
+        .totals-cell { width: 45%; }
+        .notes-box { min-height: 92px; padding-top: 4px; color: #6d7782; font-size: 10px; }
+        .notes-box p { margin: 0 0 6px; }
+        .totals { width: 100%; border-collapse: collapse; }
+        .totals td { padding: 6px 0; font-size: 10px; }
+        .totals .label { color: #68727d; }
+        .totals .value { text-align: right; font-weight: 700; }
+        .totals .grand td {
+            padding-top: 10px;
+            border-top: 2px solid #202833;
+            color: #202833;
+            font-size: 15px;
+            font-weight: 800;
+        }
+        .balance-line td { color: #b35b20; font-weight: 700; }
+        .payment-note {
+            margin-top: 9px;
+            padding: 8px 10px;
+            background: #f7f8fa;
+            color: #68727d;
+            font-size: 9px;
+        }
+        .footer {
+            margin-top: 38px;
+            padding-top: 10px;
+            border-top: 1px solid #e3e7eb;
+            color: #89919a;
+            font-size: 8px;
+            text-align: center;
+        }
+        .orange { color: #f36b21; }
     </style>
 </head>
 <body>
-    <div class="receipt">
-        {% if not company or company.fiscal_mode == 'disabled' %}<div class="fiscal-notice">{{ company.fiscal_disclaimer if company else 'DOCUMENTO NO FISCAL' }}</div>{% endif %}
-        
-        <header class="top-header">
-            <div class="brand-info">
-                <h1>{{ company.name }}</h1>
-                <p>RNC {{ company.rnc }}</p>
-                <p>{{ company.address }}</p>
-            </div>
-            <div class="total-hero">
-                <label>Total Pagado</label>
-                <h2>{{ currency_symbol }}{{ "{:,.2f}".format(sale.total / conversion_rate) }}</h2>
-            </div>
-        </header>
+    {% set is_quote = sale.status == 'QUOTATION' %}
+    {% set paid_amount = sale.amount_paid or 0 %}
+    {% set balance_amount = sale.balance or 0 %}
 
-        <section class="meta-grid">
-            <div class="meta-item">
-                <label>Cliente</label>
-                <p class="client-name">{{ sale.client.name if sale.client else 'Consumidor Final' }}</p>
-                {% if sale.client and sale.client.rnc %}<p style="color:#666; font-size:12px">ID: {{ sale.client.rnc }}</p>{% endif %}
-            </div>
-            <div class="meta-item">
-                <label>Fecha y Hora</label>
-                <p>{{ sale.created_at.strftime('%d/%m/%Y') }}</p>
-                <p style="color:#666; font-size:12px">{{ sale.created_at.strftime('%H:%M') }}</p>
-            </div>
-            <div class="meta-item" style="text-align: right;">
-                <label>Referencia</label>
-                <p>#{{ sale.id }}</p>
-                <p style="color:#666; font-size:12px">{{ sale.payment_method or 'Contado' }}</p>
-            </div>
-        </section>
+    <div class="invoice">
+        {% if not company or company.fiscal_mode == 'disabled' %}
+        <div class="fiscal-notice">{{ company.fiscal_disclaimer if company else 'DOCUMENTO NO FISCAL' }}</div>
+        {% endif %}
 
-        <section class="items-list">
-            <div class="list-header">
-                <span>Descripción</span>
-                <span>Subtotal</span>
-            </div>
+        <div class="accent-line"></div>
 
-            {% for item in sale.items %}
-            <div class="product-row">
-                <div class="product-info">
-                    <div class="product-name">{{ item.product.name }}</div>
-                    <div class="product-meta">Cantidad: {{ item.quantity }} • Cod: {{ item.product.code or '---' }}</div>
-                </div>
-                <div class="product-pricing">
-                    <span class="main-price">{{ currency_symbol }}{{ "{:,.2f}".format((item.price * item.quantity) / conversion_rate) }}</span>
-                    <span class="unit-details">{{ item.quantity }} x {{ "{:,.2f}".format(item.price / conversion_rate) }}</span>
-                </div>
-            </div>
-            {% endfor %}
-        </section>
+        <table class="header">
+            <tr>
+                <td class="company-cell">
+                    <div class="brand">
+                        <div class="brand-logo">
+                            <div class="logo-box">
+                                {% if logo_exists %}
+                                    <img src="{{ logo_exists }}" alt="Logo">
+                                {% else %}
+                                    <span class="logo-fallback">{{ (company.name[:1] if company and company.name else 'O')|upper }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="brand-info">
+                            <h1 class="company-name">{{ company.name if company else 'OrbisERP' }}</h1>
+                            {% if company and company.rnc %}<p class="company-info"><strong>RNC:</strong> {{ company.rnc }}</p>{% endif %}
+                            {% if company and company.address %}<p class="company-info">{{ company.address }}</p>{% endif %}
+                            {% if company and company.phone %}<p class="company-info">Tel. {{ company.phone }}</p>{% endif %}
+                            {% if company and company.email %}<p class="company-info">{{ company.email }}</p>{% endif %}
+                        </div>
+                    </div>
+                </td>
+                <td class="invoice-cell">
+                    <h2 class="invoice-title">{{ 'Cotización' if is_quote else 'Factura' }}</h2>
+                    <div class="invoice-number">{{ 'COT' if is_quote else 'FAC' }}-{{ '%06d'|format(sale.id) }}</div>
+                    <table class="meta-table">
+                        <tr><td class="label">Fecha</td><td class="value">{{ sale.created_at.strftime('%d/%m/%Y') }}</td></tr>
+                        <tr><td class="label">Hora</td><td class="value">{{ sale.created_at.strftime('%H:%M') }}</td></tr>
+                        {% if is_quote and sale.quote_valid_until %}<tr><td class="label">Válida hasta</td><td class="value">{{ sale.quote_valid_until.strftime('%d/%m/%Y') }}</td></tr>{% endif %}
+                        {% if not is_quote %}<tr><td class="label">Pago</td><td class="value">{{ sale.payment_method or 'Contado' }}</td></tr>{% endif %}
+                        {% if sale.user %}<tr><td class="label">Vendedor</td><td class="value">{{ sale.user.name }}</td></tr>{% endif %}
+                        <tr><td class="label">Almacén</td><td class="value">{{ sale.warehouse_display }}</td></tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
 
-        <section class="summary">
-            <div class="summary-table">
-                <!-- 1. Dinero (Subtotal) -->
-                <div class="summary-line">
-                    <span>Subtotal</span>
-                    <span>{{ currency_symbol }}{{ "{:,.2f}".format(sale.subtotal / conversion_rate) }}</span>
-                </div>
-                <!-- 2. ITBIS -->
-                <div class="summary-line tax">
-                    <span>ITBIS ({{ company.tax_percent or 18 }}%)</span>
-                    <span>{{ currency_symbol }}{{ "{:,.2f}".format(sale.itbis / conversion_rate) }}</span>
-                </div>
-                <!-- 3. Total -->
-                <div class="summary-line total-final">
-                    <span>Total</span>
-                    <span>{{ currency_symbol }}{{ "{:,.2f}".format(sale.total / conversion_rate) }}</span>
-                </div>
-            </div>
-        </section>
-
-        <div class="notes-footer">
-            <strong>NOTAS:</strong> Documento emitido por OrbisERP. Los valores han sido convertidos a {{ selected_currency }} usando la tasa de cambio vigente al momento de la transacción (1 {{ selected_currency }} = {{ "{:,.2f}".format(conversion_rate) }} DOP).
+        <div class="section-label">Cliente</div>
+        <div class="client-box">
+            <div class="client-name">{{ sale.client.name if sale.client else (sale.customer_name or 'Consumidor final') }}</div>
+            {% if sale.client and sale.client.phone %}<div class="client-info">Teléfono: {{ sale.client.phone }}</div>{% endif %}
+            {% if sale.client and sale.client.email %}<div class="client-info">Correo: {{ sale.client.email }}</div>{% endif %}
         </div>
 
-        <div class="footer-tiny">
-            {{ company.name }} — Autenticidad verificada digitalmente — OrbisOS Sequoia Core
+        <table class="items">
+            <thead>
+                <tr>
+                    <th style="width:43%">Descripción</th>
+                    <th class="right" style="width:10%">Cant.</th>
+                    <th class="right" style="width:17%">Precio</th>
+                    <th class="right" style="width:12%">Imp.</th>
+                    <th class="right" style="width:18%">Importe</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in sale.items %}
+                <tr>
+                    <td>
+                        <div class="item-name">{{ item.product.name if item.product else 'Producto' }}</div>
+                        <div class="item-meta">{% if item.product and item.product.sku %}SKU {{ item.product.sku }}{% endif %}{% if item.tax_name %} · {{ item.tax_name }}{% endif %}</div>
+                    </td>
+                    <td class="right">{{ display_quantity(item.quantity) }}</td>
+                    <td class="right">{{ currency_symbol }}{{ '{:,.2f}'.format(item.price / conversion_rate) }}</td>
+                    <td class="right">{{ '{:,.2f}'.format(item.tax_rate or 0) }}%</td>
+                    <td class="right"><strong>{{ currency_symbol }}{{ '{:,.2f}'.format((item.price * item.quantity) / conversion_rate) }}</strong></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <table class="bottom">
+            <tr>
+                <td class="notes-cell">
+                    <div class="section-label">Notas</div>
+                    <div class="notes-box">
+                        {% if is_quote and sale.quote_notes %}
+                            <p>{{ sale.quote_notes }}</p>
+                        {% elif company and company.invoice_footer %}
+                            <p>{{ company.invoice_footer }}</p>
+                        {% else %}
+                            <p>Gracias por su compra.</p>
+                        {% endif %}
+                        {% if selected_currency != 'DOP' %}<p>Valores expresados en {{ selected_currency }}. Tasa aplicada: 1 {{ selected_currency }} = {{ '{:,.2f}'.format(conversion_rate) }} DOP.</p>{% endif %}
+                    </div>
+                </td>
+                <td class="totals-cell">
+                    <table class="totals">
+                        <tr><td class="label">Subtotal</td><td class="value">{{ currency_symbol }}{{ '{:,.2f}'.format(sale.subtotal / conversion_rate) }}</td></tr>
+                        <tr><td class="label">Impuestos</td><td class="value">{{ currency_symbol }}{{ '{:,.2f}'.format(sale.itbis / conversion_rate) }}</td></tr>
+                        {% if sale.discount_amount %}<tr><td class="label">Descuento</td><td class="value">- {{ currency_symbol }}{{ '{:,.2f}'.format(sale.discount_amount / conversion_rate) }}</td></tr>{% endif %}
+                        {% if not is_quote and paid_amount %}<tr><td class="label">Pagado</td><td class="value">{{ currency_symbol }}{{ '{:,.2f}'.format(paid_amount / conversion_rate) }}</td></tr>{% endif %}
+                        {% if not is_quote and balance_amount and balance_amount > 0 %}<tr class="balance-line"><td class="label">Balance</td><td class="value">{{ currency_symbol }}{{ '{:,.2f}'.format(balance_amount / conversion_rate) }}</td></tr>{% endif %}
+                        <tr class="grand"><td>Total</td><td class="value">{{ currency_symbol }}{{ '{:,.2f}'.format(sale.total / conversion_rate) }}</td></tr>
+                    </table>
+                    <div class="payment-note">
+                        {% if is_quote %}
+                            Este documento es una cotización y no representa un cobro.
+                        {% elif balance_amount and balance_amount > 0 %}
+                            Venta con saldo pendiente de {{ currency_symbol }}{{ '{:,.2f}'.format(balance_amount / conversion_rate) }}.
+                        {% else %}
+                            Venta registrada como pagada/completada.
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <div class="footer">
+            {{ company.name if company else 'OrbisERP' }} · {{ 'Cotización' if is_quote else 'Factura' }} {{ 'COT' if is_quote else 'FAC' }}-{{ '%06d'|format(sale.id) }} · Documento generado por OrbisERP
         </div>
     </div>
 </body>

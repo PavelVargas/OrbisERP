@@ -1,145 +1,16 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Almacenes | OrbisERP</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/ware_css/wares.css">
-
-    <script>
-        (function() {
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark') {
-                document.documentElement.classList.add('dark');
-            }
-        })();
-    </script>
-</head>
-<body class="{% if session.get('theme') == 'dark' %}dark{% endif %}">
-
-    {% include 'layouts/left_bar.html' %}
-
-    <main class="main-viewport">
-        <nav class="top-nav-slim">
-            <a href="{{ url_for('dashboard_bp.dashboard') }}" class="breadcrumb-link">
-                <i class="bi bi-chevron-left"></i> <span>PANEL PRINCIPAL</span>
-            </a>
-            <div class="status-badge">
-                <i class="bi bi-broadcast"></i> <span>NODO: {{ 'SISTEMA GLOBAL' if not user.company else user.company.name | upper }}</span>
-            </div>
-        </nav>
-
-        <header class="view-header">
-            <div class="title-container">
-                <h1>{{ 'Gestión de Almacenes' if user.role == 'admin' or user.role == 'superadmin' else 'Mi Almacén' }}</h1>
-                <p>
-                    {% if user.company %}
-                        Plan: <strong style="color: var(--primary);">{{ user.company.plan_name }}</strong> 
-                        <span style="margin: 0 10px; opacity: 0.3;">|</span>
-                        Sedes: <strong>{{ warehouses|length }}</strong> de <strong>{{ user.company.get_plan_limits().max_warehouses }}</strong>
-                    {% else %}
-                        <span class="badge-super">ACCESO SUPERADMIN (SIN RESTRICCIONES)</span>
-                    {% endif %}
-                </p>
-            </div>
-            
-            {% if user.role == 'admin' or user.role == 'superadmin' %}
-                {% set can_create = true %}
-                {% if user.company %}
-                    {% set limits = user.company.get_plan_limits() %}
-                    {% if warehouses|length >= limits.max_warehouses %}
-                        {% set can_create = false %}
-                    {% endif %}
-                {% endif %}
-
-                {% if not can_create %}
-                    <div class="btn-primary-new limit-reached" style="background: #4a4a4a; cursor: not-allowed; opacity: 0.7;" title="Límite de plan alcanzado">
-                        <i class="bi bi-lock-fill"></i> <span>LÍMITE ALCANZADO</span>
-                    </div>
-                {% else %}
-                    {% if can('warehouses.create') %}<a href="{{ url_for('warehouse_bp.create_warehouse') }}" class="btn-primary-new">
-                        <i class="bi bi-plus-lg"></i> <span>Añadir Sede</span>
-                    </a>{% endif %}
-                {% endif %}
-            {% endif %}
-        </header>
-
-        {# Alerta de límite solo si tiene empresa #}
-        {% if user.company %}
-            {% if warehouses|length >= user.company.get_plan_limits().max_warehouses %}
-            <div class="upgrade-alert-box">
-                <i class="bi bi-info-circle-fill"></i>
-                <div style="flex-grow: 1;">
-                    <span>Has alcanzado el límite de sedes para el plan <strong>{{ user.company.plan_name }}</strong>.</span>
-                </div>
-                <a href="{{ url_for('company_bp.view_plans') }}" class="btn-upgrade">SUBIR PLAN</a>
-            </div>
-            {% endif %}
-        {% endif %}
-
-        <div class="wares-grid">
-            {% for w in warehouses %}
-            <article class="ware-card">
-                <div class="ware-card-inner">
-                    <div class="ware-header">
-                        <div class="ware-icon-box">
-                            <i class="bi bi-buildings-fill"></i>
-                        </div>
-                        <div class="ware-title-meta">
-                            <div class="name-badge-row">
-                                <h3>{{ w.name }}</h3>
-                                {% if w.is_main %}
-                                    <span class="badge-main">Sede Central</span>
-                                {% endif %}
-                            </div>
-                            <p class="loc-text">
-                                <i class="bi bi-geo-alt"></i> {{ w.location or 'Sin ubicación registrada' }}
-                            </p>
-                            <div class="status-live">
-                                <span class="live-dot"></span> <span>ESTADO: ACTIVO</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="ware-footer-actions">
-                        <a href="{{ url_for('warehouse_bp.warehouse_locations', warehouse_id=w.id) }}" class="btn-soft">
-                            <i class="bi bi-diagram-3"></i> <span>Ubicaciones</span>
-                        </a>
-                        <a href="{{ url_for('transfer_bp.transfers_by_warehouse', warehouse_id=w.id) }}" class="btn-soft">
-                            <i class="bi bi-truck"></i> <span>Envíos</span>
-                        </a>
-                        
-                        <a href="{{ url_for('warehouse_bp.warehouse_stock', id=w.id) }}" class="btn-solid-orange">
-                            <i class="bi bi-box-seam"></i> <span>Ver Stock</span>
-                        </a>
-
-                        {% if user.role == 'admin' or user.role == 'superadmin' %}
-                        {% if can('warehouses.edit') %}<a href="{{ url_for('warehouse_bp.edit_warehouse', id=w.id) }}" class="btn-icon-edit" title="Editar">
-                            <i class="bi bi-pencil-square"></i>
-                        </a>{% endif %}
-                        {% endif %}
-                    </div>
-                </div>
-            </article>
-            {% else %}
-            <div class="empty-state-full">
-                <i class="bi bi-folder-x"></i>
-                <p>No hay almacenes registrados en este nodo.</p>
-            </div>
-            {% endfor %}
-        </div>
-    </main>
-
-    <script>
-        window.addEventListener('storage', (e) => {
-            if (e.key === 'theme') {
-                if (e.newValue === 'dark') document.documentElement.classList.add('dark');
-                else document.documentElement.classList.remove('dark');
-            }
-        });
-    </script>
-</body>
-</html>
+{% extends 'workspace/base.html' %}
+{% block title %}Almacenes{% endblock %}{% block eyebrow %}Inventario{% endblock %}{% block heading %}Almacenes{% endblock %}
+{% block subtitle %}Administra sedes, ubicaciones físicas y disponibilidad de inventario desde una sola estructura.{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/module_refresh.css') }}">{% endblock %}
+{% block actions %}{% if can('warehouses.create') %}{% set can_create = not user.company or warehouses|length < user.company.get_plan_limits().max_warehouses %}{% if can_create %}<a class="workspace-btn" href="{{ url_for('warehouse_bp.create_warehouse') }}"><i class="bi bi-plus-lg"></i> Añadir almacén</a>{% else %}<span class="module-chip warning"><i class="bi bi-lock"></i> Límite del plan</span>{% endif %}{% endif %}{% endblock %}
+{% block content %}<div class="module-page">
+<section class="workspace-grid">
+ <article class="workspace-metric"><span><i class="bi bi-buildings"></i> Sedes activas</span><strong>{{ warehouses|length }}</strong><small>Almacenes visibles para tu usuario</small></article>
+ <article class="workspace-metric"><span><i class="bi bi-building-check"></i> Sede principal</span><strong data-ui-style="u4ff818ffe1">{{ (warehouses|selectattr('is_main')|first).name if warehouses|selectattr('is_main')|list else 'Sin definir' }}</strong><small>Referencia principal de inventario</small></article>
+ {% if user.company %}<article class="workspace-metric"><span><i class="bi bi-speedometer2"></i> Capacidad del plan</span><strong>{{ warehouses|length }} / {{ user.company.get_plan_limits().max_warehouses }}</strong><small>Plan {{ user.company.plan_name }}</small></article>{% endif %}
+ <article class="workspace-metric"><span><i class="bi bi-diagram-3"></i> Organización</span><strong data-ui-style="u4ff818ffe1">Por ubicaciones</strong><small>Zonas, pasillos y tramos por sede</small></article>
+</section>
+{% if user.company and warehouses|length >= user.company.get_plan_limits().max_warehouses %}<section class="workspace-card"><div class="workspace-card-head" data-ui-style="uef0b7a1148"><div><h2>Límite de sedes alcanzado</h2><p>El plan {{ user.company.plan_name }} permite {{ user.company.get_plan_limits().max_warehouses }} almacenes activos.</p></div><a class="workspace-btn secondary" href="{{ url_for('company_bp.view_plans') }}">Ver planes</a></div></section>{% endif %}
+<section class="module-card-grid">
+{% for w in warehouses %}<article class="module-entity-card"><header><div><span class="module-chip {{ 'primary' if w.is_main else 'success' }}"><i class="bi {{ 'bi-star-fill' if w.is_main else 'bi-check-circle' }}"></i>{{ 'SEDE CENTRAL' if w.is_main else 'ACTIVO' }}</span><h3 data-ui-style="ub05317f99f">{{ w.name }}</h3><p><i class="bi bi-geo-alt"></i> {{ w.location or 'Sin ubicación registrada' }}</p></div><span class="module-row-icon"><i class="bi bi-building"></i></span></header><footer><a class="workspace-btn secondary" href="{{ url_for('warehouse_bp.warehouse_locations', warehouse_id=w.id) }}"><i class="bi bi-diagram-3"></i> Ubicaciones</a><a class="workspace-btn secondary" href="{{ url_for('transfer_bp.transfers_by_warehouse', warehouse_id=w.id) }}"><i class="bi bi-arrow-left-right"></i> Envíos</a><a class="workspace-btn" href="{{ url_for('warehouse_bp.warehouse_stock', id=w.id) }}"><i class="bi bi-box-seam"></i> Stock</a>{% if can('warehouses.edit') %}<a class="workspace-icon-btn" href="{{ url_for('warehouse_bp.edit_warehouse', id=w.id) }}" title="Editar"><i class="bi bi-pencil"></i></a>{% endif %}</footer></article>{% else %}<article class="workspace-card" data-ui-style="u068a8ddc17"><div class="module-empty"><i class="bi bi-building"></i><h3>No hay almacenes disponibles</h3><p>Crea una sede para comenzar a organizar existencias y ubicaciones físicas.</p>{% if can('warehouses.create') %}<a class="workspace-btn" href="{{ url_for('warehouse_bp.create_warehouse') }}">Crear almacén</a>{% endif %}</div></article>{% endfor %}
+</section></div>{% endblock %}

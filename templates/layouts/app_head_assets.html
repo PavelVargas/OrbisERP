@@ -1,0 +1,68 @@
+{% set shell_asset_version = '20260827-tablet10' %}
+{# Shared authenticated shell assets. Keep theme bootstrap before every stylesheet. #}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script nonce="{{ csp_nonce() if csp_nonce is defined else '' }}">
+(() => {
+    const root = document.documentElement;
+    root.classList.add('theme-preload', 'orbis-authenticated');
+    let saved = null;
+    try {
+        saved = localStorage.getItem('theme') || localStorage.getItem('orbis-theme');
+    } catch (_error) {
+        saved = null;
+    }
+    const serverTheme = {{ (session.get('theme') or '')|tojson }};
+    const systemDark = typeof matchMedia === 'function'
+        && matchMedia('(prefers-color-scheme: dark)').matches;
+    const dark = (saved || serverTheme) === 'dark'
+        || (!saved && !serverTheme && systemDark);
+    const theme = dark ? 'dark' : 'light';
+    root.classList.toggle('dark', dark);
+    root.dataset.theme = theme;
+    root.style.colorScheme = theme;
+    const serverTabletMode = {{ 'true' if tablet_mode_active|default(session.get('tablet_mode')) else 'false' }};
+    let canonicalUiMode = null;
+    let legacyTabletOn = false;
+    let storedTabletMode = false;
+    try {
+        const uiMatch = document.cookie.match(/(?:^|;\s*)orbis_ui_mode=(tablet|desktop)(?:;|$)/);
+        canonicalUiMode = uiMatch ? uiMatch[1] : null;
+        legacyTabletOn = /(?:^|;\s*)orbis_tablet_mode=1(?:;|$)/.test(document.cookie);
+        storedTabletMode = localStorage.getItem('orbis-tablet-mode') === '1';
+    } catch (_error) {
+        storedTabletMode = false;
+    }
+    // Server/session state wins. Legacy desktop cookies are ignored because an
+    // old duplicate cookie must never kick a tablet session back to desktop.
+    const tabletMode = serverTabletMode
+        || canonicalUiMode === 'tablet'
+        || (canonicalUiMode !== 'desktop' && (legacyTabletOn || storedTabletMode));
+    try {
+        if (tabletMode) localStorage.setItem('orbis-tablet-mode', '1');
+        else if (canonicalUiMode === 'desktop') localStorage.removeItem('orbis-tablet-mode');
+    } catch (_error) {}
+    root.classList.toggle('tablet-mode', tabletMode);
+    root.classList.toggle('tablet-full-width-profile', tabletMode);
+    root.dataset.tabletMode = tabletMode ? 'true' : 'false';
+})();
+</script>
+<style nonce="{{ csp_nonce() if csp_nonce is defined else '' }}">
+html,body{background:#f5f7fa;color-scheme:light}html.dark,html.dark body{background:#0e0f11;color-scheme:dark}html.theme-preload *,html.theme-preload *::before,html.theme-preload *::after{transition:none!important;animation:none!important}
+</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/quality-accessibility.css', v=shell_asset_version) }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/base_css/base.css', v=shell_asset_version) }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/left.css', v=shell_asset_version) }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/commercial.css', v=shell_asset_version) }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ui_unification.css', v=shell_asset_version) }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ux_polish.css', v=shell_asset_version) }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ui_inline_migrations.css', v=shell_asset_version) }}">
+<link rel="shortcut icon" href="{{ url_for('static', filename='assets/isotipo.png') }}" type="image/x-icon">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/feedback.css', v=shell_asset_version) }}">
+<script src="{{ url_for('static', filename='js/theme-sync.js', v=shell_asset_version) }}" defer></script>
+<script src="{{ url_for('static', filename='js/tablet_runtime.js', v='20260827-tablet10') }}" defer></script>
+<script src="{{ url_for('static', filename='js/feedback.js', v=shell_asset_version) }}" defer></script>

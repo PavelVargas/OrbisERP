@@ -1,114 +1,25 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <title>Salidas | Inventario</title>
-    <link rel="stylesheet" href="/static/css/stock_css/entries.css">
-</head>
-<body>
-
-    {% include 'layouts/left_bar.html' %}
-
-    <main>
-        <div class="top-nav">
-            <a href="/dashboard" class="back-link">
-                <i class="bi bi-chevron-left"></i> VOLVER AL DASHBOARD
-            </a>
-            <div class="user-meta" style="font-weight: 800; color: var(--danger); font-size: 0.75rem;">
-                <i class="bi bi-dash-circle-fill"></i> REGISTRO DE SALIDAS
-            </div>
-        </div>
-
-        <header class="page-header">
-            <h2>Salidas de Inventario</h2>
-            <p>Historial de productos despachados o ajustados a la baja.</p>
-        </header>
-
-        <div class="stock-stats">
-            <div class="stat-card">
-                <div class="stat-icon"><i class="bi bi-box-arrow-up"></i></div>
-                <div class="stat-info">
-                    <small>Egresos Registrados</small>
-                    <span>{{ movements|length }} movimientos</span>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon" style="background: #fff7ed; color: #ea580c;"><i class="bi bi-cart-dash"></i></div>
-                <div class="stat-info">
-                    <small>Total Unidades Salientes</small>
-                    <span>{{ movements|sum(attribute='quantity') }} uds</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="filter-card">
-            <form method="GET" class="filter-container">
-                <div class="form-group">
-                    <label>Filtrar por Producto</label>
-                    <select name="product_id">
-                        <option value="">Todos los productos despachados</option>
-                        {% for p in products %}
-                            <option value="{{ p.id }}" {% if product_id == p.id %}selected{% endif %}>
-                                {{ p.name }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <button type="submit" class="btn-filter">
-                    <i class="bi bi-funnel-fill"></i> Aplicar Filtro
-                </button>
-            </form>
-        </div>
-
-        <div class="table-container">
-            <table class="modern-table">
-                <thead>
-                    <tr>
-                        <th>Fecha de Egreso</th>
-                        <th>Producto / Referencia</th>
-                        <th>Cantidad</th>
-                        <th>Motivo / Observación</th>
-                    </tr>
-                </thead>
-                <tbody>
-                {% for m in movements %}
-                    <tr>
-                        <td class="text-dim">
-                            <i class="bi bi-calendar-x"></i> {{ m.created_at.strftime('%d/%m/%Y') }}
-                            <br>
-                            <small>{{ m.created_at.strftime('%H:%M %p') }}</small>
-                        </td>
-                        <td>
-                            <div class="product-name">{{ m.product.name }}</div>
-                            <small class="text-dim">SKU: {{ m.product.id }}</small>
-                        </td>
-                        <td>
-                            <span class="badge-qty-out">
-                                <i class="bi bi-dash-lg"></i> {{ m.quantity }} uds
-                            </span>
-                        </td>
-                        <td class="reason-text">
-                            {{ m.reason or 'Despacho sin especificar' }}
-                        </td>
-                    </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="4">
-                            <div class="empty-state">
-                                <i class="bi bi-clipboard-x"></i>
-                                <p>No se encontraron registros de salidas para este criterio.</p>
-                            </div>
-                        </td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </main>
-
-</body>
-</html>
+{% extends 'workspace/base.html' %}
+{% block title %}Salidas de inventario{% endblock %}
+{% block eyebrow %}Inventario · Movimientos{% endblock %}
+{% block heading %}Salidas de inventario{% endblock %}
+{% block subtitle %}Consulta despachos, consumos y ajustes negativos con filtros de producto y fecha.{% endblock %}
+{% block actions %}{% if can('stock.adjust') %}<a class="workspace-btn" href="{{ url_for('stock_bp.stock_actual') }}"><i class="bi bi-sliders"></i> Ajustar existencias</a>{% endif %}{% endblock %}
+{% block content %}
+<section class="workspace-grid">
+    <article class="workspace-metric"><span>Movimientos</span><strong>{{ movements|length }}</strong><small>salidas en el filtro actual</small></article>
+    <article class="workspace-metric"><span>Cantidad saliente</span><strong>{{ display_quantity(movements|sum(attribute='quantity')) }}</strong><small>unidades/base acumuladas</small></article>
+</section>
+<form method="get" class="workspace-filter workspace-section-gap">
+    <label><span>Producto</span><select name="product_id"><option value="">Todos los productos</option>{% for p in products %}<option value="{{ p.id }}" {% if product_id == p.id %}selected{% endif %}>{{ p.name }}</option>{% endfor %}</select></label>
+    <label><span>Desde</span><input type="date" name="date_from" value="{{ date_from }}"></label>
+    <label><span>Hasta</span><input type="date" name="date_to" value="{{ date_to }}"></label>
+    <button class="workspace-btn" type="submit"><i class="bi bi-funnel"></i> Filtrar</button>
+    {% if product_id or date_from or date_to %}<a class="workspace-btn secondary" href="{{ url_for('movements_bp.movements_out') }}">Limpiar</a>{% endif %}
+</form>
+<section class="workspace-card">
+    <div class="workspace-table-wrap"><table class="workspace-table"><thead><tr><th>Fecha</th><th>Producto</th><th>Cantidad</th><th>Motivo</th></tr></thead><tbody>
+    {% for m in movements %}<tr><td>{{ m.created_at.strftime('%d/%m/%Y') }}<small>{{ m.created_at.strftime('%H:%M') }}</small></td><td><strong>{{ m.product.name }}</strong><small>{{ m.product.sku or ('ID #' ~ m.product.id) }}</small></td><td><span class="workspace-tag danger">−{{ display_quantity(m.quantity) }}</span></td><td>{{ m.reason or 'Salida general' }}</td></tr>
+    {% else %}<tr><td colspan="4"><div class="workspace-empty"><i class="bi bi-inbox"></i><strong>No hay salidas para estos filtros.</strong></div></td></tr>{% endfor %}
+    </tbody></table></div>
+</section>
+{% endblock %}

@@ -5,7 +5,7 @@
             --text-muted: #64748b;
             --border: #e2e8f0;
             --primary: #f36b21;
-            --success: #10b981;
+            --success: var(--primary);
             --danger: #ef4444;
             --input-focus: #fef3c7;
             --sidebar-width: 280px;
@@ -38,7 +38,7 @@
             width: 100%;
             max-width: 1200px;
             margin: 0 auto;
-            transition: all 0.3s ease;
+            transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
         }
 
         /* Header */
@@ -133,7 +133,7 @@
             color: var(--text-main);
             font-family: inherit;
             font-size: 1rem; /* 16px para evitar zoom en iOS */
-            transition: all 0.2s;
+            transition: color 0.2s, background-color 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.2s, opacity 0.2s;
         }
 
         textarea { padding-left: 15px; min-height: 120px; resize: none; }

@@ -1,0 +1,96 @@
+{% extends 'workspace/base.html' %}
+{% block title %}Caja y arqueo{% endblock %}
+{% block eyebrow %}Control de efectivo{% endblock %}
+{% block heading %}Caja y arqueo{% endblock %}
+{% block subtitle %}Cada turno pertenece a una sucursal concreta. Abrir o cerrar esta caja no afecta las demás sucursales.{% endblock %}
+{% block actions %}
+{% if branch and branch_locked %}<span class="workspace-tag ok"><i class="bi bi-geo-alt-fill"></i> {{ branch.name }}{% if terminal %} · {{ terminal.name }}{% endif %}</span>{% elif branches %}<form method="get" class="cash-branch-switcher"><label for="cashBranchSelect">Sucursal</label><select id="cashBranchSelect" name="branch_id" onchange="this.form.submit()">{% for row in branches %}<option value="{{ row.id }}" {{ 'selected' if branch and branch.id==row.id }}>{{ row.name }}{% if row.is_main %} · Principal{% endif %}</option>{% endfor %}</select></form>{% endif %}
+{% if can('reports.view') %}<a class="workspace-btn secondary" href="{{ url_for('reports_bp.closings_history') }}"><i class="bi bi-clock-history"></i> Historial de cierres</a>{% endif %}
+{% endblock %}
+{% block content %}
+{% if not branch %}<div class="workspace-alert workspace-alert--danger"><strong>Falta una sucursal operativa.</strong> Crea una sucursal en Retail avanzado y asígnala al usuario o terminal antes de abrir caja.</div>{% else %}<div class="cash-scope-banner"><span><i class="bi bi-shop"></i><strong>{{ branch.name }}</strong>{% if terminal %}<small>{{ terminal.name }} · {{ terminal.code }}</small>{% else %}<small>Caja de sucursal · sin terminal fija</small>{% endif %}</span><b>Esta apertura/cierre solo corresponde a esta sucursal.</b></div>{% endif %}
+{% if cash_session %}
+<section class="workspace-grid">
+    <article class="workspace-metric"><span><i class="bi bi-safe2"></i> Fondo inicial</span><strong>{{ currency_symbol }} {{ '{:,.2f}'.format((cash_session.opening_amount or 0) / conversion_rate) }}</strong><small>Abierta {{ cash_session.opened_at.strftime('%d/%m/%Y · %H:%M') }}</small></article>
+    <article class="workspace-metric"><span><i class="bi bi-cash-stack"></i> Ventas en efectivo</span><strong>{{ currency_symbol }} {{ '{:,.2f}'.format(cash_sales / conversion_rate) }}</strong><small>Desde la apertura del turno.</small></article>
+    <article class="workspace-metric"><span><i class="bi bi-arrow-up-right"></i> Salidas en efectivo</span><strong>{{ currency_symbol }} {{ '{:,.2f}'.format(cash_expenses / conversion_rate) }}</strong><small>Gastos contabilizados en efectivo.</small></article>
+    <article class="workspace-metric"><span><i class="bi bi-calculator"></i> Efectivo esperado</span><strong>{{ currency_symbol }} {{ '{:,.2f}'.format(expected / conversion_rate) }}</strong><small>Fondo + ventas − salidas.</small></article>
+</section>
+
+<div class="workspace-columns cash-layout">
+    <section class="workspace-card">
+        <div class="workspace-card-head"><div><h2>Arqueo del turno</h2><p>Cuenta el efectivo físico. Puedes escribir el total directamente o usar el contador de denominaciones.</p></div><span class="workspace-tag ok"><i class="bi bi-circle-fill"></i> Caja abierta</span></div>
+        <form class="workspace-form compact" method="post" id="cashCloseForm" data-confirm="¿Confirmas el cierre de esta caja?" data-confirm-title="Cerrar caja de la sucursal" data-confirm-detail="Se cerrará únicamente la sesión de caja de la sucursal y terminal seleccionadas. Verifica el efectivo contado antes de continuar." data-confirm-action="Cerrar esta caja" data-confirm-type="warning">
+            <input type="hidden" name="action" value="close"><input type="hidden" name="branch_id" value="{{ branch.id if branch else '' }}">
+            <label class="full">Efectivo contado · {{ selected_currency }}
+                <div class="cash-money-input"><span>{{ currency_symbol }}</span><input id="counted_amount" type="number" name="counted_amount" min="0" step="0.01" placeholder="0.00" required></div>
+            </label>
+            <div class="full cash-difference" id="differenceBox"><span><i class="bi bi-dash-circle"></i> Diferencia</span><strong id="differenceText">Pendiente de contar</strong></div>
+            <div class="full denomination-panel">
+                <div class="workspace-card-head"><div><h3>Conteo asistido</h3><p>Indica cuántas unidades tienes de cada denominación.</p></div><button class="workspace-btn secondary" id="clearCount" type="button"><i class="bi bi-eraser"></i> Limpiar</button></div>
+                <div class="denomination-grid">
+                    {% for value in [2000,1000,500,200,100,50,25,10,5,1] %}
+                    <label><span>{{ currency_symbol }} {{ value }}</span><input type="number" min="0" max="1000000" step="1" inputmode="numeric" data-denomination="{{ value }}" placeholder="0"><small>unidades</small></label>
+                    {% endfor %}
+                </div>
+            </div>
+            <label class="full">Observaciones<textarea name="notes" rows="3" maxlength="1000" placeholder="Explica faltantes, sobrantes o incidencias si aplica."></textarea></label>
+            <div class="actions"><button class="workspace-btn" type="submit"><i class="bi bi-lock"></i> Confirmar cierre</button></div>
+        </form>
+    </section>
+
+    <aside class="workspace-card workspace-card--flat cash-guide">
+        <div class="workspace-card-head"><div><h2>Resumen del turno</h2><p>Los importes se muestran en {{ selected_currency }}. La contabilidad conserva los valores base.</p></div></div>
+        <div class="workspace-mini-list">
+            <div class="workspace-mini-row"><span><strong>Sucursal</strong><small>Ámbito de esta caja</small></span><b>{{ cash_session.branch.name if cash_session.branch else 'Sin sucursal histórica' }}</b></div><div class="workspace-mini-row"><span><strong>Terminal</strong><small>Punto de venta asociado</small></span><b>{{ cash_session.terminal.name if cash_session.terminal else 'Sin terminal fija' }}</b></div><div class="workspace-mini-row"><span><strong>Responsable</strong><small>Usuario que abrió la caja</small></span><b>{{ user.name }}</b></div>
+            <div class="workspace-mini-row"><span><strong>Inicio</strong><small>Fecha y hora de apertura</small></span><b>{{ cash_session.opened_at.strftime('%d/%m · %H:%M') }}</b></div>
+            <div class="workspace-mini-row"><span><strong>Moneda visible</strong><small>Tasa: 1 {{ selected_currency }} = {{ '{:,.4f}'.format(conversion_rate) }} DOP</small></span><b>{{ selected_currency }}</b></div>
+            <div class="workspace-mini-row"><span><strong>Esperado</strong><small>Valor contra el que se compara el arqueo</small></span><b>{{ currency_symbol }} {{ '{:,.2f}'.format(expected / conversion_rate) }}</b></div>
+        </div>
+        <div class="workspace-callout"><i class="bi bi-shield-check"></i><p>El cierre genera un registro auditable. No modifica ventas ni gastos anteriores.</p></div>
+    </aside>
+</div>
+{% else %}
+<div class="workspace-columns cash-layout">
+    <section class="workspace-card">
+        <div class="workspace-card-head"><div><h2>Abrir caja</h2><p>Registra el fondo físico con el que inicia tu turno. Después podrás vender y cerrar desde esta misma pantalla.</p></div><span class="workspace-tag neutral">Sin turno abierto</span></div>
+        {% if can('cash.open') %}
+        <form class="workspace-form compact" method="post">
+            <input type="hidden" name="action" value="open"><input type="hidden" name="branch_id" value="{{ branch.id if branch else '' }}">
+            <label>Fondo inicial · {{ selected_currency }}<input type="number" name="opening_amount" min="0" step="0.01" value="0.00" required></label>
+            <div class="actions"><button class="workspace-btn" type="submit"><i class="bi bi-unlock"></i> Abrir caja</button></div>
+        </form>
+        {% else %}<div class="workspace-empty"><i class="bi bi-lock"></i>No tienes permiso para abrir caja.</div>{% endif %}
+    </section>
+    <aside class="workspace-card workspace-card--flat cash-guide"><div class="workspace-card-head"><div><h2>Cómo funciona</h2><p>El turno mantiene el efectivo esperado a partir del fondo, ventas y salidas.</p></div></div><ol class="cash-steps"><li><span>1</span><div><b>Abre el turno</b><small>Registra el fondo inicial.</small></div></li><li><span>2</span><div><b>Opera normalmente</b><small>Las ventas y gastos en efectivo alimentan el esperado.</small></div></li><li><span>3</span><div><b>Cuenta y cierra</b><small>Compara el efectivo físico y registra la diferencia.</small></div></li></ol></aside>
+</div>
+{% endif %}
+
+<section class="workspace-card">
+    <div class="workspace-card-head"><div><h2>Últimos turnos</h2><p>Historial reciente de aperturas y cierres de tu usuario.</p></div></div>
+    <div class="workspace-table-wrap"><table class="workspace-table"><thead><tr><th>Sucursal</th><th>Apertura</th><th>Cierre</th><th>Esperado</th><th>Contado</th><th>Diferencia</th><th>Estado</th></tr></thead><tbody>
+    {% for row in history %}<tr><td><strong>{{ row.branch.name if row.branch else 'Histórico' }}</strong><small>{{ row.terminal.name if row.terminal else 'Sin terminal' }}</small></td><td>{{ row.opened_at.strftime('%d/%m/%Y · %H:%M') }}</td><td>{{ row.closed_at.strftime('%d/%m/%Y · %H:%M') if row.closed_at else '—' }}</td><td>{{ currency_symbol }} {{ '{:,.2f}'.format((row.expected_amount or 0) / conversion_rate) if row.expected_amount is not none else '—' }}</td><td>{{ currency_symbol }} {{ '{:,.2f}'.format((row.counted_amount or 0) / conversion_rate) if row.counted_amount is not none else '—' }}</td><td>{% if row.difference is not none %}<span class="workspace-tag {{ 'ok' if (row.difference|float)|abs < 0.01 else 'danger' if row.difference < 0 else 'warn' }}">{{ currency_symbol }} {{ '{:+,.2f}'.format(row.difference / conversion_rate) }}</span>{% else %}—{% endif %}</td><td><span class="workspace-tag {{ 'ok' if row.status=='OPEN' else 'neutral' }}">{{ 'Abierta' if row.status=='OPEN' else 'Cerrada' }}</span></td></tr>{% else %}<tr><td colspan="7"><div class="workspace-empty"><i class="bi bi-clock-history"></i>Aún no hay turnos registrados.</div></td></tr>{% endfor %}
+    </tbody></table></div>
+</section>
+{% endblock %}
+{% block scripts %}
+{% if cash_session %}<script>
+(() => {
+    const expected = Number('{{ (expected / conversion_rate)|float }}');
+    const symbol = {{ currency_symbol|tojson }};
+    const amount = document.getElementById('counted_amount');
+    const box = document.getElementById('differenceBox');
+    const text = document.getElementById('differenceText');
+    const denoms = [...document.querySelectorAll('[data-denomination]')];
+    const render = () => {
+        if (!amount.value) { box.className = 'full cash-difference'; text.textContent = 'Pendiente de contar'; return; }
+        const diff = Number(amount.value) - expected, abs = Math.abs(diff);
+        box.className = 'full cash-difference ' + (abs < .01 ? 'is-ok' : diff < 0 ? 'is-short' : 'is-over');
+        text.textContent = abs < .01 ? 'Caja cuadrada' : `${diff < 0 ? 'Faltante' : 'Sobrante'}: ${symbol} ${abs.toLocaleString('es-DO',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+    };
+    const sum = () => { amount.value = denoms.reduce((n,i) => n + (Number(i.value)||0) * Number(i.dataset.denomination), 0).toFixed(2); render(); };
+    amount.addEventListener('input', render); denoms.forEach(i => i.addEventListener('input', sum));
+    document.getElementById('clearCount').addEventListener('click', () => { denoms.forEach(i => i.value=''); amount.value=''; render(); });
+})();
+</script>{% endif %}
+{% endblock %}

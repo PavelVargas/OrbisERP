@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="es" class="{% if session.get('theme') == 'dark' %}dark{% endif %}">
-<head>
+<html lang="es" class="{% if tablet_mode_active|default(session.get('tablet_mode')) %}tablet-mode tablet-full-width-profile{% endif %} {% if session.get('theme') == 'dark' %}dark{% endif %}">
+<head>{% set shell_assets_loaded = true %}{% include 'layouts/app_head_assets.html' %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Órdenes de compra · OrbisERP</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/order_css/purchase_list.css') }}">
 </head>
 <body>
 {% include 'layouts/left_bar.html' %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/order_css/purchase_list.css') }}">
 
 <main class="purchases-page">
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -67,7 +67,7 @@
                     <td data-label="Contenido"><div class="content-cell"><strong>{{ order.total_items or 0 }}</strong><span>unidades</span><small>{{ order.items|length }} producto{{ '' if order.items|length == 1 else 's' }}</small></div></td>
                     <td data-label="Total"><strong class="order-total">RD$ {{ '{:,.2f}'.format((order.total_cost or 0)|float) }}</strong></td>
                     <td data-label="Estado"><span class="purchase-status {{ order.status|lower }}"><i class="bi bi-{% if order.status=='PENDING' %}clock{% elif order.status=='RECEIVED' %}check2-circle{% else %}x-circle{% endif %}"></i>{{ {'PENDING':'Pendiente','RECEIVED':'Recibida','CANCELLED':'Cancelada'}.get(order.status, order.status|title) }}</span></td>
-                    <td class="row-actions"><a href="{{ url_for('purchase_bp.purchase_detail', order_id=order.id) }}" title="Abrir orden"><i class="bi bi-arrow-right"></i></a>{% if order.status=='PENDING' and can('purchases.cancel') %}<form method="post" action="{{ url_for('purchase_bp.cancel_purchase', order_id=order.id) }}" onsubmit="return confirm('¿Descartar esta orden pendiente?')"><button type="submit" title="Descartar orden"><i class="bi bi-trash3"></i></button></form>{% endif %}</td>
+                    <td class="row-actions"><a href="{{ url_for('purchase_bp.purchase_detail', order_id=order.id) }}" title="Abrir orden"><i class="bi bi-arrow-right"></i></a>{% if order.status=='PENDING' and can('purchases.cancel') %}<form method="post" action="{{ url_for('purchase_bp.cancel_purchase', order_id=order.id) }}" data-confirm="¿Descartar esta orden pendiente?" data-confirm-title="Descartar orden de compra" data-confirm-detail="La orden quedará cancelada. No se recibirán productos ni se generarán movimientos de inventario." data-confirm-action="Descartar orden"><button type="submit" title="Descartar orden"><i class="bi bi-trash3"></i></button></form>{% endif %}</td>
                 </tr>
                 {% endfor %}
                 </tbody>

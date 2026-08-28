@@ -2,16 +2,71 @@ services:
   web:
     build: .
     restart: unless-stopped
+    command: ["sh", "scripts/start_production.sh"]
     env_file: .env
+    environment:
+      BACKUP_STATUS_FILE: /backups/.last-success
+      RELEASE_VERSION: ${RELEASE_VERSION:-production}
     ports: ["127.0.0.1:8000:8000"]
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     volumes:
       - uploads:/app/static/uploads
+      - private_storage:/app/storage
       - logs:/app/logs
+      - backups:/backups:ro
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8000/operations/health/ready"]
       interval: 30s
       timeout: 5s
       retries: 5
+  backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      BACKUP_DIR: /backups
+      UPLOADS_DIR: /uploads
+      PRIVATE_STORAGE_DIR: /private_storage
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+      BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS:-86400}
+    volumes:
+      - ./scripts:/scripts:ro
+      - uploads:/uploads:ro
+      - private_storage:/private_storage:ro
+      - backups:/backups
+    command: ["sh", "/scripts/backup_loop.sh"]
+  maintenance:
+    build: .
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    env_file: .env
+    environment:
+      BACKUP_STATUS_FILE: /backups/.last-success
+      BACKUP_DIR: /backups
+      MAINTENANCE_INTERVAL_SECONDS: ${MAINTENANCE_INTERVAL_SECONDS:-86400}
+      MAINTENANCE_RETENTION_DAYS: ${MAINTENANCE_RETENTION_DAYS:-30}
+    volumes:
+      - backups:/backups:ro
+      - private_storage:/app/storage
+      - logs:/app/logs
+    command: ["sh", "scripts/maintenance_loop.sh"]
+
 volumes:
   uploads:
   logs:
+  backups:
+  private_storage:
