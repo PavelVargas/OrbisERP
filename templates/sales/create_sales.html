@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="es" class="{% if tablet_mode_active|default(session.get('tablet_mode')) %}tablet-mode tablet-full-width-profile{% endif %}">
-<head>{% set shell_assets_loaded = true %}{% include 'layouts/app_head_assets.html' %}
+<head>
+    <meta name="orbis-ui-profile" content="orbis-pos">{% set shell_assets_loaded = true %}{% include 'layouts/app_head_assets.html' %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Terminal POS | OrbisERP</title>
     
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/sales_css/create_sales.css') }}?v=pos-stable-v11">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-polished3') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sales_css/create_sales.css') }}?v=pos-polished-v14">
 </head>
 <body class="pos-page">
     {% include 'layouts/left_bar.html' %}

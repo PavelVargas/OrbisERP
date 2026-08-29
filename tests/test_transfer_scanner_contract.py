@@ -7,27 +7,27 @@ def read(relative):
     return (ROOT / relative).read_text(encoding="utf-8")
 
 
-def test_scanner_is_a_fixed_dark_workstation_with_orange_accent():
+def test_scanner_is_an_adaptive_canonical_workstation():
     template = read("templates/transfers/scanner_validation.html")
     css = read("static/css/scanner.css")
 
-    assert '<html lang="es" class="scanner-dark">' in template
-    assert '<body class="scanner-mode-page">' in template
-    assert 'meta name="color-scheme" content="dark"' in template
-    assert "This page intentionally remains dark" in css
-    assert "--scan-bg: #0c0e11" in css
-    assert "--scan-surface: #15191f" in css
-    assert "--scan-accent: #f36b21" in css
+    assert 'class="scanner-workspace ' in template
+    assert '<body class="scanner-mode-page orbis-app">' in template
+    assert 'meta name="color-scheme" content="light dark"' in template
+    assert "same adaptive light/dark tokens" in css
+    assert "--scan-bg: var(--ui-bg)" in css
+    assert "--scan-surface: var(--ui-surface)" in css
+    assert "--scan-accent: var(--ui-primary)" in css
+    assert "--scan-text: var(--ui-text)" in css
     assert "body.scanner-mode-page > main#main-frame" in css
     assert "background: var(--scan-bg) !important" in css
-    assert "padding: 30px clamp(18px, 3.2vw, 48px) 42px !important" in css
     assert '#manual-scan-form > button[type="submit"]' in css
     assert "background: var(--scan-accent) !important" in css
     assert "body.scanner-mode-page .status-badge.status-complete" in css
     assert "body.scanner-mode-page .sku-tag" in css
-    assert "v='20260825-dark5'" in template
-    assert "background: var(--scan-bg)" in css
-    assert "--primary: #10b981" not in css
+    assert "v='20260829-polished2'" in template
+    assert "rgba(" not in css
+    assert "color-mix(" not in css
 
 
 def test_scanner_uses_external_script_and_fractional_flow():

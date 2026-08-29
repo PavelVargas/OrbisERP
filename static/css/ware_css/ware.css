@@ -1,7 +1,7 @@
 
 body {
     margin: 0;
-    font-family: 'Montserrat', sans-serif;
+    font-family: "Montserrat", sans-serif;
     background-color: var(--bg-main);
     color: var(--fg-main);
     letter-spacing: -0.01em;
@@ -54,7 +54,7 @@ main {
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.04);
+    box-shadow:0 10px 30px -10px var(--ui-line);
     padding: 10px; /* Espacio interno para que la tabla no toque los bordes */
 }
 

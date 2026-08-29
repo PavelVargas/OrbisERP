@@ -28,24 +28,24 @@ html.tablet-mode {
     --tablet-topbar-height: 64px;
     --tablet-dock-height: 58px;
     --tablet-dock-safe: 78px;
-    --tablet-nav-surface: color-mix(in srgb, var(--bg-card, #fff) 94%, transparent);
-    --tablet-nav-surface-solid: var(--bg-card, #fff);
-    --tablet-nav-soft: color-mix(in srgb, var(--bg-input, #f1f5f9) 88%, var(--bg-card, #fff));
-    --tablet-nav-border: color-mix(in srgb, var(--border, #e2e8f0) 92%, transparent);
-    --tablet-nav-text: var(--text-muted, #64748b);
-    --tablet-nav-strong: var(--text-main, #1e293b);
-    --tablet-nav-active: color-mix(in srgb, var(--primary, #f36b21) 12%, var(--bg-card, #fff));
-    --tablet-nav-active-border: color-mix(in srgb, var(--primary, #f36b21) 34%, var(--border, #e2e8f0));
-    --tablet-elevated-shadow: 0 18px 52px rgba(15, 23, 42, .14);
-    --tablet-sheet-shadow: 0 28px 78px rgba(15, 23, 42, .18);
-    --tablet-backdrop: rgba(15, 23, 42, .20);
+    --tablet-nav-surface: var(--ui-surface-soft);
+    --tablet-nav-surface-solid: var(--ui-surface);
+    --tablet-nav-soft: var(--ui-surface-soft);
+    --tablet-nav-border: var(--ui-line);
+    --tablet-nav-text: var(--ui-text);
+    --tablet-nav-strong: var(--ui-text);
+    --tablet-nav-active: var(--ui-primary-soft);
+    --tablet-nav-active-border: var(--ui-line);
+    --tablet-elevated-shadow: var(--ui-shadow);
+    --tablet-sheet-shadow: var(--ui-shadow-sm);
+    --tablet-backdrop: var(--ui-overlay);
     scroll-behavior: smooth;
 }
 
 html.dark.tablet-mode {
-    --tablet-elevated-shadow: 0 20px 58px rgba(0, 0, 0, .44);
-    --tablet-sheet-shadow: 0 32px 84px rgba(0, 0, 0, .52);
-    --tablet-backdrop: rgba(0, 0, 0, .52);
+    --tablet-elevated-shadow: var(--ui-shadow);
+    --tablet-sheet-shadow: var(--ui-shadow-sm);
+    --tablet-backdrop: var(--ui-overlay);
 }
 
 html.tablet-mode body {
@@ -63,10 +63,10 @@ html.tablet-mode.orbis-authenticated body:not(.pos-page) > main.orbis-page {
     max-width: none !important;
     min-width: 0 !important;
     margin: 0 !important;
-    padding-top: max(82px, calc(env(safe-area-inset-top) + 72px)) !important;
-    padding-right: max(18px, env(safe-area-inset-right)) !important;
+    padding-top:max(80px, calc(env(safe-area-inset-top) + 64px))!important;
+    padding-right:max(16px, env(safe-area-inset-right))!important;
     padding-bottom: max(var(--tablet-dock-safe), calc(env(safe-area-inset-bottom) + 70px)) !important;
-    padding-left: max(18px, env(safe-area-inset-left)) !important;
+    padding-left:max(16px, env(safe-area-inset-left))!important;
     scroll-padding-top: 84px;
     scroll-padding-bottom: var(--tablet-dock-safe);
 }
@@ -82,9 +82,9 @@ html.tablet-mode .app-tablet-topbar {
     color: var(--tablet-nav-strong) !important;
     border-bottom: 1px solid var(--tablet-nav-border) !important;
     background: var(--tablet-nav-surface) !important;
-    box-shadow: 0 8px 30px rgba(15, 23, 42, .075) !important;
-    backdrop-filter: blur(20px) saturate(1.15) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(1.15) !important;
+    box-shadow:var(--ui-shadow-sm)!important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     transition:
         transform var(--tablet-motion-base) var(--tablet-motion-ease),
         opacity var(--tablet-motion-fast) ease,
@@ -92,7 +92,7 @@ html.tablet-mode .app-tablet-topbar {
 }
 
 html.dark.tablet-mode .app-tablet-topbar {
-    box-shadow: 0 10px 34px rgba(0, 0, 0, .30) !important;
+    box-shadow:var(--ui-shadow-sm)!important;
 }
 
 html.tablet-mode .app-tablet-brand strong,
@@ -102,13 +102,13 @@ html.tablet-mode .app-tablet-profile strong {
 }
 
 html.tablet-mode .app-tablet-brand small {
-    color: var(--primary, #f36b21) !important;
+    color:var(--primary, var(--ui-primary))!important;
 }
 
 html.tablet-mode .app-tablet-brandmark {
     border-color: var(--tablet-nav-border) !important;
     background: var(--tablet-nav-surface-solid) !important;
-    box-shadow: 0 5px 16px rgba(15, 23, 42, .06);
+    box-shadow:var(--ui-shadow-sm);
 }
 
 html.tablet-mode .app-tablet-home,
@@ -126,18 +126,18 @@ html.tablet-mode .app-tablet-search {
 }
 
 html.tablet-mode .app-tablet-home {
-    color: #fff !important;
-    border-color: var(--primary, #f36b21) !important;
-    background: linear-gradient(135deg, var(--primary, #f36b21), color-mix(in srgb, var(--primary, #f36b21) 82%, #b8470d)) !important;
-    box-shadow: 0 8px 20px color-mix(in srgb, var(--primary, #f36b21) 20%, transparent) !important;
+    color:var(--ui-white)!important;
+    border-color:var(--primary, var(--ui-primary))!important;
+    background:var(--ui-primary-soft)!important;
+    box-shadow:none!important;
 }
 
 html.tablet-mode .app-tablet-search :where(i, .orbis-shell-icon) {
-    color: var(--primary, #f36b21) !important;
+    color:var(--primary, var(--ui-primary))!important;
 }
 
 html.tablet-mode .app-tablet-profile > span {
-    border-color: color-mix(in srgb, var(--primary, #f36b21) 36%, var(--tablet-nav-border)) !important;
+    border-color:var(--ui-primary-line)!important;
 }
 
 html.tablet-mode .app-tablet-topbar :where(a, button):active {
@@ -154,12 +154,12 @@ html.tablet-mode .tablet-launch-dock {
     min-height: var(--tablet-dock-height) !important;
     height: auto !important;
     gap: 4px !important;
-    padding: 5px 7px !important;
+    padding:4px 8px!important;
     border: 1px solid var(--tablet-nav-border) !important;
     border-radius: 18px !important;
     color: var(--tablet-nav-strong) !important;
     background: var(--tablet-nav-surface) !important;
-    box-shadow: var(--tablet-elevated-shadow) !important;
+    box-shadow:var(--ui-shadow-sm)!important;
     backdrop-filter: blur(22px) saturate(1.18) !important;
     -webkit-backdrop-filter: blur(22px) saturate(1.18) !important;
     transition:
@@ -188,14 +188,14 @@ html.tablet-mode .tablet-launch-dock button {
     min-height: 46px !important;
     height: 46px !important;
     flex: 1 1 0 !important;
-    gap: 2px !important;
-    padding: 4px 6px !important;
+    gap:0!important;
+    padding:4px 4px!important;
     border: 0 !important;
-    border-radius: 13px !important;
+    border-radius:12px!important;
     color: var(--tablet-nav-text) !important;
     background: transparent !important;
     box-shadow: none !important;
-    font-size: 8px !important;
+    font-size:12px!important;
     line-height: 1 !important;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
@@ -225,7 +225,7 @@ html.tablet-mode .tablet-launch-dock button:focus-visible {
 html.tablet-mode .app-tablet-dock :where(a, button).active,
 html.tablet-mode .app-tablet-dock :where(a, button)[aria-expanded="true"],
 html.tablet-mode .tablet-launch-dock button.active {
-    color: var(--primary, #f36b21) !important;
+    color:var(--primary, var(--ui-primary))!important;
     background: var(--tablet-nav-active) !important;
     box-shadow: inset 0 0 0 1px var(--tablet-nav-active-border) !important;
 }
@@ -254,7 +254,7 @@ html.tablet-mode .tablet-section-sheet {
     border-radius: 18px !important;
     color: var(--tablet-nav-strong) !important;
     background: var(--tablet-nav-surface-solid) !important;
-    box-shadow: var(--tablet-sheet-shadow) !important;
+    box-shadow:var(--ui-shadow-sm)!important;
     transform: translate(-50%, calc(100% + 96px)) scale(.985) !important;
     transform-origin: bottom center;
     transition:
@@ -268,12 +268,12 @@ html.tablet-mode .tablet-section-sheet.open {
 
 html.tablet-mode .tablet-section-sheet-head {
     min-height: 60px !important;
-    padding: 11px 12px 10px 15px !important;
+    padding:12px 12px 8px 16px!important;
     border-bottom-color: var(--tablet-nav-border) !important;
 }
 
 html.tablet-mode .tablet-section-sheet-head small {
-    color: var(--primary, #f36b21) !important;
+    color:var(--primary, var(--ui-primary))!important;
 }
 
 html.tablet-mode .tablet-section-sheet-head strong,
@@ -297,15 +297,15 @@ html.tablet-mode .tablet-section-sheet-head button:active {
 }
 
 html.tablet-mode .tablet-section-links {
-    gap: 7px !important;
-    padding: 10px !important;
+    gap:8px!important;
+    padding:8px!important;
 }
 
 html.tablet-mode .tablet-section-link {
     min-height: 60px !important;
     grid-template-columns: 38px minmax(0,1fr) 16px !important;
-    gap: 9px !important;
-    padding: 8px 10px !important;
+    gap:8px!important;
+    padding:8px 8px!important;
     border-color: var(--tablet-nav-border) !important;
     background: var(--tablet-nav-soft) !important;
     transition:
@@ -328,8 +328,8 @@ html.tablet-mode .tablet-section-link:active {
 html.tablet-mode .tablet-section-link-icon {
     width: 38px !important;
     height: 38px !important;
-    color: var(--primary, #f36b21) !important;
-    background: color-mix(in srgb, var(--primary, #f36b21) 10%, var(--bg-card, #fff)) !important;
+    color:var(--primary, var(--ui-primary))!important;
+    background:var(--ui-primary-soft)!important;
 }
 
 html.tablet-mode .tablet-section-link-copy small,
@@ -341,7 +341,7 @@ html.tablet-mode .tablet-section-link-arrow {
    Launchpad: full width, denser tablet cards, no oversized dead zones.
    ------------------------------------------------------------------------ */
 html.tablet-mode body:has(> .tablet-shell) {
-    background: var(--bg-main, #f8fafc) !important;
+    background:var(--bg-main, var(--ui-primary-soft))!important;
 }
 
 html.tablet-mode .tablet-shell {
@@ -350,20 +350,20 @@ html.tablet-mode .tablet-shell {
     min-height: var(--tablet-vh, 100dvh) !important;
     margin: 0 !important;
     gap: 16px !important;
-    padding-top: max(14px, env(safe-area-inset-top)) !important;
-    padding-right: max(18px, env(safe-area-inset-right)) !important;
+    padding-top:max(12px, env(safe-area-inset-top))!important;
+    padding-right:max(16px, env(safe-area-inset-right))!important;
     padding-bottom: max(var(--tablet-dock-safe), calc(env(safe-area-inset-bottom) + 70px)) !important;
-    padding-left: max(18px, env(safe-area-inset-left)) !important;
+    padding-left:max(16px, env(safe-area-inset-left))!important;
     scroll-padding-bottom: var(--tablet-dock-safe);
 }
 
 html.tablet-mode .tablet-topbar {
     min-height: 56px !important;
-    padding: 5px 0 10px !important;
+    padding:4px 0 8px!important;
 }
 
 html.tablet-mode .tablet-hero {
-    gap: 18px !important;
+    gap:16px!important;
 }
 
 html.tablet-mode .tablet-hero h1 {
@@ -377,17 +377,17 @@ html.tablet-mode .tablet-search {
 
 html.tablet-mode .tablet-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    gap: 11px !important;
+    gap:12px!important;
     align-content: start !important;
 }
 
 html.tablet-mode .tablet-app {
     min-height: 104px !important;
     grid-template-columns: 48px minmax(0,1fr) 30px !important;
-    gap: 11px !important;
-    padding: 14px !important;
+    gap:12px!important;
+    padding:12px!important;
     border-radius: 16px !important;
-    box-shadow: 0 7px 22px rgba(15, 23, 42, .045) !important;
+    box-shadow:var(--ui-shadow-sm)!important;
     transition:
         transform var(--tablet-motion-base) var(--tablet-motion-ease),
         border-color var(--tablet-motion-base) ease,
@@ -397,7 +397,7 @@ html.tablet-mode .tablet-app {
 }
 
 html.dark.tablet-mode .tablet-app {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, .18) !important;
+    box-shadow:var(--ui-shadow-sm)!important;
 }
 
 html.tablet-mode .tablet-app.featured {
@@ -419,7 +419,7 @@ html.tablet-mode .tablet-app-go {
 html.tablet-mode .tablet-app:hover,
 html.tablet-mode .tablet-app:focus-visible {
     transform: translateY(-3px) scale(1.006) !important;
-    box-shadow: 0 14px 34px rgba(15, 23, 42, .09) !important;
+    box-shadow:var(--ui-shadow-sm)!important;
 }
 
 html.tablet-mode .tablet-app:active {
@@ -429,7 +429,7 @@ html.tablet-mode .tablet-app:active {
 
 html.tablet-mode .tablet-footer {
     min-height: 28px !important;
-    padding-top: 6px !important;
+    padding-top:4px!important;
 }
 
 /* ------------------------------------------------------------------------
@@ -468,7 +468,7 @@ html.tablet-mode.tablet-mode-ready .tablet-grid > .tablet-app:nth-child(3) { ani
 html.tablet-mode.tablet-mode-ready .tablet-grid > .tablet-app:nth-child(4) { animation-delay: 60ms; }
 html.tablet-mode.tablet-mode-ready .tablet-grid > .tablet-app:nth-child(5) { animation-delay: 78ms; }
 html.tablet-mode.tablet-mode-ready .tablet-grid > .tablet-app:nth-child(6) { animation-delay: 96ms; }
-html.tablet-mode.tablet-mode-ready .tablet-grid > .tablet-app:nth-child(n+7) { animation-delay: 112ms; }
+html.tablet-mode.tablet-mode-ready .tablet-grid > .tablet-app:nth-child(n/**/+7) { animation-delay: 112ms; }
 
 html.tablet-mode.tablet-navigating body > main {
     opacity: 0 !important;
@@ -536,8 +536,8 @@ html.tablet-mode.tablet-keyboard-open .tablet-section-backdrop {
 @media (max-width: 900px) {
     html.tablet-mode.orbis-authenticated body:not(.pos-page) > main,
     html.tablet-mode.orbis-authenticated body:not(.pos-page) > main.orbis-page {
-        padding-right: max(14px, env(safe-area-inset-right)) !important;
-        padding-left: max(14px, env(safe-area-inset-left)) !important;
+        padding-right:max(12px, env(safe-area-inset-right))!important;
+        padding-left:max(12px, env(safe-area-inset-left))!important;
     }
 
     html.tablet-mode .tablet-grid {

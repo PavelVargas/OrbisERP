@@ -14,7 +14,7 @@ html.tablet-mode {
     --tablet-shell-bottom: 92px;
     width: 100%;
     max-width: none;
-    background: var(--bg-page, var(--bg-main, #f3f5f7));
+    background:var(--bg-page, var(--bg-main, var(--ui-primary-soft)));
 }
 
 html.tablet-mode body:not(.pos-page) {

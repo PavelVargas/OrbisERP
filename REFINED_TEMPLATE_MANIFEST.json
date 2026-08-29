@@ -1,0 +1,732 @@
+{
+  "name": "OrbisERP Refined UI",
+  "version": "20260829-refined3",
+  "templates_active": 118,
+  "documents": 47,
+  "inherited_templates": 66,
+  "partials": 5,
+  "profiles": {
+    "orbis-public": 10,
+    "orbis-app": 95,
+    "orbis-launchpad": 1,
+    "partial": 5,
+    "orbis-print": 5,
+    "orbis-master": 2
+  },
+  "quality": {
+    "rgba_occurrences_templates_css": 0,
+    "static_inline_style_attributes": 0,
+    "dynamic_inline_style_attributes": 15,
+    "legacy_redesign_stylesheet_references": 0
+  },
+  "templates": [
+    {
+      "template": "Home/index.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-public"
+    },
+    {
+      "template": "backoffice/base.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "backoffice/expenses.html",
+      "kind": "inherited",
+      "base": "backoffice/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "backoffice/inventory_count_detail.html",
+      "kind": "inherited",
+      "base": "backoffice/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "backoffice/inventory_counts.html",
+      "kind": "inherited",
+      "base": "backoffice/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "backoffice/notifications.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "backoffice/overview.html",
+      "kind": "inherited",
+      "base": "backoffice/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "backoffice/payables.html",
+      "kind": "inherited",
+      "base": "backoffice/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "backoffice/receivables.html",
+      "kind": "inherited",
+      "base": "backoffice/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "backoffice/return_form.html",
+      "kind": "inherited",
+      "base": "backoffice/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "backoffice/returns.html",
+      "kind": "inherited",
+      "base": "backoffice/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "backoffice/security.html",
+      "kind": "inherited",
+      "base": "backoffice/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "cash/register.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "categories/category.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "categories/create.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "categories/edit.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "clients/create.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "clients/detail.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "clients/edit.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "clients/list.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "company/create_company.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-public"
+    },
+    {
+      "template": "company/list_companies.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "company/plans.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "company/settings.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "crm/index.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "dashboard/dashboard.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "divisas/gestion.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "errors/cuenta_suspendida.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-public"
+    },
+    {
+      "template": "errors/permission_denied.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-public"
+    },
+    {
+      "template": "errors/request_error.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "governance/audit.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "governance/integrity.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "governance/processes.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "governance/sessions.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "governance/system.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "launchpad/index.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-launchpad"
+    },
+    {
+      "template": "layouts/app_head_assets.html",
+      "kind": "partial",
+      "base": null,
+      "profile": "partial"
+    },
+    {
+      "template": "layouts/left_bar.html",
+      "kind": "partial",
+      "base": null,
+      "profile": "partial"
+    },
+    {
+      "template": "layouts/theme_prepaint.html",
+      "kind": "partial",
+      "base": null,
+      "profile": "partial"
+    },
+    {
+      "template": "login/forgot_password.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-public"
+    },
+    {
+      "template": "login/login.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-public"
+    },
+    {
+      "template": "login/two_factor.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-public"
+    },
+    {
+      "template": "movements/entries.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "movements/exits.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "operations/billing.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "operations/data_center.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "operations/setup.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "partials/auth_flashes.html",
+      "kind": "partial",
+      "base": null,
+      "profile": "partial"
+    },
+    {
+      "template": "perfil/perfil.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "products/create.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "products/detail.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "products/edit.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "products/movements.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "products/products.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "products/stock_detail.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "purchase/create_purchase.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "purchase/purchase_detail.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "purchase/purchase_list.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "registro/register.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-public"
+    },
+    {
+      "template": "registro/verify_email.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-public"
+    },
+    {
+      "template": "reports/closings_history.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "reports/index.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "reports/inventory_health.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "reports/monthly_history.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "reports/print_cash.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-print"
+    },
+    {
+      "template": "reports/print_sales.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-print"
+    },
+    {
+      "template": "reports/retail_performance.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "retail/_nav.html",
+      "kind": "partial",
+      "base": null,
+      "profile": "partial"
+    },
+    {
+      "template": "retail/catalog_setup.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "retail/configuration.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "retail/customer_programs.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "retail/integrations.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "retail/locations.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "retail/operations_center.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "retail/overview.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "retail/pricing.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "retail/quality.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "retail/warranties.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "sales/create_sales.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "sales/detail_sales.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "sales/invoice_pdf.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-print"
+    },
+    {
+      "template": "sales/list.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "sales/receipt_thermal.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-print"
+    },
+    {
+      "template": "stock/adjust_stock.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "stock/kardex.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "stock/stock_actual.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "stock/stock_history.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "superadmin/dashboard.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-master"
+    },
+    {
+      "template": "superadmin/payments_management.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-master"
+    },
+    {
+      "template": "suppliers/create.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "suppliers/edit.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "suppliers/list.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "suppliers/supplier_history.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "transfers/by_warehouse.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "transfers/create.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "transfers/list.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "transfers/pdf_template.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-print"
+    },
+    {
+      "template": "transfers/scanner_validation.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "transfers/view_detail.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "users/create_user.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "users/edit_user.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "users/permission_audit.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "users/reset_password_form.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-public"
+    },
+    {
+      "template": "users/users.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "users/users_profile.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "warehouse/create.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "warehouse/edit.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "warehouse/list.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "warehouse/location_traceability.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "warehouse/locations.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "warehouse/stock.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "workspace/base.html",
+      "kind": "document",
+      "base": null,
+      "profile": "orbis-app"
+    },
+    {
+      "template": "workspace/documents.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "workspace/labels.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "workspace/notification_rules.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "workspace/promotions.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "workspace/recycle_bin.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    },
+    {
+      "template": "workspace/taxes.html",
+      "kind": "inherited",
+      "base": "workspace/base.html",
+      "profile": "orbis-app"
+    }
+  ]
+}

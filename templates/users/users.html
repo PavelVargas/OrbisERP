@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html lang="es" class="{% if tablet_mode_active|default(session.get('tablet_mode')) %}tablet-mode tablet-full-width-profile{% endif %} {% if session.get('theme') == 'dark' %}dark{% endif %}"><head>{% set shell_assets_loaded = true %}{% include 'layouts/app_head_assets.html' %}<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Gestión de personal · OrbisERP</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/users_css/users.css') }}"></head>
-<body>{% include 'layouts/left_bar.html' %}<main class="staff-page">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/users_css/users.css') }}">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-polished3') }}">
+</head>
+<body class="orbis-app">{% include 'layouts/left_bar.html' %}<main class="staff-page">
 <header class="staff-header"><div><span class="eyebrow">EQUIPO Y ACCESOS</span><h1>Gestión de personal</h1><p>Administra colaboradores, roles, sedes y permisos desde un solo lugar.</p></div><div class="header-actions">{% if can('audits.view') %}<a class="btn secondary" href="{{ url_for('users_bp.permission_audit') }}"><i class="bi bi-clock-history"></i> Auditoría</a>{% endif %}{% if can('users.create') and users|length < user.company.get_plan_limits().max_users %}<a class="btn primary" href="{{ url_for('users_bp.create_user') }}"><i class="bi bi-person-plus"></i> Nuevo colaborador</a>{% endif %}</div></header>
 <section class="staff-summary"><div><i class="bi bi-people"></i><span>Colaboradores<strong>{{ users|length }}</strong></span></div><div><i class="bi bi-building"></i><span>Plan actual<strong>{{ user.company.plan_name }}</strong></span></div><div><i class="bi bi-person-check"></i><span>Capacidad<strong>{{ users|length }} / {{ user.company.get_plan_limits().max_users }}</strong></span></div></section>
 {% if users|length >= user.company.get_plan_limits().max_users %}<div class="limit-notice"><i class="bi bi-info-circle"></i><span>Alcanzaste el límite de colaboradores de tu plan.</span><a href="{{ url_for('company_bp.view_plans') }}">Ver planes</a></div>{% endif %}

@@ -7,13 +7,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>No pudimos completar la solicitud · OrbisERP</title>
   <link rel="stylesheet" href="{{ url_for('static',filename='css/operations.css') }}">
-  <style nonce="{{ csp_nonce }}">
-    .request-error-page{min-height:100dvh;display:grid;place-items:center;padding:32px 20px}.request-error-card{width:min(680px,100%);border:1px solid var(--line);border-radius:24px;background:var(--card);box-shadow:0 26px 70px rgba(0,0,0,.16);overflow:hidden}.request-error-head{display:flex;align-items:flex-start;gap:16px;padding:26px 28px 18px}.request-error-icon{width:54px;height:54px;flex:0 0 54px;border-radius:16px;display:grid;place-items:center;background:color-mix(in srgb,var(--o) 13%,transparent);color:var(--o);font-size:24px}.request-error-head small{display:block;color:var(--muted);font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}.request-error-head h1{margin:0;font-size:clamp(22px,4vw,31px);line-height:1.12}.request-error-body{padding:0 28px 26px}.request-error-explanation{padding:16px 18px;border-radius:15px;background:var(--surface-2,var(--bg));border:1px solid var(--line);font-size:15px;line-height:1.55}.request-error-next{margin:18px 0 0;padding-left:20px;color:var(--muted);line-height:1.6}.request-error-reference{display:flex;gap:10px;align-items:center;margin-top:18px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}.request-error-reference code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--text);overflow-wrap:anywhere}.request-error-actions{display:flex;gap:10px;flex-wrap:wrap;padding:18px 28px;background:var(--surface-2,var(--bg));border-top:1px solid var(--line)}.request-error-actions a{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 16px;border-radius:12px;text-decoration:none;font-weight:800}.request-error-actions .primary{background:var(--o);color:#fff}.request-error-actions .secondary{border:1px solid var(--line);color:var(--text);background:var(--card)}@media(max-width:680px){.request-error-page{padding:16px}.request-error-card{border-radius:18px}.request-error-head,.request-error-body,.request-error-actions{padding-left:18px;padding-right:18px}.request-error-actions a{flex:1 1 100%}}
-  </style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-polished3') }}">
 </head>
-<body>
+<body class="orbis-app">
 {% if user %}{% include 'layouts/left_bar.html' %}{% endif %}
-<main class="request-error-page" {% if user %}style="margin-left:var(--sidebar-space,0)"{% endif %}>
+<main class="request-error-page" {% if user %}data-ui-style="r140b8277de"{% endif %}>
   <article class="request-error-card" role="alert">
     <header class="request-error-head">
       <span class="request-error-icon"><i class="bi bi-exclamation-triangle"></i></span>

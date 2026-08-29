@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Proveedor | Sistema</title>
     <link rel="stylesheet" href="/static/css/order_css/supplier.css">
+
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-polished3') }}">
 </head>
-<body>
+<body class="orbis-app">
 
     {% include 'layouts/left_bar.html' %}
 
@@ -27,7 +30,7 @@
             </div>
         </header>
 
-        <div class="form-container-left" style="max-width: 600px;">
+        <div class="form-container-left" data-ui-style="rdc271cfe4e">
             <form method="POST" class="modern-form">
                 <div class="form-group">
                     <label>Nombre del Proveedor</label>
@@ -44,7 +47,7 @@
                     <input type="text" name="phone" value="{{ supplier.phone }}">
                 </div>
 
-                <div class="form-actions-left" style="margin-top: 20px;">
+                <div class="form-actions-left" data-ui-style="r5fa693f3d4">
                     <button type="submit" class="btn-primary">
                         <i class="bi bi-arrow-clockwise"></i> Actualizar proveedor
                     </button>

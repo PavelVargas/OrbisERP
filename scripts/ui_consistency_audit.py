@@ -4,7 +4,7 @@
 This intentionally does not pretend to replace browser E2E. It catches the common
 causes of visual regressions in templates: shell assets loaded in the wrong order,
 undefined workspace components, legacy duplicate views, inline one-off styling in
-core surfaces, obsolete block names and old off-brand accent colors.
+core surfaces, obsolete block names and fragmented theme/style generations.
 """
 from __future__ import annotations
 
@@ -53,8 +53,6 @@ LEGACY_DUPLICATES = {
     "warehouse/transfers_by_warehouse.html",
 }
 
-# Old accents that made parts of the product look like a different application.
-FORBIDDEN_ACCENTS = {"#4f46e5", "#8b83ff", "#6366f1", "#4338ca", "#714b67"}
 CLASS_RE = re.compile(r"class=[\"']([^\"']+)[\"']")
 WORKSPACE_DEF_RE = re.compile(r"\.((?:workspace-)[A-Za-z0-9_-]+)")
 
@@ -94,7 +92,7 @@ def main() -> int:
     # deployment/cascade hazards. Keep authenticated surfaces self-contained.
     common_assets = (
         "css/base_css/base.css", "css/left.css", "css/commercial.css",
-        "css/ui_unification.css", "css/ux_polish.css", "css/ui_inline_migrations.css",
+        "css/ui_unification.css", "css/ux_polish.css",
     )
     for path in templates:
         rel = path.relative_to(TEMPLATES).as_posix()
@@ -150,12 +148,56 @@ def main() -> int:
     if missing:
         fail(errors, "Undefined workspace component classes: " + ", ".join(missing))
 
-    # 5) Remove old purple/indigo brand fragments from application templates/styles.
-    for path in [*templates, *css_files]:
-        source = path.read_text(encoding="utf-8", errors="replace").lower()
-        found = sorted(color for color in FORBIDDEN_ACCENTS if color in source)
-        if found:
-            fail(errors, f"Off-brand accent {','.join(found)} in {path.relative_to(ROOT)}")
+    # 5) Refined design-system integrity: one final stylesheet, no alpha-color
+    # functions, and every complete document receives an explicit screen profile.
+    refined = STATIC_CSS / "orbis_refined.css"
+    refined_source = refined.read_text(encoding="utf-8", errors="replace") if refined.exists() else ""
+    if not refined_source:
+        fail(errors, "Missing static/css/orbis_refined.css")
+    template_source = "\n".join(p.read_text(encoding="utf-8", errors="replace") for p in templates)
+    forbidden_color_patterns = {
+        "rgba() alpha color": r"rgba\s*\(",
+        "8-digit alpha hex": r"#[0-9a-fA-F]{8}\b",
+        "color-mix()": r"color-mix\s*\(",
+        "decorative gradient": r"(?:linear|radial|conic)-gradient\s*\(",
+    }
+    for label, pattern in forbidden_color_patterns.items():
+        if re.search(pattern, css_source, re.I):
+            fail(errors, f"{label} remains in CSS")
+        if re.search(pattern, template_source, re.I):
+            fail(errors, f"{label} remains in templates")
+
+    # Inline layout declarations caused multiple generations of per-template spacing.
+    # Dynamic progress geometry is represented by native <progress>, not style attrs.
+    for path in templates:
+        source = path.read_text(encoding="utf-8", errors="replace")
+        if re.search(r"<[^>]+\sstyle\s*=", source, re.I):
+            fail(errors, f"Inline style attribute remains: {path.relative_to(ROOT)}")
+
+    # Every migrated data-ui-style hook must be defined by the canonical final sheet,
+    # otherwise standalone/public/print profiles would silently miss its layout.
+    used_migrations = set(re.findall(r"data-ui-style=[\"']([^\"']+)", template_source))
+    defined_migrations = set(re.findall(r"\[data-ui-style=[\"']?([^\"'\]\s]+)", refined_source))
+    missing_migrations = sorted(used_migrations - defined_migrations)
+    if missing_migrations:
+        fail(errors, "Migrated template styles missing from canonical sheet: " + ", ".join(missing_migrations))
+    for legacy_sheet in ("orbis_v2.css", "orbis_serene.css", "orbis_next.css"):
+        for path in templates:
+            if legacy_sheet in path.read_text(encoding="utf-8", errors="replace"):
+                fail(errors, f"Legacy redesign stylesheet still referenced: {legacy_sheet} in {path.relative_to(ROOT)}")
+    profile_names = ("orbis-app", "orbis-public", "orbis-print", "orbis-master", "orbis-launchpad", "orbis-pos")
+    for path in templates:
+        source = path.read_text(encoding="utf-8", errors="replace")
+        if "<html" not in source.lower():
+            continue
+        if "orbis_refined.css" not in source:
+            fail(errors, f"Complete document missing refined stylesheet: {path.relative_to(ROOT)}")
+        if not any(profile in source for profile in profile_names):
+            fail(errors, f"Complete document missing explicit visual profile: {path.relative_to(ROOT)}")
+        close_head = source.lower().find("</head>")
+        refined_pos = source.find("orbis_refined.css")
+        if refined_pos < 0 or close_head < refined_pos:
+            fail(errors, f"Refined stylesheet is not in final head position: {path.relative_to(ROOT)}")
 
     if errors:
         print("UI consistency audit FAILED:", file=sys.stderr)

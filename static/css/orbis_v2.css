@@ -1,0 +1,718 @@
+/*
+ * OrbisERP UI 2.0 — complete visual migration
+ * 2026-08-29
+ * Goal: one calm, high-density product language across every interactive view.
+ * Functional selectors, IDs and JS hooks remain untouched.
+ */
+:root {
+  --o-accent: #f06a24;
+  --o-accent-strong: #d95817;
+  --o-accent-soft: #fff1e8;
+  --o-bg: #f4f5f6;
+  --o-surface: #ffffff;
+  --o-surface-2: #f8f9fa;
+  --o-surface-3: #eef0f2;
+  --o-text: #17191c;
+  --o-text-2: #535960;
+  --o-text-3: #838a91;
+  --o-line: #e4e7e9;
+  --o-line-strong: #d8dcdf;
+  --o-success: #16805b;
+  --o-success-soft: #e9f7f1;
+  --o-warning: #a96505;
+  --o-warning-soft: #fff5df;
+  --o-danger: #c73b45;
+  --o-danger-soft: #fff0f1;
+  --o-info: #2c6fc0;
+  --o-info-soft: #edf5ff;
+  --o-radius-xs: 7px;
+  --o-radius-sm: 10px;
+  --o-radius-md: 14px;
+  --o-radius-lg: 18px;
+  --o-radius-xl: 24px;
+  --o-control: 42px;
+  --o-shadow-1: 0 1px 2px rgba(20, 24, 28, .04), 0 8px 30px rgba(20, 24, 28, .035);
+  --o-shadow-2: 0 14px 44px rgba(20, 24, 28, .09);
+  --o-page: 1480px;
+  --o-page-pad: clamp(18px, 2.5vw, 38px);
+  --o-sidebar: 264px;
+  --o-sidebar-collapsed: 76px;
+  --o-transition: 150ms cubic-bezier(.2,.7,.2,1);
+
+  /* aliases used by legacy styles */
+  --primary: var(--o-accent);
+  --accent: var(--o-accent);
+  --bg-main: var(--o-bg);
+  --bg-card: var(--o-surface);
+  --bg-input: var(--o-surface-2);
+  --bg-hover: var(--o-surface-3);
+  --text-main: var(--o-text);
+  --text-muted: var(--o-text-2);
+  --border: var(--o-line);
+  --border-strong: var(--o-line-strong);
+  --radius: var(--o-radius-sm);
+}
+
+html.dark,
+html[data-theme="dark"] {
+  --o-bg: #101214;
+  --o-surface: #171a1d;
+  --o-surface-2: #1d2024;
+  --o-surface-3: #25292e;
+  --o-text: #f4f5f6;
+  --o-text-2: #aab0b6;
+  --o-text-3: #7f878e;
+  --o-line: #292e33;
+  --o-line-strong: #353b42;
+  --o-accent-soft: #351f14;
+  --o-success-soft: #132a23;
+  --o-warning-soft: #302611;
+  --o-danger-soft: #32191c;
+  --o-info-soft: #17283d;
+  --o-shadow-1: 0 1px 2px rgba(0,0,0,.18), 0 10px 28px rgba(0,0,0,.12);
+  --o-shadow-2: 0 18px 52px rgba(0,0,0,.28);
+}
+
+html,
+body { min-height: 100%; }
+
+body {
+  font-family: "Plus Jakarta Sans", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+html.orbis-authenticated body,
+body.orbis-ui-v2 {
+  margin: 0;
+  background: var(--o-bg);
+  color: var(--o-text);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+html.orbis-authenticated *,
+body.orbis-ui-v2 * { box-sizing: border-box; }
+
+html.orbis-authenticated :where(a),
+body.orbis-ui-v2 :where(a) { text-decoration: none; }
+
+html.orbis-authenticated :where(button,input,select,textarea),
+body.orbis-ui-v2 :where(button,input,select,textarea) { font: inherit; }
+
+/* ---------- App shell ---------- */
+html.orbis-authenticated body:not(.pos-page) > main,
+body.orbis-ui-v2:not(.auth-page):not(.pos-page) > main {
+  min-height: 100vh;
+  padding: 34px var(--o-page-pad) 64px;
+  background: transparent;
+}
+
+html.orbis-authenticated:not(.tablet-mode) body:not(.pos-page) > main {
+  margin-left: var(--o-sidebar) !important;
+  width: auto !important;
+  max-width: none !important;
+}
+
+html.orbis-authenticated.sidebar-collapsed:not(.tablet-mode) body:not(.pos-page) > main,
+html.orbis-authenticated.nav-collapsed:not(.tablet-mode) body:not(.pos-page) > main {
+  margin-left: var(--o-sidebar-collapsed) !important;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main > * {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: var(--o-page);
+}
+
+/* ---------- Sidebar ---------- */
+html.orbis-authenticated .sidebar {
+  width: var(--o-sidebar) !important;
+  padding: 12px 10px 10px !important;
+  border: 0 !important;
+  border-right: 1px solid var(--o-line) !important;
+  background: color-mix(in srgb, var(--o-surface) 94%, var(--o-bg)) !important;
+  box-shadow: none !important;
+}
+
+html.orbis-authenticated .sidebar-header {
+  gap: 10px;
+  padding: 4px 2px 12px !important;
+  border: 0 !important;
+}
+
+html.orbis-authenticated .sidebar .brand {
+  min-height: 52px;
+  gap: 11px;
+  padding: 7px 8px !important;
+  border-radius: var(--o-radius-md);
+}
+
+html.orbis-authenticated .sidebar .brand-icon {
+  width: 36px !important;
+  height: 36px !important;
+  border: 0 !important;
+  border-radius: 11px !important;
+  background: var(--o-surface-2) !important;
+  box-shadow: none !important;
+}
+
+html.orbis-authenticated .sidebar .brand-icon img { width: 26px; height: 26px; object-fit: contain; }
+html.orbis-authenticated .sidebar .brand-name { color: var(--o-text); font-size: 13px; letter-spacing: -.02em; }
+html.orbis-authenticated .sidebar .brand-meta { color: var(--o-text-3); font-size: 10px; }
+
+html.orbis-authenticated .sidebar .user-widget {
+  min-height: 54px;
+  gap: 10px;
+  padding: 8px !important;
+  border: 0 !important;
+  border-radius: var(--o-radius-md) !important;
+  background: var(--o-surface-2) !important;
+  box-shadow: none !important;
+}
+html.orbis-authenticated .sidebar .user-widget:hover { background: var(--o-surface-3) !important; }
+html.orbis-authenticated .sidebar .user-avatar {
+  width: 34px !important; height: 34px !important;
+  border: 0 !important; border-radius: 50% !important;
+  background: var(--o-accent-soft) !important; color: var(--o-accent) !important;
+}
+html.orbis-authenticated .sidebar .user-info strong { color: var(--o-text); font-size: 11.5px; }
+html.orbis-authenticated .sidebar .user-info small { color: var(--o-text-3); font-size: 9.5px; }
+
+html.orbis-authenticated .sidebar-search {
+  min-height: 39px;
+  padding: 0 10px !important;
+  border: 0 !important;
+  border-radius: var(--o-radius-sm) !important;
+  background: var(--o-surface-2) !important;
+  box-shadow: none !important;
+}
+html.orbis-authenticated .sidebar-search input { color: var(--o-text) !important; background: transparent !important; border: 0 !important; box-shadow: none !important; }
+html.orbis-authenticated .sidebar-search kbd { border: 0 !important; background: var(--o-surface-3) !important; color: var(--o-text-3) !important; }
+
+html.orbis-authenticated .sidebar-nav { padding: 6px 2px 12px !important; }
+html.orbis-authenticated .nav-section { margin: 0 0 7px !important; }
+html.orbis-authenticated .nav-section-toggle {
+  min-height: 29px;
+  padding: 4px 9px !important;
+  color: var(--o-text-3) !important;
+  font-size: 9px !important;
+  font-weight: 750 !important;
+  letter-spacing: .075em !important;
+  text-transform: uppercase;
+}
+html.orbis-authenticated .nav-items { gap: 2px !important; }
+html.orbis-authenticated .sidebar .nav-item {
+  min-height: 40px !important;
+  gap: 9px !important;
+  padding: 6px 9px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  color: var(--o-text-2) !important;
+  box-shadow: none !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  transition: background var(--o-transition), color var(--o-transition), transform var(--o-transition);
+}
+html.orbis-authenticated .sidebar .nav-item:hover { background: var(--o-surface-2) !important; color: var(--o-text) !important; }
+html.orbis-authenticated .sidebar .nav-item.active {
+  background: var(--o-accent-soft) !important;
+  color: var(--o-accent-strong) !important;
+}
+html.orbis-authenticated .sidebar .nav-item--primary:not(.active) { color: var(--o-accent-strong) !important; }
+html.orbis-authenticated .sidebar .nav-icon {
+  display: grid !important; place-items: center;
+  width: 26px !important; height: 26px !important;
+  border: 0 !important; border-radius: 8px !important;
+  background: transparent !important;
+  color: inherit !important;
+  font-size: 14px !important;
+}
+html.orbis-authenticated .sidebar .nav-item.active .nav-icon { background: color-mix(in srgb, var(--o-accent) 9%, transparent) !important; }
+html.orbis-authenticated .sidebar-footer { padding: 8px 2px 2px !important; border-top: 1px solid var(--o-line) !important; }
+html.orbis-authenticated .collapse-btn {
+  right: -13px !important; width: 26px !important; height: 26px !important;
+  border: 1px solid var(--o-line) !important; border-radius: 50% !important;
+  background: var(--o-surface) !important; color: var(--o-text-2) !important;
+  box-shadow: 0 4px 14px rgba(0,0,0,.06) !important;
+}
+
+/* ---------- Page headers ---------- */
+html.orbis-authenticated :where(.workspace-header,.bo-header,.page-header,.dashboard-header,.clients-header,.products-header,.sales-header,.stock-header,.supplier-header,.purchase-header,.report-header,.section-header) {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 22px;
+  width: 100%;
+  margin: 0 auto 26px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html.orbis-authenticated :where(.workspace-heading,.bo-header>div:first-child,.page-header>div:first-child,.title-group) { min-width: 0; }
+html.orbis-authenticated :where(.workspace-eyebrow,.bo-eyebrow,.eyebrow,.page-kicker,.section-kicker,.card-kicker,.form-kicker) {
+  display: block;
+  margin: 0 0 6px;
+  color: var(--o-accent) !important;
+  font-size: 9px !important;
+  font-weight: 800 !important;
+  letter-spacing: .095em !important;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+html.orbis-authenticated :where(.workspace-header,.bo-header,.page-header,.dashboard-header,.products-header,.sales-header) h1,
+html.orbis-authenticated main > :where(h1) {
+  margin: 0;
+  color: var(--o-text) !important;
+  font-size: clamp(27px, 2.1vw, 35px) !important;
+  font-weight: 760 !important;
+  letter-spacing: -.045em !important;
+  line-height: 1.08 !important;
+}
+html.orbis-authenticated :where(.workspace-heading,.bo-header,.page-header,.dashboard-header,.products-header,.sales-header) p {
+  max-width: 780px;
+  margin: 7px 0 0;
+  color: var(--o-text-2) !important;
+  font-size: 12.5px !important;
+  line-height: 1.55 !important;
+}
+html.orbis-authenticated :where(.workspace-header-actions,.bo-header-actions,.header-actions,.page-actions,.actions) { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+/* ---------- Typography ---------- */
+html.orbis-authenticated main :where(h2,h3,h4) { color: var(--o-text); }
+html.orbis-authenticated main h2 { font-size: 17px; font-weight: 720; letter-spacing: -.025em; }
+html.orbis-authenticated main h3 { font-size: 14px; font-weight: 700; letter-spacing: -.015em; }
+html.orbis-authenticated main :where(p,small,.muted,.subtle,.hint,.description,.help-text) { color: var(--o-text-2); }
+html.orbis-authenticated main strong { color: inherit; }
+html.orbis-authenticated main a:not(.workspace-btn):not(.btn):not(.nav-item):not(.product-action-icon) { color: var(--o-accent-strong); }
+
+/* ---------- Surfaces: fewer borders, more hierarchy ---------- */
+html.orbis-authenticated main :where(
+  .workspace-card,.workspace-panel,.workspace-kpi,.workspace-metric,.bo-card,.bo-panel,
+  .metric-card,.stats-card,.stat-card,.kpi-card,.dashboard-card,.report-card,.content-card,
+  .table-card,.toolbar-card,.search-card,.filter-panel,.filters-panel,.filter-card,.form-card,
+  .detail-card,.summary-card,.info-card,.settings-card,.configuration-column,.warehouse-sidebar,
+  .glass-form,.form-container,.form-container-left,.bento-item,.card,.panel,.section-shell,
+  .hub-card,.capability-card,.activity-panel,.overview-card,.product-panel,.sale-panel
+) {
+  border: 0 !important;
+  border-radius: var(--o-radius-md) !important;
+  background: var(--o-surface) !important;
+  color: var(--o-text);
+  box-shadow: var(--o-shadow-1) !important;
+}
+
+html.orbis-authenticated main :where(.workspace-card,.workspace-panel,.bo-card,.content-card,.table-card,.form-card,.detail-card,.summary-card,.section-shell) {
+  padding: clamp(17px, 2vw, 23px) !important;
+}
+
+html.orbis-authenticated main :where(.workspace-card--flat,.flat,.transparent-card) {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html.orbis-authenticated main :where(.workspace-card-head,.bo-card-head,.card-header,.panel-heading,.section-title-row) {
+  margin: 0 0 14px !important;
+  padding: 0 0 12px !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--o-line) !important;
+  background: transparent !important;
+}
+
+/* nested cards should not look like card inception */
+html.orbis-authenticated main :where(.workspace-card,.bo-card,.content-card,.section-shell) :where(.workspace-card,.bo-card,.metric-card,.info-card,.summary-card,.card,.panel) {
+  border: 0 !important;
+  background: var(--o-surface-2) !important;
+  box-shadow: none !important;
+}
+
+/* ---------- Grids ---------- */
+html.orbis-authenticated main :where(.workspace-grid,.bo-grid,.metrics-grid,.stats-grid,.kpi-grid,.dashboard-grid,.module-card-grid,.retail-subgrid,.form-grid,.cards-grid) {
+  gap: 14px !important;
+}
+
+/* ---------- Buttons ---------- */
+html.orbis-authenticated :where(.workspace-btn,.bo-btn,.btn,.btn-primary,.btn-secondary,.action-btn,.act-btn,.master-btn,.primary-action,.secondary-action,.product-action-icon),
+body.orbis-ui-v2 :where(.btn,.btn-primary,.btn-secondary,button[type="submit"]) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 39px;
+  padding: 0 13px;
+  border: 0 !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  font-size: 11.5px !important;
+  font-weight: 720 !important;
+  line-height: 1 !important;
+  cursor: pointer;
+  transition: transform var(--o-transition), background var(--o-transition), color var(--o-transition), opacity var(--o-transition);
+}
+html.orbis-authenticated :where(.workspace-btn,.bo-btn,.btn,.action-btn,.act-btn,.master-btn):hover { transform: translateY(-1px); }
+html.orbis-authenticated :where(.workspace-btn,.bo-btn,.btn,.action-btn,.act-btn,.master-btn):active { transform: translateY(0); }
+
+html.orbis-authenticated :where(.workspace-btn:not(.secondary):not(.danger):not(.ghost),.bo-btn.primary,.btn-primary,.primary-action,button[type="submit"]:not(.secondary):not(.ghost):not(.danger)) {
+  background: var(--o-accent) !important;
+  color: #fff !important;
+}
+html.orbis-authenticated :where(.workspace-btn:not(.secondary):not(.danger):not(.ghost),.bo-btn.primary,.btn-primary,.primary-action,button[type="submit"]:not(.secondary):not(.ghost):not(.danger)):hover { background: var(--o-accent-strong) !important; }
+html.orbis-authenticated :where(.workspace-btn.secondary,.bo-btn.secondary,.btn-secondary,.secondary-action,.ghost,.btn-outline) {
+  background: var(--o-surface-2) !important;
+  color: var(--o-text) !important;
+}
+html.orbis-authenticated :where(.workspace-btn.secondary,.bo-btn.secondary,.btn-secondary,.secondary-action,.ghost,.btn-outline):hover { background: var(--o-surface-3) !important; }
+html.orbis-authenticated :where(.danger,.workspace-btn.danger,.bo-btn.danger,.btn-danger) { background: var(--o-danger-soft) !important; color: var(--o-danger) !important; }
+html.orbis-authenticated :where(.workspace-icon-btn,.icon-btn,.product-action-icon) {
+  width: 36px; height: 36px; min-height: 36px; padding: 0 !important;
+  border: 0 !important; border-radius: 9px !important;
+  background: var(--o-surface-2) !important; color: var(--o-text-2) !important;
+}
+html.orbis-authenticated :where(.workspace-icon-btn,.icon-btn,.product-action-icon):hover { background: var(--o-surface-3) !important; color: var(--o-text) !important; }
+
+/* ---------- Forms ---------- */
+html.orbis-authenticated main :where(.workspace-form,.bo-form,.modern-form,.retail-form,.form-grid,.field-grid) { gap: 14px !important; }
+html.orbis-authenticated main :where(.form-group,.field-group,label) { color: var(--o-text); }
+html.orbis-authenticated main :where(.form-group>label,.field-group>label,label>span:first-child,.label) {
+  color: var(--o-text-2) !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: .01em;
+}
+html.orbis-authenticated main :where(input,select,textarea):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+body.orbis-ui-v2.auth-page :where(input,select,textarea):not([type="checkbox"]):not([type="radio"]) {
+  width: 100%;
+  min-height: var(--o-control);
+  padding: 9px 11px;
+  border: 1px solid var(--o-line) !important;
+  border-radius: 10px !important;
+  outline: none;
+  background: var(--o-surface-2) !important;
+  color: var(--o-text) !important;
+  box-shadow: none !important;
+  font-size: 12px !important;
+  transition: border-color var(--o-transition), background var(--o-transition), box-shadow var(--o-transition);
+}
+html.orbis-authenticated main textarea { min-height: 98px; resize: vertical; }
+html.orbis-authenticated main :where(input,select,textarea):focus,
+body.orbis-ui-v2.auth-page :where(input,select,textarea):focus {
+  border-color: color-mix(in srgb, var(--o-accent) 55%, var(--o-line)) !important;
+  background: var(--o-surface) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--o-accent) 11%, transparent) !important;
+}
+html.orbis-authenticated main :where(input,textarea)::placeholder { color: var(--o-text-3); }
+html.orbis-authenticated main :where(input[type="checkbox"],input[type="radio"]) { accent-color: var(--o-accent); }
+html.orbis-authenticated main fieldset { border: 0 !important; padding: 0 !important; }
+html.orbis-authenticated main hr { border: 0; border-top: 1px solid var(--o-line); }
+
+/* ---------- Tables ---------- */
+html.orbis-authenticated main :where(.workspace-table-wrap,.bo-table-wrap,.table-wrap,.table-responsive,.retail-list-scroll,.list-scroll) {
+  overflow-x: auto;
+  border: 0 !important;
+  border-radius: var(--o-radius-sm) !important;
+  background: var(--o-surface) !important;
+}
+html.orbis-authenticated main :where(table,.workspace-table,.bo-table,.retail-table,.table-enterprise) {
+  width: 100%;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--o-text);
+}
+html.orbis-authenticated main :where(table,.workspace-table,.bo-table,.retail-table,.table-enterprise) th {
+  padding: 10px 12px !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--o-line) !important;
+  background: transparent !important;
+  color: var(--o-text-3) !important;
+  font-size: 9px !important;
+  font-weight: 800 !important;
+  letter-spacing: .075em !important;
+  line-height: 1.2 !important;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+html.orbis-authenticated main :where(table,.workspace-table,.bo-table,.retail-table,.table-enterprise) td {
+  padding: 12px !important;
+  border: 0 !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--o-line) 75%, transparent) !important;
+  background: transparent !important;
+  color: var(--o-text) !important;
+  font-size: 11.5px !important;
+  vertical-align: middle;
+}
+html.orbis-authenticated main :where(table,.workspace-table,.bo-table,.retail-table,.table-enterprise) tbody tr:last-child td { border-bottom: 0 !important; }
+html.orbis-authenticated main :where(table,.workspace-table,.bo-table,.retail-table,.table-enterprise) tbody tr:hover td { background: var(--o-surface-2) !important; }
+
+/* ---------- Metrics ---------- */
+html.orbis-authenticated main :where(.workspace-metric,.workspace-kpi,.metric-card,.stat-card,.kpi-card,.stat-item) {
+  padding: 16px !important;
+  border: 0 !important;
+  background: var(--o-surface) !important;
+  box-shadow: var(--o-shadow-1) !important;
+}
+html.orbis-authenticated main :where(.workspace-metric,.workspace-kpi,.metric-card,.stat-card,.kpi-card,.stat-item) :where(.value,strong,.metric-value,.stat-value) {
+  color: var(--o-text) !important;
+  font-size: clamp(20px, 2vw, 27px) !important;
+  font-weight: 760 !important;
+  letter-spacing: -.04em !important;
+}
+html.orbis-authenticated main :where(.workspace-metric,.workspace-kpi,.metric-card,.stat-card,.kpi-card,.stat-item) :where(.label,small,.metric-label,.stat-label) { color: var(--o-text-3) !important; }
+html.orbis-authenticated main :where(.metric-icon,.kpi-icon,.overview-icon,.module-row-icon,.cap-icon,.priority-icon) {
+  display: grid; place-items: center;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: var(--o-accent-soft) !important;
+  color: var(--o-accent) !important;
+  box-shadow: none !important;
+}
+
+/* ---------- Chips/status ---------- */
+html.orbis-authenticated :where(.workspace-tag,.workspace-badge,.module-chip,.retail-chip,.retail-pill,.pill-badge,.badge,.status,.chip,.pill,.warehouse-badge) {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 24px;
+  padding: 4px 8px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: var(--o-surface-2) !important;
+  color: var(--o-text-2) !important;
+  box-shadow: none !important;
+  font-size: 9.5px !important;
+  font-weight: 720 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.1 !important;
+  text-transform: none !important;
+}
+html.orbis-authenticated :where(.success,.ok,.status-success,.workspace-badge.success) { background: var(--o-success-soft) !important; color: var(--o-success) !important; }
+html.orbis-authenticated :where(.warning,.warn,.status-warning,.workspace-badge.warning) { background: var(--o-warning-soft) !important; color: var(--o-warning) !important; }
+html.orbis-authenticated :where(.danger,.status-danger,.workspace-badge.danger) { background: var(--o-danger-soft) !important; color: var(--o-danger) !important; }
+html.orbis-authenticated :where(.info,.status-info,.workspace-badge.info) { background: var(--o-info-soft) !important; color: var(--o-info) !important; }
+
+/* ---------- Alerts/empty states ---------- */
+html.orbis-authenticated :where(.workspace-alert,.bo-alert,.alert,.flash-message,.module-note,.workspace-callout,.info-box) {
+  border: 0 !important;
+  border-radius: var(--o-radius-sm) !important;
+  background: var(--o-surface-2) !important;
+  color: var(--o-text-2) !important;
+  box-shadow: none !important;
+}
+html.orbis-authenticated :where(.workspace-alert--success,.alert-success) { background: var(--o-success-soft) !important; color: var(--o-success) !important; }
+html.orbis-authenticated :where(.workspace-alert--warning,.alert-warning) { background: var(--o-warning-soft) !important; color: var(--o-warning) !important; }
+html.orbis-authenticated :where(.workspace-alert--danger,.alert-danger,.alert-error) { background: var(--o-danger-soft) !important; color: var(--o-danger) !important; }
+html.orbis-authenticated :where(.workspace-empty,.module-empty,.empty-state,.empty-box,.bo-empty,.search-empty,.empty-sales,.empty-results) {
+  padding: 38px 22px !important;
+  border: 0 !important;
+  border-radius: var(--o-radius-md) !important;
+  background: var(--o-surface-2) !important;
+  color: var(--o-text-2) !important;
+  box-shadow: none !important;
+  text-align: center;
+}
+html.orbis-authenticated :where(.workspace-empty,.module-empty,.empty-state,.empty-box,.bo-empty) > i { color: var(--o-text-3); font-size: 25px; }
+
+/* ---------- Modals/popovers ---------- */
+html.orbis-authenticated :where(.modal-content,.modal-card,.global-search-panel,.filters-popover,.dropdown-menu,.popover,.tablet-section-sheet) {
+  border: 0 !important;
+  border-radius: var(--o-radius-lg) !important;
+  background: var(--o-surface) !important;
+  color: var(--o-text) !important;
+  box-shadow: var(--o-shadow-2) !important;
+}
+html.orbis-authenticated :where(.modal-header,.modal-footer,.global-search-box) { border-color: var(--o-line) !important; }
+html.orbis-authenticated :where(.global-search-modal,.modal-backdrop,.sidebar-overlay,.tablet-section-backdrop) { backdrop-filter: blur(7px); }
+
+/* ---------- Module list / entity rows ---------- */
+html.orbis-authenticated main :where(.module-list,.workspace-mini-list,.retail-record-list,.activity-list) { gap: 6px !important; }
+html.orbis-authenticated main :where(.module-row,.workspace-mini-row,.retail-record,.list-row,.activity-row) {
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+html.orbis-authenticated main :where(.module-row,.workspace-mini-row,.retail-record,.list-row,.activity-row):hover { background: var(--o-surface-2) !important; }
+
+/* ---------- Dashboard ---------- */
+html.orbis-authenticated .dashboard-container,
+html.orbis-authenticated .dashboard-content { max-width: var(--o-page) !important; margin: 0 auto !important; }
+html.orbis-authenticated :where(.dashboard-kpis,.dashboard-grid,.metrics-row) { gap: 14px !important; }
+html.orbis-authenticated :where(.chart-container,.chart-card,.analytics-card) {
+  border: 0 !important; border-radius: var(--o-radius-md) !important;
+  background: var(--o-surface) !important; box-shadow: var(--o-shadow-1) !important;
+}
+
+/* ---------- Product catalog ---------- */
+html.orbis-authenticated :where(.products-container,.product-page,.product-catalog) { max-width: var(--o-page) !important; margin-inline: auto !important; }
+html.orbis-authenticated :where(.product-toolbar,.product-catalog-toolbar,.product-filter-bar) {
+  border: 0 !important; border-radius: var(--o-radius-md) !important;
+  background: var(--o-surface) !important; box-shadow: var(--o-shadow-1) !important;
+}
+html.orbis-authenticated .odoo-product-card {
+  overflow: hidden;
+  border: 0 !important;
+  border-radius: var(--o-radius-md) !important;
+  background: var(--o-surface) !important;
+  box-shadow: var(--o-shadow-1) !important;
+  transition: transform var(--o-transition), box-shadow var(--o-transition);
+}
+html.orbis-authenticated .odoo-product-card:hover { transform: translateY(-2px); box-shadow: 0 12px 34px rgba(20,24,28,.08) !important; }
+html.orbis-authenticated .odoo-product-image { background: var(--o-surface-2) !important; border: 0 !important; }
+html.orbis-authenticated .odoo-product-body { padding: 15px !important; }
+html.orbis-authenticated .odoo-product-name { color: var(--o-text) !important; font-weight: 720 !important; }
+html.orbis-authenticated .odoo-product-sku { color: var(--o-text-3) !important; }
+html.orbis-authenticated .odoo-product-price { color: var(--o-text) !important; }
+html.orbis-authenticated .product-soft-tag { border: 0 !important; background: var(--o-surface-2) !important; color: var(--o-text-2) !important; }
+html.orbis-authenticated .product-soft-tag.accent { background: var(--o-accent-soft) !important; color: var(--o-accent-strong) !important; }
+html.orbis-authenticated .odoo-product-footer { border-top: 1px solid var(--o-line) !important; }
+html.orbis-authenticated .product-view-button { border: 0 !important; background: transparent !important; color: var(--o-text-3) !important; }
+html.orbis-authenticated .product-view-button.active { background: var(--o-surface-2) !important; color: var(--o-text) !important; }
+
+/* ---------- Retail ---------- */
+html.orbis-authenticated .retail-shell { max-width: var(--o-page) !important; margin-inline: auto !important; }
+html.orbis-authenticated :where(.retail-launch-card,.retail-section,.retail-card) {
+  border: 0 !important; border-radius: var(--o-radius-md) !important;
+  background: var(--o-surface) !important; box-shadow: var(--o-shadow-1) !important;
+}
+html.orbis-authenticated .retail-section-intro { border: 0 !important; background: transparent !important; }
+html.orbis-authenticated .retail-form-divider { border-color: var(--o-line) !important; }
+
+/* ---------- Backoffice ---------- */
+html.orbis-authenticated .bo-page { max-width: none !important; }
+html.orbis-authenticated .bo-status { border: 0 !important; border-radius: 999px !important; }
+html.orbis-authenticated .bo-security-form { border: 0 !important; background: var(--o-surface-2) !important; }
+
+/* ---------- Scanner ---------- */
+body.scanner-mode-page.orbis-ui-v2,
+html.orbis-authenticated body.scanner-mode-page { background: #0f1113 !important; }
+body.scanner-mode-page :where(.scanner-card,.scanner-panel,.scanner-shell) { border: 0 !important; border-radius: 18px !important; }
+
+/* ---------- POS: redesigned but structurally isolated ---------- */
+html.orbis-authenticated body.pos-page {
+  background: var(--o-bg) !important;
+  color: var(--o-text) !important;
+}
+html.orbis-authenticated body.pos-page :where(.pos-shell,.pos-layout,.sales-container,.checkout-shell) { background: transparent !important; }
+html.orbis-authenticated body.pos-page :where(.pos-panel,.product-browser,.cart-panel,.checkout-panel,.sale-card,.customer-panel,.payment-panel,.summary-panel) {
+  border: 0 !important;
+  border-radius: var(--o-radius-md) !important;
+  background: var(--o-surface) !important;
+  box-shadow: var(--o-shadow-1) !important;
+}
+html.orbis-authenticated body.pos-page :where(input,select,textarea):not([type="checkbox"]):not([type="radio"]) {
+  border: 1px solid var(--o-line) !important;
+  border-radius: 10px !important;
+  background: var(--o-surface-2) !important;
+  color: var(--o-text) !important;
+  box-shadow: none !important;
+}
+html.orbis-authenticated body.pos-page :where(button,.btn,.pos-btn) { border-radius: 10px !important; box-shadow: none !important; }
+html.orbis-authenticated body.pos-page :where(.product-card,.catalog-card,.pos-product-card) { border: 0 !important; border-radius: 12px !important; box-shadow: none !important; background: var(--o-surface-2) !important; }
+html.orbis-authenticated body.pos-page :where(.product-card,.catalog-card,.pos-product-card):hover { background: var(--o-surface-3) !important; }
+html.orbis-authenticated body.pos-page :where(.cart-row,.line-item,.sale-line) { border: 0 !important; border-bottom: 1px solid var(--o-line) !important; }
+
+/* ---------- Public/auth ---------- */
+body.orbis-ui-v2.auth-page {
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 10% 8%, color-mix(in srgb, var(--o-accent) 11%, transparent), transparent 30%),
+    var(--o-bg) !important;
+  color: var(--o-text);
+}
+body.orbis-ui-v2.auth-page :where(.auth-nav,.top-nav) { border: 0 !important; background: transparent !important; box-shadow: none !important; }
+body.orbis-ui-v2.auth-page :where(.split-layout,.auth-layout,.auth-shell) { min-height: 100vh; }
+body.orbis-ui-v2.auth-page :where(.side-visual,.visual-panel) {
+  border: 0 !important;
+  background: #17191c !important;
+  color: #fff !important;
+}
+body.orbis-ui-v2.auth-page :where(.side-form,.auth-card,.form-panel,.login-card,.register-card) {
+  border: 0 !important;
+  border-radius: var(--o-radius-lg) !important;
+  background: var(--o-surface) !important;
+  box-shadow: var(--o-shadow-2) !important;
+}
+body.orbis-ui-v2.auth-page :where(h1,h2) { letter-spacing: -.045em; }
+body.orbis-ui-v2.auth-page :where(.btn-primary,button[type="submit"]) { min-height: 44px; border: 0 !important; border-radius: 10px !important; background: var(--o-accent) !important; color: white !important; font-weight: 720 !important; }
+body.orbis-ui-v2.auth-page :where(.theme-switch,.auth-icon-btn) { border: 0 !important; background: var(--o-surface-2) !important; }
+
+/* ---------- Company/admin/master pages ---------- */
+body.orbis-ui-v2 :where(.master-panel,.master-card,.company-card,.plan-card,.admin-card) {
+  border: 0 !important;
+  border-radius: var(--o-radius-md) !important;
+  background: var(--o-surface) !important;
+  box-shadow: var(--o-shadow-1) !important;
+}
+body.orbis-ui-v2 :where(.master-theme,.master-body) { background: var(--o-bg) !important; color: var(--o-text) !important; }
+
+/* ---------- Banners ---------- */
+html.orbis-authenticated :where(.company-readonly-banner,.global-broadcast-banner,.support-mode) {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* ---------- Focus/accessibility ---------- */
+html.orbis-authenticated :where(a,button,input,select,textarea):focus-visible,
+body.orbis-ui-v2 :where(a,button,input,select,textarea):focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--o-accent) 68%, white);
+  outline-offset: 2px;
+}
+
+/* ---------- Tablet ---------- */
+html.tablet-mode.orbis-authenticated .sidebar { display: none !important; }
+html.tablet-mode.orbis-authenticated body:not(.pos-page) > main {
+  margin-left: 0 !important;
+  padding: 88px 18px 96px !important;
+}
+html.tablet-mode.orbis-authenticated .app-tablet-topbar {
+  border: 0 !important;
+  border-bottom: 1px solid var(--o-line) !important;
+  background: color-mix(in srgb, var(--o-surface) 92%, transparent) !important;
+  backdrop-filter: blur(14px);
+  box-shadow: none !important;
+}
+html.tablet-mode.orbis-authenticated .app-tablet-dock {
+  border: 0 !important;
+  border-top: 1px solid var(--o-line) !important;
+  background: color-mix(in srgb, var(--o-surface) 94%, transparent) !important;
+  backdrop-filter: blur(14px);
+  box-shadow: none !important;
+}
+html.tablet-mode.orbis-authenticated .tablet-dock-section,
+html.tablet-mode.orbis-authenticated .tablet-dock-home { border: 0 !important; border-radius: 10px !important; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1100px) {
+  :root { --o-page-pad: 22px; }
+  html.orbis-authenticated:not(.tablet-mode) body:not(.pos-page) > main { margin-left: var(--o-sidebar-collapsed) !important; }
+  html.orbis-authenticated:not(.tablet-mode) .sidebar { width: var(--o-sidebar-collapsed) !important; }
+  html.orbis-authenticated:not(.tablet-mode) .sidebar .hide-collapsed { display: none !important; }
+}
+
+@media (max-width: 760px) {
+  :root { --o-page-pad: 15px; --o-control: 44px; }
+  html.orbis-authenticated:not(.tablet-mode) body:not(.pos-page) > main { margin-left: 0 !important; padding-top: 74px !important; }
+  html.orbis-authenticated:not(.tablet-mode) .sidebar { width: min(290px, 88vw) !important; }
+  html.orbis-authenticated :where(.workspace-header,.bo-header,.page-header,.dashboard-header,.products-header,.sales-header) { align-items: flex-start; flex-direction: column; gap: 13px; }
+  html.orbis-authenticated :where(.workspace-header-actions,.bo-header-actions,.header-actions,.page-actions) { width: 100%; }
+  html.orbis-authenticated :where(.workspace-header-actions,.bo-header-actions,.header-actions,.page-actions) > * { flex: 1 1 auto; }
+  html.orbis-authenticated main :where(.workspace-card,.workspace-panel,.bo-card,.content-card,.table-card,.form-card,.detail-card,.summary-card,.section-shell) { padding: 15px !important; }
+  html.orbis-authenticated main :where(table,.workspace-table,.bo-table,.retail-table) td { padding: 10px !important; }
+}
+
+@media (max-width: 520px) {
+  html.orbis-authenticated :where(.workspace-header,.bo-header,.page-header) h1 { font-size: 26px !important; }
+  html.orbis-authenticated :where(.workspace-btn,.bo-btn,.btn,.action-btn) { min-height: 42px; }
+  body.orbis-ui-v2.auth-page :where(.side-form,.auth-card,.form-panel,.login-card,.register-card) { border-radius: 14px !important; box-shadow: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.orbis-authenticated *, body.orbis-ui-v2 * { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}

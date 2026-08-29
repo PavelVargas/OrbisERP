@@ -8,9 +8,13 @@
     {% include 'layouts/app_head_assets.html' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/workspace.css') }}">
     {% block extra_head %}{% endblock %}
+
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-polished3') }}">
 </head>
-<body>
+<body class="orbis-app">
     {% include 'layouts/left_bar.html' %}
+    
     <main class="workspace-page orbis-page">
         <header class="workspace-header">
             <div class="workspace-heading">

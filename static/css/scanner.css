@@ -1,31 +1,28 @@
-/* OrbisERP transfer scanner: fixed dark operational workstation.
-   This page intentionally remains dark regardless of the global theme. */
+/* OrbisERP transfer scanner: canonical operational workstation.
+   Uses the same adaptive light/dark tokens as the rest of the product. */
 
-html.scanner-dark {
-    background: #0c0e11 !important;
-    color-scheme: dark !important;
+html.scanner-workspace {
+    background: var(--ui-bg) !important;
 }
 
 body.scanner-mode-page {
-    --scan-accent: #f36b21;
-    --scan-accent-strong: #ff7a2f;
-    --scan-success: #2fbe7c;
-    --scan-danger: #ff626d;
-    --scan-bg: #0c0e11;
-    --scan-bg-soft: #101318;
-    --scan-surface: #15191f;
-    --scan-surface-raised: #1b2027;
-    --scan-input: #20262e;
-    --scan-text: #f7f7f5;
-    --scan-muted: #98a2ad;
-    --scan-line: #2b323b;
-    --scan-line-strong: #3a444f;
+    --scan-accent: var(--ui-primary);
+    --scan-accent-strong: var(--ui-primary-hover);
+    --scan-success: var(--ui-success);
+    --scan-danger: var(--ui-danger);
+    --scan-bg: var(--ui-bg);
+    --scan-bg-soft: var(--ui-surface-soft);
+    --scan-surface: var(--ui-surface);
+    --scan-surface-raised: var(--ui-surface);
+    --scan-input: var(--ui-surface-soft);
+    --scan-text: var(--ui-text);
+    --scan-muted: var(--ui-muted);
+    --scan-line: var(--ui-line);
+    --scan-line-strong: var(--ui-line-strong);
     min-height: 100vh;
     color: var(--scan-text) !important;
     background: var(--scan-bg) !important;
-    color-scheme: dark !important;
 }
-
 body.scanner-mode-page,
 body.scanner-mode-page input,
 body.scanner-mode-page button {
@@ -36,12 +33,10 @@ body.scanner-mode-page > main#main-frame {
     position: relative;
     min-height: 100vh;
     max-width: none !important;
-    padding: 30px clamp(18px, 3.2vw, 48px) 42px !important;
+    padding:32px clamp(16px, 3.2vw, 48px) 40px!important;
     display: block !important;
     color: var(--scan-text) !important;
-    background:
-        radial-gradient(circle at 92% 0%, color-mix(in srgb, var(--scan-accent) 10%, transparent), transparent 30rem),
-        linear-gradient(180deg, #101318 0%, var(--scan-bg) 72%) !important;
+    background: var(--scan-bg) !important;
 }
 
 body.scanner-mode-page > main#main-frame::before {
@@ -50,11 +45,9 @@ body.scanner-mode-page > main#main-frame::before {
     pointer-events: none;
     content: "";
     opacity: 0.18;
-    background-image:
-        linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+    background-image:none;
     background-size: 28px 28px;
-    mask-image: linear-gradient(to bottom, #000, transparent 68%);
+    mask-image:none;
 }
 
 body.scanner-mode-page .scanner-toolbar,
@@ -69,15 +62,15 @@ body.scanner-mode-page .scanner-shell {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 18px;
+    gap:16px;
     margin-bottom: 20px;
 }
 
 .scanner-eyebrow {
     display: block;
-    margin-bottom: 6px;
+    margin-bottom:4px;
     color: var(--scan-muted);
-    font-size: 9px;
+    font-size:12px;
     font-weight: 800;
     letter-spacing: 0.13em;
     text-transform: uppercase;
@@ -85,7 +78,7 @@ body.scanner-mode-page .scanner-shell {
 
 .scanner-breadcrumb {
     color: var(--scan-muted);
-    font-size: 10px;
+    font-size:12px;
     font-weight: 800;
     letter-spacing: 0.11em;
 }
@@ -97,7 +90,7 @@ body.scanner-mode-page .scanner-shell {
 .scanner-toolbar-actions {
     display: flex;
     align-items: center;
-    gap: 9px;
+    gap:8px;
 }
 
 .scanner-theme-pill,
@@ -106,13 +99,13 @@ body.scanner-mode-page .scanner-shell {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 7px;
-    padding: 0 11px;
+    gap:8px;
+    padding:0 12px;
     border: 1px solid var(--scan-line) !important;
     border-radius: 999px !important;
-    background: color-mix(in srgb, var(--scan-surface) 92%, transparent) !important;
+    background: var(--ui-surface-soft) !important;
     color: var(--scan-muted) !important;
-    font-size: 8px !important;
+    font-size:12px!important;
     font-weight: 850 !important;
     letter-spacing: 0.04em !important;
     text-transform: uppercase !important;
@@ -124,19 +117,19 @@ body.scanner-mode-page .scanner-shell {
 
 body.scanner-mode-page .status-badge.status-active {
     color: var(--scan-accent-strong) !important;
-    border-color: color-mix(in srgb, var(--scan-accent) 55%, var(--scan-line)) !important;
-    background: color-mix(in srgb, var(--scan-accent) 9%, var(--scan-surface)) !important;
+    border-color:var(--ui-primary-line)!important;
+    background: var(--scan-bg) !important;
 }
 
 body.scanner-mode-page .status-badge.status-complete {
     color: var(--scan-success) !important;
-    border-color: color-mix(in srgb, var(--scan-success) 55%, var(--scan-line)) !important;
-    background: color-mix(in srgb, var(--scan-success) 9%, var(--scan-surface)) !important;
+    border-color:var(--ui-success-line)!important;
+    background:var(--ui-success-soft)!important;
 }
 
 .scanner-shell {
     display: grid;
-    gap: 14px;
+    gap:12px;
 }
 
 .scanner-heading {
@@ -144,7 +137,7 @@ body.scanner-mode-page .status-badge.status-complete {
     align-items: flex-end;
     justify-content: space-between;
     gap: 16px;
-    padding: 2px 2px 4px;
+    padding:0 0 4px;
 }
 
 .scanner-heading h1 {
@@ -156,9 +149,9 @@ body.scanner-mode-page .status-badge.status-complete {
 }
 
 .scanner-heading p {
-    margin: 7px 0 0;
+    margin:8px 0 0;
     color: var(--scan-muted);
-    font-size: 10px;
+    font-size:12px;
     line-height: 1.5;
 }
 
@@ -169,18 +162,18 @@ body.scanner-mode-page .status-badge.status-complete {
     gap: 8px;
     padding: 0 12px;
     border: 1px solid var(--scan-line);
-    border-radius: 9px;
+    border-radius:8px;
     color: var(--scan-text);
     background: var(--scan-surface);
-    font-size: 9px;
+    font-size:12px;
     font-weight: 800;
     cursor: pointer;
 }
 
 .scanner-reset:hover {
     color: var(--scan-accent-strong);
-    border-color: color-mix(in srgb, var(--scan-accent) 45%, var(--scan-line));
-    background: color-mix(in srgb, var(--scan-accent) 7%, var(--scan-surface));
+    border-color:var(--ui-primary-line);
+    background:var(--ui-primary-soft);
 }
 
 .hardware-scanner-input {
@@ -199,16 +192,16 @@ body.scanner-mode-page .status-badge.status-complete {
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     gap: 12px;
-    padding: 7px 7px 7px 16px;
+    padding:8px 8px 8px 16px;
     border: 1px solid var(--scan-line-strong);
-    border-radius: 13px;
+    border-radius:12px;
     background: var(--scan-surface);
-    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.16);
+    box-shadow: none;
 }
 
 .manual-scan:focus-within {
-    border-color: color-mix(in srgb, var(--scan-accent) 70%, var(--scan-line));
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--scan-accent) 14%, transparent);
+    border-color:var(--ui-primary-line);
+    box-shadow:none;
 }
 
 .manual-scan > i {
@@ -240,7 +233,7 @@ body.scanner-mode-page .manual-scan input:focus {
 }
 
 body.scanner-mode-page .manual-scan input::placeholder {
-    color: #75808b !important;
+    color:var(--ui-muted)!important;
 }
 
 body.scanner-mode-page #manual-scan-form > button[type="submit"],
@@ -252,13 +245,13 @@ body.scanner-mode-page #fractional-form button[type="submit"] {
     gap: 8px;
     padding: 0 16px !important;
     border: 0 !important;
-    border-radius: 9px !important;
-    color: #fff !important;
+    border-radius:8px!important;
+    color:var(--ui-white)!important;
     background: var(--scan-accent) !important;
-    font-size: 9px !important;
+    font-size:12px!important;
     font-weight: 850 !important;
     cursor: pointer;
-    box-shadow: 0 10px 24px color-mix(in srgb, var(--scan-accent) 18%, transparent) !important;
+    box-shadow:none!important;
 }
 
 body.scanner-mode-page #manual-scan-form > button[type="submit"]:hover,
@@ -281,7 +274,7 @@ body.scanner-mode-page #btn-final[type="submit"]:hover {
     padding: 0;
     overflow: hidden;
     border: 1px solid var(--scan-line);
-    border-radius: 13px;
+    border-radius:12px;
     background: var(--scan-surface);
 }
 
@@ -291,8 +284,8 @@ body.scanner-mode-page #btn-final[type="submit"]:hover {
     display: grid;
     grid-template-columns: 23px 24px minmax(0, 1fr);
     align-items: center;
-    gap: 9px;
-    padding: 12px 14px;
+    gap:8px;
+    padding:12px 12px;
     border-right: 1px solid var(--scan-line);
     color: var(--scan-muted);
 }
@@ -307,9 +300,9 @@ body.scanner-mode-page #btn-final[type="submit"]:hover {
     display: grid;
     place-items: center;
     border: 1px solid var(--scan-line-strong);
-    border-radius: 7px;
+    border-radius:6px;
     color: var(--scan-muted);
-    font-size: 8px;
+    font-size:12px;
     font-weight: 900;
 }
 
@@ -320,25 +313,25 @@ body.scanner-mode-page #btn-final[type="submit"]:hover {
 .scan-step > span:last-child {
     min-width: 0;
     display: grid;
-    gap: 3px;
+    gap:4px;
 }
 
 .scan-step strong {
     color: inherit;
-    font-size: 10px;
+    font-size:12px;
 }
 
 .scan-step small {
     overflow: hidden;
-    color: #697480;
-    font-size: 8px;
+    color:var(--ui-muted);
+    font-size:12px;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .scan-step.active {
     color: var(--scan-accent-strong);
-    background: color-mix(in srgb, var(--scan-accent) 8%, var(--scan-surface));
+    background:var(--ui-primary-soft);
 }
 
 .scan-step.active::after {
@@ -351,7 +344,7 @@ body.scanner-mode-page #btn-final[type="submit"]:hover {
 }
 
 .scan-step.active .scan-step-number {
-    color: #fff;
+    color:var(--ui-white);
     border-color: var(--scan-accent);
     background: var(--scan-accent);
 }
@@ -362,34 +355,34 @@ body.scanner-mode-page #btn-final[type="submit"]:hover {
 
 .scan-step.done .scan-step-number {
     color: var(--scan-success);
-    border-color: color-mix(in srgb, var(--scan-success) 55%, var(--scan-line));
-    background: color-mix(in srgb, var(--scan-success) 9%, var(--scan-surface));
+    border-color:var(--ui-success-line);
+    background:var(--ui-success-soft);
 }
 
 .scanner-message {
     min-height: 40px;
     display: flex;
     align-items: center;
-    gap: 9px;
-    padding: 10px 12px;
+    gap:8px;
+    padding:8px 12px;
     border: 1px solid var(--scan-line);
     border-radius: 10px;
     color: var(--scan-muted);
     background: var(--scan-surface);
-    font-size: 9px;
+    font-size:12px;
     font-weight: 700;
 }
 
 .scanner-message.error {
-    color: #ffd7da;
-    border-color: color-mix(in srgb, var(--scan-danger) 48%, var(--scan-line));
-    background: color-mix(in srgb, var(--scan-danger) 10%, var(--scan-surface));
+    color:var(--ui-danger);
+    border-color:var(--ui-danger-line);
+    background:var(--ui-danger-soft);
 }
 
 .scanner-message.success {
-    color: #c9f7e0;
-    border-color: color-mix(in srgb, var(--scan-success) 48%, var(--scan-line));
-    background: color-mix(in srgb, var(--scan-success) 10%, var(--scan-surface));
+    color:var(--ui-success);
+    border-color:var(--ui-success-line);
+    background:var(--ui-success-soft);
 }
 
 .scanner-idle {
@@ -402,10 +395,8 @@ body.scanner-mode-page #btn-final[type="submit"]:hover {
     border: 1px solid var(--scan-line);
     border-radius: 16px;
     color: var(--scan-muted);
-    background:
-        radial-gradient(circle at center, color-mix(in srgb, var(--scan-accent) 8%, transparent), transparent 16rem),
-        var(--scan-surface);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.012), 0 25px 70px rgba(0, 0, 0, 0.18);
+    background:var(--ui-primary-soft);
+    box-shadow:inset 0 0 0 1px var(--ui-danger-soft), 0 25px 70px var(--ui-line);
     text-align: center;
 }
 
@@ -414,12 +405,12 @@ body.scanner-mode-page #btn-final[type="submit"]:hover {
     height: 84px;
     display: grid;
     place-items: center;
-    margin-bottom: 22px;
-    border: 1px solid color-mix(in srgb, var(--scan-accent) 38%, var(--scan-line));
-    border-radius: 24px;
+    margin-bottom:20px;
+    border:1px solid var(--ui-primary-line);
+    border-radius:18px;
     color: var(--scan-accent-strong);
-    background: color-mix(in srgb, var(--scan-accent) 8%, var(--scan-surface-raised));
-    box-shadow: 0 20px 50px color-mix(in srgb, var(--scan-accent) 8%, transparent);
+    background:var(--ui-primary-soft);
+    box-shadow:none;
 }
 
 .scanner-idle-icon i {
@@ -436,18 +427,18 @@ body.scanner-mode-page #btn-final[type="submit"]:hover {
 
 .scanner-idle p {
     margin: 8px 0 0;
-    font-size: 11px;
+    font-size:12px;
 }
 
 .scanner-idle small {
-    margin-top: 6px;
-    color: #6d7883;
-    font-size: 8px;
+    margin-top:4px;
+    color:var(--ui-muted);
+    font-size:12px;
 }
 
 .transfer-details {
     display: grid;
-    gap: 13px;
+    gap:12px;
 }
 
 .route-path {
@@ -455,21 +446,21 @@ body.scanner-mode-page #btn-final[type="submit"]:hover {
     grid-template-columns: minmax(0, 1fr) 42px minmax(0, 1fr);
     align-items: center;
     gap: 12px;
-    padding: 16px 18px;
+    padding:16px 16px;
     border: 1px solid var(--scan-line);
-    border-radius: 13px;
+    border-radius:12px;
     background: var(--scan-surface);
 }
 
 .route-point {
     min-width: 0;
     display: grid;
-    gap: 5px;
+    gap:4px;
 }
 
 .route-point span {
     color: var(--scan-muted);
-    font-size: 8px;
+    font-size:12px;
     font-weight: 850;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -478,7 +469,7 @@ body.scanner-mode-page #btn-final[type="submit"]:hover {
 .route-point strong {
     overflow: hidden;
     color: var(--scan-text);
-    font-size: 11px;
+    font-size:12px;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -501,40 +492,38 @@ body.scanner-mode-page #btn-final[type="submit"]:hover {
 .product-node {
     position: relative;
     overflow: hidden;
-    padding: clamp(20px, 3vw, 34px);
+    padding:clamp(20px, 3vw, 32px);
     border: 1px solid var(--scan-line);
     border-radius: 16px;
     color: var(--scan-text);
-    background:
-        linear-gradient(135deg, color-mix(in srgb, var(--scan-accent) 5%, transparent), transparent 45%),
-        var(--scan-surface);
-    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.2);
+    background:var(--ui-primary-soft);
+    box-shadow: none;
     transition: transform 0.1s ease, border-color 0.16s ease;
 }
 
 .product-node.bump {
     transform: scale(1.004);
-    border-color: color-mix(in srgb, var(--scan-accent) 52%, var(--scan-line));
+    border-color:var(--ui-primary-line);
 }
 
 .product-head {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 18px;
+    gap:16px;
 }
 
 body.scanner-mode-page .sku-tag {
     display: inline-flex;
     align-items: center;
     min-height: 25px;
-    margin-bottom: 10px;
-    padding: 0 9px !important;
-    border: 1px solid color-mix(in srgb, var(--scan-accent) 30%, var(--scan-line)) !important;
-    border-radius: 7px !important;
+    margin-bottom:8px;
+    padding:0 8px!important;
+    border:var(--ui-primary-line)!important;
+    border-radius:6px!important;
     color: var(--scan-accent-strong) !important;
-    background: color-mix(in srgb, var(--scan-accent) 8%, transparent) !important;
-    font-size: 8px !important;
+    background: var(--scan-bg) !important;
+    font-size:12px!important;
     font-weight: 850 !important;
     letter-spacing: 0.04em !important;
     text-transform: none !important;
@@ -549,9 +538,9 @@ body.scanner-mode-page .sku-tag {
 }
 
 .product-meta {
-    margin: 7px 0 0;
+    margin:8px 0 0;
     color: var(--scan-muted);
-    font-size: 9px;
+    font-size:12px;
 }
 
 .quantity-unit {
@@ -559,18 +548,18 @@ body.scanner-mode-page .sku-tag {
     min-height: 34px;
     display: grid;
     place-items: center;
-    padding: 0 9px;
+    padding:0 8px;
     border: 1px solid var(--scan-line);
-    border-radius: 9px;
+    border-radius:8px;
     color: var(--scan-muted);
     background: var(--scan-bg-soft);
-    font-size: 9px;
+    font-size:12px;
     font-weight: 850;
 }
 
 .progress-wrapper {
     height: 8px;
-    margin: 28px 0 20px;
+    margin:24px 0 20px;
     overflow: hidden;
     border-radius: 999px;
     background: var(--scan-input);
@@ -580,8 +569,8 @@ body.scanner-mode-page .sku-tag {
     width: 0;
     height: 100%;
     border-radius: inherit;
-    background: linear-gradient(90deg, var(--scan-accent), var(--scan-accent-strong));
-    box-shadow: 0 0 24px color-mix(in srgb, var(--scan-accent) 25%, transparent);
+    background:var(--ui-primary-soft);
+    box-shadow:none;
     transition: width 0.16s ease;
 }
 
@@ -611,8 +600,8 @@ body.scanner-mode-page .sku-tag {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
     align-items: end;
-    gap: 18px;
-    margin-top: 25px;
+    gap:16px;
+    margin-top:24px;
     padding-top: 20px;
     border-top: 1px solid var(--scan-line);
 }
@@ -624,13 +613,13 @@ body.scanner-mode-page .sku-tag {
 
 .fractional-entry label span {
     color: var(--scan-text);
-    font-size: 10px;
+    font-size:12px;
     font-weight: 800;
 }
 
 .fractional-entry label small {
     color: var(--scan-muted);
-    font-size: 8px;
+    font-size:12px;
     line-height: 1.45;
 }
 
@@ -645,7 +634,7 @@ body.scanner-mode-page .fractional-entry input {
     min-height: 42px;
     padding: 0 12px !important;
     border: 1px solid var(--scan-line-strong) !important;
-    border-radius: 9px !important;
+    border-radius:8px!important;
     outline: 0;
     color: var(--scan-text) !important;
     background: var(--scan-input) !important;
@@ -657,14 +646,14 @@ body.scanner-mode-page .fractional-entry input {
 body.scanner-mode-page .fractional-entry input:focus {
     border-color: var(--scan-accent) !important;
     background: var(--scan-input) !important;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--scan-accent) 13%, transparent) !important;
+    box-shadow:none!important;
 }
 
 .scanner-help {
     min-height: 22px;
     margin: 0;
     color: var(--scan-muted);
-    font-size: 9px;
+    font-size:12px;
     line-height: 1.5;
     text-align: center;
 }
@@ -679,16 +668,16 @@ body.scanner-mode-page #btn-final.btn-validate[type="submit"] {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 9px;
-    padding: 0 18px !important;
+    gap:8px;
+    padding:0 16px!important;
     border: 0 !important;
-    border-radius: 11px !important;
-    color: #fff !important;
+    border-radius:10px!important;
+    color:var(--ui-white)!important;
     background: var(--scan-accent) !important;
-    font-size: 11px !important;
+    font-size:12px!important;
     font-weight: 900 !important;
     cursor: pointer;
-    box-shadow: 0 18px 34px color-mix(in srgb, var(--scan-accent) 20%, transparent) !important;
+    box-shadow:none!important;
 }
 
 body.scanner-mode-page [hidden] {
@@ -696,7 +685,7 @@ body.scanner-mode-page [hidden] {
 }
 
 body.scanner-mode-page :focus-visible {
-    outline: 3px solid color-mix(in srgb, var(--scan-accent) 58%, white) !important;
+    outline:var(--ui-primary-line)!important;
     outline-offset: 2px !important;
 }
 
@@ -706,7 +695,7 @@ body.scanner-mode-page.scanner-error > main#main-frame {
 
 @keyframes scanner-error-flash {
     50% {
-        box-shadow: inset 0 0 0 4px color-mix(in srgb, var(--scan-danger) 34%, transparent);
+        box-shadow:none;
     }
 }
 
@@ -726,7 +715,7 @@ body.scanner-mode-page.scanner-error > main#main-frame {
     body.scanner-mode-page > main#main-frame {
         width: 100% !important;
         margin: 0 !important;
-        padding-top: 86px !important;
+        padding-top:80px!important;
     }
 }
 

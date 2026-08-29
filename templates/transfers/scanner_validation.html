@@ -1,16 +1,19 @@
 <!DOCTYPE html>
-<html lang="es" class="scanner-dark {% if tablet_mode_active|default(session.get('tablet_mode')) %}tablet-mode tablet-full-width-profile{% endif %}">
+<html lang="es" class="scanner-workspace {% if tablet_mode_active|default(session.get('tablet_mode')) %}tablet-mode tablet-full-width-profile{% endif %}">
 <head>
     {% set shell_assets_loaded = true %}
     {% include 'layouts/app_head_assets.html' %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="color-scheme" content="dark">
+    <meta name="color-scheme" content="light dark">
     <title>Esc&aacute;ner de transferencias | OrbisERP</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/scanner.css', v='20260825-dark5') }}">
-    <script src="{{ url_for('static', filename='js/scanner.js', v='20260825-dark5') }}" defer></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/scanner.css', v='20260829-polished2', build='20260829-polished3') }}">
+    <script src="{{ url_for('static', filename='js/scanner.js', v='20260829-polished3') }}" defer></script>
+
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-polished3') }}">
 </head>
-<body class="scanner-mode-page">
+<body class="scanner-mode-page orbis-app">
     {% include 'layouts/left_bar.html' %}
 
     <main
@@ -25,7 +28,7 @@
                 <div class="scanner-breadcrumb">ORBIS / <strong id="mode-text">ESPERANDO CONDUCE</strong></div>
             </div>
             <div class="scanner-toolbar-actions">
-                <span class="scanner-theme-pill"><i class="bi bi-moon-stars-fill"></i> Modo operativo oscuro</span>
+                <span class="scanner-theme-pill"><i class="bi bi-upc-scan"></i> Modo operativo</span>
                 <span id="status-badge" class="status-badge">STANDBY</span>
             </div>
         </header>

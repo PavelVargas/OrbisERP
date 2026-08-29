@@ -1,0 +1,21 @@
+/* Public/authentication visual finish — same tokens and geometry as the app. */
+:root { --primary:var(--ui-primary); --primary-hover:var(--ui-primary-hover); --bg-main:var(--ui-bg); --bg-card:var(--ui-surface); --bg-input:var(--ui-surface-soft); --border:var(--ui-line); --text-main:var(--ui-text); --text-muted:var(--ui-muted); }
+html.dark { --primary:var(--ui-primary); --primary-hover:var(--ui-primary-hover); --bg-main:var(--ui-bg); --bg-card:var(--ui-surface); --bg-input:var(--ui-surface-soft); --border:var(--ui-line); --text-main:var(--ui-text); --text-muted:var(--ui-muted); }
+body.auth-page { background:var(--bg-main); color:var(--text-main); }
+.auth-page .auth-nav { height:68px; padding:0 clamp(16px,4vw,48px); background:var(--ui-surface); border-bottom:1px solid var(--border); }
+.auth-page .nav-logo { font-size:16px; font-weight:750; }
+.auth-page .theme-switch { min-height:36px; border-radius:8px; box-shadow:none; }
+.auth-page .split-layout { padding-top:64px; }
+.auth-page .side-visual { background:var(--ui-bg); }
+.auth-page .side-visual::after { display:none; }
+.auth-page .visual-content h1 { font-size:clamp(34px,4.8vw,58px); font-weight:750; letter-spacing:-.05em; }
+.auth-page .visual-content p { font-size:14px; line-height:1.65; }
+.auth-page .pill-badge { border-radius:999px; }
+.auth-page :where(.login-card,.register-card) { border-radius:14px; box-shadow:var(--ui-shadow-sm); }
+.auth-page .form-header h2 { font-size:24px; font-weight:750; }
+.auth-page .field-group label { font-size:12px; font-weight:650; }
+.auth-page .field-group input { min-height:44px; border-radius:8px; background:var(--bg-input); font-size:13px; }
+.auth-page .field-group input:focus { border-color:var(--ui-primary-line); box-shadow:none; }
+.auth-page :where(.btn-login-main,.btn-register) { min-height:44px; border-radius:8px; box-shadow:none; font-size:13px; }
+.auth-page :where(.btn-login-main,.btn-register):hover { transform:translateY(-1px); box-shadow:none; }
+.auth-page .links-footer { font-size:12px; }

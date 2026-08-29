@@ -11,12 +11,12 @@
             padding: 20px; 
             display: flex; 
             flex-direction: column; 
-            gap: 25px; 
+            gap:24px; 
             min-width: 0; 
         }
 
         @media (min-width: 768px) {
-            main { padding: 40px; gap: 30px; }
+            main { padding: 40px; gap:32px; }
         }
 
         /* Header Responsivo */
@@ -36,7 +36,7 @@
 
         .header-actions {
             display: flex;
-            gap: 10px;
+            gap:8px;
             width: 100%;
         }
 
@@ -47,7 +47,7 @@
         .btn-back, .btn-export {
             flex: 1;
             justify-content: center;
-            display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 12px;
+            display: flex; align-items: center; gap: 8px; padding:8px 16px; border-radius: 12px;
             font-size: 0.85rem; font-weight: 700; text-decoration: none; transition: 0.2s;
         }
 
@@ -56,10 +56,10 @@
         }
 
         .btn-export {
-            background: var(--primary); color: #111; border: none;
+            background: var(--primary); color:var(--ui-text); border: none;
         }
 
-        .btn-back:hover, .btn-export:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+        .btn-back:hover, .btn-export:hover { transform: translateY(-2px); box-shadow:var(--ui-shadow-sm); }
 
         /* Contenedor de Historial */
         .history-container {
@@ -70,7 +70,7 @@
         }
 
         @media (min-width: 768px) {
-            .history-container { padding: 30px; }
+            .history-container { padding:32px; }
         }
 
         /* Tabla Responsiva: Oculta en móviles, se convierte en Cards */
@@ -85,13 +85,13 @@
         }
 
         .audit-table th {
-            text-align: left; padding: 15px; font-size: 0.7rem; font-weight: 800;
+            text-align: left; padding:16px; font-size:0.75rem; font-weight: 800;
             color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;
             border-bottom: 1px solid var(--border);
         }
 
         .audit-table td {
-            padding: 20px 15px; border-bottom: 1px solid var(--border);
+            padding:20px 16px; border-bottom: 1px solid var(--border);
             font-size: 0.9rem; color: var(--text-main);
         }
 
@@ -99,7 +99,7 @@
         .mobile-audit-cards {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap:16px;
         }
 
         @media (min-width: 992px) {
@@ -109,15 +109,15 @@
         .audit-card {
             background: var(--bg-input);
             border: 1px solid var(--border);
-            border-radius: 15px;
-            padding: 15px;
+            border-radius:14px;
+            padding:16px;
         }
 
         .card-row {
             display: flex;
             justify-content: space-between;
             padding: 8px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            border-bottom:1px solid var(--ui-danger-soft);
         }
 
         .card-row:last-child { border: none; }
@@ -126,7 +126,7 @@
 
         /* Badges y Status */
         .status-pill {
-            padding: 4px 10px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase;
+            padding:4px 8px; border-radius: 6px; font-size:0.75rem; font-weight: 800; text-transform: uppercase;
         }
-        .pill-success { background: rgba(16, 185, 129, 0.1); color: var(--success); }
-        .pill-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+        .pill-success { background:var(--ui-success-soft); color: var(--success); }
+        .pill-danger { background:var(--ui-danger-soft); color: var(--danger); }

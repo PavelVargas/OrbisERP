@@ -1,3 +1,4 @@
+{# OrbisERP Polished UI · canonical navigation · functional hooks preserved #}
 {# Shared application chrome. This partial intentionally contains no html/head/body tags. #}
 {% if not shell_assets_loaded|default(false) %}
 <script nonce="{{ csp_nonce() if csp_nonce is defined else '' }}">
@@ -55,13 +56,14 @@
 <script src="{{ url_for('static', filename='js/theme-sync.js') }}" defer></script>
 <script src="{{ url_for('static', filename='js/tablet_runtime.js', v='20260827-tablet10') }}" defer></script>
 <script src="{{ url_for('static', filename='js/feedback.js') }}" defer></script>
-
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app_final.css', v='20260829-polished3') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tablet_mode.css', v='20260829-polished3') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tablet_responsive.css', v='20260829-polished3') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tablet_experience.css', v='20260829-polished3') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/design_system.css', v='20260829-unified1') }}">
 {% endif %}
 
-<link rel="stylesheet" href="{{ url_for('static', filename='css/app_final.css', v='20260827-tablet10') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/tablet_mode.css', v='20260827-tablet10') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/tablet_responsive.css', v='20260827-tablet10') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/tablet_experience.css', v='20260827-tablet10') }}">
+
 
 
 {% if company_readonly|default(false) and session.get('user_role') != 'superadmin' %}
@@ -179,10 +181,26 @@
 
     <div class="sidebar-footer">
         <button class="nav-item theme-toggle" id="theme-switch" type="button"><span class="nav-icon"><i class="bi bi-moon-stars theme-moon"></i><i class="bi bi-sun theme-sun"></i></span><span class="nav-label hide-collapsed">Cambiar apariencia</span><span class="nav-tooltip">Tema</span></button>
-        <form method="post" action="{{ url_for('login_bp.logout') }}" style="display:contents"><button type="submit" class="nav-item logout-item"><span class="nav-icon"><i class="bi bi-box-arrow-right"></i></span><span class="nav-label hide-collapsed">Cerrar sesión</span><span class="nav-tooltip">Salir</span></button></form>
+        <form method="post" action="{{ url_for('login_bp.logout') }}" data-ui-style="rae125572d5"><button type="submit" class="nav-item logout-item"><span class="nav-icon"><i class="bi bi-box-arrow-right"></i></span><span class="nav-label hide-collapsed">Cerrar sesión</span><span class="nav-tooltip">Salir</span></button></form>
     </div>
     <button class="collapse-btn" id="collapse-toggle" type="button" aria-label="Contraer menú"><i class="bi bi-chevron-left"></i></button>
 </aside>
+
+<header class="app-topbar" aria-label="Barra principal">
+    <div class="app-topbar__context">
+        <span class="app-topbar__mark" aria-hidden="true"></span>
+        <strong>{{ user.company.name if user and user.company else 'OrbisERP' }}</strong>
+        <span>Espacio de trabajo</span>
+    </div>
+    <div class="app-topbar__actions">
+        <button type="button" class="app-topbar__button app-topbar__button--search" onclick="document.getElementById('nav-search')?.focus()" aria-label="Buscar en el sistema"><i class="bi bi-search"></i><span>Buscar</span><kbd>Ctrl K</kbd></button>
+        {% if can('notifications.view') %}<a class="app-topbar__button" href="{{ url_for('backoffice_bp.notifications') }}" aria-label="Notificaciones"><i class="bi bi-bell"></i></a>{% endif %}
+        <a class="app-topbar__profile" href="{{ url_for('perfil_bp.perfil') }}">
+            <span class="app-topbar__avatar">{% if user and user.avatar_path %}<img src="{{ url_for('static', filename=user.avatar_path) }}" alt="">{% else %}{{ (user.name | first | upper) if user and user.name else 'U' }}{% endif %}</span>
+            <strong>{{ user.name if user and user.name else 'Usuario' }}</strong><i class="bi bi-chevron-down"></i>
+        </a>
+    </div>
+</header>
 
 <header class="app-tablet-topbar" aria-label="Barra de modo tablet">
     <a class="app-tablet-home" href="{{ url_for('launchpad_bp.launchpad') }}" aria-label="Abrir aplicaciones"><i class="bi bi-grid-3x3-gap-fill"></i></a>

@@ -1,18 +1,18 @@
 /* --- AJUSTES DE DISEÑO PREMIUM (ORBIS-ODOO) --- */
         :root {
-            --odoo-purple: #f36b21;
-            --primary: #f36b21;
+            --odoo-purple:var(--ui-primary);
+            --primary:var(--ui-primary);
             --bg-card: #151b2c;
             --border: #222d45;
             --text-main: #f1f5f9;
             --text-muted: #94a3b8;
             --bg-input: #1e2538;
-            --shadow: 0 1px 3px rgba(0,0,0,0.12);
+            --shadow:0 1px 3px var(--ui-line);
             --success: var(--primary);
         }
 
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: "Plus Jakarta Sans", sans-serif;
             margin: 0;
             padding: 16px 24px; /* Margen optimizado sin espacios excesivos */
         }
@@ -75,7 +75,7 @@
         .items-table th { 
             padding: 12px 16px; font-size: 11px; font-weight: 800;
             color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
-            border-bottom: 2px solid var(--border); background: rgba(0,0,0,0.05);
+            border-bottom: 2px solid var(--border); background:var(--ui-line);
         }
         .items-table td { padding: 16px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
         .product-name { color: var(--text-main); font-weight: 700; font-size: 14px; }
@@ -83,11 +83,11 @@
         .p-qty { font-weight: 800; font-size: 15px; color: var(--primary); }
 
         /* Footer de Acciones */
-        .footer-actions { padding: 24px; background: rgba(0,0,0,0.05); border-top: 1px solid var(--border); }
+        .footer-actions { padding: 24px; background:var(--ui-line); border-top: 1px solid var(--border); }
         
         .helper-text {
-            display: flex; align-items: center; gap: 12px; background: rgba(250, 162, 0, 0.08); 
-            padding: 14px 18px; border-radius: 8px; margin-bottom: 16px; border: 1px solid rgba(250, 162, 0, 0.15);
+            display: flex; align-items: center; gap: 12px; background:var(--ui-primary-soft); 
+            padding: 14px 18px; border-radius: 8px; margin-bottom: 16px; border:1px solid var(--ui-primary-soft);
             font-size: 13px; font-weight: 600; color: var(--text-main);
         }
 
@@ -100,9 +100,9 @@
         .btn-confirm-main:hover { background: #0ca673; transform: translateY(-1px); }
 
         .status-success-text {
-            text-align: center; background: rgba(16, 185, 129, 0.08); padding: 16px; 
+            text-align: center; background:var(--ui-success-soft); padding: 16px; 
             border-radius: 8px; color: var(--success); font-weight: 700; font-size: 14px;
-            border: 1px solid rgba(16, 185, 129, 0.15); letter-spacing: 0.5px;
+            border:1px solid var(--ui-success-soft); letter-spacing: 0.5px;
         }
 
         /* --- BOTONERA DE ACCIONES DEL PANEL DE CONTROL --- */
@@ -110,7 +110,7 @@
     display: flex;
     gap: 8px;
     align-items: center;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-top:1px solid var(--ui-danger-soft);
     padding-top: 12px;
     margin-top: 12px;
 }
@@ -134,17 +134,17 @@
 /* Variante secundaria (Gris Carbón Neutro) */
 .btn-cp-secondary {
     background: var(--bg-input, #1e2538);
-    border: 1px solid var(--border, rgba(34, 45, 69, 0.8));
+    border:1px solid var(--border, var(--ui-primary-soft));
     color: var(--text-main, #f8fafc);
 }
 
 /* Efectos Interactivos Premium */
 .btn-cp-secondary:hover {
-    background: var(--border, rgba(34, 45, 69, 0.8));
+    background:var(--border, var(--ui-primary-soft));
     border-color: var(--text-muted, #94a3b8);
-    color: var(--primary, #f36b21);
+    color:var(--primary, var(--ui-primary));
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow:0 4px 12px var(--ui-line);
 }
 
 .btn-cp-secondary:active {

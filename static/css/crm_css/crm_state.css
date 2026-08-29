@@ -19,7 +19,7 @@
 }
 
 .crm-error-state > span {
-    background: rgba(216, 72, 80, 0.1);
+    background:var(--ui-danger-soft);
     color: var(--crm-danger);
 }
 

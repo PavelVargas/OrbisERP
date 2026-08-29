@@ -14,13 +14,13 @@
             line-height: 1.45;
         }
         .invoice { width: 100%; max-width: 790px; margin: 0 auto; }
-        .accent-line { height: 4px; background: #f36b21; margin-bottom: 20px; }
+        .accent-line { height: 4px; background: #2563eb; margin-bottom: 20px; }
         .fiscal-notice {
             margin-bottom: 14px;
             padding: 8px 12px;
-            border: 1px solid #f3cbb5;
-            background: #fff8f3;
-            color: #b94e16;
+            border: 1px solid #bfdbfe;
+            background: #eff6ff;
+            color: #1e40af;
             text-align: center;
             font-size: 9px;
             font-weight: 700;
@@ -43,11 +43,11 @@
             background: #fafbfc;
         }
         .logo-box img { width: 100%; height: 100%; object-fit: contain; }
-        .logo-fallback { display: table-cell; vertical-align: middle; color: #f36b21; font-size: 28px; font-weight: 800; }
+        .logo-fallback { display: table-cell; vertical-align: middle; color: #2563eb; font-size: 28px; font-weight: 800; }
         .company-name { margin: 0 0 7px; font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
         .company-info { margin: 2px 0; color: #66717d; font-size: 10px; }
         .invoice-title { margin: 0 0 7px; color: #202833; font-size: 27px; font-weight: 800; letter-spacing: -.03em; text-transform: uppercase; }
-        .invoice-number { margin-bottom: 10px; color: #f36b21; font-size: 14px; font-weight: 800; }
+        .invoice-number { margin-bottom: 10px; color: #2563eb; font-size: 14px; font-weight: 800; }
         .meta-table { margin-left: auto; border-collapse: collapse; min-width: 215px; }
         .meta-table td { padding: 3px 0 3px 12px; font-size: 10px; }
         .meta-table .label { color: #77818b; font-weight: 600; text-align: left; }
@@ -107,7 +107,7 @@
             font-size: 15px;
             font-weight: 800;
         }
-        .balance-line td { color: #b35b20; font-weight: 700; }
+        .balance-line td { color: #1e40af; font-weight: 700; }
         .payment-note {
             margin-top: 9px;
             padding: 8px 10px;
@@ -123,10 +123,12 @@
             font-size: 8px;
             text-align: center;
         }
-        .orange { color: #f36b21; }
+        .orange { color: #2563eb; }
     </style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_print_v2.css', v='20260829-v2') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-polished3') }}">
 </head>
-<body>
+<body class="orbis-print">
     {% set is_quote = sale.status == 'QUOTATION' %}
     {% set paid_amount = sale.amount_paid or 0 %}
     {% set balance_amount = sale.balance or 0 %}
@@ -185,11 +187,11 @@
         <table class="items">
             <thead>
                 <tr>
-                    <th style="width:43%">Descripción</th>
-                    <th class="right" style="width:10%">Cant.</th>
-                    <th class="right" style="width:17%">Precio</th>
-                    <th class="right" style="width:12%">Imp.</th>
-                    <th class="right" style="width:18%">Importe</th>
+                    <th data-ui-style="r31ac4ee7d0">Descripción</th>
+                    <th class="right" data-ui-style="r477d664a08">Cant.</th>
+                    <th class="right" data-ui-style="r3dc2eec8dc">Precio</th>
+                    <th class="right" data-ui-style="rc28f1b1511">Imp.</th>
+                    <th class="right" data-ui-style="r55b2e17218">Importe</th>
                 </tr>
             </thead>
             <tbody>

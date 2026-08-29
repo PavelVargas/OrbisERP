@@ -4,149 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Pagos | OrbisERP</title>
-    
-    <script>
-        (() => {
-            let saved = null;
-            try { saved = localStorage.getItem('theme') || localStorage.getItem('orbis-theme'); } catch (_error) {}
-            const dark = saved === 'dark' || (saved !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
-            const theme = dark ? 'dark' : 'light';
-            document.documentElement.classList.toggle('dark', dark);
-            document.documentElement.dataset.theme = theme;
-            document.documentElement.style.colorScheme = theme;
-        })();
-    </script>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    {% include 'layouts/theme_prepaint.html' %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/base_css/base.css">
-    <script src="{{ url_for('static', filename='js/theme-sync.js') }}" defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <style>
-        /* ── RESET AGRESIVO PARA CENTRADO ABSOLUTO ── */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: var(--bg-main) !important;
-            color: var(--text-main);
-            min-height: 100vh;
-            /* Forzamos al body a ser un contenedor que centra a sus hijos */
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: center !important;
-        }
-
-        /* ── TOPBAR (FULL WIDTH) ── */
-        .topbar {
-            height: 64px;
-            background: var(--bg-card);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100% !important;
-            padding: 0 28px;
-            flex-shrink: 0;
-        }
-        .topbar-content {
-            width: 100%;
-            max-width: 1100px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text-main); font-weight: 700; }
-        .nav-logo i { color: var(--primary); font-size: 1.3rem; }
-
-        /* ── MAIN: ANULACIÓN DE BASE.CSS ── */
-        main {
-            /* Matamos cualquier restricción de base.css */
-            width: 100% !important;
-            max-width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            /* Centrado interno */
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: center !important;
-            flex-grow: 1;
-        }
-
-        /* ── HERO ── */
-        .hero {
-            background: var(--bg-card);
-            border-bottom: 1px solid var(--border);
-            padding: 60px 20px;
-            width: 100% !important;
-            display: flex;
-            justify-content: center;
-        }
-        .hero-inner {
-            width: 100%;
-            max-width: 1100px;
-            text-align: center;
-        }
-        .hero h2 { font-size: 32px; font-weight: 800; margin-bottom: 12px; }
-        .hero p { color: var(--text-muted); font-size: 15px; max-width: 600px; margin: 0 auto; }
-
-        /* ── CONTENEDOR DE TABLA (EL "ANCLA" DEL CENTRADO) ── */
-        .content-container { 
-            width: 100% !important;
-            max-width: 1100px !important;
-            padding: 40px 20px !important;
-            box-sizing: border-box;
-        }
-        
-        .payments-table { 
-            width: 100%; 
-            border-collapse: separate; 
-            border-spacing: 0 10px; 
-        }
-        .payments-table th { 
-            padding: 10px 20px;
-            text-align: left; 
-            font-size: 11px; 
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-        }
-
-        /* ── FILAS ESTILO CARD ── */
-        .payments-table tr td { 
-            background: var(--bg-card); 
-            padding: 18px 20px;
-            border-top: 1px solid var(--border);
-            border-bottom: 1px solid var(--border);
-            transition: all 0.2s ease;
-        }
-        .payments-table tr td:first-child { border-left: 1px solid var(--border); border-radius: 14px 0 0 14px; }
-        .payments-table tr td:last-child { border-right: 1px solid var(--border); border-radius: 0 14px 14px 0; }
-
-        .payments-table tr:hover td {
-            border-color: var(--primary);
-            background: var(--bg-hover);
-            transform: translateY(-1px);
-        }
-
-        /* ── ELEMENTOS DE INTERFAZ ── */
-        .pill { font-size: 11px; font-weight: 700; padding: 6px 14px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; }
-        .status-PENDING { background: rgba(250, 162, 0, 0.1); color: var(--warning); border: 1px solid rgba(250, 162, 0, 0.2); }
-        .status-APPROVED { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.2); }
-
-        .btn-approve {
-            background: var(--success); color: white; border: none; padding: 10px 20px; border-radius: 8px;
-            font-weight: 700; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
-        }
-
-        .btn-theme {
-            background: var(--bg-input); border: 1px solid var(--border); color: var(--text-main);
-            padding: 8px 14px; border-radius: 10px; cursor: pointer; font-size: 12px; 
-            display: flex; align-items: center; gap: 8px;
-        }
-    </style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-polished3') }}">
 </head>
-<body class="master-theme">
+<body class="master-theme orbis-master payments-management">
     <header class="topbar">
         <div class="topbar-content">
             <a href="{{ url_for('superadmin_bp.admin_dashboard') }}" class="nav-logo">
@@ -163,7 +27,7 @@
     <main>
         <section class="hero">
             <div class="hero-inner">
-                <div style="font-size: 10px; font-weight: 800; color: var(--primary); letter-spacing: 1.5px; margin-bottom: 10px;">AUDITORÍA DE PAGOS</div>
+                <div data-ui-style="r952c843f21">AUDITORÍA DE PAGOS</div>
                 <h2>Solicitudes Pendientes</h2>
                 <p>Valida los comprobantes para aplicar renovaciones automáticas en los nodos.</p>
             </div>
@@ -185,19 +49,19 @@
                     {% for company in payments %}
                     <tr>
                         <td>
-                            <div style="display: flex; flex-direction: column;">
-                                <strong style="font-size: 15px;">{{ company.name }}</strong>
-                                <span style="color: var(--text-muted); font-size: 11px; font-family: monospace;">#NODE-{{ company.id }}</span>
+                            <div data-ui-style="rba30f188c7">
+                                <strong data-ui-style="rf112760ebc">{{ company.name }}</strong>
+                                <span data-ui-style="rafd2d7152f">#NODE-{{ company.id }}</span>
                             </div>
                         </td>
                         <td>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <span style="background: var(--bg-input); border: 1px solid var(--border); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;">
+                            <div data-ui-style="r3088da1131">
+                                <span data-ui-style="racb751cfda">
                                     {{ company.plan_name }}
                                 </span>
                                 {% if company.requested_plan and company.requested_plan != company.plan_name %}
-                                    <i class="bi bi-arrow-right" style="color: var(--success); font-size: 12px;"></i>
-                                    <span style="border: 1px solid var(--success); color: var(--success); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;">
+                                    <i class="bi bi-arrow-right" data-ui-style="rf8b7863d6d"></i>
+                                    <span data-ui-style="r14a8ad844c">
                                         {{ company.requested_plan }}
                                     </span>
                                 {% endif %}
@@ -210,18 +74,18 @@
                             </span>
                         </td>
                         <td>
-                            <div style="font-size: 13px;">
-                                <i class="bi bi-calendar-event" style="color: var(--primary); margin-right: 6px;"></i>
+                            <div data-ui-style="reefff2f8dd">
+                                <i class="bi bi-calendar-event" data-ui-style="r979e86e5e9"></i>
                                 {{ company.expiration_date.strftime('%d/%m/%Y') if company.expiration_date else 'N/A' }}
                             </div>
                         </td>
                         <td>
                             {% if company.last_receipt_path %}
-                            <a href="{{ url_for('superadmin_bp.download_receipt', company_id=company.id) }}" target="_blank" rel="noopener" style="color: #38bdf8; text-decoration: none; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                            <a href="{{ url_for('superadmin_bp.download_receipt', company_id=company.id) }}" target="_blank" rel="noopener" data-ui-style="r340a40920e">
                                 <i class="bi bi-file-earmark-image"></i> Ver Recibo
                             </a>
                             {% else %}
-                            <span style="color: var(--text-muted); font-size: 12px;">Sin archivo</span>
+                            <span data-ui-style="rbfc60b4648">Sin archivo</span>
                             {% endif %}
                         </td>
                         <td>
@@ -232,7 +96,7 @@
                                 </button>
                             </form>
                             {% else %}
-                            <span style="color: var(--success); font-weight: 800; font-size: 11px; display: flex; align-items: center; gap: 4px;">
+                            <span data-ui-style="rb41d648de9">
                                 <i class="bi bi-shield-fill-check"></i> PROCESADO
                             </span>
                             {% endif %}

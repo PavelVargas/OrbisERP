@@ -3,7 +3,7 @@
 body {
     background: var(--bg-main);
     color: var(--text-main);
-    font-family: 'Montserrat', sans-serif;
+    font-family: "Montserrat", sans-serif;
     margin: 0;
     padding-bottom: 50px;
 }
@@ -71,7 +71,7 @@ main {
 .b-received { background: var(--success-bg); color: var(--success); }
 
 .payment-method-badge {
-    background: rgba(255,255,255,0.05);
+    background:var(--ui-danger-soft);
     color: var(--text-muted);
     padding: 6px 12px;
     border-radius: 8px;
@@ -95,7 +95,7 @@ main {
     gap: 15px;
     font-size: 14px;
     background: var(--danger-bg);
-    border: 1px solid rgba(239, 68, 68, 0.2);
+    border:1px solid var(--ui-danger-soft);
     color: var(--danger);
 }
 
@@ -109,7 +109,7 @@ main {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 30px;
-    background: rgba(255, 255, 255, 0.02); /* Sutil fondo para diferenciar el bloque */
+    background:var(--ui-danger-soft); /* Sutil fondo para diferenciar el bloque */
     border-top: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
 }
@@ -152,7 +152,7 @@ main {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    background: rgba(0,0,0,0.1);
+    background:var(--ui-line);
 }
 
 .totales-area { width: 340px; }
@@ -168,7 +168,7 @@ main {
 .financial-summary {
     margin-top: 15px;
     padding: 15px;
-    background: rgba(255,255,255,0.03);
+    background:var(--ui-danger-soft);
     border-radius: 12px;
     border: 1px solid var(--border);
 }
@@ -185,5 +185,5 @@ main {
     display: flex;
     align-items: center;
     gap: 10px;
-    box-shadow: 0 4px 15px rgba(250, 162, 0, 0.2);
+    box-shadow:0 4px 15px var(--ui-primary-soft);
 }

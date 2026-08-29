@@ -46,7 +46,7 @@
     .tabs-nav {
         flex-direction: row !important;
         overflow-x: auto;
-        padding-bottom: 10px;
+        padding-bottom:8px;
         -webkit-overflow-scrolling: touch;
     }
     .tab-btn {
@@ -73,7 +73,7 @@
         border: 1px solid var(--border-color);
         border-radius: 12px;
         margin-bottom: 1rem;
-        padding: 10px;
+        padding:8px;
     }
 
     .table-enterprise td {
@@ -88,7 +88,7 @@
     .table-enterprise td::before {
         content: attr(data-label);
         font-weight: 700;
-        font-size: 0.7rem;
+        font-size:0.75rem;
         color: var(--text-tertiary);
         text-transform: uppercase;
     }
@@ -106,7 +106,7 @@
 
 .badge-info {
     background: var(--bg-tertiary);
-    padding: 4px 10px;
+    padding:4px 8px;
     border-radius: 6px;
     font-size: 0.8rem;
     border: 1px solid var(--border-color);
@@ -120,7 +120,7 @@
 }
 
 .module-label {
-    font-size: 0.7rem;
+    font-size:0.75rem;
     font-weight: 800;
     letter-spacing: 2px;
     color: var(--accent);
@@ -145,7 +145,7 @@
 
 /* Sidebar de Almacenes */
 .sidebar-label {
-    font-size: 0.65rem;
+    font-size:0.75rem;
     font-weight: 800;
     color: var(--text-tertiary);
     margin-bottom: 1rem;
@@ -213,7 +213,7 @@
 .tab-btn.active {
     border-color: var(--accent);
     background: var(--bg-active);
-    box-shadow: var(--shadow-sm);
+    box-shadow:var(--ui-shadow-sm);
 }
 
 .tab-btn.active .tab-icon {
@@ -244,10 +244,10 @@
 .origin-badge {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap:8px;
     background: var(--bg-tertiary);
     padding: 8px 16px;
-    border-radius: 50px;
+    border-radius:18px;
     font-size: 0.8rem;
     color: var(--text-secondary);
     border: 1px solid var(--border-color);
@@ -264,7 +264,7 @@
 }
 
 .product-cell .sku {
-    font-size: 0.7rem;
+    font-size:0.75rem;
     color: var(--accent);
     font-weight: 700;
 }
@@ -288,7 +288,7 @@
 }
 
 .empty-state {
-    padding: 10px;
+    padding:8px;
     text-align: center;
     color: var(--text-tertiary);
 }
@@ -343,7 +343,7 @@
 
 .empty-pending-row i {
     margin-bottom: 0.65rem;
-    color: #16a36a;
+    color:var(--ui-success);
     font-size: 2rem;
 }
 

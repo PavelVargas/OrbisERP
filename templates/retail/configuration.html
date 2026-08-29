@@ -36,7 +36,7 @@
         </div>
         <div class="receipt-preview-stage" aria-label="Vista previa del ticket">
           <div class="receipt-preview-ruler"><span>Vista previa</span><b id="receiptPreviewWidthLabel">{{ settings.default_receipt_width or 80 }} mm</b></div>
-          <article class="receipt-config-preview" id="receiptConfigPreview" style="--receipt-preview-mm:{{ settings.default_receipt_width or 80 }}">
+          <article class="receipt-config-preview" id="receiptConfigPreview" data-receipt-width="{{ settings.default_receipt_width or 80 }}">
             <header><strong>{{ current_company.name if current_company else 'Tu empresa' }}</strong><small>RNC / identificación comercial</small><small>Tel. 809-000-0000</small></header>
             <hr><div class="receipt-sample-row"><span>TICKET</span><b>#000123</b></div><div class="receipt-sample-row"><span>Fecha</span><span>26/08/2026 22:49</span></div><hr>
             <div class="receipt-sample-item"><strong>Producto de ejemplo</strong><div><span>2 × RD$ 250.00</span><b>RD$ 500.00</b></div></div><div class="receipt-sample-item"><strong>Segundo artículo</strong><div><span>1 × RD$ 125.00</span><b>RD$ 125.00</b></div></div>

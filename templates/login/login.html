@@ -8,8 +8,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/static/css/login_css/login.css">
     <link rel="stylesheet" href="/static/css/public.css">
+    <link rel="stylesheet" href="/static/css/public_final.css?v=20260829-unified1">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-polished3') }}">
 </head>
-<body class="auth-page">
+<body class="auth-page orbis-public">
 
     <div class="bg-glow"></div>
 
@@ -41,8 +43,8 @@
         <section class="side-form">
             <div class="login-card">
                 <div class="form-header">
-                    <div class="login-icon-box" style="margin-bottom: 20px;">
-                        <i class="bi bi-person-badge" style="font-size: 4rem; color: var(--primary);"></i>
+                    <div class="login-icon-box" data-ui-style="rb75fad0009">
+                        <i class="bi bi-person-badge" data-ui-style="raa1500f1f7"></i>
                     </div>
                     <h2>Inicia sesión</h2>
                     <p>Usa el correo y la contraseña de tu cuenta.</p>
@@ -55,17 +57,17 @@
                         
                         <div class="field-group full">
                             <label><i class="bi bi-envelope"></i> Correo electrónico</label>
-                            <div class="input-with-icon" style="position: relative;">
-                                <i class="bi bi-person" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
-                                <input type="email" name="email" placeholder="nombre@empresa.com" required style="padding-left: 45px;">
+                            <div class="input-with-icon" data-ui-style="r50666a574d">
+                                <i class="bi bi-person" data-ui-style="rce31fa50e4"></i>
+                                <input type="email" name="email" placeholder="nombre@empresa.com" required data-ui-style="r522cdbe26e">
                             </div>
                         </div>
 
                         <div class="field-group full">
                             <label><i class="bi bi-shield-lock"></i> Contraseña</label>
-                            <div class="input-with-icon" style="position: relative;">
-                                <i class="bi bi-key" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
-                                <input type="password" name="password" placeholder="••••••••" required style="padding-left: 45px;">
+                            <div class="input-with-icon" data-ui-style="r50666a574d">
+                                <i class="bi bi-key" data-ui-style="rce31fa50e4"></i>
+                                <input type="password" name="password" placeholder="••••••••" required data-ui-style="r522cdbe26e">
                             </div>
                         </div>
 

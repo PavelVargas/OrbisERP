@@ -1,6 +1,6 @@
 
         body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
+            font-family: "Plus Jakarta Sans", sans-serif; 
             background: var(--bg-main); 
             color: var(--text-main);
             margin: 0;
@@ -52,7 +52,7 @@
         /* Tabla Estilizada */
         .table-container { 
             background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border);
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden;
+            box-shadow:0 4px 6px -1px var(--ui-line); overflow: hidden;
         }
         .modern-table { width: 100%; border-collapse: collapse; }
         .modern-table th { background: var(--bg-main); padding: 18px 25px; text-align: left; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); }

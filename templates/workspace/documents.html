@@ -47,7 +47,7 @@
                 {% set storage_limit = user.company.storage_limit if user and user.company and user.company.storage_limit else 0 %}
                 {% set usage_pct = ((total_bytes / storage_limit * 100) if storage_limit else 0) %}
                 <div><span><i class="bi bi-device-ssd"></i> Almacenamiento</span><strong>{{ '%.1f'|format(total_bytes / 1024 / 1024) }} MB</strong></div>
-                <div class="module-progress"><i style="width:{{ [usage_pct,100]|min|round|int }}%"></i></div>
+                <progress class="ui-progress {{ 'warning' if usage_pct >= 75 else '' }}" max="100" value="{{ [usage_pct,100]|min|round|int }}">{{ [usage_pct,100]|min|round|int }}%</progress>
                 <small>{% if storage_limit %}de {{ '%.1f'|format(storage_limit / 1024 / 1024) }} MB disponibles{% else %}{{ total_docs }} archivo(s) almacenados{% endif %}</small>
             </div>
         </aside>

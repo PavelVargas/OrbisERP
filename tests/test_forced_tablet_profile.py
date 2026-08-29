@@ -42,7 +42,7 @@ def test_module_breakpoints_are_mirrored_to_reference_profile_not_container_widt
     assert 'reference match: (max-width:1050px)' in generated
     assert 'html.tablet-mode .bo-kpis {grid-template-columns:repeat(2,1fr)}' in generated
     assert 'reference match: (max-width:1200px)' in generated
-    assert 'html.tablet-mode .clients-page {margin-left:0;padding-top:88px}' in generated
+    assert 'html.tablet-mode .clients-page {margin-left:0;padding-top:80px;}' in generated
     assert '@container orbis-tablet-viewport' not in generated
     assert 'REFERENCE_WIDTH = 1024.0' in builder
     assert 'scope_selector' in builder

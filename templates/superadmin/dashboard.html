@@ -4,19 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Centro maestro · OrbisERP</title>
-  <script>
-    (()=>{let saved=null;try{saved=localStorage.getItem('theme')||localStorage.getItem('orbis-theme')}catch(_e){}const dark=saved==='dark'||(saved!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);const t=dark?'dark':'light';document.documentElement.classList.toggle('dark',dark);document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t;document.documentElement.classList.add('theme-preload')})();
-  </script>
-  <style>html{background:#f4f6f8}html.dark{background:#0d1114}.theme-preload *, .theme-preload *::before,.theme-preload *::after{transition:none!important;animation:none!important}</style>
+  {% include 'layouts/theme_prepaint.html' %}
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/superadmin_css/superadmin.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/feedback.css') }}">
-  <script src="{{ url_for('static', filename='js/theme-sync.js') }}" defer></script>
   <script src="{{ url_for('static', filename='js/feedback.js') }}" defer></script>
   <script src="{{ url_for('static', filename='js/admin.js') }}" defer></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-polished3') }}">
 </head>
-<body class="master-body">
+<body class="master-body orbis-master">
   <nav class="master-topbar">
     <a class="master-brand" href="{{ url_for('superadmin_bp.admin_dashboard') }}">
       <span><i class="bi bi-intersect"></i></span>
@@ -49,14 +46,14 @@
       <article class="master-panel infra-panel">
         <header><div><span>INFRAESTRUCTURA</span><h2>Capacidad de almacenamiento</h2></div><span class="panel-badge {{ 'warning' if infra_perc > 80 else 'ok' }}">{{ infra_perc }}%</span></header>
         <div class="infra-value"><strong>{{ total_used_mb }}</strong><span>MB usados de {{ total_disk_mb }} MB</span></div>
-        <div class="master-progress"><i style="--progress:{{ infra_perc if infra_perc <= 100 else 100 }}%"></i></div>
+        <progress class="ui-progress {{ 'warning' if infra_perc > 80 else '' }}" max="100" value="{{ infra_perc if infra_perc <= 100 else 100 }}">{{ infra_perc }}%</progress>
         <p>{{ 'Capacidad alta: conviene ampliar o limpiar almacenamiento.' if infra_perc > 80 else 'Capacidad dentro del margen operativo configurado.' }}</p>
       </article>
       <article class="master-panel plan-panel">
         <header><div><span>SUSCRIPCIONES</span><h2>Distribución de planes</h2></div></header>
         <div class="plan-bars">
           {% set total_nodes = companies|length if companies|length else 1 %}
-          {% for plan in ['BASIC','PRO','ULTRA'] %}<div><span><b>{{ plan }}</b><em>{{ plan_counts[plan] }}</em></span><i><b style="--progress:{{ (plan_counts[plan] / total_nodes * 100)|round(1) }}%"></b></i></div>{% endfor %}
+          {% for plan in ['BASIC','PRO','ULTRA'] %}<div><span><b>{{ plan }}</b><em>{{ plan_counts[plan] }}</em></span><progress class="ui-progress" max="100" value="{{ (plan_counts[plan] / total_nodes * 100)|round(1) }}">{{ (plan_counts[plan] / total_nodes * 100)|round(1) }}%</progress></div>{% endfor %}
         </div>
       </article>
       <article class="master-panel alert-panel">
@@ -80,7 +77,7 @@
           </header>
           <div class="company-body">
             <dl><div><dt>RNC</dt><dd>{{ c.rnc or 'N/D' }}</dd></div><div><dt>Moneda</dt><dd>{{ c.display_currency_code or 'N/D' }}</dd></div><div><dt>Vencimiento</dt><dd class="{% if c.expiration_date and c.expiration_date < ahora %}danger-text{% endif %}">{{ c.expiration_date.strftime('%d/%m/%Y') if c.expiration_date else 'N/D' }}</dd></div><div><dt>Almacenamiento</dt><dd>{{ (usage / 1024 / 1024)|round(1) }} MB</dd></div></dl>
-            <div class="company-storage"><span><small>Uso del plan</small><b>{{ usage_pct }}%</b></span><i><b class="{% if usage_pct > 90 %}danger{% elif usage_pct > 75 %}warning{% endif %}" style="--progress:{{ usage_pct if usage_pct <= 100 else 100 }}%"></b></i><small>Límite {{ (storage_limit / 1024 / 1024)|round(0) if storage_limit else 0 }} MB</small></div>
+            <div class="company-storage"><span><small>Uso del plan</small><b>{{ usage_pct }}%</b></span><progress class="ui-progress {% if usage_pct > 90 %}danger{% elif usage_pct > 75 %}warning{% endif %}" max="100" value="{{ usage_pct if usage_pct <= 100 else 100 }}">{{ usage_pct }}%</progress><small>Límite {{ (storage_limit / 1024 / 1024)|round(0) if storage_limit else 0 }} MB</small></div>
           </div>
           <footer>
             <form method="post" action="{{ url_for('superadmin_bp.impersonate', company_id=c.id) }}"><button class="company-support" type="submit"><i class="bi bi-headset"></i> Entrar como soporte</button></form>

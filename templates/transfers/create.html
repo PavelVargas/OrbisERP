@@ -4,8 +4,11 @@
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Nueva transferencia · OrbisERP</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/tranfer_css/create_tranfer.css') }}">
+
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-polished3') }}">
 </head>
-<body>{% include 'layouts/left_bar.html' %}
+<body class="orbis-app">{% include 'layouts/left_bar.html' %}
 <main class="transfer-page">
     {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div class="flash-stack">{% for category,message in messages %}<div class="flash flash-{{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}{% endwith %}
     <header class="transfer-header">

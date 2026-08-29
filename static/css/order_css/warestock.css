@@ -16,7 +16,7 @@ main { flex: 1; margin-left: 290px; padding: 33px; min-height: 100vh; }
     border-radius: 20px; 
     border: 1px solid var(--border); 
     overflow: hidden; 
-    box-shadow: 0 4px 20px rgba(0,0,0,0.03); 
+    box-shadow:0 4px 20px var(--ui-line); 
 }
 
 .modern-table { width: 100%; border-collapse: collapse; }
@@ -38,9 +38,9 @@ main { flex: 1; margin-left: 290px; padding: 33px; min-height: 100vh; }
 .badge { 
     padding: 5px 12px; border-radius: 8px; font-size: 10px; font-weight: 800; 
 }
-.b-received { background: rgba(16, 185, 129, 0.1); color: var(--success); }
-.b-pending { background: rgba(249, 168, 37, 0.1); color: var(--warning); }
-.b-cancelled { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+.b-received { background:var(--ui-success-soft); color: var(--success); }
+.b-pending { background:var(--ui-primary-soft); color: var(--warning); }
+.b-cancelled { background:var(--ui-danger-soft); color: var(--danger); }
 
 /* MODO OSCURO */
 html.dark body .modern-table th { background: #1c1c1f; }
@@ -93,7 +93,7 @@ html.dark body .modern-table td { border-bottom-color: #252529; }
 .modern-form input:focus {
     border-color: var(--primary-blue);
     outline: none;
-    box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.05);
+    box-shadow:0 0 0 4px var(--ui-primary-soft);
 }
 
 /* Soporte Modo Oscuro para Inputs de Almacén */

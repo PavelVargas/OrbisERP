@@ -2,7 +2,7 @@
 body {
     background-color: var(--bg);
     color: var(--fg);
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: "Plus Jakarta Sans", sans-serif;
     margin: 0;
     transition: 0.3s ease;
 }
@@ -169,7 +169,7 @@ body {
 .form-group input:focus, .form-group textarea:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1);
+    box-shadow:0 0 0 4px var(--ui-primary-soft);
 }
 
 /* FOOTER & BUTTON */
@@ -196,7 +196,7 @@ body {
 
 .btn-save:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    box-shadow:0 10px 20px var(--ui-line);
     opacity: 0.9;
 }
 

@@ -92,7 +92,7 @@ input, select, textarea {
 input:focus, select:focus, textarea:focus {
     border-color: var(--primary);
     background: var(--bg-card);
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 10%, transparent);
+    box-shadow:none;
 }
 
 textarea {

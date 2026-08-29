@@ -40,8 +40,9 @@ def test_tablet_shell_is_available_for_client_continuity_but_hidden_on_desktop()
 def test_light_theme_dock_and_sheet_use_theme_tokens_not_permanent_dark_surfaces():
     css = read('static/css/tablet_experience.css')
 
-    assert '--tablet-nav-surface: color-mix' in css
-    assert '--tablet-nav-strong: var(--text-main' in css
+    assert '--tablet-nav-surface: var(--ui-surface-soft)' in css
+    assert 'color-mix' not in css
+    assert '--tablet-nav-strong: var(--ui-text)' in css
     assert 'background: var(--tablet-nav-surface) !important' in css
     assert 'background: var(--tablet-nav-surface-solid) !important' in css
     assert 'color: var(--tablet-nav-strong) !important' in css

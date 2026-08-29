@@ -1,0 +1,1193 @@
+/* OrbisERP minimal visual layer.
+   Loaded last so the product keeps its behavior while presenting one quiet,
+   consistent interface across authenticated, tablet, public and master views. */
+
+:root {
+    --minimal-primary:var(--ui-primary);
+    --minimal-primary-hover: #cc5d18;
+    --minimal-bg: #f6f7f8;
+    --minimal-surface: #ffffff;
+    --minimal-surface-soft: #f8f9fa;
+    --minimal-border: #e5e7eb;
+    --minimal-text: #202124;
+    --minimal-muted: #72757a;
+    --minimal-radius-sm: 8px;
+    --minimal-radius: 12px;
+    --minimal-radius-lg: 14px;
+    --minimal-shadow:0 1px 2px var(--ui-line);
+}
+
+html.dark {
+    --minimal-bg: #111214;
+    --minimal-surface: #18191b;
+    --minimal-surface-soft: #1f2023;
+    --minimal-border: #2b2d31;
+    --minimal-text: #f3f4f6;
+    --minimal-muted: #9a9da3;
+    --minimal-shadow:0 1px 2px var(--ui-line);
+}
+
+/* Authenticated app ------------------------------------------------------ */
+html.orbis-authenticated {
+    --primary: var(--minimal-primary);
+    --accent: var(--minimal-primary);
+    --primary-hover: var(--minimal-primary-hover);
+    --bg-main: var(--minimal-bg);
+    --bg-card: var(--minimal-surface);
+    --bg-input: var(--minimal-surface-soft);
+    --bg-hover: var(--minimal-surface-soft);
+    --text-main: var(--minimal-text);
+    --text-muted: var(--minimal-muted);
+    --border: var(--minimal-border);
+    --shadow: var(--minimal-shadow);
+    --radius: var(--minimal-radius);
+    --sidebar-width: 248px;
+    --sidebar-collapsed: 68px;
+    --orbis-canvas: var(--minimal-bg);
+    --orbis-panel: var(--minimal-surface);
+    --orbis-panel-soft: var(--minimal-surface-soft);
+    --orbis-line: var(--minimal-border);
+    --orbis-radius-sm: var(--minimal-radius-sm);
+    --orbis-radius: var(--minimal-radius);
+    --orbis-radius-lg: var(--minimal-radius-lg);
+    --orbis-shadow: var(--minimal-shadow);
+    --orbis-shadow-soft: var(--minimal-shadow);
+    --orbis-page-width: 1360px;
+}
+
+html.orbis-authenticated body:not(.pos-page) {
+    background: var(--minimal-bg) !important;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main {
+    gap: 16px;
+    color: var(--minimal-text);
+}
+
+@media (min-width: 1025px) {
+    html.orbis-authenticated:not(.tablet-mode) body:not(.pos-page) > main {
+        padding: 28px clamp(22px, 2.5vw, 38px) 42px;
+    }
+}
+
+/* Sidebar: compact, high contrast, no decorative chrome. */
+html.orbis-authenticated .sidebar {
+    width: var(--sidebar-width);
+    border-right:1px solid var(--ui-danger-soft);
+    background: #17181a;
+    box-shadow: none;
+}
+
+html.orbis-authenticated .sidebar.collapsed {
+    width: var(--sidebar-collapsed);
+}
+
+html.orbis-authenticated .sidebar-header {
+    padding: 14px 12px 12px;
+    border-bottom-color:var(--ui-danger-soft);
+}
+
+html.orbis-authenticated .brand {
+    min-height: 40px;
+    gap: 10px;
+    padding: 0 4px 10px;
+}
+
+html.orbis-authenticated .brand-icon {
+    width: 34px;
+    height: 34px;
+    flex-basis: 34px;
+    border-radius: 9px;
+    box-shadow: none;
+}
+
+html.orbis-authenticated .brand-name { font-size: 13px; }
+html.orbis-authenticated .brand-meta { margin-top: 2px; font-size: 8px; letter-spacing: .06em; }
+
+html.orbis-authenticated .user-widget {
+    gap: 9px;
+    margin-top: 0;
+    padding: 8px;
+    border-radius: 9px;
+    background:var(--ui-danger-soft);
+}
+
+html.orbis-authenticated .user-avatar {
+    width: 30px;
+    height: 30px;
+    flex-basis: 30px;
+    border-radius: 8px;
+}
+
+html.orbis-authenticated .sidebar-search {
+    height: 36px;
+    margin-top: 10px;
+    border-radius: 8px;
+    background:var(--ui-line);
+    box-shadow: none;
+}
+
+html.orbis-authenticated .sidebar-nav {
+    padding: 10px 8px 14px;
+}
+
+html.orbis-authenticated .nav-section { margin-bottom: 10px; }
+html.orbis-authenticated .section-title { margin-bottom: 3px; opacity: .68; }
+
+html.orbis-authenticated .nav-item {
+    min-height: 38px;
+    gap: 9px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    color: #a7abb1;
+    box-shadow: none;
+}
+
+html.orbis-authenticated .nav-item:hover {
+    color: #ffffff;
+    background:var(--ui-danger-soft);
+}
+
+html.orbis-authenticated .nav-item.active {
+    color: #ffffff;
+    background:var(--ui-primary-soft);
+    box-shadow: inset 2px 0 0 var(--minimal-primary);
+}
+
+html.orbis-authenticated .nav-item.active::before,
+html.orbis-authenticated .nav-item::after {
+    display: none !important;
+}
+
+html.orbis-authenticated .nav-item--primary,
+html.orbis-authenticated .nav-item--primary.active {
+    color: #ffffff;
+    background: var(--minimal-primary);
+    box-shadow: none;
+}
+
+html.orbis-authenticated .nav-item--primary:hover {
+    background: var(--minimal-primary-hover);
+}
+
+html.orbis-authenticated .nav-icon {
+    width: 26px;
+    height: 26px;
+    flex-basis: 26px;
+    border-radius: 7px;
+    background: transparent;
+}
+
+html.orbis-authenticated .nav-item:hover .nav-icon,
+html.orbis-authenticated .nav-item.active .nav-icon {
+    background: transparent;
+    transform: none;
+}
+
+html.orbis-authenticated .sidebar-footer {
+    padding: 8px;
+    border-top-color:var(--ui-danger-soft);
+}
+
+html.orbis-authenticated .sidebar-mobile-trigger {
+    width: 40px;
+    height: 40px;
+    border-radius: 9px;
+    border-color: var(--minimal-border);
+    color: var(--minimal-text);
+    background: var(--minimal-surface);
+    box-shadow: var(--minimal-shadow);
+}
+
+/* Page headings: plain surface, short copy, clear action placement. */
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-header,
+    .bo-header,
+    .page-header,
+    .sales-header,
+    .clients-header,
+    .stock-header,
+    .suppliers-header,
+    .purchases-header,
+    .staff-header,
+    .reports-header,
+    .history-header,
+    .monthly-header,
+    .kardex-header,
+    .company-settings-header,
+    .profile-header,
+    .hub-header,
+    .cash-header,
+    .data-hero,
+    .ops-hero,
+    .order-header,
+    .purchase-setup-header,
+    .transfer-header,
+    .request-error-head
+) {
+    min-height: 0;
+    gap: 18px;
+    padding: 18px 20px;
+    overflow: visible;
+    border: 1px solid var(--minimal-border) !important;
+    border-radius: var(--minimal-radius-lg) !important;
+    color: var(--minimal-text) !important;
+    background: var(--minimal-surface) !important;
+    box-shadow: var(--minimal-shadow) !important;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-header,
+    .bo-header,
+    .page-header,
+    .sales-header,
+    .clients-header,
+    .stock-header,
+    .suppliers-header,
+    .purchases-header,
+    .staff-header,
+    .reports-header,
+    .history-header,
+    .monthly-header,
+    .kardex-header,
+    .company-settings-header,
+    .profile-header,
+    .hub-header,
+    .cash-header,
+    .data-hero,
+    .ops-hero,
+    .order-header,
+    .purchase-setup-header,
+    .transfer-header,
+    .request-error-head
+)::after {
+    display: none !important;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-header,
+    .bo-header,
+    .page-header,
+    .sales-header,
+    .clients-header,
+    .stock-header,
+    .suppliers-header,
+    .purchases-header,
+    .staff-header,
+    .reports-header,
+    .history-header,
+    .monthly-header,
+    .kardex-header,
+    .company-settings-header,
+    .profile-header,
+    .hub-header,
+    .cash-header,
+    .data-hero,
+    .ops-hero,
+    .order-header,
+    .purchase-setup-header,
+    .transfer-header,
+    .request-error-head
+) :where(h1, h2, h3, strong) {
+    color: var(--minimal-text) !important;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-header,
+    .bo-header,
+    .page-header,
+    .sales-header,
+    .clients-header,
+    .stock-header,
+    .suppliers-header,
+    .purchases-header,
+    .staff-header,
+    .reports-header,
+    .history-header,
+    .monthly-header,
+    .kardex-header,
+    .company-settings-header,
+    .profile-header,
+    .hub-header,
+    .cash-header,
+    .data-hero,
+    .ops-hero,
+    .order-header,
+    .purchase-setup-header,
+    .transfer-header,
+    .request-error-head
+) :where(p, small) {
+    color: var(--minimal-muted) !important;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-header,
+    .bo-header,
+    .page-header,
+    .sales-header,
+    .clients-header,
+    .stock-header,
+    .suppliers-header,
+    .purchases-header,
+    .staff-header,
+    .reports-header,
+    .history-header,
+    .monthly-header,
+    .kardex-header,
+    .company-settings-header,
+    .profile-header,
+    .hub-header,
+    .cash-header,
+    .data-hero,
+    .ops-hero,
+    .order-header,
+    .purchase-setup-header,
+    .transfer-header,
+    .request-error-head
+) :where(h1, h2) {
+    margin-top: 3px;
+    margin-bottom: 4px;
+    font-size: clamp(22px, 2.1vw, 30px);
+    font-weight: 720;
+    line-height: 1.15;
+    letter-spacing: -.035em;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-eyebrow,
+    .bo-eyebrow,
+    .page-eyebrow,
+    .header-eyebrow,
+    .hub-eyebrow,
+    .ops-hero > span,
+    .reports-header > div > span,
+    .suppliers-header > div > span,
+    .clients-header > div > span,
+    .purchases-header > div > span,
+    .staff-header > div > span,
+    .sales-header > div > span
+) {
+    color: var(--minimal-primary) !important;
+    font-size: 9px !important;
+    font-weight: 800 !important;
+    letter-spacing: .08em !important;
+}
+
+/* Surfaces: one border, almost no elevation. */
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-card,
+    .bo-card,
+    .hub-card,
+    .table-card,
+    .content-card,
+    .detail-card,
+    .summary-card,
+    .metric-card,
+    .stats-card,
+    .toolbar-card,
+    .search-card,
+    .filter-panel,
+    .filters-panel,
+    .control-panel,
+    .configuration-column,
+    .form-container,
+    .form-container-left,
+    .ops-card,
+    .retail-section,
+    .retail-launch-card,
+    .cash-card,
+    .report-card,
+    .user-card,
+    .product-card,
+    .client-card,
+    .supplier-card,
+    .purchase-card,
+    .stock-card,
+    .product-catalog-bar,
+    .product-filter-panel,
+    .odoo-product-card,
+    .quick-actions > a
+) {
+    border: 1px solid var(--minimal-border) !important;
+    border-radius: var(--minimal-radius) !important;
+    background: var(--minimal-surface) !important;
+    box-shadow: var(--minimal-shadow) !important;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-card,
+    .bo-card,
+    .hub-card,
+    .table-card,
+    .content-card,
+    .detail-card,
+    .summary-card,
+    .filter-panel,
+    .filters-panel,
+    .control-panel,
+    .configuration-column,
+    .form-container,
+    .form-container-left,
+    .ops-card
+) {
+    padding: 18px;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(.workspace-card, .bo-card, .hub-card) :where(h2, h3) {
+    letter-spacing: -.025em;
+}
+
+/* Forms: white/graphite fields, readable labels, restrained focus ring. */
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="color"]):not([type="range"]),
+    select,
+    textarea
+) {
+    min-height: 42px;
+    padding: 9px 11px;
+    border: 1px solid var(--minimal-border) !important;
+    border-radius: var(--minimal-radius-sm) !important;
+    color: var(--minimal-text) !important;
+    background: var(--minimal-surface) !important;
+    box-shadow: none !important;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main textarea { min-height: 92px; }
+
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="color"]):not([type="range"]),
+    select,
+    textarea
+):focus {
+    border-color:var(--ui-primary-line)!important;
+    background: var(--minimal-surface) !important;
+    box-shadow:none!important;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main label {
+    color: var(--minimal-muted);
+    font-weight: 600;
+}
+
+/* Buttons: compact, flat, predictable. */
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-btn,
+    .btn,
+    [class^="btn-"],
+    [class*=" btn-"],
+    button[type="submit"],
+    a[class*="action"]
+) {
+    min-height: 40px;
+    border-radius: var(--minimal-radius-sm) !important;
+    box-shadow: none !important;
+    font-weight: 700;
+    transform: none !important;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-btn--primary,
+    .btn-primary,
+    .primary-action,
+    .action-primary,
+    button[type="submit"]:not(.danger):not(.btn-danger):not(.workspace-btn--danger)
+) {
+    border-color: var(--minimal-primary) !important;
+    color: #ffffff !important;
+    background: var(--minimal-primary) !important;
+    box-shadow: none !important;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-btn--primary,
+    .btn-primary,
+    .primary-action,
+    .action-primary,
+    button[type="submit"]:not(.danger):not(.btn-danger):not(.workspace-btn--danger)
+):hover:not(:disabled) {
+    background: var(--minimal-primary-hover) !important;
+    filter: none !important;
+    transform: none !important;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-btn.secondary,
+    .workspace-btn--secondary,
+    .btn-secondary,
+    .secondary-action
+) {
+    border-color: var(--minimal-border) !important;
+    color: var(--minimal-text) !important;
+    background: var(--minimal-surface) !important;
+}
+
+/* Tables: fewer visual separators and more legible type. */
+html.orbis-authenticated body:not(.pos-page) > main table {
+    border-collapse: collapse;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main th {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--minimal-border);
+    color: var(--minimal-muted);
+    background: var(--minimal-surface-soft);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .04em;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main td {
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--minimal-border);
+    color: var(--minimal-text);
+}
+
+html.orbis-authenticated body:not(.pos-page) > main tbody tr:hover {
+    background: var(--minimal-surface-soft) !important;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .status-badge,
+    .badge,
+    .workspace-tag,
+    [class*="status-"],
+    [class*="-status"]
+) {
+    border-radius: 999px;
+    box-shadow: none;
+}
+
+/* Dashboard: separate metrics instead of a heavy connected block. */
+html.orbis-authenticated body:not(.pos-page) > main .metric-grid {
+    gap: 10px;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: visible;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main .metric-card {
+    min-height: 132px;
+    padding: 16px 17px !important;
+    border-right: 1px solid var(--minimal-border) !important;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main .metric-card--main {
+    background: var(--minimal-surface) !important;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main .metric-card__top i {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    color: var(--minimal-primary);
+    background:var(--ui-primary-soft);
+}
+
+html.orbis-authenticated body:not(.pos-page) > main .metric-card > strong {
+    margin-top: 14px;
+    font-size: clamp(20px, 1.8vw, 27px);
+}
+
+html.orbis-authenticated body:not(.pos-page) > main .quick-panel {
+    margin-top: 14px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main .quick-actions {
+    gap: 8px;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main .quick-actions > a {
+    padding: 10px 11px;
+    transform: none !important;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main .quick-actions > a:hover {
+    border-color:var(--ui-primary-line)!important;
+    background: var(--minimal-surface-soft) !important;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main .hub-card .card-header {
+    min-height: 0;
+    padding: 0 0 14px;
+}
+
+/* Product catalog: quieter cards and cleaner filters. */
+html.orbis-authenticated body:not(.pos-page) > main .product-scope-tabs {
+    gap: 6px;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main .product-scope-tab {
+    min-height: 38px;
+    border-radius: 8px;
+    box-shadow: none;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main .product-catalog-bar {
+    padding: 10px;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main .odoo-product-card {
+    overflow: hidden;
+    transform: none !important;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main .odoo-product-card:hover {
+    border-color:var(--ui-primary-line)!important;
+    box-shadow: var(--minimal-shadow) !important;
+    transform: none !important;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main :where(.product-soft-tag, .archive-ribbon) {
+    border-radius: 999px;
+}
+
+/* Alerts remain semantic but flat. */
+html.orbis-authenticated :where(.company-readonly-banner, .global-broadcast-banner) {
+    box-shadow: none !important;
+}
+
+/* Tablet: same visual language, larger touch targets only where useful. */
+html.tablet-mode.orbis-authenticated body:not(.pos-page) > main {
+    gap: 14px;
+}
+
+html.tablet-mode.orbis-authenticated body:not(.pos-page) > main :where(
+    .workspace-header,
+    .bo-header,
+    .page-header,
+    .sales-header,
+    .clients-header,
+    .stock-header,
+    .suppliers-header,
+    .purchases-header,
+    .staff-header,
+    .reports-header,
+    .history-header,
+    .monthly-header,
+    .kardex-header,
+    .company-settings-header,
+    .profile-header,
+    .hub-header,
+    .cash-header,
+    .data-hero,
+    .ops-hero,
+    .order-header,
+    .purchase-setup-header,
+    .transfer-header,
+    .request-error-head
+) {
+    min-height: 0;
+    padding: 17px 18px;
+    border-radius: 12px !important;
+}
+
+html.tablet-mode.orbis-authenticated body:not(.pos-page) > main :where(
+    button,
+    .btn,
+    .workspace-btn,
+    a[class*="btn"],
+    a[class*="action"],
+    summary
+) {
+    min-height: 46px;
+}
+
+/* Tablet launchpad ------------------------------------------------------- */
+body:has(.tablet-shell) {
+    background: var(--minimal-bg) !important;
+}
+
+.tablet-shell {
+    width: min(1320px, 100%) !important;
+    gap: 20px !important;
+    background: transparent;
+}
+
+.tablet-topbar {
+    min-height: 58px !important;
+    padding-bottom: 10px !important;
+}
+
+.tablet-brandmark,
+.tablet-top-actions > button,
+.tablet-desktop-link,
+.tablet-profile-link,
+.tablet-search,
+.tablet-app {
+    border-color: var(--minimal-border) !important;
+    border-radius: var(--minimal-radius) !important;
+    background: var(--minimal-surface) !important;
+    box-shadow: var(--minimal-shadow) !important;
+}
+
+.tablet-brandmark { border-radius: 10px !important; box-shadow: none !important; }
+.tablet-hero h1 { font-size: clamp(28px, 3.4vw, 40px) !important; }
+.tablet-hero p { color: var(--minimal-muted) !important; }
+.tablet-search { min-height: 48px !important; }
+
+.tablet-grid {
+    gap: 10px !important;
+}
+
+.tablet-app {
+    min-height: 112px !important;
+    grid-template-columns: 48px minmax(0, 1fr) 30px !important;
+    gap: 11px !important;
+    padding: 15px !important;
+    color: var(--minimal-text) !important;
+    transform: none !important;
+}
+
+.tablet-app:hover,
+.tablet-app:focus-visible {
+    border-color:var(--ui-primary-line)!important;
+    box-shadow: var(--minimal-shadow) !important;
+    transform: none !important;
+}
+
+.tablet-app.featured {
+    grid-column: auto !important;
+    border-color:var(--ui-primary-line)!important;
+    color: var(--minimal-text) !important;
+    background: var(--minimal-surface) !important;
+}
+
+.tablet-app-icon,
+.featured .tablet-app-icon {
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 11px !important;
+    color: var(--minimal-primary) !important;
+    background:var(--ui-primary-soft)!important;
+}
+
+.tablet-app-copy small,
+.featured .tablet-app-copy small {
+    color: var(--minimal-muted) !important;
+}
+
+.tablet-app-go,
+.featured .tablet-app-go {
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 8px !important;
+    color: var(--minimal-muted) !important;
+    background: var(--minimal-surface-soft) !important;
+}
+
+html.tablet-mode .tablet-launch-dock {
+    min-height: 64px !important;
+    padding: 6px !important;
+    border-radius: 16px !important;
+    border-color:var(--ui-danger-soft)!important;
+    background: #17181a !important;
+    box-shadow:0 8px 24px var(--ui-line)!important;
+    backdrop-filter: none !important;
+}
+
+html.tablet-mode .tablet-launch-dock button {
+    min-height: 50px !important;
+    border-radius: 10px !important;
+}
+
+html.tablet-mode .tablet-launch-dock button.active,
+html.tablet-mode .tablet-launch-dock button:focus-visible {
+    color: #ffffff !important;
+    background:var(--ui-primary-soft)!important;
+    box-shadow: none !important;
+}
+
+/* Public authentication ------------------------------------------------- */
+.auth-page {
+    --primary: var(--minimal-primary) !important;
+    --primary-hover: var(--minimal-primary-hover) !important;
+    --bg-main: var(--minimal-bg) !important;
+    --bg-card: var(--minimal-surface) !important;
+    --bg-input: var(--minimal-surface) !important;
+    --border: var(--minimal-border) !important;
+    --text-main: var(--minimal-text) !important;
+    --text-muted: var(--minimal-muted) !important;
+    background: var(--minimal-bg) !important;
+}
+
+.auth-page .auth-nav {
+    height: 64px !important;
+    padding: 0 clamp(18px, 3vw, 36px) !important;
+    background:var(--ui-line)!important;
+    backdrop-filter: blur(10px) !important;
+}
+
+.auth-page .split-layout {
+    grid-template-columns: 1fr !important;
+    min-height: 100vh !important;
+    padding-top: 64px !important;
+}
+
+.auth-page .side-visual {
+    display: none !important;
+}
+
+.auth-page .side-form {
+    min-height: calc(100vh - 64px) !important;
+    display: grid !important;
+    place-items: center !important;
+    padding: 28px 18px !important;
+    background: var(--minimal-bg) !important;
+}
+
+.auth-page :where(.login-card, .register-card) {
+    width: min(100%, 430px) !important;
+    max-width: 430px !important;
+    padding: 28px !important;
+    border: 1px solid var(--minimal-border) !important;
+    border-radius: var(--minimal-radius-lg) !important;
+    background: var(--minimal-surface) !important;
+    box-shadow: var(--minimal-shadow) !important;
+}
+
+.auth-page .form-header { margin-bottom: 22px !important; }
+.auth-page .form-header h2 { font-size: 23px !important; font-weight: 720 !important; }
+.auth-page .form-header p { font-size: 12px !important; line-height: 1.55 !important; }
+.auth-page .login-icon-box { display: none !important; }
+
+.auth-page .field-group label {
+    margin-bottom: 6px !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+}
+
+.auth-page .field-group input,
+.auth-page .field-group select,
+.auth-page .field-group textarea {
+    min-height: 44px !important;
+    padding: 10px 12px !important;
+    border: 1px solid var(--minimal-border) !important;
+    border-radius: var(--minimal-radius-sm) !important;
+    color: var(--minimal-text) !important;
+    background: var(--minimal-surface) !important;
+    box-shadow: none !important;
+}
+
+.auth-page .field-group input:focus,
+.auth-page .field-group select:focus,
+.auth-page .field-group textarea:focus {
+    border-color:var(--ui-primary-line)!important;
+    box-shadow:none!important;
+}
+
+.auth-page :where(.btn-login-main, .btn-register, .btn-register-main) {
+    min-height: 44px !important;
+    border-radius: var(--minimal-radius-sm) !important;
+    background: var(--minimal-primary) !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.auth-page :where(.btn-login-main, .btn-register, .btn-register-main):hover {
+    background: var(--minimal-primary-hover) !important;
+    transform: none !important;
+}
+
+.auth-page .theme-switch {
+    min-height: 36px !important;
+    border-radius: 8px !important;
+    border-color: var(--minimal-border) !important;
+    background: var(--minimal-surface) !important;
+    box-shadow: none !important;
+}
+
+.auth-page .auth-flash {
+    border-radius: 8px !important;
+    box-shadow: none !important;
+}
+
+/* Company onboarding is also reduced to a direct two-column form. */
+.auth-page.company-onboarding .company-shell {
+    width: min(1060px, calc(100% - 36px)) !important;
+    min-height: calc(100vh - 64px) !important;
+    margin: 64px auto 0 !important;
+    gap: 24px !important;
+    padding: 28px 0 40px !important;
+}
+
+.auth-page.company-onboarding :where(.company-intro, .company-form-panel) {
+    min-width: 0;
+}
+
+.auth-page.company-onboarding :where(.owner-card, .setup-steps, .logo-upload-wrap, .trial-note) {
+    border-color: var(--minimal-border) !important;
+    border-radius: var(--minimal-radius) !important;
+    background: var(--minimal-surface) !important;
+    box-shadow: none !important;
+}
+
+/* Superadmin ------------------------------------------------------------ */
+.master-body {
+    --master-bg: var(--minimal-bg) !important;
+    --master-surface: var(--minimal-surface) !important;
+    --master-soft: var(--minimal-surface-soft) !important;
+    --master-border: var(--minimal-border) !important;
+    --master-text: var(--minimal-text) !important;
+    --master-muted: var(--minimal-muted) !important;
+    --master-primary: var(--minimal-primary) !important;
+    --master-primary-soft:var(--ui-primary-soft)!important;
+    --master-shadow: var(--minimal-shadow) !important;
+    background: var(--minimal-bg) !important;
+}
+
+.master-topbar {
+    min-height: 62px !important;
+    padding: 0 22px !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+.master-brand > span {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 9px !important;
+    background: var(--minimal-primary) !important;
+    box-shadow: none !important;
+}
+
+.master-shell {
+    width: min(1360px, calc(100% - 36px)) !important;
+    padding: 26px 0 48px !important;
+}
+
+.master-heading {
+    align-items: center !important;
+    margin-bottom: 18px !important;
+}
+
+.master-heading h1 { font-size: clamp(1.55rem, 2.2vw, 2rem) !important; }
+
+.master-btn,
+.master-icon-action,
+.master-search {
+    border-radius: var(--minimal-radius-sm) !important;
+    box-shadow: none !important;
+}
+
+.master-btn { background: var(--minimal-primary) !important; border-color: var(--minimal-primary) !important; }
+.master-btn.secondary { color: var(--minimal-text) !important; background: var(--minimal-surface) !important; border-color: var(--minimal-border) !important; }
+
+.master-kpis { gap: 10px !important; margin-bottom: 10px !important; }
+.master-overview-grid { gap: 10px !important; }
+
+.master-kpis article,
+.master-panel,
+.master-companies-section,
+.master-company-card,
+.master-modal {
+    border-color: var(--minimal-border) !important;
+    border-radius: var(--minimal-radius) !important;
+    background: var(--minimal-surface) !important;
+    box-shadow: var(--minimal-shadow) !important;
+}
+
+.master-kpis article { padding: 15px !important; }
+.master-panel { padding: 16px !important; }
+.master-companies-section { padding: 17px !important; }
+.master-company-card { transform: none !important; }
+.master-company-card:hover { transform: none !important; box-shadow: var(--minimal-shadow) !important; }
+
+.kpi-icon,
+.company-logo,
+.node-avatar {
+    border-radius: 9px !important;
+}
+
+.master-progress i,
+.company-storage > i > b,
+.plan-bars > div > i > b {
+    background: var(--minimal-primary) !important;
+}
+
+/* Small screens --------------------------------------------------------- */
+@media (max-width: 900px) {
+    html.orbis-authenticated body:not(.pos-page) > main :where(
+        .workspace-header,
+        .bo-header,
+        .page-header,
+        .sales-header,
+        .clients-header,
+        .stock-header,
+        .suppliers-header,
+        .purchases-header,
+        .staff-header,
+        .reports-header,
+        .history-header,
+        .monthly-header,
+        .kardex-header,
+        .company-settings-header,
+        .profile-header,
+        .hub-header,
+        .cash-header,
+        .data-hero,
+        .ops-hero,
+        .order-header,
+        .purchase-setup-header,
+        .transfer-header,
+        .request-error-head
+    ) {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    html.orbis-authenticated body:not(.pos-page) > main :where(
+        .workspace-header-actions,
+        .bo-header-actions,
+        .page-actions,
+        .header-actions,
+        .hub-header__actions
+    ) {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .master-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+    .master-overview-grid { grid-template-columns: 1fr !important; }
+}
+
+@media (max-width: 680px) {
+    html.orbis-authenticated body:not(.pos-page) > main {
+        padding-left: 14px !important;
+        padding-right: 14px !important;
+    }
+
+    html.orbis-authenticated body:not(.pos-page) > main :where(
+        .workspace-header,
+        .bo-header,
+        .page-header,
+        .sales-header,
+        .clients-header,
+        .stock-header,
+        .suppliers-header,
+        .purchases-header,
+        .staff-header,
+        .reports-header,
+        .history-header,
+        .monthly-header,
+        .kardex-header,
+        .company-settings-header,
+        .profile-header,
+        .hub-header,
+        .cash-header,
+        .data-hero,
+        .ops-hero,
+        .order-header,
+        .purchase-setup-header,
+        .transfer-header,
+        .request-error-head
+    ) {
+        padding: 16px !important;
+    }
+
+    .auth-page :where(.login-card, .register-card) { padding: 22px 18px !important; }
+    .auth-page.company-onboarding .company-shell { width: min(100% - 28px, 620px) !important; grid-template-columns: 1fr !important; }
+    .master-kpis { grid-template-columns: 1fr !important; }
+    .master-shell { width: min(100% - 24px, 1360px) !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tablet-app,
+    .master-company-card,
+    html.orbis-authenticated body:not(.pos-page) > main :where(button, a, tbody tr) {
+        transition: none !important;
+    }
+}
+
+/* Superadmin payments legacy screen. */
+.master-theme {
+    --primary: var(--minimal-primary) !important;
+    --primary-hover: var(--minimal-primary-hover) !important;
+    --bg-main: var(--minimal-bg) !important;
+    --bg-card: var(--minimal-surface) !important;
+    --bg-input: var(--minimal-surface-soft) !important;
+    --border: var(--minimal-border) !important;
+    --text-main: var(--minimal-text) !important;
+    --text-muted: var(--minimal-muted) !important;
+    background: var(--minimal-bg) !important;
+}
+
+.master-theme .topbar {
+    height: 62px !important;
+    padding: 0 22px !important;
+    background: var(--minimal-surface) !important;
+}
+
+.master-theme .topbar-content,
+.master-theme .hero-inner,
+.master-theme .content-container {
+    max-width: 1120px !important;
+}
+
+.master-theme .hero {
+    padding: 30px 18px 22px !important;
+    background: transparent !important;
+}
+
+.master-theme .hero h2 {
+    margin-bottom: 7px !important;
+    font-size: clamp(24px, 3vw, 30px) !important;
+    letter-spacing: -.035em !important;
+}
+
+.master-theme .hero p {
+    font-size: 13px !important;
+}
+
+.master-theme .content-container {
+    padding: 0 18px 42px !important;
+}
+
+.master-theme .payments-table {
+    border-collapse: collapse !important;
+    border: 1px solid var(--minimal-border) !important;
+    border-radius: var(--minimal-radius) !important;
+    background: var(--minimal-surface) !important;
+    box-shadow: var(--minimal-shadow) !important;
+    overflow: hidden !important;
+}
+
+.master-theme .payments-table th {
+    padding: 10px 12px !important;
+    border-bottom: 1px solid var(--minimal-border) !important;
+    background: var(--minimal-surface-soft) !important;
+    font-size: 9px !important;
+    letter-spacing: .04em !important;
+}
+
+.master-theme .payments-table tr td {
+    padding: 12px !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--minimal-border) !important;
+    border-radius: 0 !important;
+    background: var(--minimal-surface) !important;
+    box-shadow: none !important;
+}
+
+.master-theme .payments-table tr:hover td {
+    background: var(--minimal-surface-soft) !important;
+    transform: none !important;
+}
+
+.master-theme :where(.btn-approve, .btn-theme) {
+    border-radius: var(--minimal-radius-sm) !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.master-theme .btn-approve {
+    background: var(--minimal-primary) !important;
+}
+
+/* Preserve icon spacing on authentication fields after the flat input reset. */
+.auth-page .input-with-icon input {
+    padding-left: 42px !important;
+}

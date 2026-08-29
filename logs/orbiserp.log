@@ -2242,3 +2242,14 @@ DETAIL:  La fila que falla contiene (1168, Arroz premium 5 lb, SUP-260823-001, A
 2026-08-28 10:09:34,056 INFO app PostgreSQL configurado; release=2026.08.13 env=development
 2026-08-28 10:11:40,600 INFO app audit request_id=0f1c4932aeb2c454aaa63dd1 method=POST path=/login status=302 user_id=7 company_id=2 ip=10.0.0.240
 2026-08-28 10:33:02,013 INFO app audit request_id=5907cfd468a29b3216f99b86 method=POST path=/login status=302 user_id=7 company_id=2 ip=10.0.0.21
+2026-08-28 14:15:42,475 INFO app PostgreSQL configurado; release=2026.08.13 env=development
+2026-08-28 14:16:40,211 INFO app audit request_id=0056301ac69943cf0a40af51 method=POST path=/login status=302 user_id=7 company_id=2 ip=10.0.0.230
+2026-08-28 16:05:15,071 INFO app audit request_id=835e88d3e5de4486d53b6821 method=POST path=/logout status=302 user_id=None company_id=None ip=10.0.0.230
+2026-08-28 16:05:17,836 INFO app audit request_id=96d57af9929a8d5c73723c60 method=POST path=/login status=302 user_id=1 company_id=None ip=10.0.0.230
+2026-08-28 16:13:45,424 INFO app audit request_id=72946f3c139114a6f672d3ff method=POST path=/logout status=302 user_id=None company_id=None ip=10.0.0.230
+2026-08-28 16:13:48,578 INFO app audit request_id=77ba0f73380e348db3333e1a method=POST path=/login status=302 user_id=7 company_id=2 ip=10.0.0.230
+2026-08-28 16:19:18,082 INFO app PostgreSQL configurado; release=2026.08.13 env=development
+2026-08-29 11:37:36,537 INFO app PostgreSQL configurado; release=2026.08.13 env=development
+2026-08-29 11:50:42,768 INFO app PostgreSQL configurado; release=2026.08.13 env=development
+2026-08-29 12:52:40,436 INFO app PostgreSQL configurado; release=2026.08.13 env=development
+2026-08-29 12:56:59,163 INFO app audit request_id=7e9799bed8f5352cefd38b65 method=POST path=/governance/sessions/revoke-all status=302 user_id=7 company_id=2 ip=127.0.0.1

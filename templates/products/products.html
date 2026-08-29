@@ -52,8 +52,8 @@
         </form>
 
         <div class="product-view-switch" role="group" aria-label="Vista del catálogo">
-            <button type="button" class="product-view-button active" data-products-view="kanban" title="Tarjetas"><i class="bi bi-grid-3x3-gap"></i><span>Tarjetas</span></button>
-            <button type="button" class="product-view-button" data-products-view="list" title="Lista"><i class="bi bi-list-ul"></i><span>Lista</span></button>
+            <button type="button" class="product-view-button" data-products-view="kanban" title="Tarjetas"><i class="bi bi-grid-3x3-gap"></i><span>Tarjetas</span></button>
+            <button type="button" class="product-view-button active" data-products-view="list" title="Lista"><i class="bi bi-list-ul"></i><span>Lista</span></button>
         </div>
     </section>
 
@@ -62,7 +62,7 @@
         <span>{{ selected_currency }}{% if selected_currency != 'DOP' %} · 1 {{ selected_currency }} = {{ '%.2f'|format(conversion_rate) }} DOP{% endif %}</span>
     </div>
 
-    <section class="product-kanban-shell" data-products-shell data-view="kanban">
+    <section class="product-kanban-shell" data-products-shell data-view="list">
         <div class="product-list-header" aria-hidden="true">
             <span>Producto</span><span>Categoría</span><span>Precio</span><span>Existencia</span><span>Acciones</span>
         </div>
@@ -157,8 +157,8 @@
         try { localStorage.setItem(key, view); } catch (_) {}
     };
     buttons.forEach((button) => button.addEventListener('click', () => apply(button.dataset.productsView)));
-    let initial = 'kanban';
-    try { initial = localStorage.getItem(key) || 'kanban'; } catch (_) {}
+    let initial = 'list';
+    try { initial = localStorage.getItem(key) || 'list'; } catch (_) {}
     apply(initial);
 })();
 </script>

@@ -19,7 +19,7 @@
         .brand-title {
             font-size: 24px;
             font-weight: bold;
-            color: #faa200; /* Naranja Orbis */
+            color: #2563eb; /* Naranja Orbis */
             margin: 0;
         }
         .report-type {
@@ -42,7 +42,7 @@
         }
         .data-table th {
             background-color: #f8f9fa;
-            border-bottom: 2px solid #faa200;
+            border-bottom: 2px solid #2563eb;
             color: #34495e;
             text-transform: uppercase;
             font-size: 10px;
@@ -69,7 +69,7 @@
             font-size: 14px;
         }
         .total-highlight {
-            background-color: #faa200;
+            background-color: #2563eb;
             color: white;
             font-weight: bold;
         }
@@ -82,13 +82,15 @@
             thead { display: table-header-group; }
         }
     </style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_print_v2.css', v='20260829-v2') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-polished3') }}">
 </head>
-<body>
+<body class="orbis-print">
 
-    <div class="no-print" style="margin-bottom: 20px; padding: 10px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 6px;">
-        <button onclick="window.print()" style="background: #faa200; color: white; border: none; padding: 8px 15px; border-radius: 4px; font-weight: bold; cursor: pointer;">Imprimir Documento</button>
-        <button onclick="window.close()" style="background: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 4px; margin-left: 10px; cursor: pointer;">Cerrar Vista</button>
-        <span style="margin-left: 15px; font-size: 11px; color: #856404;">Tip: Asegúrate de habilitar "Gráficos de fondo" en la configuración de la impresora.</span>
+    <div class="no-print" data-ui-style="rb462b4f0ae">
+        <button onclick="window.print()" data-ui-style="r42df27450f">Imprimir Documento</button>
+        <button onclick="window.close()" data-ui-style="rc62080786f">Cerrar Vista</button>
+        <span data-ui-style="r723dec2810">Tip: Asegúrate de habilitar "Gráficos de fondo" en la configuración de la impresora.</span>
     </div>
 
     <table class="header-table">
@@ -108,19 +110,19 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: 20%;">Fecha</th>
-                <th style="width: 45%;">Cliente</th>
-                <th style="width: 15%; text-center">Método</th>
-                <th style="width: 20%;" class="text-right">Total ({{ currency_symbol }})</th>
+                <th data-ui-style="r85b7a6bea8">Fecha</th>
+                <th data-ui-style="re289b717a9">Cliente</th>
+                <th data-ui-style="r3ebefbda92">Método</th>
+                <th data-ui-style="r85b7a6bea8" class="text-right">Total ({{ currency_symbol }})</th>
             </tr>
         </thead>
         <tbody>
             {% for s in sales %}
             <tr>
                 <td>{{ s.date.strftime('%d/%m/%Y %H:%M') }}</td>
-                <td style="font-weight: 500;">{{ s.client }}</td>
+                <td data-ui-style="raf5bb0afde">{{ s.client }}</td>
                 <td class="text-center">{{ s.payment_method }}</td>
-                <td class="text-right" style="font-weight: bold;">{{ "{:,.2f}".format(s.total_converted) }}</td>
+                <td class="text-right" data-ui-style="r78d7af8b7e">{{ "{:,.2f}".format(s.total_converted) }}</td>
             </tr>
             {% endfor %}
         </tbody>

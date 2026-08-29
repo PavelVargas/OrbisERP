@@ -1,12 +1,12 @@
  :root {
-            --primary: #f36b21;
+            --primary:var(--ui-primary);
             --primary-rgb: 250, 162, 0;
             --bg-main: #f8fafc;
             --bg-card: #ffffff;
             --bg-input: #f1f5f9;
             --text-main: #0f172a;
             --text-muted: #64748b;
-            --border: rgba(0,0,0,0.06);
+            --border:var(--ui-line);
             --radius: 24px;
             --ease: cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -17,11 +17,11 @@
             --bg-input: #1c1f26;
             --text-main: #f1f5f9;
             --text-muted: #94a3b8;
-            --border: rgba(255,255,255,0.08);
+            --border:var(--ui-danger-soft);
             background-color: #0a0c10;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Plus Jakarta Sans", sans-serif; }
         
         body { 
             background-color: var(--bg-main); 
@@ -41,7 +41,7 @@
         /* --- NAV --- */
         nav {
             position: fixed; top: 0; width: 100%; height: 80px;
-            background: rgba(var(--bg-main), 0.8);
+            background: var(--bg-main);
             backdrop-filter: blur(16px); border-bottom: 1px solid var(--border);
             z-index: 1000; display: flex; align-items: center;
         }
@@ -63,7 +63,7 @@
             display: inline-flex; align-items: center; gap: 8px; border: none; cursor: pointer;
         }
         .btn-primary { background: var(--primary); color: #000; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(var(--primary-rgb), 0.2); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px var(--primary); }
         .btn-outline { background: transparent; color: var(--text-main); border: 1px solid var(--border); }
         .btn-outline:hover { background: var(--bg-input); border-color: var(--primary); }
 
@@ -82,7 +82,7 @@
         .mockup-container {
             background: var(--bg-card); border: 1px solid var(--border);
             border-radius: var(--radius); padding: 12px; margin-top: 4rem;
-            box-shadow: 0 40px 80px rgba(0,0,0,0.4);
+            box-shadow:0 40px 80px var(--ui-line);
         }
         .mock-ui { background: var(--bg-main); border-radius: 16px; height: 450px; display: flex; overflow: hidden; }
         .sidebar-mock { width: 220px; border-right: 1px solid var(--border); padding: 20px; background: var(--bg-card); }

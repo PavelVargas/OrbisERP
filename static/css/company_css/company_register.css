@@ -36,7 +36,7 @@ body.company-onboarding .auth-nav {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: color-mix(in srgb, var(--bg-main) 94%, transparent);
+    background:var(--ui-bg);
     border-bottom: 1px solid var(--border);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
@@ -45,18 +45,18 @@ body.company-onboarding .auth-nav {
 body.company-onboarding .nav-logo {
     display: flex;
     align-items: center;
-    gap: 9px;
+    gap:8px;
     color: var(--text-main);
     font-size: 1.14rem;
     font-weight: 800;
     line-height: 1;
 }
 
-body.company-onboarding .nav-logo i { color: #ff7a1a; }
+body.company-onboarding .nav-logo i { color:var(--ui-warning); }
 
 body.company-onboarding .theme-switch {
     min-height: 36px;
-    padding: 8px 13px;
+    padding:8px 12px;
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -75,7 +75,7 @@ body.company-onboarding .company-shell {
     width: min(1680px, 100%);
     min-height: 100dvh;
     margin: 0 auto;
-    padding: calc(var(--company-nav-h) + 22px) var(--company-page-pad) 28px;
+    padding:calc(var(--company-nav-h) + 20px) var(--company-page-pad) 24px;
     display: grid;
     grid-template-columns: minmax(390px, 0.78fr) minmax(620px, 1.22fr);
     gap: var(--company-panel-gap);
@@ -93,7 +93,7 @@ body.company-onboarding .company-intro {
     justify-self: start;
     display: flex;
     flex-direction: column;
-    gap: 22px;
+    gap:20px;
     padding: 8px 0;
 }
 
@@ -102,13 +102,13 @@ body.company-onboarding .intro-copy { width: 100%; }
 body.company-onboarding .pill-badge {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    padding: 6px 10px;
-    border: 1px solid rgba(255,122,26,.30);
+    gap:8px;
+    padding:4px 8px;
+    border:1px solid var(--ui-primary-soft);
     border-radius: 999px;
-    background: rgba(255,122,26,.09);
-    color: #ff8b2c;
-    font-size: .65rem;
+    background:var(--ui-primary-soft);
+    color:var(--ui-warning);
+    font-size:0.75rem;
     font-weight: 800;
     letter-spacing: .065em;
     text-transform: uppercase;
@@ -125,7 +125,7 @@ body.company-onboarding .intro-copy h1 {
 }
 
 body.company-onboarding .text-gradient {
-    color: #ff7a1a;
+    color:var(--ui-warning);
     background: none;
     -webkit-text-fill-color: currentColor;
 }
@@ -143,11 +143,11 @@ body.company-onboarding .owner-card {
     display: grid;
     grid-template-columns: 46px minmax(0,1fr) auto;
     align-items: center;
-    gap: 13px;
-    padding: 14px 15px;
+    gap:12px;
+    padding:12px 16px;
     border: 1px solid var(--border);
-    border-radius: 15px;
-    background: color-mix(in srgb, var(--glass) 84%, transparent);
+    border-radius:14px;
+    background:var(--ui-bg);
 }
 
 body.company-onboarding .owner-avatar {
@@ -155,9 +155,9 @@ body.company-onboarding .owner-avatar {
     height: 46px;
     display: grid;
     place-items: center;
-    border-radius: 13px;
-    background: linear-gradient(145deg,#ffad16,#ff821a);
-    color: #111;
+    border-radius:12px;
+    background:var(--ui-primary-soft);
+    color:var(--ui-text);
     font-size: 1rem;
     font-weight: 900;
 }
@@ -165,14 +165,14 @@ body.company-onboarding .owner-avatar {
 body.company-onboarding .owner-card > div:nth-child(2) {
     min-width: 0;
     display: grid;
-    gap: 2px;
+    gap:0;
 }
 
 body.company-onboarding .owner-card span,
 body.company-onboarding .owner-card small {
     overflow: hidden;
     color: var(--text-muted);
-    font-size: .69rem;
+    font-size:0.75rem;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -186,13 +186,13 @@ body.company-onboarding .owner-card strong {
 }
 
 body.company-onboarding .owner-card > i {
-    color: #ff9817;
+    color:var(--ui-primary);
     font-size: 1.15rem;
 }
 
 body.company-onboarding .setup-steps {
     display: grid;
-    gap: 6px;
+    gap:4px;
 }
 
 body.company-onboarding .setup-step {
@@ -200,9 +200,9 @@ body.company-onboarding .setup-step {
     display: grid;
     grid-template-columns: 31px minmax(0,1fr) auto;
     align-items: center;
-    gap: 11px;
-    padding: 6px 8px;
-    border-radius: 11px;
+    gap:12px;
+    padding:4px 8px;
+    border-radius:10px;
     color: var(--text-muted);
 }
 
@@ -212,14 +212,14 @@ body.company-onboarding .setup-step b {
     display: grid;
     place-items: center;
     border: 1px solid var(--border);
-    border-radius: 9px;
-    background: rgba(255,255,255,.025);
-    font-size: .71rem;
+    border-radius:8px;
+    background:var(--ui-danger-soft);
+    font-size:0.75rem;
 }
 
 body.company-onboarding .setup-step span {
     display: grid;
-    gap: 1px;
+    gap:0;
     color: inherit;
     font-size: .78rem;
     font-weight: 800;
@@ -227,7 +227,7 @@ body.company-onboarding .setup-step span {
 
 body.company-onboarding .setup-step small {
     color: var(--text-muted);
-    font-size: .65rem;
+    font-size:0.75rem;
     font-weight: 600;
 }
 
@@ -236,13 +236,13 @@ body.company-onboarding .setup-step.active { color: var(--text-main); }
 
 body.company-onboarding .setup-step.done b,
 body.company-onboarding .setup-step.active b {
-    border-color: rgba(255,137,22,.33);
-    background: rgba(255,137,22,.10);
-    color: #ff9817;
+    border-color:var(--ui-primary-soft);
+    background:var(--ui-primary-soft);
+    color:var(--ui-primary);
 }
 
 body.company-onboarding .setup-step.done > i,
-body.company-onboarding .setup-step.active > i { color: #ff9817; }
+body.company-onboarding .setup-step.active > i { color:var(--ui-primary); }
 
 /* Formulario */
 body.company-onboarding .company-form-panel {
@@ -259,24 +259,24 @@ body.company-onboarding .company-card {
     padding: var(--company-card-pad);
     border: 1px solid var(--border);
     border-radius: var(--company-radius);
-    background: color-mix(in srgb, var(--glass) 90%, transparent);
-    box-shadow: 0 22px 62px rgba(0,0,0,.14);
+    background:var(--ui-bg);
+    box-shadow:var(--ui-shadow-sm);
 }
 
 body.company-onboarding .company-card .form-header { margin: 0 0 20px; }
 
 body.company-onboarding .section-kicker {
     display: block;
-    margin-bottom: 6px;
-    color: #ff9817;
-    font-size: .67rem;
+    margin-bottom:4px;
+    color:var(--ui-primary);
+    font-size:0.75rem;
     font-weight: 800;
     letter-spacing: .08em;
     text-transform: uppercase;
 }
 
 body.company-onboarding .company-card .form-header h2 {
-    margin: 0 0 6px;
+    margin:0 0 4px;
     color: var(--text-main);
     font-size: clamp(1.55rem, 2vw, 1.85rem);
     line-height: 1.15;
@@ -296,7 +296,7 @@ body.company-onboarding .modern-form { margin: 0; }
 body.company-onboarding .form-grid {
     display: grid;
     grid-template-columns: repeat(2,minmax(0,1fr));
-    gap: 13px 16px;
+    gap:12px 16px;
 }
 
 body.company-onboarding .field-group { min-width: 0; }
@@ -305,10 +305,10 @@ body.company-onboarding .field-group.full { grid-column: 1 / -1; }
 body.company-onboarding .field-group label {
     display: flex;
     align-items: center;
-    gap: 6px;
-    margin: 0 0 5px;
+    gap:4px;
+    margin:0 0 4px;
     color: var(--text-main);
-    font-size: .71rem;
+    font-size:0.75rem;
     font-weight: 700;
 }
 
@@ -317,32 +317,32 @@ body.company-onboarding .field-group label i { color: var(--text-muted); }
 body.company-onboarding .field-group input {
     width: 100%;
     min-height: 43px;
-    padding: 10px 12px;
+    padding:8px 12px;
     border: 1px solid var(--border);
     border-radius: 10px;
     outline: 0;
-    background: rgba(255,255,255,.035);
+    background:var(--ui-danger-soft);
     color: var(--text-main);
     font: inherit;
     font-size: .78rem;
     transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
 }
 
-body.company-onboarding .field-group input::placeholder { color: color-mix(in srgb,var(--text-muted) 72%,transparent); }
+body.company-onboarding .field-group input::placeholder { color:var(--ui-text-soft); }
 
 body.company-onboarding .field-group input:focus {
-    border-color: rgba(255,130,24,.72);
-    background: rgba(255,130,24,.035);
-    box-shadow: 0 0 0 3px rgba(255,130,24,.10);
+    border-color:var(--ui-primary-soft);
+    background:var(--ui-primary-soft);
+    box-shadow:var(--ui-shadow-sm);
 }
 
-html:not(.dark) body.company-onboarding .field-group input { background: #fff; }
+html:not(.dark) body.company-onboarding .field-group input { background:var(--ui-surface); }
 
 body.company-onboarding .field-hint {
     display: block;
     margin-top: 4px;
     color: var(--text-muted);
-    font-size: .63rem;
+    font-size:0.75rem;
     line-height: 1.4;
 }
 
@@ -350,11 +350,11 @@ body.company-onboarding .logo-upload-wrap {
     display: grid;
     grid-template-columns: 72px minmax(0,1fr);
     align-items: center;
-    gap: 14px;
-    padding: 11px;
+    gap:12px;
+    padding:12px;
     border: 1px dashed var(--border);
-    border-radius: 13px;
-    background: rgba(255,255,255,.018);
+    border-radius:12px;
+    background:var(--ui-danger-soft);
 }
 
 body.company-onboarding .logo-preview {
@@ -363,10 +363,10 @@ body.company-onboarding .logo-preview {
     display: grid;
     place-items: center;
     overflow: hidden;
-    border: 1px solid rgba(255,137,22,.20);
+    border:1px solid var(--ui-primary-soft);
     border-radius: 14px;
-    background: rgba(255,137,22,.08);
-    color: #ff9817;
+    background:var(--ui-primary-soft);
+    color:var(--ui-primary);
     font-size: 1.65rem;
 }
 
@@ -389,7 +389,7 @@ body.company-onboarding .logo-upload-copy > strong {
 
 body.company-onboarding .logo-upload-copy > span {
     color: var(--text-muted);
-    font-size: .66rem;
+    font-size:0.75rem;
     line-height: 1.4;
 }
 
@@ -397,76 +397,76 @@ body.company-onboarding .file-upload input { display: none; }
 
 body.company-onboarding .file-upload label {
     width: max-content;
-    margin: 3px 0 0;
-    padding: 6px 9px;
+    margin:4px 0 0;
+    padding:4px 8px;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap:4px;
     border: 1px solid var(--border);
     border-radius: 8px;
-    background: rgba(255,255,255,.025);
+    background:var(--ui-danger-soft);
     color: var(--text-main);
-    font-size: .66rem;
+    font-size:0.75rem;
     font-weight: 700;
     cursor: pointer;
 }
 
 body.company-onboarding .trial-note {
-    margin-top: 13px;
-    padding: 10px 12px;
+    margin-top:12px;
+    padding:8px 12px;
     display: flex;
     align-items: flex-start;
-    gap: 10px;
-    border: 1px solid rgba(255,137,22,.16);
+    gap:8px;
+    border:1px solid var(--ui-primary-soft);
     border-radius: 12px;
-    background: rgba(255,137,22,.065);
+    background:var(--ui-primary-soft);
 }
 
 body.company-onboarding .trial-note > i {
-    margin-top: 1px;
-    color: #ff9817;
+    margin-top:0;
+    color:var(--ui-primary);
     font-size: 1rem;
 }
 
-body.company-onboarding .trial-note div { display: grid; gap: 2px; }
-body.company-onboarding .trial-note strong { font-size: .73rem; }
-body.company-onboarding .trial-note span { color: var(--text-muted); font-size: .63rem; line-height: 1.4; }
+body.company-onboarding .trial-note div { display: grid; gap:0; }
+body.company-onboarding .trial-note strong { font-size:0.75rem; }
+body.company-onboarding .trial-note span { color: var(--text-muted); font-size:0.75rem; line-height: 1.4; }
 
 body.company-onboarding .btn-register {
     width: 100%;
     min-height: 44px;
     margin-top: 12px;
-    padding: 10px 14px;
+    padding:8px 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap:8px;
     border: 0;
     border-radius: 10px;
-    background: linear-gradient(135deg,#ff7622,#ff5d32);
-    color: #fff;
+    background:var(--ui-primary-soft);
+    color:var(--ui-white);
     font: inherit;
     font-size: .78rem;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 0 9px 22px rgba(255,96,37,.17);
+    box-shadow:var(--ui-shadow-sm);
     transition: transform .16s ease, box-shadow .16s ease;
 }
 
 body.company-onboarding .btn-register:hover {
     transform: translateY(-1px);
-    box-shadow: 0 12px 26px rgba(255,96,37,.22);
+    box-shadow:var(--ui-shadow-sm);
 }
 
 body.company-onboarding .account-footer {
-    margin-top: 10px;
+    margin-top:8px;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     flex-wrap: wrap;
     color: var(--text-muted);
-    font-size: .64rem;
+    font-size:0.75rem;
     text-align: center;
 }
 
@@ -477,7 +477,7 @@ body.company-onboarding .link-button {
     padding: 0;
     border: 0;
     background: transparent;
-    color: #ff9817;
+    color:var(--ui-primary);
     font: inherit;
     font-weight: 800;
     cursor: pointer;
@@ -496,24 +496,24 @@ body.company-onboarding .link-button:hover { text-decoration: underline; }
 
     body.company-onboarding .company-shell {
         padding-top: calc(var(--company-nav-h) + 12px);
-        padding-bottom: 14px;
+        padding-bottom:12px;
     }
 
-    body.company-onboarding .company-intro { gap: 14px; max-width: 440px; }
-    body.company-onboarding .intro-copy h1 { margin: 10px 0 11px; font-size: clamp(2.45rem,3.6vw,3.45rem); }
+    body.company-onboarding .company-intro { gap:12px; max-width: 440px; }
+    body.company-onboarding .intro-copy h1 { margin:8px 0 12px; font-size: clamp(2.45rem,3.6vw,3.45rem); }
     body.company-onboarding .intro-copy p { font-size: .82rem; line-height: 1.48; }
-    body.company-onboarding .owner-card { padding: 10px 12px; }
+    body.company-onboarding .owner-card { padding:8px 12px; }
     body.company-onboarding .owner-avatar { width: 40px; height: 40px; }
-    body.company-onboarding .setup-steps { gap: 2px; }
-    body.company-onboarding .setup-step { min-height: 36px; padding: 3px 7px; }
-    body.company-onboarding .company-card .form-header { margin-bottom: 13px; }
+    body.company-onboarding .setup-steps { gap:0; }
+    body.company-onboarding .setup-step { min-height: 36px; padding:4px 8px; }
+    body.company-onboarding .company-card .form-header { margin-bottom:12px; }
     body.company-onboarding .company-card .form-grid { gap: 8px 12px; }
-    body.company-onboarding .field-group input { min-height: 37px; padding: 8px 10px; }
-    body.company-onboarding .logo-upload-wrap { grid-template-columns: 58px minmax(0,1fr); padding: 8px 10px; }
+    body.company-onboarding .field-group input { min-height: 37px; padding:8px 8px; }
+    body.company-onboarding .logo-upload-wrap { grid-template-columns: 58px minmax(0,1fr); padding:8px 8px; }
     body.company-onboarding .logo-preview { width: 58px; height: 58px; }
-    body.company-onboarding .trial-note { margin-top: 8px; padding: 8px 10px; }
+    body.company-onboarding .trial-note { margin-top: 8px; padding:8px 8px; }
     body.company-onboarding .btn-register { min-height: 39px; margin-top: 8px; }
-    body.company-onboarding .account-footer { margin-top: 7px; }
+    body.company-onboarding .account-footer { margin-top:8px; }
 }
 
 /* Garantias de aislamiento: public.css no puede volver a encoger esta vista. */
@@ -551,9 +551,9 @@ body.company-onboarding .company-card .btn-register {
 
     body.company-onboarding .company-intro {
         max-width: none;
-        margin: 0 0 22px;
+        margin:0 0 20px;
         padding: 0;
-        gap: 15px;
+        gap:16px;
     }
 
     body.company-onboarding .intro-copy h1 {
@@ -571,15 +571,15 @@ body.company-onboarding .company-card .btn-register {
     body.company-onboarding { --company-nav-h: 56px; --company-page-pad: 14px; }
     body.company-onboarding .mode-text { display: none; }
     body.company-onboarding .theme-switch { width: 36px; padding: 0; justify-content: center; }
-    body.company-onboarding .company-shell { padding-top: calc(var(--company-nav-h) + 18px); padding-bottom: 18px; }
+    body.company-onboarding .company-shell { padding-top:calc(var(--company-nav-h) + 16px); padding-bottom:16px; }
     body.company-onboarding .intro-copy h1 { font-size: 2.15rem; }
     body.company-onboarding .owner-card { grid-template-columns: 42px minmax(0,1fr); }
     body.company-onboarding .owner-card > i { display: none; }
     body.company-onboarding .form-grid { grid-template-columns: 1fr; }
     body.company-onboarding .field-group.full,
     body.company-onboarding .field-group { grid-column: 1; }
-    body.company-onboarding .company-card { padding: 20px 16px; border-radius: 15px; }
+    body.company-onboarding .company-card { padding: 20px 16px; border-radius:14px; }
     body.company-onboarding .logo-upload-wrap { grid-template-columns: 56px minmax(0,1fr); }
     body.company-onboarding .logo-preview { width: 56px; height: 56px; }
-    body.company-onboarding .account-footer { align-items: center; flex-direction: column; gap: 5px; }
+    body.company-onboarding .account-footer { align-items: center; flex-direction: column; gap:4px; }
 }

@@ -137,14 +137,16 @@
             padding-top: 10px; 
         }
     </style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_print_v2.css', v='20260829-v2') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-polished3') }}">
 </head>
-<body>
+<body class="orbis-print">
 
     <div class="header-wrapper">
         <div class="header-left">
             <h1 class="brand">ORBIS ERP</h1>
             <div class="doc-title">Conduce de Transferencia Logística</div>
-            <div style="margin-top: 10px; font-weight: 800; font-size: 16px;">
+            <div data-ui-style="r8ebc815c09">
                 REF: TR{{ "%06d" | format(transfer.id) }}
             </div>
         </div>
@@ -170,7 +172,7 @@
     </div>
 
     {# Bloque 2: Responsabilidad y Fecha #}
-    <div class="info-section" style="border-top: none;">
+    <div class="info-section" data-ui-style="rb5dec29717">
         <div class="info-box">
             <span class="label">Emitido por</span>
             <span class="content">{{ user.name if user is defined and user else 'Sistema' }}</span>
@@ -186,13 +188,13 @@
             <tr>
                 <th>Descripción del Producto</th>
                 <th>SKU / Referencia</th>
-                <th style="text-align: right;">Cantidad</th>
+                <th data-ui-style="u30489cbd39">Cantidad</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td><strong style="color: #1e293b;">{{ transfer.product.name }}</strong></td>
-                <td style="color: #64748b;">{{ transfer.product.sku or 'SIN SKU' }}</td>
+                <td><strong data-ui-style="rb63d49eca1">{{ transfer.product.name }}</strong></td>
+                <td data-ui-style="rd82513d1a3">{{ transfer.product.sku or 'SIN SKU' }}</td>
                 <td class="qty-cell">{{ transfer.quantity }}</td>
             </tr>
         </tbody>
@@ -201,9 +203,9 @@
 
     <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
     <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
-    <div style="margin-top: 50px; border-left: 4px solid #000; padding-left: 15px;">
-        <p style="font-size: 11px; font-weight: 800; color: #64748b; margin: 0;">NOTA DE RECEPCIÓN:</p>
-        <p style="font-size: 12px; color: #1e293b; margin-top: 5px;">
+    <div data-ui-style="r8a6e890fc1">
+        <p data-ui-style="redc6720411">NOTA DE RECEPCIÓN:</p>
+        <p data-ui-style="r4327100c18">
             Este documento debe ser escaneado en el almacén de destino para confirmar la entrada de mercancía.
         </p>
     </div>

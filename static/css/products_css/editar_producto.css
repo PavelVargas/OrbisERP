@@ -4,7 +4,7 @@
             --text-main: #0f172a;
             --text-muted: #64748b;
             --border: #e2e8f0;
-            --primary: #f36b21;
+            --primary:var(--ui-primary);
             --success: var(--primary);
             --danger: #ef4444;
             --input-focus: #fef3c7;
@@ -17,7 +17,7 @@
             --text-main: #f1f5f9;
             --text-muted: #94a3b8;
             --border: #27272a;
-            --input-focus: rgba(250, 162, 0, 0.05);
+            --input-focus:var(--ui-primary-soft);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -25,7 +25,7 @@
         body {
             background: var(--bg-main);
             color: var(--text-main);
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: "Plus Jakarta Sans", sans-serif;
             display: flex;
             min-height: 100vh;
             line-height: 1.5;
@@ -79,7 +79,7 @@
             border: 1px solid var(--border);
             border-radius: 20px;
             padding: clamp(20px, 4vw, 30px);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            box-shadow:0 4px 6px -1px var(--ui-line);
         }
 
         .section-label {
@@ -142,12 +142,12 @@
             outline: none;
             border-color: var(--primary);
             background: var(--input-focus);
-            box-shadow: 0 0 0 4px rgba(250, 162, 0, 0.1);
+            box-shadow:0 0 0 4px var(--ui-primary-soft);
         }
 
         /* Widgets Financieros */
         .profit-widget {
-            background: rgba(16, 185, 129, 0.05);
+            background:var(--ui-success-soft);
             border: 1px dashed var(--success);
             border-radius: 15px;
             padding: 20px;
@@ -185,7 +185,7 @@
         }
 
         .btn-save { background: var(--primary); color: #000; width: auto; }
-        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(250, 162, 0, 0.2); }
+        .btn-save:hover { transform: translateY(-2px); box-shadow:0 10px 20px var(--ui-primary-soft); }
         .btn-save:active { transform: translateY(0); }
 
         .btn-cancel { background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border); }
@@ -225,7 +225,7 @@
                 padding: 15px;
                 margin: 20px -20px -20px -20px; /* Expande al borde de la pantalla */
                 border-top: 1px solid var(--border);
-                box-shadow: 0 -10px 20px rgba(0,0,0,0.05);
+                box-shadow:0 -10px 20px var(--ui-line);
                 z-index: 100;
             }
 

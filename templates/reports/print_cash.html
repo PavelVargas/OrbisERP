@@ -73,12 +73,14 @@
             thead { display: table-header-group; }
         }
     </style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_print_v2.css', v='20260829-v2') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-polished3') }}">
 </head>
-<body>
+<body class="orbis-print">
 
-    <div class="no-print" style="margin-bottom: 20px; padding: 10px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 6px;">
-        <button onclick="window.print()" style="background: #2c3e50; color: white; border: none; padding: 8px 15px; border-radius: 4px; font-weight: bold; cursor: pointer;">Imprimir</button>
-        <button onclick="window.close()" style="background: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 4px; margin-left: 10px; cursor: pointer;">Cerrar</button>
+    <div class="no-print" data-ui-style="rb462b4f0ae">
+        <button onclick="window.print()" data-ui-style="rf2bea76310">Imprimir</button>
+        <button onclick="window.close()" data-ui-style="rc62080786f">Cerrar</button>
     </div>
 
     <table class="header-table">
@@ -98,8 +100,8 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th style="text-align: left;">Fecha/Hora</th>
-                <th style="text-align: left;">Cajero / Usuario</th>
+                <th data-ui-style="r26cef2c5d8">Fecha/Hora</th>
+                <th data-ui-style="r26cef2c5d8">Cajero / Usuario</th>
                 <th class="text-right">Monto Sistema</th>
                 <th class="text-right">Reportado Físico</th>
                 <th class="text-center">Diferencia</th>
@@ -112,7 +114,7 @@
             {% set diff = real_amt - sys_amt %}
             <tr>
                 <td>{{ c.closing_date.strftime('%d/%m/%Y %H:%M') }}</td>
-                <td style="font-weight: bold;">{{ c.user.name if c.user else 'Sistema' }}</td>
+                <td data-ui-style="r78d7af8b7e">{{ c.user.name if c.user else 'Sistema' }}</td>
                 <td class="text-right">{{ currency_symbol }} {{ "{:,.2f}".format(sys_amt) }}</td>
                 <td class="text-right">{{ currency_symbol }} {{ "{:,.2f}".format(real_amt) }}</td>
                 <td class="text-center">

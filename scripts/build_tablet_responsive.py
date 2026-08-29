@@ -23,9 +23,23 @@ import tinycss2
 
 ROOT = Path(__file__).resolve().parents[1]
 CSS_ROOT = ROOT / "static" / "css"
+TEMPLATES_ROOT = ROOT / "templates"
 OUTPUT = CSS_ROOT / "tablet_responsive.css"
 REFERENCE_WIDTH = 1024.0
 EXCLUDED = {OUTPUT.resolve()}
+
+URL_FOR_CSS = re.compile(
+    r"url_for\(\s*['\"]static['\"]\s*,\s*filename\s*=\s*['\"]([^'\"]+\.css)['\"]"
+)
+DIRECT_CSS = re.compile(r"(?:^|['\"(])(?:/static/)?(css/[A-Za-z0-9_./-]+\.css)")
+
+# Dedicated surfaces already own their responsive behavior and must not be
+# copied into the authenticated tablet compatibility layer.
+TABLET_MIRROR_EXCLUDED = {
+    "css/tablet_responsive.css",
+    "css/sales_css/create_sales.css",
+    "css/orbis_print_v2.css",
+}
 
 WIDTH_QUERY = re.compile(r"(?:min|max)-width\s*:", re.IGNORECASE)
 WIDTH_CLAUSE = re.compile(
@@ -38,11 +52,32 @@ UNSUPPORTED_QUERY = re.compile(
 )
 
 
+def referenced_css_paths() -> set[Path]:
+    """Return stylesheets that are actually reachable from active templates.
+
+    Previous builds mirrored media queries from every historical stylesheet in
+    ``static/css``. That allowed abandoned redesign experiments to leak back
+    into tablet mode even when no template loaded them. Tablet compatibility
+    now follows the same active asset graph as the application.
+    """
+    refs: set[str] = set()
+    for template in TEMPLATES_ROOT.rglob("*.html"):
+        text = template.read_text(encoding="utf-8", errors="ignore")
+        refs.update(URL_FOR_CSS.findall(text))
+        refs.update(DIRECT_CSS.findall(text))
+    return {
+        (ROOT / "static" / ref).resolve()
+        for ref in refs
+        if ref not in TABLET_MIRROR_EXCLUDED and (ROOT / "static" / ref).exists()
+    }
+
+
 def iter_css_files() -> list[Path]:
+    active = referenced_css_paths()
     return [
         path
         for path in sorted(CSS_ROOT.rglob("*.css"))
-        if path.resolve() not in EXCLUDED
+        if path.resolve() in active and path.resolve() not in EXCLUDED
     ]
 
 

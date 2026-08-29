@@ -1,6 +1,6 @@
 
 
-body { margin: 0; font-family: 'Montserrat', sans-serif; background: var(--bg-app); color: var(--text-main); }
+body { margin: 0; font-family: "Montserrat", sans-serif; background: var(--bg-app); color: var(--text-main); }
 
 .main-content {
     flex-grow: 1;
@@ -55,14 +55,14 @@ body { margin: 0; font-family: 'Montserrat', sans-serif; background: var(--bg-ap
     height: 8px;
     background: #34c759;
     border-radius: 50%;
-    box-shadow: 0 0 0 rgba(52, 199, 89, 0.4);
+    box-shadow:0 0 0 var(--ui-success-soft);
     animation: pulse 2s infinite;
 }
 
 @keyframes pulse {
-    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.7); }
-    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(52, 199, 89, 0); }
-    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 199, 89, 0); }
+    0% { transform: scale(0.95); box-shadow:0 0 0 0 var(--ui-success-soft); }
+    70% { transform: scale(1); box-shadow:0 0 0 6px var(--ui-success-soft); }
+    100% { transform: scale(0.95); box-shadow:0 0 0 0 var(--ui-success-soft); }
 }
 
 /* Form Layout */
@@ -90,7 +90,7 @@ body { margin: 0; font-family: 'Montserrat', sans-serif; background: var(--bg-ap
 .card-header i {
     font-size: 24px;
     color: var(--accent);
-    background: rgba(0, 113, 227, 0.1);
+    background:var(--ui-primary-soft);
     width: 50px;
     height: 50px;
     display: flex;
@@ -123,7 +123,7 @@ body { margin: 0; font-family: 'Montserrat', sans-serif; background: var(--bg-ap
 
 .input-box input:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.08);
+    box-shadow:0 0 0 4px var(--ui-primary-soft);
     background: var(--card-bg);
 }
 
@@ -159,7 +159,7 @@ body { margin: 0; font-family: 'Montserrat', sans-serif; background: var(--bg-ap
 .slider:before {
     position: absolute; content: ""; height: 24px; width: 24px; left: 2px; bottom: 2px;
     background-color: white; transition: .4s; border-radius: 50%;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    box-shadow:0 3px 8px var(--ui-line);
 }
 input:checked + .slider { background-color: #34c759; }
 input:checked + .slider:before { transform: translateX(22px); }
@@ -196,12 +196,12 @@ input:checked + .slider:before { transform: translateX(22px); }
     align-items: center;
     gap: 12px;
     transition: color 0.3s, background-color 0.3s, border-color 0.3s, box-shadow 0.3s, transform 0.3s, opacity 0.3s;
-    box-shadow: 0 10px 20px rgba(0, 113, 227, 0.2);
+    box-shadow:0 10px 20px var(--ui-primary-soft);
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 15px 30px rgba(0, 113, 227, 0.3);
+    box-shadow:0 15px 30px var(--ui-primary-soft);
 }
 
 .btn-primary:active { transform: scale(0.98); }

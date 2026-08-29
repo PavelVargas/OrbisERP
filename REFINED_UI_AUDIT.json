@@ -1,0 +1,34 @@
+{
+  "version": "20260829-refined3",
+  "templates": 118,
+  "full_documents": 47,
+  "inherited": 66,
+  "partials": 5,
+  "profiles": {
+    "orbis-public": 10,
+    "orbis-app": 95,
+    "orbis-launchpad": 1,
+    "partial": 5,
+    "orbis-print": 5,
+    "orbis-master": 2
+  },
+  "rgba": 0,
+  "static_inline_styles": 0,
+  "dynamic_inline_styles": 15,
+  "refined_stylesheet": "static/css/orbis_refined.css",
+  "refined_last_in_full_documents": true,
+  "removed_legacy_duplicate_templates": [
+    "cash/close.html",
+    "sales/pending.html",
+    "sales/quotes.html",
+    "sales/sales.html",
+    "warehouse/transfers_by_warehouse.html",
+    "workspace/activity.html",
+    "workspace/executive.html"
+  ],
+  "removed_legacy_redesign_stylesheets": [
+    "static/css/orbis_v2.css",
+    "static/css/orbis_serene.css",
+    "static/css/orbis_next.css"
+  ]
+}

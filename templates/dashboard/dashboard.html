@@ -8,8 +8,11 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
     <script src="{{ url_for('static', filename='js/dashboard.js') }}" defer></script>
+
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-polished3') }}">
 </head>
-<body>
+<body class="orbis-app">
 {% include 'layouts/left_bar.html' %}
 
 {% set sale_statuses = {
@@ -175,7 +178,7 @@
                     {% for product in top_products %}
                     <div class="product-item">
                         <div class="product-image">{% set img = product_image_url(product) %}{% if img %}<img src="{{ img }}" alt="" loading="lazy" referrerpolicy="no-referrer">{% else %}<i class="bi bi-box-seam"></i>{% endif %}</div>
-                        <div class="product-info"><b>{{ product.name }}</b><small>{{ product.sku or 'Sin SKU' }} · {{ product.qty }} unidades</small><span><i style="--value: {{ (product.qty / max_qty * 100) if max_qty else 0 }}%"></i></span></div>
+                        <div class="product-info"><b>{{ product.name }}</b><small>{{ product.sku or 'Sin SKU' }} · {{ product.qty }} unidades</small><progress class="ui-progress" max="100" value="{{ (product.qty / max_qty * 100) if max_qty else 0 }}">{{ (product.qty / max_qty * 100) if max_qty else 0 }}%</progress></div>
                         <strong>{{ currency_symbol }} {{ '{:,.0f}'.format((product.revenue|float) / conversion_rate) }}</strong>
                     </div>
                     {% else %}<div class="empty-state"><i class="bi bi-box-seam"></i><b>Sin datos de productos</b><span>Completa ventas para ver el ranking.</span></div>{% endfor %}
@@ -216,9 +219,9 @@
 
         <footer class="plan-summary">
             <div class="plan-name"><span><i class="bi bi-stars"></i></span><div><small>PLAN ACTUAL</small><b>{{ plan_name }}</b></div></div>
-            <div class="usage"><span>Facturas <b>{{ invoices_usage|int }}/{{ invoices_limit|int }}</b></span><i><em style="--usage: {{ inv_percent }}%"></em></i></div>
-            <div class="usage"><span>Usuarios <b>{{ users_count }}/{{ users_limit }}</b></span><i><em style="--usage: {{ users_percent }}%"></em></i></div>
-            <div class="usage"><span>Almacenes <b>{{ wares_count }}/{{ wares_limit }}</b></span><i><em style="--usage: {{ wares_percent }}%"></em></i></div>
+            <div class="usage"><span>Facturas <b>{{ invoices_usage|int }}/{{ invoices_limit|int }}</b></span><progress class="ui-progress" max="100" value="{{ inv_percent }}">{{ inv_percent }}%</progress></div>
+            <div class="usage"><span>Usuarios <b>{{ users_count }}/{{ users_limit }}</b></span><progress class="ui-progress" max="100" value="{{ users_percent }}">{{ users_percent }}%</progress></div>
+            <div class="usage"><span>Almacenes <b>{{ wares_count }}/{{ wares_limit }}</b></span><progress class="ui-progress" max="100" value="{{ wares_percent }}">{{ wares_percent }}%</progress></div>
             {% if can('company.settings') %}<a href="{{ url_for('operations_bp.billing') }}">Administrar plan <i class="bi bi-arrow-right"></i></a>{% endif %}
         </footer>
     </div>

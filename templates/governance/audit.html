@@ -10,7 +10,7 @@
 {% block content %}
 <div class="module-page audit-v2">
     {% if audit_compat_mode %}
-    <div class="workspace-alert workspace-alert--warning" style="margin-bottom:14px">
+    <div class="workspace-alert workspace-alert--warning" data-ui-style="r2b583d7389">
         <strong>Auditoría en modo compatibilidad.</strong> Los eventos siguen visibles, pero algunos metadatos técnicos no existen todavía en esta base de datos. Ejecuta <code>flask --app app db upgrade</code> para habilitar la auditoría completa.
     </div>
     {% endif %}

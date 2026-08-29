@@ -2,8 +2,8 @@
         :root {
             --up-color: var(--primary);
             --down-color: #ef4444;
-            --up-bg: rgba(16, 185, 129, 0.1);
-            --down-bg: rgba(239, 68, 68, 0.1);
+            --up-bg:var(--ui-success-soft);
+            --down-bg:var(--ui-danger-soft);
         }
 
         .kpi-trend {
@@ -38,8 +38,8 @@
             text-transform: uppercase;
             font-weight: 800;
         }
-        .status-pill.warning { background: rgba(243, 107, 33, 0.12); color: #d94f0d; }
-        .status-pill.danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+        .status-pill.warning { background:var(--ui-primary-soft); color:var(--ui-primary); }
+        .status-pill.danger { background:var(--ui-danger-soft); color: #ef4444; }
 
         .kpi-footer {
             display: flex;
@@ -61,4 +61,4 @@
             color: var(--primary);
         }
 
-        html.dark .kpi-box { border: 1px solid rgba(255,255,255,0.05); }
+        html.dark .kpi-box { border:1px solid var(--ui-danger-soft); }

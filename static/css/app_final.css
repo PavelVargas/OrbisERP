@@ -55,7 +55,7 @@ html.dark body :where(dialog,[popover]) {
 /* Consistent interaction geometry for authenticated legacy modules. */
 body > main :where(button,a,input,select,textarea) { -webkit-tap-highlight-color: transparent; }
 body > main :where(button,a,input,select,textarea):focus-visible {
-    outline: 2px solid color-mix(in srgb,var(--primary) 72%,white);
+    outline:2px solid var(--ui-primary-line);
     outline-offset: 2px;
 }
 
@@ -95,7 +95,7 @@ html.tablet-mode body > .pos-layout {
     body > main :where(.page-header,.workstation-header,.stock-header,.clients-header,.supplier-header) {
         align-items: flex-start;
         flex-wrap: wrap;
-        gap: 14px;
+        gap:12px;
     }
     body > main :where(.page-header,.workstation-header,.stock-header,.clients-header,.supplier-header) > :last-child {
         max-width: 100%;
@@ -113,9 +113,9 @@ html.tablet-mode body > .pos-layout {
 }
 
 /* Branch-scoped cash register context. */
-.cash-scope-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 18px;padding:13px 16px;border:1px solid color-mix(in srgb,var(--primary) 22%,var(--border));border-radius:14px;background:color-mix(in srgb,var(--primary) 6%,var(--bg-card));color:var(--text-main)}
-.cash-scope-banner>span{display:flex;align-items:center;gap:9px;min-width:0}.cash-scope-banner>span>i{color:var(--primary)}.cash-scope-banner strong{font-size:.9rem}.cash-scope-banner small{color:var(--text-muted)}.cash-scope-banner>b{font-size:.76rem;color:var(--primary)}
-.cash-branch-switcher{display:flex;align-items:center;gap:8px}.cash-branch-switcher label{font-size:.72rem;font-weight:800;color:var(--text-muted)}.cash-branch-switcher select{min-height:42px;border:1px solid var(--border);border-radius:10px;background:var(--bg-input);color:var(--text-main);padding:0 34px 0 11px}
+.cash-scope-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 16px;padding:12px 16px;border:1px solid var(--ui-primary-line);border-radius:14px;background:var(--ui-primary-soft);color:var(--text-main);}
+.cash-scope-banner>span{display:flex;align-items:center;gap:8px;min-width:0;}.cash-scope-banner>span>i{color:var(--primary)}.cash-scope-banner strong{font-size:.9rem}.cash-scope-banner small{color:var(--text-muted)}.cash-scope-banner>b{font-size:.76rem;color:var(--primary)}
+.cash-branch-switcher{display:flex;align-items:center;gap:8px}.cash-branch-switcher label{font-size:0.75rem;font-weight:800;color:var(--text-muted);}.cash-branch-switcher select{min-height:42px;border:1px solid var(--border);border-radius:10px;background:var(--bg-input);color:var(--text-main);padding:0 32px 0 12px;}
 @media(max-width:760px){.cash-scope-banner{align-items:flex-start;flex-direction:column}.cash-branch-switcher{width:100%}.cash-branch-switcher select{flex:1}}
 
 /* Tablet usability v3: predictable touch geometry and keyboard-safe actions. */
@@ -127,7 +127,7 @@ html.tablet-mode.tablet-landscape .workspace-page .workspace-form{grid-template-
 html.tablet-mode.tablet-portrait .workspace-page .workspace-form{grid-template-columns:1fr}
 html.tablet-mode.tablet-keyboard-open .company-readonly-banner{position:static}
 html.tablet-mode.tablet-keyboard-open .app-tablet-topbar{transform:translateY(-105%);pointer-events:none}
-html.tablet-mode.tablet-keyboard-open body:not(.pos-page)>main,html.tablet-mode.tablet-keyboard-open body:not(.pos-page)>main.orbis-page{padding-top:max(18px,env(safe-area-inset-top))!important}
+html.tablet-mode.tablet-keyboard-open body:not(.pos-page)>main,html.tablet-mode.tablet-keyboard-open body:not(.pos-page)>main.orbis-page{padding-top:max(16px,env(safe-area-inset-top))!important;}
 
 /* ========================================================================
    Authenticated visual system v7 · one language across every business view
@@ -135,45 +135,43 @@ html.tablet-mode.tablet-keyboard-open body:not(.pos-page)>main,html.tablet-mode.
    compact information density and clear operational hierarchy.
    ======================================================================== */
 html.orbis-authenticated {
-    --orbis-graphite: #171a1f;
-    --orbis-graphite-2: #20242a;
-    --orbis-graphite-3: #2a3038;
-    --orbis-canvas: #f3f5f7;
-    --orbis-panel: #ffffff;
-    --orbis-panel-soft: #f7f8fa;
-    --orbis-line: #e1e5e9;
+    --orbis-graphite:var(--ui-line);
+    --orbis-graphite-2:var(--ui-line);
+    --orbis-graphite-3:var(--ui-line);
+    --orbis-canvas:var(--ui-bg);
+    --orbis-panel:var(--ui-surface);
+    --orbis-panel-soft:var(--ui-surface-soft);
+    --orbis-line:var(--ui-line);
     --orbis-radius-sm: 10px;
-    --orbis-radius: 15px;
+    --orbis-radius:14px;
     --orbis-radius-lg: 20px;
-    --orbis-shadow: 0 14px 40px rgba(28, 34, 42, .075);
-    --orbis-shadow-soft: 0 4px 16px rgba(28, 34, 42, .055);
+    --orbis-shadow:0 14px 40px var(--ui-line);
+    --orbis-shadow-soft:0 4px 16px var(--ui-line);
     --orbis-page-width: 1480px;
     --orbis-page-inline: clamp(22px, 2.8vw, 48px);
 }
 
 html.orbis-authenticated.dark {
-    --orbis-canvas: #0e0f11;
-    --orbis-panel: #17191c;
-    --orbis-panel-soft: #202328;
-    --orbis-line: #2c3036;
-    --orbis-shadow: 0 18px 46px rgba(0, 0, 0, .24);
-    --orbis-shadow-soft: 0 5px 18px rgba(0, 0, 0, .18);
+    --orbis-canvas:var(--ui-bg);
+    --orbis-panel:var(--ui-surface);
+    --orbis-panel-soft:var(--ui-surface-soft);
+    --orbis-line:var(--ui-line);
+    --orbis-shadow:0 18px 46px var(--ui-line);
+    --orbis-shadow-soft:0 5px 18px var(--ui-line);
 }
 
 html.orbis-authenticated body:not(.pos-page) {
-    background:
-        radial-gradient(circle at 92% -10%, color-mix(in srgb, var(--primary) 7%, transparent), transparent 31rem),
-        var(--orbis-canvas) !important;
+    background:var(--ui-primary-soft)!important;
 }
 
 html.orbis-authenticated body:not(.pos-page) > main {
-    gap: 18px;
+    gap:16px;
     color: var(--text-main);
 }
 
 @media (min-width: 1025px) {
     html.orbis-authenticated:not(.tablet-mode) body:not(.pos-page) > main {
-        padding: 34px var(--orbis-page-inline) 46px;
+        padding:32px var(--orbis-page-inline) 48px;
     }
 }
 
@@ -257,15 +255,13 @@ html.orbis-authenticated body:not(.pos-page) > main :where(
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 22px;
-    padding: clamp(20px, 2.5vw, 30px);
-    border: 1px solid rgba(255,255,255,.075);
+    gap:20px;
+    padding:clamp(20px, 2.5vw, 32px);
+    border:1px solid var(--ui-line);
     border-radius: var(--orbis-radius-lg);
-    color: #f5f7f8;
-    background:
-        radial-gradient(circle at 9% 0%, color-mix(in srgb, var(--primary) 19%, transparent), transparent 19rem),
-        linear-gradient(135deg, var(--orbis-graphite), #1d2127 58%, #16191e);
-    box-shadow: var(--orbis-shadow);
+    color:var(--ui-text);
+    background:var(--ui-primary-soft);
+    box-shadow:var(--ui-shadow-sm);
 }
 
 html.orbis-authenticated body:not(.pos-page) > main :where(
@@ -293,14 +289,14 @@ html.orbis-authenticated body:not(.pos-page) > main :where(
     .transfer-header,
     .request-error-head
 )::after {
-    content: '';
+    content: "";
     position: absolute;
     z-index: -1;
     width: 210px;
     height: 210px;
     right: -70px;
     bottom: -135px;
-    border: 28px solid color-mix(in srgb, var(--primary) 17%, transparent);
+    border:1px solid var(--ui-primary-line);
     border-radius: 50%;
     pointer-events: none;
 }
@@ -330,7 +326,7 @@ html.orbis-authenticated body:not(.pos-page) > main :where(
     .transfer-header,
     .request-error-head
 ) :where(h1,h2,h3,strong) {
-    color: #fff;
+    color:var(--ui-white);
 }
 
 html.orbis-authenticated body:not(.pos-page) > main :where(
@@ -358,7 +354,7 @@ html.orbis-authenticated body:not(.pos-page) > main :where(
     .transfer-header,
     .request-error-head
 ) :where(p,small) {
-    color: #aeb7bf;
+    color:var(--ui-text-soft);
 }
 
 html.orbis-authenticated body:not(.pos-page) > main :where(
@@ -374,7 +370,7 @@ html.orbis-authenticated body:not(.pos-page) > main :where(
     .staff-header > div > span,
     .sales-header > div > span
 ) {
-    color: #ff9a58 !important;
+    color:var(--ui-primary)!important;
     font-weight: 850;
     letter-spacing: .11em;
     text-transform: uppercase;
@@ -391,7 +387,7 @@ html.orbis-authenticated body:not(.pos-page) > main :where(
     align-items: center;
     justify-content: flex-end;
     flex-wrap: wrap;
-    gap: 9px;
+    gap:8px;
 }
 
 /* Common surfaces: same geometry, border language and elevation. */
@@ -428,7 +424,7 @@ html.orbis-authenticated body:not(.pos-page) > main :where(
     border-color: var(--orbis-line) !important;
     border-radius: var(--orbis-radius) !important;
     background: var(--orbis-panel) !important;
-    box-shadow: var(--orbis-shadow-soft);
+    box-shadow:var(--ui-shadow-sm);
 }
 
 html.orbis-authenticated body:not(.pos-page) > main :where(
@@ -446,7 +442,7 @@ html.orbis-authenticated body:not(.pos-page) > main :where(
     .form-container-left,
     .ops-card
 ) {
-    padding: clamp(16px, 2vw, 22px);
+    padding:clamp(16px, 2vw, 20px);
 }
 
 html.orbis-authenticated body:not(.pos-page) > main :where(
@@ -483,9 +479,9 @@ html.orbis-authenticated body:not(.pos-page) > main :where(
     select,
     textarea
 ):focus {
-    border-color: color-mix(in srgb, var(--primary) 66%, var(--orbis-line)) !important;
+    border-color:var(--ui-primary-line)!important;
     background: var(--orbis-panel) !important;
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 13%, transparent) !important;
+    box-shadow:none!important;
 }
 
 html.orbis-authenticated body:not(.pos-page) > main :where(label) {
@@ -515,9 +511,9 @@ html.orbis-authenticated body:not(.pos-page) > main :where(
     button[type="submit"]:not(.danger):not(.btn-danger):not(.workspace-btn--danger)
 ) {
     border-color: var(--primary) !important;
-    color: #fff !important;
-    background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 94%, #ffad62), var(--primary-hover, #cf5c12)) !important;
-    box-shadow: 0 8px 20px color-mix(in srgb, var(--primary) 18%, transparent);
+    color:var(--ui-white)!important;
+    background:var(--ui-primary-soft)!important;
+    box-shadow:none;
 }
 
 html.orbis-authenticated body:not(.pos-page) > main :where(
@@ -546,18 +542,18 @@ html.orbis-authenticated body:not(.pos-page) > main :where(table) {
 }
 
 html.orbis-authenticated body:not(.pos-page) > main :where(th) {
-    padding: 11px 13px;
+    padding:12px 12px;
     border-bottom: 1px solid var(--orbis-line);
     color: var(--text-muted);
     background: var(--orbis-panel-soft);
-    font-size: 9px;
+    font-size:12px;
     font-weight: 850;
     letter-spacing: .055em;
     text-transform: uppercase;
 }
 
 html.orbis-authenticated body:not(.pos-page) > main :where(td) {
-    padding: 12px 13px;
+    padding:12px 12px;
     border-bottom: 1px solid var(--orbis-line);
     color: var(--text-main);
 }
@@ -567,7 +563,7 @@ html.orbis-authenticated body:not(.pos-page) > main :where(tbody tr) {
 }
 
 html.orbis-authenticated body:not(.pos-page) > main :where(tbody tr:hover) {
-    background: color-mix(in srgb, var(--primary) 4.5%, var(--orbis-panel));
+    background:var(--ui-primary-soft);
 }
 
 html.orbis-authenticated body:not(.pos-page) > main :where(
@@ -615,10 +611,9 @@ html.tablet-mode.orbis-authenticated body:not(.pos-page) > main {
     max-width: none !important;
     min-height: calc(var(--tablet-vh, 100dvh) - 68px);
     margin: 0 !important;
-    padding:
-        max(88px, calc(env(safe-area-inset-top) + 76px))
+    padding:max(80px, calc(env(safe-area-inset-top) + 80px))
         var(--orbis-page-inline)
-        max(112px, calc(env(safe-area-inset-bottom) + 96px)) !important;
+        max(112px, calc(env(safe-area-inset-bottom) + 96px))!important;
     gap: 16px;
     overflow-x: clip;
 }
@@ -820,7 +815,7 @@ html.tablet-mode.orbis-authenticated body:not(.pos-page) :where(dialog,.modal-co
 }
 
 html.tablet-mode.orbis-authenticated.tablet-keyboard-open body:not(.pos-page) > main {
-    padding-top: max(18px, env(safe-area-inset-top)) !important;
+    padding-top:max(16px, env(safe-area-inset-top))!important;
     padding-bottom: max(20px, env(safe-area-inset-bottom)) !important;
 }
 
@@ -853,7 +848,7 @@ html.tablet-mode.orbis-authenticated.tablet-keyboard-open body:not(.pos-page) > 
         align-items: flex-start;
         flex-direction: column;
         min-height: 0;
-        padding: 18px;
+        padding:16px;
     }
 }
 

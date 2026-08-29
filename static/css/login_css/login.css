@@ -1,24 +1,24 @@
 /* --- VARIABLES MAESTRAS --- */
 :root {
-    --primary: #f36b21;
-    --bg-main: #f8fafc;
-    --bg-card: #ffffff;
-    --border: rgba(0, 0, 0, 0.08);
-    --text-main: #1e293b;
-    --text-muted: #64748b;
+    --primary:var(--ui-primary);
+    --bg-main:var(--ui-bg);
+    --bg-card:var(--ui-surface);
+    --border:var(--ui-line);
+    --text-main:var(--ui-text);
+    --text-muted:var(--ui-muted);
 }
 
 html.dark {
-    --bg-main: #0b0f1a; 
-    --bg-card: #151b2c; 
-    --border: rgba(255, 255, 255, 0.08);
-    --text-main: #f1f5f9;
-    --text-muted: #94a3b8;
+    --bg-main:var(--ui-bg); 
+    --bg-card:var(--ui-surface); 
+    --border:var(--ui-line);
+    --text-main:var(--ui-text);
+    --text-muted:var(--ui-muted);
 }
 
 body {
     margin: 0;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: "Plus Jakarta Sans", sans-serif;
     background-color: var(--bg-main);
     color: var(--text-main);
     min-height: 100vh;
@@ -28,7 +28,7 @@ body {
 .auth-nav {
     position: fixed;
     top: 0; width: 96%;
-    padding: 25px 50px;
+    padding:24px 48px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -42,7 +42,7 @@ body {
     font-weight: 800;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap:8px;
 }
 .nav-logo i { color: var(--primary); font-size: 1.8rem; }
 
@@ -50,12 +50,12 @@ body {
     background: var(--bg-card);
     border: 1px solid var(--border);
     padding: 8px 16px;
-    border-radius: 50px;
+    border-radius:18px;
     color: var(--text-main);
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap:8px;
     font-weight: 600;
     transition: 0.3s;
 }
@@ -68,11 +68,11 @@ body {
 }
 
 .side-visual {
-    background: radial-gradient(circle at top left, rgba(250, 162, 0, 0.1), transparent);
+    background:var(--ui-surface-soft);
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 60px;
+    padding:64px;
 }
 
 .visual-content h1 {
@@ -83,7 +83,7 @@ body {
 }
 
 .text-gradient {
-    background: linear-gradient(135deg, var(--primary), #ff8c00);
+    background:var(--ui-primary-soft);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -103,7 +103,7 @@ body {
 
 .login-logo {
     width: 140px;
-    margin-bottom: 25px;
+    margin-bottom:24px;
     filter: grayscale(100%);
 }
 
@@ -111,7 +111,7 @@ html.dark .login-logo {
     filter: grayscale(100%) brightness(2.5);
 }
 
-.form-header { margin-bottom: 30px; text-align: center; }
+.form-header { margin-bottom:32px; text-align: center; }
 .form-header h2 { font-size: 2rem; font-weight: 800; margin: 0; color: var(--text-main); }
 .form-header p { color: var(--text-muted); margin-top: 8px; font-size: 0.95rem; }
 
@@ -137,7 +137,7 @@ html.dark .login-logo {
 .field-group input {
     width: 100%;
     box-sizing: border-box;
-    padding: 14px 18px;
+    padding:12px 16px;
     border-radius: 12px;
     background: var(--bg-card);
     border: 1px solid var(--border);
@@ -149,12 +149,12 @@ html.dark .login-logo {
 .field-group input:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 4px rgba(250, 162, 0, 0.1);
+    box-shadow:var(--ui-shadow-sm);
 }
 
 .btn-login-main {
     width: 100%;
-    margin-top: 30px;
+    margin-top:32px;
     padding: 16px;
     border-radius: 12px;
     border: none;
@@ -166,24 +166,24 @@ html.dark .login-logo {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 10px;
+    gap:8px;
     transition: 0.3s;
 }
 
 .btn-login-main:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(250, 162, 0, 0.2);
+    box-shadow:var(--ui-shadow-sm);
 }
 
 .links-footer {
-    margin-top: 30px;
+    margin-top:32px;
     text-align: center;
     display: flex;
     flex-direction: column;
     gap: 12px;
     font-size: 0.9rem;
     border-top: 1px solid var(--border);
-    padding-top: 25px;
+    padding-top:24px;
 }
 .links-footer a { color: var(--text-muted); text-decoration: none; transition: 0.3s; }
 .links-footer a strong { color: var(--primary); }
@@ -194,16 +194,16 @@ html.dark .login-logo {
     .split-layout { grid-template-columns: 1fr; }
     .side-visual { display: none; }
     .auth-nav { padding: 20px; }
-    .side-form { padding-top: 100px; }
+    .side-form { padding-top:96px; }
     .mode-text { display: none; }
 }
 
 /* --- COMPONENTES EXTRA --- */
 .pill-badge {
-    background: rgba(250, 162, 0, 0.1);
+    background:var(--ui-primary-soft);
     color: var(--primary);
-    padding: 6px 16px;
-    border-radius: 50px;
+    padding:4px 16px;
+    border-radius:18px;
     font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;

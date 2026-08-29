@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ target_user.name }} · Actividad de usuario · OrbisERP</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/users_css/config_user.css', v='12') }}">
+
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-polished3') }}">
 </head>
-<body>
+<body class="orbis-app">
 {% include "layouts/left_bar.html" %}
 <main class="user-activity-page">
     <nav class="profile-breadcrumb"><a href="{{ url_for('users_bp.users') }}"><i class="bi bi-arrow-left"></i> Personal</a><span>Usuario #{{ target_user.id }}</span></nav>

@@ -1,0 +1,263 @@
+/* OrbisERP 2026 — unified product design layer.
+   Loaded last for authenticated views. It intentionally normalizes visual
+   language without changing application markup or business behaviour. */
+:root {
+    --primary:var(--ui-primary);
+    --accent:var(--ui-primary);
+    --success:var(--ui-success);
+    --warning:var(--ui-warning);
+    --danger:var(--ui-danger);
+    --info:var(--ui-info);
+    --bg-main:var(--ui-bg);
+    --bg-card:var(--ui-surface);
+    --bg-input:var(--ui-surface-soft);
+    --bg-hover:var(--ui-surface-hover);
+    --text-main:var(--ui-text);
+    --text-muted:var(--ui-muted);
+    --border:var(--ui-line);
+    --border-strong:var(--ui-line-strong);
+    --shadow:0 1px 2px var(--ui-line), 0 8px 24px var(--ui-line);
+    --ui-radius-xs: 7px;
+    --ui-radius-sm: 9px;
+    --ui-radius-md: 12px;
+    --ui-radius-lg: 16px;
+    --ui-control-height: 42px;
+    --ui-page-max: 1440px;
+    --ui-page-pad: clamp(16px, 2.2vw, 32px);
+    --ui-focus:var(--ui-primary-soft);
+    --radius: 10px;
+}
+
+html.dark {
+    --bg-main:var(--ui-bg);
+    --bg-card:var(--ui-surface);
+    --bg-input:var(--ui-surface-soft);
+    --bg-hover:var(--ui-surface-hover);
+    --text-main:var(--ui-text);
+    --text-muted:var(--ui-muted);
+    --border:var(--ui-line);
+    --border-strong:var(--ui-line-strong);
+    --shadow:0 1px 2px var(--ui-line), 0 12px 30px var(--ui-line);
+}
+
+html.orbis-authenticated body {
+    background: var(--bg-main);
+    color: var(--text-main);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+html.orbis-authenticated body:not(.pos-page) > main {
+    padding-right: var(--ui-page-pad);
+    padding-left: var(--ui-page-pad);
+}
+
+html.orbis-authenticated body:not(.pos-page) > main > :where(
+    .content-container,.dashboard-container,.workspace-header,.workspace-alerts,
+    .workspace-grid,.workspace-kpis,.workspace-panel,.workspace-card,
+    .bo-header,.bo-alerts,.bo-grid,.bo-card,.page-header,.table-card,
+    .sales-shell,.sales-header,.sales-card,.clients-container,.products-container,
+    .reports-container,.stock-container,.supplier-container,.purchase-container
+) { max-width: var(--ui-page-max); }
+
+/* Typography: one hierarchy everywhere. */
+html.orbis-authenticated body:not(.pos-page) > main :where(h1,.workspace-heading h1,.bo-header h1,.page-header h1,.page-header h2) {
+    color: var(--text-main);
+    font-size: clamp(25px, 2.2vw, 32px);
+    font-weight: 750;
+    line-height: 1.12;
+    letter-spacing: -.035em;
+}
+html.orbis-authenticated body:not(.pos-page) > main :where(h2,.workspace-card h2,.workspace-panel h2,.bo-card h2) {
+    color: var(--text-main);
+    letter-spacing: -.02em;
+}
+html.orbis-authenticated body:not(.pos-page) > main :where(.workspace-eyebrow,.bo-eyebrow,.eyebrow,.section-kicker,.page-kicker) {
+    color: var(--primary) !important;
+    font-size:12px!important;
+    font-weight: 750 !important;
+    letter-spacing: .09em !important;
+    text-transform: uppercase;
+}
+html.orbis-authenticated body:not(.pos-page) > main :where(.workspace-heading p,.bo-header p,.page-header p,.section-subtitle,.header-subtitle) {
+    max-width: 760px;
+    color: var(--text-muted) !important;
+    font-size: 13px !important;
+    line-height: 1.55;
+}
+
+/* Surfaces: flatter, quieter, consistent. */
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    .table-card,.glass-form,.bento-item,.content-card,.form-container-left,.form-container,
+    .filter-panel,.filters-panel,.filters-popover,.control-panel,.configuration-column,
+    .summary-card,.warehouse-sidebar,.modal-content,.modal-card,.detail-card,.metric-card,
+    .stats-card,.toolbar-card,.search-card,.workspace-card,.workspace-panel,.workspace-kpi,
+    .workspace-metric,.bo-card,.sales-card,.report-card,.card,.panel
+) {
+    border: 1px solid var(--border) !important;
+    border-radius: var(--ui-radius-md) !important;
+    background: var(--bg-card) !important;
+    color: var(--text-main);
+    box-shadow:var(--ui-shadow-sm)!important;
+}
+html.orbis-authenticated body:not(.pos-page) > main :where(.workspace-card,.workspace-panel,.bo-card,.table-card,.content-card,.sales-card) {
+    padding:clamp(16px, 2vw, 20px);
+}
+
+/* Inputs: same size, same focus, same background. */
+html.orbis-authenticated body:not(.pos-page) > main :where(input,select,textarea):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]) {
+    min-height: var(--ui-control-height);
+    border: 1px solid var(--border-strong) !important;
+    border-radius: var(--ui-radius-sm) !important;
+    background: var(--bg-input) !important;
+    color: var(--text-main) !important;
+    box-shadow: none !important;
+    font-size: 13px !important;
+    outline: none;
+}
+html.orbis-authenticated body:not(.pos-page) > main textarea { min-height: 96px; resize: vertical; }
+html.orbis-authenticated body:not(.pos-page) > main :where(input,select,textarea):not([type="checkbox"]):not([type="radio"]):focus {
+    border-color:var(--ui-primary-line)!important;
+    background: var(--bg-card) !important;
+    box-shadow:var(--ui-shadow-sm)!important;
+}
+html.orbis-authenticated body:not(.pos-page) > main :where(input,textarea)::placeholder { color:var(--ui-text-soft); opacity: 1; }
+html.orbis-authenticated body:not(.pos-page) > main label { color: var(--text-main); }
+html.orbis-authenticated body:not(.pos-page) > main label > :where(span,small):first-child { font-weight: 650; }
+html.orbis-authenticated body:not(.pos-page) > main :where(input[type="checkbox"],input[type="radio"]) { accent-color: var(--primary); }
+
+/* Buttons and action links. */
+html.orbis-authenticated body:not(.pos-page) > main :where(
+    button,.btn,.btn-primary,.workspace-btn,.bo-btn,.action-btn,.primary-action,.secondary-action
+) {
+    min-height: 38px;
+    border-radius: var(--ui-radius-sm) !important;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: -.005em;
+    box-shadow: none;
+    transition: background-color .16s ease, border-color .16s ease, color .16s ease, opacity .16s ease, transform .16s ease;
+}
+html.orbis-authenticated body:not(.pos-page) > main :where(.btn-primary,.workspace-btn.primary,.bo-btn.primary,.primary-action,button[type="submit"]):not(.icon-btn):not(.ghost):not(.danger) {
+    border-color: var(--primary) !important;
+    background: var(--primary) !important;
+    color:var(--ui-white)!important;
+}
+html.orbis-authenticated body:not(.pos-page) > main :where(.btn-primary,.workspace-btn.primary,.bo-btn.primary,.primary-action,button[type="submit"]):hover {
+    filter: brightness(.96);
+    transform: translateY(-1px);
+}
+html.orbis-authenticated body:not(.pos-page) > main :where(.workspace-btn:not(.primary),.bo-btn:not(.primary),.secondary-action,.btn-secondary,.btn-outline) {
+    border: 1px solid var(--border-strong) !important;
+    background: var(--bg-card) !important;
+    color: var(--text-main) !important;
+}
+html.orbis-authenticated body:not(.pos-page) > main :where(.workspace-btn:not(.primary),.bo-btn:not(.primary),.secondary-action,.btn-secondary,.btn-outline):hover {
+    background: var(--bg-hover) !important;
+}
+
+/* Header blocks should feel like page chrome, not another card. */
+html.orbis-authenticated body:not(.pos-page) > main :where(.workspace-header,.bo-header,.page-header,.sales-header,.clients-header,.products-header,.stock-header,.suppliers-header,.purchases-header,.reports-header) {
+    width: 100%;
+    margin: 0 auto 20px;
+    padding: 0;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+/* Tables: readable density and one visual treatment. */
+html.orbis-authenticated body:not(.pos-page) > main :where(.table-wrap,.table-responsive,.workspace-table-wrap,.retail-section-body) {
+    overflow-x: auto;
+    border-radius: var(--ui-radius-sm);
+}
+html.orbis-authenticated body:not(.pos-page) > main :where(table,.table-enterprise,.workspace-table,.retail-table) {
+    width: 100%;
+    border-collapse: collapse;
+    color: var(--text-main);
+}
+html.orbis-authenticated body:not(.pos-page) > main :where(table,.table-enterprise,.workspace-table,.retail-table) th {
+    padding:12px 12px!important;
+    border-bottom: 1px solid var(--border-strong) !important;
+    background:var(--ui-bg)!important;
+    color: var(--text-muted) !important;
+    font-size:12px!important;
+    font-weight: 750 !important;
+    letter-spacing: .055em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+html.orbis-authenticated body:not(.pos-page) > main :where(table,.table-enterprise,.workspace-table,.retail-table) td {
+    padding: 12px !important;
+    border-bottom: 1px solid var(--border) !important;
+    background: transparent;
+    color: var(--text-main) !important;
+    font-size: 12px !important;
+    vertical-align: middle;
+}
+html.orbis-authenticated body:not(.pos-page) > main :where(table,.table-enterprise,.workspace-table,.retail-table) tbody tr:last-child td { border-bottom: 0 !important; }
+html.orbis-authenticated body:not(.pos-page) > main :where(table,.table-enterprise,.workspace-table,.retail-table) tbody tr:hover td { background:var(--ui-surface-hover); }
+
+/* Pills and status labels: compact, semantic, not decorative. */
+html.orbis-authenticated body:not(.pos-page) > main :where(.badge,.status,.workspace-badge,.retail-pill,.retail-chip,.pill,.chip) {
+    border-radius: 999px !important;
+    padding:4px 8px!important;
+    font-size:12px!important;
+    font-weight: 700 !important;
+    line-height: 1.15;
+    letter-spacing: 0;
+    text-transform: none;
+    box-shadow: none !important;
+}
+
+/* Empty states, alerts and dialogs. */
+html.orbis-authenticated body:not(.pos-page) > main :where(.empty-state,.empty-sales,.empty-results,.workspace-empty) {
+    padding:32px 20px;
+    color: var(--text-muted);
+    text-align: center;
+}
+html.orbis-authenticated body:not(.pos-page) > main :where(.workspace-alert,.bo-alert,.alert,.flash-message) {
+    border-radius: var(--ui-radius-sm) !important;
+    box-shadow: none !important;
+    font-size: 12px;
+}
+html.orbis-authenticated :where(.modal-content,.modal-card) { border-radius: var(--ui-radius-lg) !important; }
+
+/* Sidebar refinement: same understated language as the content. */
+html.orbis-authenticated .sidebar {
+    border-right-color: var(--border) !important;
+    background: var(--bg-card) !important;
+    box-shadow: none !important;
+}
+html.orbis-authenticated .sidebar :where(.nav-item,.sidebar-link) {
+    border-radius:8px!important;
+    font-size: 12px;
+}
+html.orbis-authenticated .sidebar :where(.nav-item.active,.sidebar-link.active) {
+    background:var(--ui-primary-soft)!important;
+    color: var(--primary) !important;
+}
+html.orbis-authenticated .sidebar .nav-icon {
+    border-radius: 8px;
+    background: transparent;
+}
+html.orbis-authenticated .sidebar :where(.nav-item.active,.sidebar-link.active) .nav-icon {
+    background:var(--ui-primary-soft);
+}
+
+/* Keep motion restrained and useful. */
+@media (prefers-reduced-motion: no-preference) {
+    html.orbis-authenticated body:not(.pos-page) > main :where(.workspace-card,.workspace-panel,.bo-card,.table-card,.content-card) { transition: border-color .16s ease, background-color .16s ease; }
+}
+
+@media (max-width: 900px) {
+    html.orbis-authenticated body:not(.pos-page) > main { --ui-page-pad: 16px; }
+    html.orbis-authenticated body:not(.pos-page) > main :where(.workspace-header,.bo-header,.page-header,.sales-header) { gap:12px; }
+}
+
+@media (max-width: 620px) {
+    :root { --ui-control-height: 44px; }
+    html.orbis-authenticated body:not(.pos-page) > main :where(.workspace-card,.workspace-panel,.bo-card,.table-card,.content-card,.sales-card) { padding:12px; }
+    html.orbis-authenticated body:not(.pos-page) > main :where(h1,.workspace-heading h1,.bo-header h1,.page-header h2) { font-size: 25px; }
+}

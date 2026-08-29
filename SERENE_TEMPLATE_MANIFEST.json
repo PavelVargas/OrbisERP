@@ -1,0 +1,597 @@
+{
+  "design": "OrbisERP Serene",
+  "date": "2026-08-29",
+  "templates": 118,
+  "items": [
+    {
+      "template": "templates/Home/index.html",
+      "profile": "standalone-public-or-special",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/backoffice/base.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/backoffice/expenses.html",
+      "profile": "backoffice",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/backoffice/inventory_count_detail.html",
+      "profile": "backoffice",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/backoffice/inventory_counts.html",
+      "profile": "backoffice",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/backoffice/notifications.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/backoffice/overview.html",
+      "profile": "backoffice",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/backoffice/payables.html",
+      "profile": "backoffice",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/backoffice/receivables.html",
+      "profile": "backoffice",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/backoffice/return_form.html",
+      "profile": "backoffice",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/backoffice/returns.html",
+      "profile": "backoffice",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/backoffice/security.html",
+      "profile": "backoffice",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/cash/register.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/categories/category.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/categories/create.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/categories/edit.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/clients/create.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/clients/detail.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/clients/edit.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/clients/list.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/company/create_company.html",
+      "profile": "standalone-public-or-special",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/company/list_companies.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/company/plans.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/company/settings.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/crm/index.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/dashboard/dashboard.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/divisas/gestion.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/errors/cuenta_suspendida.html",
+      "profile": "standalone-public-or-special",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/errors/permission_denied.html",
+      "profile": "standalone-public-or-special",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/errors/request_error.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/governance/audit.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/governance/integrity.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/governance/processes.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/governance/sessions.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/governance/system.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/launchpad/index.html",
+      "profile": "standalone-public-or-special",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/layouts/app_head_assets.html",
+      "profile": "partial",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/layouts/left_bar.html",
+      "profile": "partial",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/layouts/theme_prepaint.html",
+      "profile": "partial",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/login/forgot_password.html",
+      "profile": "standalone-public-or-special",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/login/login.html",
+      "profile": "standalone-public-or-special",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/login/two_factor.html",
+      "profile": "standalone-public-or-special",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/movements/entries.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/movements/exits.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/operations/billing.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/operations/data_center.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/operations/setup.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/partials/auth_flashes.html",
+      "profile": "partial",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/perfil/perfil.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/products/create.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/products/detail.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/products/edit.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/products/movements.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/products/products.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/products/stock_detail.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/purchase/create_purchase.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/purchase/purchase_detail.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/purchase/purchase_list.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/registro/register.html",
+      "profile": "standalone-public-or-special",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/registro/verify_email.html",
+      "profile": "standalone-public-or-special",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/reports/closings_history.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/reports/index.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/reports/inventory_health.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/reports/monthly_history.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/reports/print_cash.html",
+      "profile": "print",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/reports/print_sales.html",
+      "profile": "print",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/reports/retail_performance.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/retail/_nav.html",
+      "profile": "partial",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/retail/catalog_setup.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/retail/configuration.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/retail/customer_programs.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/retail/integrations.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/retail/locations.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/retail/operations_center.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/retail/overview.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/retail/pricing.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/retail/quality.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/retail/warranties.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/sales/create_sales.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/sales/detail_sales.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/sales/invoice_pdf.html",
+      "profile": "print",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/sales/list.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/sales/receipt_thermal.html",
+      "profile": "print",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/stock/adjust_stock.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/stock/kardex.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/stock/stock_actual.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/stock/stock_history.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/superadmin/dashboard.html",
+      "profile": "standalone-public-or-special",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/superadmin/payments_management.html",
+      "profile": "standalone-public-or-special",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/suppliers/create.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/suppliers/edit.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/suppliers/list.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/suppliers/supplier_history.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/transfers/by_warehouse.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/transfers/create.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/transfers/list.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/transfers/pdf_template.html",
+      "profile": "print",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/transfers/scanner_validation.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/transfers/view_detail.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/users/create_user.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/users/edit_user.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/users/permission_audit.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/users/reset_password_form.html",
+      "profile": "standalone-public-or-special",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/users/users.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/users/users_profile.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/warehouse/create.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/warehouse/edit.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/warehouse/list.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/warehouse/location_traceability.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/warehouse/locations.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/warehouse/stock.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/workspace/base.html",
+      "profile": "authenticated-direct",
+      "serene_direct": true
+    },
+    {
+      "template": "templates/workspace/documents.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/workspace/labels.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/workspace/notification_rules.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/workspace/promotions.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/workspace/recycle_bin.html",
+      "profile": "workspace",
+      "serene_direct": false
+    },
+    {
+      "template": "templates/workspace/taxes.html",
+      "profile": "workspace",
+      "serene_direct": false
+    }
+  ]
+}
