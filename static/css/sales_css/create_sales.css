@@ -1260,3 +1260,8 @@ body.pos-page .pos-right {
     grid-template-columns: minmax(0, 1fr) !important;
   }
 }
+
+/* CI/runtime contract: product cards expose actions explicitly; the card itself is not clickable. */
+.pos-page #product-grid > article.retail-pos-card {
+  cursor: default;
+}

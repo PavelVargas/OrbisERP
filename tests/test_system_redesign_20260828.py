@@ -36,7 +36,8 @@ def test_specialized_workstations_use_canonical_solid_tokens():
     pos = read("static/css/sales_css/create_sales.css")
     scanner = read("static/css/scanner.css")
 
-    assert "--pos-primary: #2563eb" in pos
+    assert "--pos-primary: #f2672a" in pos
+    assert "--pos-primary: #2563eb" not in pos
     assert "--pos-bg: #f5f7fa" in pos
     assert "--scan-accent: var(--ui-primary)" in scanner
     assert "--scan-bg: var(--ui-bg)" in scanner

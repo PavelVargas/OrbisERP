@@ -2320,3 +2320,4 @@ Exit with code 1 due to network error: ProtocolUnknownError
 2026-08-29 16:15:04,894 INFO app audit request_id=9529510a433209e65ff1bfa7 method=POST path=/edit/1145 status=302 user_id=7 company_id=2 ip=127.0.0.1
 2026-08-29 16:15:16,127 INFO app audit request_id=2d1d854846c36a79570e143d method=POST path=/sales/assign-client status=200 user_id=7 company_id=2 ip=127.0.0.1
 2026-08-29 16:15:51,676 INFO app audit request_id=f60eb91c74dc86c103cd0006 method=POST path=/sales/add/1154 status=200 user_id=7 company_id=2 ip=127.0.0.1
+2026-08-29 17:00:59,890 INFO app PostgreSQL configurado; release=2026.08.13 env=development
