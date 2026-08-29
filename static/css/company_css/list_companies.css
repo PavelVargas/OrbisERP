@@ -179,7 +179,7 @@
 .card-main { margin-bottom: 24px; }
 .company-title { font-size: 22px; font-weight: 800; margin: 0 0 8px 0; color: var(--text-main); line-height: 1.2; }
 .rnc-tag { display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 14px; font-weight: 600; }
-.rnc-tag i { color: #3b82f6; font-size: 1.1rem; }
+.rnc-tag i { color: var(--ui-primary); font-size: 1.1rem; }
 
 .card-details { margin-bottom: 28px; display: flex; flex-direction: column; gap: 18px; flex-grow: 1; }
 .detail-item { display: flex; gap: 16px; align-items: center; }

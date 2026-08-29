@@ -375,11 +375,6 @@
         search?.addEventListener('input', filterNavigation);
 
         document.addEventListener('keydown', (event) => {
-            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
-                event.preventDefault();
-                if (sidebar.classList.contains('collapsed')) setCollapsed(false);
-                search?.focus();
-            }
             if (event.key === 'Escape') {
                 closeMobile();
                 if (document.activeElement === search) {
@@ -429,22 +424,56 @@
 
         let timer;
         let requestController;
-        const emptyMessage = (message) => {
-            const node = document.createElement('div');
-            node.className = 'search-empty';
-            node.textContent = message;
-            results.replaceChildren(node);
+        let activeIndex = -1;
+        let lastFocused = null;
+
+        const resultLinks = () => [...results.querySelectorAll('.global-search-result')];
+        const setActive = (index) => {
+            const links = resultLinks();
+            if (!links.length) { activeIndex = -1; return; }
+            activeIndex = Math.max(0, Math.min(index, links.length - 1));
+            links.forEach((link, idx) => {
+                const active = idx === activeIndex;
+                link.classList.toggle('is-active', active);
+                link.setAttribute('aria-selected', String(active));
+            });
+            links[activeIndex]?.scrollIntoView({block: 'nearest'});
+        };
+        const emptyMessage = (title, message = '') => {
+            activeIndex = -1;
+            const wrap = document.createElement('div');
+            wrap.className = 'search-empty';
+            const icon = document.createElement('span');
+            const glyph = window.OrbisLocalIcons?.create('bi-search', 'orbis-search-empty-icon');
+            if (glyph) icon.append(glyph); else icon.textContent = '⌕';
+            const strong = document.createElement('strong');
+            strong.textContent = title;
+            wrap.append(icon, strong);
+            if (message) {
+                const small = document.createElement('small');
+                small.textContent = message;
+                wrap.append(small);
+            }
+            results.replaceChildren(wrap);
         };
         const close = () => {
             requestController?.abort();
+            clearTimeout(timer);
             modal.classList.remove('open');
             modal.setAttribute('aria-hidden', 'true');
+            document.documentElement.classList.remove('global-search-open');
             input.value = '';
-            emptyMessage('Escribe al menos 2 caracteres.');
+            emptyMessage('¿Qué necesitas encontrar?', 'Escribe al menos 2 caracteres para empezar.');
+            const focusTarget = lastFocused;
+            lastFocused = null;
+            if (focusTarget && typeof focusTarget.focus === 'function') setTimeout(() => focusTarget.focus(), 0);
         };
         const open = () => {
+            if (modal.classList.contains('open')) return input.focus();
+            lastFocused = document.activeElement;
             modal.classList.add('open');
             modal.setAttribute('aria-hidden', 'false');
+            document.documentElement.classList.add('global-search-open');
             setTimeout(() => input.focus(), 0);
         };
         const resultInitials = (label) => {
@@ -460,10 +489,13 @@
                 return '#';
             }
         };
-        const buildResult = (row) => {
+        const buildResult = (row, index) => {
             const link = document.createElement('a');
             link.className = 'global-search-result';
             link.href = safeInternalUrl(row?.url);
+            link.setAttribute('role', 'option');
+            link.setAttribute('aria-selected', 'false');
+            link.dataset.resultIndex = String(index);
 
             const icon = document.createElement('span');
             icon.className = 'global-search-result-icon';
@@ -474,25 +506,43 @@
             else icon.textContent = resultInitials(String(row?.type || row?.title || 'R'));
 
             const copy = document.createElement('span');
+            copy.className = 'global-search-result-copy';
             const title = document.createElement('strong');
             title.textContent = String(row?.title || 'Resultado');
             const meta = document.createElement('small');
-            const type = String(row?.type || 'Registro');
-            const subtitle = String(row?.subtitle || '').trim();
-            meta.textContent = subtitle ? `${type} · ${subtitle}` : type;
+            meta.textContent = String(row?.subtitle || '').trim() || 'Abrir registro';
             copy.append(title, meta);
-            link.append(icon, copy);
+
+            const type = document.createElement('span');
+            type.className = 'global-search-result-type';
+            type.textContent = String(row?.type || 'Registro');
+            const arrow = document.createElement('i');
+            arrow.className = 'bi bi-arrow-up-right';
+            type.append(arrow);
+
+            link.append(icon, copy, type);
+            link.addEventListener('mouseenter', () => setActive(index));
             return link;
         };
 
+        document.querySelectorAll('[data-global-search-trigger]').forEach(button => button.addEventListener('click', open));
+        document.querySelectorAll('[data-global-search-close]').forEach(button => button.addEventListener('click', close));
         document.getElementById('tablet-search-trigger')?.addEventListener('click', open);
         document.addEventListener('keydown', (event) => {
             if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
                 event.preventDefault();
                 event.stopImmediatePropagation();
                 open();
+                return;
             }
-            if (event.key === 'Escape' && modal.classList.contains('open')) close();
+            if (!modal.classList.contains('open')) return;
+            if (event.key === 'Escape') { event.preventDefault(); close(); return; }
+            if (event.key === 'ArrowDown') { event.preventDefault(); setActive(activeIndex < 0 ? 0 : activeIndex + 1); return; }
+            if (event.key === 'ArrowUp') { event.preventDefault(); setActive(activeIndex < 0 ? 0 : activeIndex - 1); return; }
+            if (event.key === 'Enter' && activeIndex >= 0) {
+                const target = resultLinks()[activeIndex];
+                if (target) { event.preventDefault(); target.click(); }
+            }
         }, true);
         modal.addEventListener('click', (event) => { if (event.target === modal) close(); });
         input.addEventListener('input', () => {
@@ -500,9 +550,10 @@
             requestController?.abort();
             const query = input.value.trim();
             if (query.length < 2) {
-                emptyMessage('Escribe al menos 2 caracteres.');
+                emptyMessage('Sigue escribiendo', 'Necesitamos al menos 2 caracteres.');
                 return;
             }
+            emptyMessage('Buscando…', 'Estamos revisando productos, clientes y operaciones.');
             timer = setTimeout(async () => {
                 requestController = new AbortController();
                 try {
@@ -517,16 +568,17 @@
                     const payload = await response.json();
                     const rows = Array.isArray(payload?.results) ? payload.results : [];
                     if (!rows.length) {
-                        emptyMessage('No encontramos resultados.');
+                        emptyMessage('Sin resultados', `No encontramos coincidencias para “${query}”.`);
                         return;
                     }
-                    results.replaceChildren(...rows.slice(0, 30).map(buildResult));
+                    results.replaceChildren(...rows.slice(0, 24).map(buildResult));
+                    setActive(0);
                 } catch (error) {
                     if (error?.name === 'AbortError') return;
                     console.error('No fue posible completar la búsqueda global:', error);
-                    emptyMessage('No fue posible buscar en este momento.');
+                    emptyMessage('No pudimos buscar', 'Inténtalo de nuevo en unos segundos.');
                 }
-            }, 180);
+            }, 150);
         });
     };
 
@@ -534,7 +586,6 @@
         ? document.addEventListener('DOMContentLoaded', init, {once: true})
         : init();
 })();
-
 
 // ORBIS_SCANNER_NAV_EXCLUSIVITY_20260825
 (function () {

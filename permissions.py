@@ -269,6 +269,7 @@ ENDPOINT_PERMISSIONS = {
     'retail_bp.branch_create': ('branches.manage',),
     'retail_bp.terminal_create': ('terminals.manage',),
     'retail_bp.uom_create': ('retail.settings',),
+    'retail_bp.apply_uom_to_all_products': ('retail.settings',),
     'retail_bp.product_uom_conversion_save': ('products.edit',),
     'retail_bp.product_uom_conversion_delete': ('products.edit',),
     'retail_bp.price_list_create': ('products.pricing',),

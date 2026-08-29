@@ -3,13 +3,13 @@
 {% block eyebrow %}Ventas y clientes{% endblock %}
 {% block heading %}Seguimiento CRM{% endblock %}
 {% block subtitle %}Clientes, etapas comerciales, tareas y conversaciones en un espacio claro para saber qué sigue con cada relación.{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/module_refresh.css') }}">{% endblock %}
+{% block final_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/crm_polished.css', v='20260829-crm5') }}">{% endblock %}
 {% block actions %}
 <button type="button" class="workspace-btn secondary crm-mobile-directory" id="mobileClientsBtn"><i class="bi bi-people"></i> Clientes</button>
 {% if can('clients.create') %}<a class="workspace-btn" href="{{ url_for('client_bp.create_client') }}"><i class="bi bi-person-plus"></i> Nuevo cliente</a>{% endif %}
 {% endblock %}
 {% block content %}
-<div class="module-page crm-v3" data-crm-root data-client-endpoint="{{ url_for('crm_bp.get_client_details', client_id=0) }}">
+<div class="module-page crm-v3 crm-polished" data-crm-root data-client-endpoint="{{ url_for('crm_bp.get_client_details', client_id=0) }}">
     <section class="crm-v3-stats">
         <article><span><i class="bi bi-people"></i> Clientes</span><strong>{{ stats.clients }}</strong><small>Cartera activa</small></article>
         <article><span><i class="bi bi-person-plus"></i> Leads</span><strong>{{ stats.leads }}</strong><small>Por calificar</small></article>

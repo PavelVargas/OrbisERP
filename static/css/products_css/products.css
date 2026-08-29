@@ -354,7 +354,7 @@
             box-shadow:0 4px 12px var(--ui-line);
         }
 
-        .act-btn.edit:hover  { background: #1976d2; color: white; border-color: #1976d2; }
+        .act-btn.edit:hover  { background: #f2672a; color: white; border-color: #f2672a; }
         .act-btn.delete:hover { background: #d32f2f; color: white; border-color: #d32f2f; }
 
         /* EMPTY STATE */
@@ -427,7 +427,7 @@
 .filter-popover { position: relative; flex: 0 0 auto; }
 .filter-popover > summary { list-style: none; min-height: 44px; padding: 0 15px; border: 1px solid var(--border-color, #dfe4ea); border-radius: 12px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; background: var(--card-bg, #fff); color: var(--text-main, #17202a); font-weight: 700; }
 .filter-popover > summary::-webkit-details-marker { display: none; }
-.filter-popover > summary b { color: #635bff; font-size: 20px; line-height: 0; }
+.filter-popover > summary b { color: var(--ui-primary); font-size: 20px; line-height: 0; }
 .filter-popover-panel { position: absolute; z-index: 40; right: 0; top: calc(100% + 10px); width: min(720px, calc(100vw - 40px)); padding: 16px; border: 1px solid var(--border-color, #dfe4ea); border-radius: 16px; background: var(--card-bg, #fff); box-shadow:0 20px 55px var(--ui-line); display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .filter-popover-panel select, .filter-popover-panel input { width: 100%; min-height: 42px; }
 .filter-popover-panel .btn-filter, .filter-popover-panel .btn-clear { min-height: 42px; align-self: end; }

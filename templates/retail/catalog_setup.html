@@ -1,11 +1,28 @@
 {% extends 'workspace/base.html' %}
 {% block title %}Unidades y variantes{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/retail.css') }}">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/retail.css', v='20260829-bulkuom1') }}">{% endblock %}
 {% block eyebrow %}Retail avanzado{% endblock %}
 {% block heading %}Unidades y variantes{% endblock %}
 {% block subtitle %}Controla precisión de cantidades, conversiones y atributos sin mezclarlo con el resto de Retail avanzado.{% endblock %}
 {% block content %}
 <div class="retail-shell">{% include 'retail/_nav.html' %}
+  <section class="retail-bulk-uom workspace-card">
+    <div class="retail-bulk-uom__copy">
+      <span class="section-kicker">CONFIGURACIÓN MASIVA</span>
+      <h2>Unidad de venta para todo el catálogo</h2>
+      <p>Selecciona una unidad y aplícala de una vez a todos los productos activos compatibles. Los productos que aún no tienen unidad base también quedarán inicializados para que puedan venderse en el POS.</p>
+      <div class="retail-bulk-uom__stats"><span><strong>{{ product_count }}</strong> productos activos</span><span><strong>{{ products_missing_sale_uom }}</strong> sin unidad de venta</span><span><strong>{{ products_missing_base_uom }}</strong> sin unidad base</span></div>
+    </div>
+    <form method="post" action="{{ url_for('retail_bp.apply_uom_to_all_products') }}" class="retail-bulk-uom__form" data-bulk-uom-form>
+      <label for="bulk-uom-id">Unidad a aplicar</label>
+      <select name="uom_id" id="bulk-uom-id" required>
+        <option value="">Selecciona una unidad</option>
+        {% for u in uoms %}<option value="{{ u.id }}">{{ u.name }} ({{ u.symbol }}) · {{ u.category }}</option>{% endfor %}
+      </select>
+      <button type="submit" class="workspace-btn"><i class="bi bi-check2-all"></i> Aplicar a todos los productos</button>
+      <small>Si un producto usa otra categoría de medida, se omitirá para no dañar sus conversiones.</small>
+    </form>
+  </section>
   <div class="retail-subgrid">
     <section class="workspace-card"><div class="workspace-card-head"><div><h2>Unidades de medida</h2><p>Las unidades discretas no admiten decimales; peso y medida sí pueden hacerlo.</p></div></div>
       <div class="retail-list-scroll">{% for u in uoms %}<div class="retail-record"><span><strong>{{ u.name }} ({{ u.symbol }})</strong><small>{{ u.category }} · factor {{ display_quantity(u.factor_to_reference) }} · redondeo {{ display_quantity(u.rounding) }}</small></span><span class="retail-chip">{{ 'Decimal' if u.allow_fraction else 'Entera' }}</span></div>{% else %}<div class="workspace-empty">No hay unidades.</div>{% endfor %}</div>

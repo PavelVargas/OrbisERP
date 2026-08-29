@@ -24,13 +24,40 @@ from sqlalchemy.orm import joinedload, selectinload
 
 purchase_bp = Blueprint('purchase_bp', __name__)
 
-def _positive_money(raw_value, field_name):
+def _positive_integer(raw_value, field_name):
+    """Parse a strictly positive whole-number quantity.
+
+    Integral decimal strings such as ``1.00`` are accepted for backwards
+    compatibility with purchase forms, while fractional, non-finite, zero
+    and negative values are rejected at the HTTP boundary.
+    """
     value = finite_decimal(raw_value, field_name=field_name)
     if value <= 0:
         raise BusinessRuleError(f'{field_name} debe ser mayor que cero.')
-    quantized = value.quantize(finite_decimal('0.01'), rounding=ROUND_HALF_UP)
-    if quantized != value:
-        raise BusinessRuleError(f'{field_name} admite como máximo 2 decimales.')
+    if value != value.to_integral_value():
+        raise BusinessRuleError(f'{field_name} debe ser un número entero.')
+    if value > finite_decimal('1000000'):
+        raise BusinessRuleError(f'{field_name} supera el máximo permitido.')
+    try:
+        return int(value)
+    except (ValueError, TypeError, OverflowError) as exc:
+        raise BusinessRuleError(f'{field_name} debe ser un número entero válido.') from exc
+
+
+def _positive_money(raw_value, field_name):
+    """Parse a positive monetary value and normalize it to cents.
+
+    Purchase forms historically accept additional decimal precision and round
+    HALF_UP to two decimal places.  Keep that contract here while rejecting
+    non-finite, zero, negative and out-of-range amounts.
+    """
+    value = finite_decimal(raw_value, field_name=field_name)
+    if value <= 0:
+        raise BusinessRuleError(f'{field_name} debe ser mayor que cero.')
+    try:
+        quantized = value.quantize(finite_decimal('0.01'), rounding=ROUND_HALF_UP)
+    except (ValueError, TypeError, ArithmeticError) as exc:
+        raise BusinessRuleError(f'{field_name} no tiene un importe válido.') from exc
     if quantized > finite_decimal('99999999.99'):
         raise BusinessRuleError(f'{field_name} supera el máximo permitido.')
     return quantized

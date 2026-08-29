@@ -21,7 +21,7 @@
     --success: #11845b;
     --warning: #a76608;
     --danger: #c83d4f;
-    --info: #356fbe;
+    --info: #f2672a;
     --radius: 16px;
     --radius-lg: 22px;
     --shadow:0 10px 28px var(--ui-line);
@@ -62,7 +62,7 @@ html.dark {
     --success: #49c995;
     --warning: #e7b55d;
     --danger: #f07080;
-    --info: #72a7ed;
+    --info: #ff925f;
     --shadow:0 12px 32px var(--ui-line);
     --shadow-lg:0 25px 60px var(--ui-line);
     --orbis-canvas: var(--bg-main);

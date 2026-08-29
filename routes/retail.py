@@ -8,7 +8,7 @@ import hashlib
 import re
 import secrets
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, g, abort
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, g, abort, current_app
 from sqlalchemy import func, or_
 from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -195,7 +195,19 @@ def catalog_setup():
         return redirect(url_for('login_bp.login'))
     uoms = UnitOfMeasure.query.filter_by(company_id=company_id, active=True).order_by(UnitOfMeasure.category.asc(), UnitOfMeasure.name.asc()).all()
     attributes = ProductAttribute.query.filter_by(company_id=company_id, active=True).order_by(ProductAttribute.sequence.asc(), ProductAttribute.name.asc()).all()
-    return render_template('retail/catalog_setup.html', user=user, uoms=uoms, attributes=attributes)
+    active_products = Product.query.filter_by(company_id=company_id, status=True).filter(Product.archived_at.is_(None))
+    product_count = active_products.count()
+    products_missing_sale_uom = active_products.filter(Product.sale_uom_id.is_(None)).count()
+    products_missing_base_uom = active_products.filter(Product.base_uom_id.is_(None)).count()
+    return render_template(
+        'retail/catalog_setup.html',
+        user=user,
+        uoms=uoms,
+        attributes=attributes,
+        product_count=product_count,
+        products_missing_sale_uom=products_missing_sale_uom,
+        products_missing_base_uom=products_missing_base_uom,
+    )
 
 
 @retail_bp.get('/pricing')
@@ -424,6 +436,83 @@ def terminal_create():
     except IntegrityError:
         db.session.rollback(); flash('Ya existe una terminal con ese código.', 'danger')
     return redirect(url_for('retail_bp.locations'))
+
+
+@retail_bp.post('/catalog-setup/apply-uom-all')
+def apply_uom_to_all_products():
+    """Set one sale UOM across the active catalog without inventing conversions.
+
+    Products without a base unit receive the selected unit as both base and sale
+    UOM. Products with a base unit are updated only when the measurement category
+    is compatible; existing product conversions are preserved and, when present,
+    explicitly enabled for sale.
+    """
+    company_id, _ = _ctx()
+    if not company_id:
+        return redirect(url_for('login_bp.login'))
+
+    uom_id = request.form.get('uom_id', type=int)
+    selected = UnitOfMeasure.query.filter_by(id=uom_id, company_id=company_id, active=True).first()
+    if not selected:
+        flash('Selecciona una unidad de medida válida.', 'danger')
+        return redirect(url_for('retail_bp.catalog_setup'))
+
+    products = (
+        Product.query.filter_by(company_id=company_id, status=True)
+        .filter(Product.archived_at.is_(None))
+        .order_by(Product.id.asc())
+        .all()
+    )
+    applied = 0
+    initialized = 0
+    skipped = []
+
+    try:
+        for product in products:
+            base = product.base_uom
+            if base is None:
+                product.base_uom_id = selected.id
+                product.sale_uom_id = selected.id
+                if product.purchase_uom_id is None:
+                    product.purchase_uom_id = selected.id
+                initialized += 1
+                applied += 1
+                continue
+
+            if base.category != selected.category:
+                skipped.append(product.name)
+                continue
+
+            conversion = ProductUomConversion.query.filter_by(
+                company_id=company_id,
+                product_id=product.id,
+                uom_id=selected.id,
+            ).first()
+            if conversion is not None:
+                conversion.allow_sale = True
+
+            product.sale_uom_id = selected.id
+            applied += 1
+
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        current_app.logger.exception('No se pudo aplicar la unidad %s al catálogo de empresa %s', selected.id, company_id)
+        flash('No se pudo actualizar el catálogo. No se guardaron cambios.', 'danger')
+        return redirect(url_for('retail_bp.catalog_setup'))
+
+    if skipped:
+        preview = ', '.join(skipped[:3])
+        suffix = '…' if len(skipped) > 3 else ''
+        flash(
+            f'{selected.name} se aplicó a {applied} producto(s). '
+            f'{len(skipped)} se omitieron porque usan otra categoría de medida ({preview}{suffix}).',
+            'warning',
+        )
+    else:
+        extra = f' {initialized} producto(s) también recibieron su unidad base inicial.' if initialized else ''
+        flash(f'{selected.name} se aplicó a los {applied} producto(s) activos.{extra}', 'success')
+    return redirect(url_for('retail_bp.catalog_setup'))
 
 
 @retail_bp.post('/uom')

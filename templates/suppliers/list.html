@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="es" class="{% if tablet_mode_active|default(session.get('tablet_mode')) %}tablet-mode tablet-full-width-profile{% endif %} {% if session.get('theme') == 'dark' %}dark{% endif %}"><head>{% set shell_assets_loaded = true %}{% include 'layouts/app_head_assets.html' %}<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Proveedores · OrbisERP</title>
 <link rel="stylesheet" href="{{ url_for('static',filename='css/supplier_css/supplier_list.css') }}">
 
-<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-polished3') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-orange1') }}">
 </head><body class="orbis-app">{% include 'layouts/left_bar.html' %}<main class="suppliers-page"><header class="suppliers-header"><div><span>COMPRAS Y ABASTECIMIENTO</span><h1>Proveedores</h1><p>Contactos, actividad de compra y acceso rápido a cada historial.</p></div>{% if can('suppliers.manage') %}<a href="{{ url_for('supplier_bp.supplier_create') }}"><i class="bi bi-plus-lg"></i> Nuevo proveedor</a>{% endif %}</header>
 {% with messages=get_flashed_messages(with_categories=true) %}{% for category,message in messages %}<div class="supplier-alert {{ category }}">{{ message }}</div>{% endfor %}{% endwith %}
 <section class="supplier-summary"><article><span>Proveedores activos</span><strong>{{ suppliers|length }}</strong></article><article><span>Órdenes históricas</span><strong>{{ total_orders }}</strong></article><article><span>Compras acumuladas</span><strong>RD$ {{ '{:,.2f}'.format(total_spent) }}</strong></article></section>

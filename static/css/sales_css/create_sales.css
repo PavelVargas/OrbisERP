@@ -13,10 +13,10 @@
   --pos-text-soft: #425466;
   --pos-muted: #6b778c;
   --pos-faint: #94a0b2;
-  --pos-primary: #2563eb;
-  --pos-primary-hover: #1d4ed8;
-  --pos-primary-soft: #eff6ff;
-  --pos-primary-line: #bfdbfe;
+  --pos-primary: #f2672a;
+  --pos-primary-hover: #df5419;
+  --pos-primary-soft: #fff1e8;
+  --pos-primary-line: #fed7aa;
   --pos-success: #15803d;
   --pos-success-soft: #f0fdf4;
   --pos-success-line: #bbf7d0;
@@ -45,10 +45,10 @@ html.dark {
   --pos-text-soft: #d1d5db;
   --pos-muted: #9aa4b2;
   --pos-faint: #748094;
-  --pos-primary: #60a5fa;
-  --pos-primary-hover: #93c5fd;
-  --pos-primary-soft: #182a44;
-  --pos-primary-line: #2f527d;
+  --pos-primary: #ff925f;
+  --pos-primary-hover: #ffb38e;
+  --pos-primary-soft: #3a2418;
+  --pos-primary-line: #6d3c1e;
   --pos-success: #4ade80;
   --pos-success-soft: #16351f;
   --pos-success-line: #285c37;
@@ -80,13 +80,9 @@ body.pos-page {
   font-size: 14px;
 }
 
-body.pos-page #app-sidebar,
 body.pos-page .app-topbar,
 body.pos-page .app-tablet-topbar,
-body.pos-page .app-tablet-dock,
-body.pos-page .sidebar-mobile-trigger,
-body.pos-page .sidebar-overlay,
-body.pos-page .collapse-btn { display: none !important; }
+body.pos-page .app-tablet-dock { display: none !important; }
 
 .pos-page button,
 .pos-page input,
@@ -645,7 +641,622 @@ html.tablet-mode body.pos-page .order-item { grid-template-columns: 30px minmax(
   .pos-page *, .pos-page *::before, .pos-page *::after { transition: none !important; animation-duration: 1ms !important; }
 }
 
+
+/* --------------------------------------------------------------------------
+   POS Gallery v15 · image-first, warm neutral terminal
+   -------------------------------------------------------------------------- */
+:root {
+  --pos-primary: #ea580c;
+  --pos-primary-hover: #c2410c;
+  --pos-primary-soft: #fff7ed;
+  --pos-primary-line: #fed7aa;
+  --pos-shadow: 0 8px 22px #e7e5e4;
+}
+html.dark {
+  --pos-primary: #fb923c;
+  --pos-primary-hover: #fdba74;
+  --pos-primary-soft: #3a2418;
+  --pos-primary-line: #6d3c1e;
+  --pos-shadow: 0 8px 22px #090b0f;
+}
+
+body.pos-page {
+  background: #f7f7f5 !important;
+}
+html.dark body.pos-page { background: var(--pos-bg) !important; }
+
+.pos-page .pos-topbar { padding-inline: 20px !important; }
+.pos-page .topbar-badge,
+.pos-page .clock-chip { background: var(--pos-surface) !important; }
+.pos-page .topbar-badge > i,
+.pos-page .clock-chip > i { color: var(--pos-primary) !important; }
+
+.pos-page .search-bar-area {
+  padding: 14px 18px !important;
+  background: var(--pos-surface) !important;
+}
+.pos-page #barcode-input {
+  height: 46px !important;
+  min-height: 46px !important;
+  border-color: var(--pos-line-strong) !important;
+  border-radius: 12px !important;
+  background: var(--pos-surface) !important;
+  font-size: 13px !important;
+}
+.pos-page #barcode-input:focus {
+  border-color: var(--pos-primary) !important;
+  outline: 2px solid var(--pos-primary-soft) !important;
+}
+.pos-page .catalog-status {
+  min-height: 34px !important;
+  border-radius: 999px !important;
+  background: var(--pos-surface-soft) !important;
+}
+
+.pos-page #product-grid.product-area {
+  padding: 16px 18px 20px !important;
+  grid-template-columns: repeat(auto-fill, minmax(245px, 1fr)) !important;
+  gap: 14px !important;
+  background: #f7f7f5 !important;
+}
+html.dark .pos-page #product-grid.product-area { background: var(--pos-bg) !important; }
+
+.pos-page #product-grid > article.retail-pos-card {
+  min-height: 390px !important;
+  border-color: var(--pos-line) !important;
+  border-radius: 14px !important;
+  background: var(--pos-surface) !important;
+  box-shadow: none !important;
+}
+.pos-page #product-grid > article.retail-pos-card:hover,
+.pos-page #product-grid > article.retail-pos-card:focus-within {
+  border-color: var(--pos-line-strong) !important;
+  box-shadow: 0 10px 26px #e7e5e4 !important;
+}
+html.dark .pos-page #product-grid > article.retail-pos-card:hover,
+html.dark .pos-page #product-grid > article.retail-pos-card:focus-within { box-shadow: var(--pos-shadow) !important; }
+.pos-page #product-grid > article.retail-pos-card.is-unavailable {
+  opacity: 1 !important;
+  background: var(--pos-surface-soft) !important;
+}
+.pos-page #product-grid > article.retail-pos-card.is-unavailable .sale-product-media > img { opacity: .62 !important; filter: grayscale(.15); }
+
+/* Product image owns the upper half of each card. */
+.pos-page .sale-product-media {
+  height: 188px !important;
+  min-height: 188px !important;
+  padding: 0 !important;
+  border-bottom: 1px solid var(--pos-line) !important;
+  background: #fbfbfa !important;
+}
+html.dark .pos-page .sale-product-media { background: #f5f5f4 !important; }
+.pos-page .sale-product-media > img {
+  width: 100% !important;
+  height: 100% !important;
+  padding: 14px !important;
+  object-fit: contain !important;
+  object-position: center !important;
+}
+.pos-page .sale-product-placeholder {
+  gap: 8px !important;
+  background: #fbfbfa !important;
+  color: #78716c !important;
+}
+html.dark .pos-page .sale-product-placeholder { background: #f5f5f4 !important; color: #57534e !important; }
+.pos-page .sale-product-category-mark {
+  width: 52px !important;
+  height: 52px !important;
+  border: 1px solid #fdba74 !important;
+  border-radius: 14px !important;
+  background: #fff7ed !important;
+  color: #c2410c !important;
+  font-size: 15px !important;
+}
+.pos-page .sale-product-placeholder small { color: #78716c !important; font-size: 9.5px !important; letter-spacing: .07em !important; }
+
+.pos-page .pos-card-body { padding: 13px 13px 14px !important; }
+.pos-page .card-header-tags {
+  min-height: 16px !important;
+  margin: 0 0 4px !important;
+  gap: 7px !important;
+  align-items: center !important;
+}
+.pos-page .badge-ui {
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--pos-muted) !important;
+  font-size: 9px !important;
+  font-weight: 720 !important;
+  letter-spacing: .045em !important;
+  line-height: 1.35 !important;
+}
+.pos-page .badge-ui.badge-category {
+  background: transparent !important;
+  color: var(--pos-primary) !important;
+}
+.pos-page .badge-ui.badge-category::after {
+  content: "·";
+  margin-left: 7px;
+  color: var(--pos-faint);
+}
+.pos-page .badge-ui.product,
+.pos-page .badge-ui.service,
+.pos-page .badge-ui.weight,
+.pos-page .badge-ui.badge-type-service,
+.pos-page .badge-ui.badge-type-product {
+  background: transparent !important;
+  color: var(--pos-muted) !important;
+}
+.pos-page .product-sku {
+  color: var(--pos-faint) !important;
+  font-size: 9.5px !important;
+  font-weight: 650 !important;
+  letter-spacing: .05em !important;
+}
+.pos-page .product-name {
+  min-height: 39px !important;
+  margin-top: 4px !important;
+  font-size: 14px !important;
+  font-weight: 740 !important;
+  line-height: 1.38 !important;
+}
+.pos-page .pos-price-row { margin-top: 8px !important; }
+.pos-page .product-price {
+  color: var(--pos-text) !important;
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  letter-spacing: -.035em !important;
+}
+.pos-page .pos-price-row small { font-size: 9.5px !important; }
+.pos-page .pos-stock-row { margin-top: 7px !important; }
+.pos-page .pos-stock-badge {
+  min-height: 22px !important;
+  padding: 0 7px !important;
+  border-radius: 7px !important;
+  font-size: 9.5px !important;
+}
+.pos-page .pos-stock-row > small { font-size: 9px !important; }
+
+.pos-page .pos-card-controls {
+  padding-top: 11px !important;
+  grid-template-columns: minmax(0, 1fr) 64px !important;
+  gap: 7px !important;
+}
+.pos-page .pos-card-controls.no-uom { grid-template-columns: minmax(0, 1fr) !important; }
+.pos-page .pos-card-controls select,
+.pos-page .pos-card-controls input {
+  height: 38px !important;
+  min-height: 38px !important;
+  border-radius: 9px !important;
+  background: var(--pos-surface-soft) !important;
+  font-size: 10.5px !important;
+}
+.pos-page .pos-card-controls select:focus,
+.pos-page .pos-card-controls input:focus {
+  border-color: var(--pos-primary) !important;
+  outline: 2px solid var(--pos-primary-soft) !important;
+}
+.pos-page #product-grid .add-product-btn {
+  min-height: 42px !important;
+  border-color: var(--pos-primary) !important;
+  border-radius: 10px !important;
+  background: var(--pos-primary) !important;
+  font-size: 11px !important;
+}
+.pos-page #product-grid .add-product-btn:hover:not(:disabled) {
+  border-color: var(--pos-primary-hover) !important;
+  background: var(--pos-primary-hover) !important;
+}
+.pos-page .add-product-glyph { width: 19px !important; height: 19px !important; border-radius: 6px !important; }
+
+/* Order pane: quiet surface, accent only on the primary action. */
+.pos-page .pos-right { background: var(--pos-surface) !important; }
+.pos-page .order-head,
+.pos-page .customer-section,
+.pos-page .summary-section,
+.pos-page .promotion-panel,
+.pos-page .checkout-section { background: var(--pos-surface) !important; }
+.pos-page .btn-checkout,
+.pos-page .promotion-apply-btn {
+  border-color: var(--pos-primary) !important;
+  background: var(--pos-primary) !important;
+}
+.pos-page .btn-checkout:hover:not(:disabled),
+.pos-page .promotion-apply-btn:hover {
+  border-color: var(--pos-primary-hover) !important;
+  background: var(--pos-primary-hover) !important;
+}
+.pos-page .btn-quote {
+  border-color: var(--pos-line-strong) !important;
+  background: var(--pos-surface-soft) !important;
+  color: var(--pos-text-soft) !important;
+}
+.pos-page .btn-quote:hover:not(:disabled) {
+  border-color: var(--pos-line-strong) !important;
+  background: var(--pos-surface-hover) !important;
+  color: var(--pos-text) !important;
+}
+
+@media (max-width: 1260px) and (min-width: 901px) {
+  .pos-page #product-grid.product-area { grid-template-columns: repeat(auto-fill, minmax(225px, 1fr)) !important; }
+  .pos-page .sale-product-media { height: 166px !important; min-height: 166px !important; }
+  .pos-page #product-grid > article.retail-pos-card { min-height: 364px !important; }
+}
+
+@media (max-width: 900px) {
+  .pos-page #product-grid.product-area {
+    padding: 12px !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+  .pos-page .sale-product-media { height: 154px !important; min-height: 154px !important; }
+  .pos-page #product-grid > article.retail-pos-card { min-height: 350px !important; }
+}
+
+@media (max-width: 620px) {
+  .pos-page #product-grid.product-area { padding: 9px !important; gap: 8px !important; }
+  .pos-page .sale-product-media { height: 126px !important; min-height: 126px !important; }
+  .pos-page .sale-product-media > img { padding: 9px !important; }
+  .pos-page #product-grid > article.retail-pos-card { min-height: 326px !important; }
+  .pos-page .pos-card-body { padding: 10px !important; }
+  .pos-page .card-header-tags { gap: 5px !important; }
+  .pos-page .badge-ui { font-size: 8px !important; }
+  .pos-page .product-name { min-height: 34px !important; font-size: 12.5px !important; }
+  .pos-page .product-price { font-size: 14px !important; }
+  .pos-page .pos-card-controls { grid-template-columns: minmax(0, 1fr) 58px !important; }
+}
+
+@media (max-width: 430px) {
+  .pos-page #product-grid.product-area { grid-template-columns: 1fr !important; }
+  .pos-page #product-grid > article.retail-pos-card {
+    min-height: 0 !important;
+    display: grid !important;
+    grid-template-columns: 132px minmax(0, 1fr) !important;
+  }
+  .pos-page .sale-product-media {
+    width: 132px !important;
+    height: 100% !important;
+    min-height: 224px !important;
+    border-right: 1px solid var(--pos-line) !important;
+    border-bottom: 0 !important;
+  }
+  .pos-page .product-price { font-size: 15px !important; }
+}
+
+@media (max-height: 760px) and (min-width: 901px) {
+  .pos-page #product-grid.product-area { padding: 10px 14px !important; }
+  .pos-page .sale-product-media { height: 146px !important; min-height: 146px !important; }
+  .pos-page #product-grid > article.retail-pos-card { min-height: 330px !important; }
+  .pos-page .pos-card-body { padding: 10px 11px 11px !important; }
+  .pos-page .product-name { min-height: 34px !important; }
+}
+
 /* Keep this as the final card rule: regression tests verify the non-clickable cursor. */
 .pos-page #product-grid > article.retail-pos-card {
   cursor: default;
+}
+
+/* --------------------------------------------------------------------------
+   POS Gallery v16 · full-image catalog
+   The product photo is never cropped. It is centered at its natural aspect
+   ratio inside a consistent product canvas across desktop/tablet/mobile.
+   -------------------------------------------------------------------------- */
+.pos-page #product-grid.product-area {
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)) !important;
+  gap: 12px !important;
+  padding: 14px 16px 18px !important;
+}
+
+.pos-page #product-grid > article.retail-pos-card {
+  min-height: 0 !important;
+  border-radius: 14px !important;
+  overflow: hidden !important;
+}
+
+.pos-page .sale-product-media {
+  position: relative !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  aspect-ratio: 4 / 3 !important;
+  padding: 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  border-bottom: 1px solid var(--pos-line) !important;
+  background: #ffffff !important;
+}
+
+html.dark .pos-page .sale-product-media {
+  background: #f8fafc !important;
+}
+
+.pos-page .sale-product-media > img,
+.pos-page .sale-product-media > img[data-product-image] {
+  display: block !important;
+  width: auto !important;
+  height: auto !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  margin: auto !important;
+  padding: 0 !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  transform: none !important;
+  scale: 1 !important;
+}
+
+.pos-page .sale-product-placeholder {
+  position: absolute !important;
+  inset: 14px !important;
+  width: auto !important;
+  height: auto !important;
+  border-radius: 10px !important;
+  background: #f8fafc !important;
+}
+
+.pos-page .pos-card-body {
+  padding: 12px 13px 13px !important;
+}
+
+.pos-page .product-name {
+  min-height: 38px !important;
+  margin-top: 3px !important;
+  font-size: 14px !important;
+  line-height: 1.35 !important;
+}
+
+.pos-page .product-price {
+  font-size: 18px !important;
+}
+
+.pos-page .pos-card-controls {
+  padding-top: 10px !important;
+}
+
+@media (max-width: 1380px) and (min-width: 901px) {
+  .pos-page #product-grid.product-area {
+    grid-template-columns: repeat(auto-fill, minmax(235px, 1fr)) !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .pos-page #product-grid.product-area {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    padding: 12px !important;
+  }
+  .pos-page .sale-product-media {
+    aspect-ratio: 4 / 3 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 10px !important;
+  }
+}
+
+@media (max-width: 620px) {
+  .pos-page #product-grid.product-area {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    padding: 9px !important;
+  }
+  .pos-page .sale-product-media {
+    aspect-ratio: 1 / 1 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 8px !important;
+  }
+  .pos-page .product-name {
+    min-height: 34px !important;
+    font-size: 12.5px !important;
+  }
+  .pos-page .product-price {
+    font-size: 15px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .pos-page #product-grid.product-area {
+    grid-template-columns: 1fr !important;
+  }
+  .pos-page #product-grid > article.retail-pos-card {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .pos-page .sale-product-media {
+    width: 100% !important;
+    aspect-ratio: 16 / 10 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid var(--pos-line) !important;
+  }
+}
+
+@media (max-height: 760px) and (min-width: 901px) {
+  .pos-page .sale-product-media {
+    aspect-ratio: 16 / 10 !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   POS + canonical application sidebar · 2026-08-29
+   The sales terminal keeps the same navigation as the rest of OrbisERP.
+   -------------------------------------------------------------------------- */
+@media (min-width: 1025px) {
+  body.pos-page #app-sidebar.sidebar {
+    display: flex !important;
+  }
+  body.pos-page #app-sidebar .collapse-btn {
+    display: grid !important;
+  }
+  body.pos-page .pos-topbar {
+    left: var(--ui-sidebar, 244px) !important;
+    width: auto !important;
+  }
+  body.pos-page .pos-layout {
+    width: auto !important;
+    margin-left: var(--ui-sidebar, 244px) !important;
+  }
+  html.sidebar-collapsed body.pos-page .pos-topbar {
+    left: var(--ui-sidebar-collapsed, 72px) !important;
+  }
+  html.sidebar-collapsed body.pos-page .pos-layout {
+    margin-left: var(--ui-sidebar-collapsed, 72px) !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  body.pos-page #app-sidebar.sidebar {
+    display: flex !important;
+  }
+  body.pos-page .sidebar-mobile-trigger {
+    display: grid !important;
+  }
+  body.pos-page .sidebar-overlay.active {
+    display: block !important;
+  }
+  body.pos-page .pos-topbar {
+    left: 0 !important;
+  }
+  body.pos-page .pos-layout {
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+}
+
+/* Orange is the product-wide brand accent. POS must never reintroduce blue. */
+:root {
+  --pos-primary: #f2672a;
+  --pos-primary-hover: #df5419;
+  --pos-primary-soft: #fff1e8;
+  --pos-primary-line: #fed7aa;
+}
+html.dark {
+  --pos-primary: #ff925f;
+  --pos-primary-hover: #ffb38e;
+  --pos-primary-soft: #3a2418;
+  --pos-primary-line: #6d3c1e;
+}
+
+/* ========================================================================== 
+   POS canvas fix · 2026-08-29
+   Sidebar stays visible while the terminal consumes the full remaining viewport.
+   Prevents the catalog/order grid from shrink-wrapping and leaving blank space.
+   ========================================================================== */
+body.pos-page {
+  display: block !important;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  min-width: 0 !important;
+}
+
+@media (min-width: 1025px) {
+  body.pos-page .pos-topbar {
+    position: fixed !important;
+    top: 0 !important;
+    right: 0 !important;
+    left: var(--ui-sidebar, 244px) !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+  }
+
+  body.pos-page .pos-layout {
+    position: fixed !important;
+    top: var(--pos-topbar-h) !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: var(--ui-sidebar, 244px) !important;
+    width: auto !important;
+    max-width: none !important;
+    height: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    grid-template-columns: minmax(0, 1fr) clamp(380px, 27vw, 430px) !important;
+    align-items: stretch !important;
+  }
+
+  html.sidebar-collapsed body.pos-page .pos-topbar {
+    left: var(--ui-sidebar-collapsed, 72px) !important;
+  }
+
+  html.sidebar-collapsed body.pos-page .pos-layout {
+    left: var(--ui-sidebar-collapsed, 72px) !important;
+  }
+}
+
+body.pos-page .pos-left,
+body.pos-page .pos-right,
+body.pos-page .order-items-scroll,
+body.pos-page #product-grid.product-area {
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+body.pos-page .pos-left {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+body.pos-page #product-grid.product-area {
+  width: 100% !important;
+  max-width: none !important;
+  grid-template-columns: repeat(auto-fill, minmax(245px, 1fr)) !important;
+  align-content: start !important;
+}
+
+body.pos-page .pos-right {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+}
+
+@media (min-width: 1500px) {
+  body.pos-page .pos-layout {
+    grid-template-columns: minmax(0, 1fr) 410px !important;
+  }
+
+  body.pos-page #product-grid.product-area {
+    grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)) !important;
+  }
+}
+
+@media (min-width: 1900px) {
+  body.pos-page .pos-layout {
+    grid-template-columns: minmax(0, 1fr) 430px !important;
+  }
+
+  body.pos-page #product-grid.product-area {
+    grid-template-columns: repeat(auto-fill, minmax(265px, 1fr)) !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  body.pos-page .pos-topbar {
+    left: 0 !important;
+    right: 0 !important;
+    width: auto !important;
+  }
+
+  body.pos-page .pos-layout {
+    position: fixed !important;
+    top: var(--pos-topbar-h) !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
 }

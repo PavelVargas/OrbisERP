@@ -6,13 +6,19 @@
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/module_refresh.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/retail.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/sales_css/detail_sales.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/sales_css/detail_sales.css', v='20260829-fiscalnotice1') }}">
 {% endblock %}
 {% block back_link %}<a class="workspace-back" href="{{ url_for('sales_bp.list_sales') }}"><i class="bi bi-chevron-left"></i> Volver a ventas</a>{% endblock %}
 {% block actions %}{% if can('sales.print') %}<a class="workspace-btn secondary" href="{{ url_for('sales_bp.thermal_receipt', sale_id=sale.id) }}" target="_blank" rel="noopener"><i class="bi bi-receipt"></i> Ticket / vista previa</a><a class="workspace-btn" href="{{ url_for('sales_bp.export_pdf', sale_id=sale.id) }}" target="_blank" rel="noopener"><i class="bi bi-file-earmark-pdf"></i> Factura PDF</a>{% endif %}{% endblock %}
 {% block content %}
 <div class="sale-view-shell">
-  {% if user.company and user.company.fiscal_mode == 'disabled' %}<div class="workspace-alert workspace-alert--warning"><strong>Documento comercial no fiscal.</strong> {{ user.company.fiscal_disclaimer }}</div>{% endif %}
+  {% if user.company and user.company.fiscal_mode == 'disabled' %}
+  <div class="sale-fiscal-notice" data-fiscal-notice>
+    <div class="sale-fiscal-notice__icon"><i class="bi bi-info-circle"></i></div>
+    <div class="sale-fiscal-notice__copy"><strong>Documento comercial no fiscal</strong><span>{{ user.company.fiscal_disclaimer }}</span></div>
+    <button type="button" class="sale-fiscal-notice__dismiss" data-fiscal-notice-dismiss aria-label="No volver a mostrar este aviso" title="No volver a mostrar"><i class="bi bi-x-lg"></i><span>No volver a mostrar</span></button>
+  </div>
+  {% endif %}
 
   <section class="sale-hero">
     <div class="sale-hero-main"><span class="sale-status sale-status--{{ sale.status|lower }}">{{ sale.status }}</span><h2>{{ sale.client.name if sale.client else 'Consumidor final' }}</h2><div class="sale-hero-meta"><span><i class="bi bi-calendar3"></i>{{ sale.created_at.strftime('%d/%m/%Y · %I:%M %p') }}</span><span><i class="bi bi-person"></i>{{ sale.user.name if sale.user else 'Sistema' }}</span><span><i class="bi bi-building"></i>{{ sale.warehouse_display }}</span></div></div>
@@ -51,4 +57,21 @@
   </section>
 </div>
 {% endblock %}
-{% block scripts %}<script nonce="{{ g.csp_nonce }}">document.querySelectorAll('.sale-view-tabs button').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.sale-view-tabs button').forEach(x=>x.classList.toggle('active',x===btn));document.querySelectorAll('.sale-view-panel').forEach(panel=>panel.classList.toggle('active',panel.dataset.salePanel===btn.dataset.salePanel));}));</script>{% endblock %}
+{% block scripts %}<script nonce="{{ g.csp_nonce }}">
+(() => {
+  document.querySelectorAll('.sale-view-tabs button').forEach(btn => btn.addEventListener('click', () => {
+    document.querySelectorAll('.sale-view-tabs button').forEach(x => x.classList.toggle('active', x === btn));
+    document.querySelectorAll('.sale-view-panel').forEach(panel => panel.classList.toggle('active', panel.dataset.salePanel === btn.dataset.salePanel));
+  }));
+
+  const notice = document.querySelector('[data-fiscal-notice]');
+  const storageKey = 'orbis-hide-non-fiscal-sale-notice';
+  if (notice) {
+    try { if (localStorage.getItem(storageKey) === '1') notice.hidden = true; } catch (_) {}
+    notice.querySelector('[data-fiscal-notice-dismiss]')?.addEventListener('click', () => {
+      notice.hidden = true;
+      try { localStorage.setItem(storageKey, '1'); } catch (_) {}
+    });
+  }
+})();
+</script>{% endblock %}

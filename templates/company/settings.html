@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="es" class="{% if tablet_mode_active|default(session.get('tablet_mode')) %}tablet-mode tablet-full-width-profile{% endif %} {% if session.get('theme') == 'dark' %}dark{% endif %}"><head>{% set shell_assets_loaded = true %}{% include 'layouts/app_head_assets.html' %}<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Configuración de empresa · OrbisERP</title>
 <link rel="stylesheet" href="{{ url_for('static',filename='css/company_css/settings.css') }}">
 
-<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-polished3') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-orange1') }}">
 </head><body class="orbis-app">{% include 'layouts/left_bar.html' %}<main class="company-settings-page">
 <header class="company-settings-header"><div><span>IDENTIDAD Y DATOS GENERALES</span><h1>Configuración de empresa</h1><p>Información que verá tu equipo en documentos, ventas y comunicaciones.</p></div><div class="settings-status"><i class="bi bi-shield-check"></i><span>Empresa activa<small>{{ company.plan_name or 'Plan actual' }}</small></span></div></header>
 {% with messages=get_flashed_messages(with_categories=true) %}{% for category,message in messages %}<div class="settings-alert {{ category }}">{{ message }}</div>{% endfor %}{% endwith %}

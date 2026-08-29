@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="es" class="{% if tablet_mode_active|default(session.get('tablet_mode')) %}tablet-mode tablet-full-width-profile{% endif %} {% if session.get('theme') == 'dark' %}dark{% endif %}"><head>{% set shell_assets_loaded = true %}{% include 'layouts/app_head_assets.html' %}<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Clientes · OrbisERP</title>
 <link rel="stylesheet" href="{{ url_for('static',filename='css/client_css/client.css') }}">
 
-<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-polished3') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-orange1') }}">
 </head><body class="orbis-app">{% include 'layouts/left_bar.html' %}<main class="clients-page">
 <header class="clients-header"><div><span>VENTAS Y RELACIONES</span><h1>Clientes</h1><p>Directorio comercial, contacto y seguimiento de cada comprador.</p></div>{% if can('clients.create') %}<a class="client-primary" href="{{ url_for('client_bp.create_client') }}"><i class="bi bi-person-plus"></i> Nuevo cliente</a>{% endif %}</header>
 <section class="clients-toolbar"><label><i class="bi bi-search"></i><input id="clientSearch" type="search" placeholder="Buscar nombre, correo o teléfono…"></label><select id="stageFilter" aria-label="Filtrar por etapa"><option value="">Todas las etapas</option><option>Lead</option><option>Negociacion</option><option>Ganado</option><option>Perdido</option></select><a href="{{ url_for('crm_bp.crm_index') }}"><i class="bi bi-kanban"></i> Abrir CRM</a><span><b id="clientCount">{{ clients|length }}</b> clientes</span></section>

@@ -2253,3 +2253,70 @@ DETAIL:  La fila que falla contiene (1168, Arroz premium 5 lb, SUP-260823-001, A
 2026-08-29 11:50:42,768 INFO app PostgreSQL configurado; release=2026.08.13 env=development
 2026-08-29 12:52:40,436 INFO app PostgreSQL configurado; release=2026.08.13 env=development
 2026-08-29 12:56:59,163 INFO app audit request_id=7e9799bed8f5352cefd38b65 method=POST path=/governance/sessions/revoke-all status=302 user_id=7 company_id=2 ip=127.0.0.1
+2026-08-29 12:58:17,258 INFO app PostgreSQL configurado; release=2026.08.13 env=development
+2026-08-29 12:58:21,374 INFO app audit request_id=d1e5a0b6b9b991fabd92a7d7 method=POST path=/logout status=302 user_id=None company_id=None ip=127.0.0.1
+2026-08-29 12:58:52,217 INFO app audit request_id=5658c2bf127891a63d262240 method=POST path=/login status=302 user_id=7 company_id=2 ip=127.0.0.1
+2026-08-29 13:03:31,381 INFO app audit request_id=67ffc5cf22856bcf8700a3e9 method=POST path=/login status=302 user_id=7 company_id=2 ip=10.0.0.230
+2026-08-29 13:33:58,762 INFO app PostgreSQL configurado; release=2026.08.13 env=development
+2026-08-29 13:34:15,403 INFO app audit request_id=326971a45ca0fbf4a602c5cb method=POST path=/crm/api/update_status status=200 user_id=7 company_id=2 ip=127.0.0.1
+2026-08-29 13:34:15,893 INFO app audit request_id=a2b6a106481bd7a1e7580bfe method=POST path=/crm/api/update_status status=200 user_id=7 company_id=2 ip=127.0.0.1
+2026-08-29 13:34:16,563 INFO app audit request_id=71971f01061e700cf866f219 method=POST path=/crm/api/update_status status=200 user_id=7 company_id=2 ip=127.0.0.1
+2026-08-29 13:34:16,909 INFO app audit request_id=72d4f936340575c6195094d4 method=POST path=/crm/api/update_status status=200 user_id=7 company_id=2 ip=127.0.0.1
+2026-08-29 13:34:17,189 INFO app audit request_id=b17c3d62164121cefbf9d7fc method=POST path=/crm/api/update_status status=200 user_id=7 company_id=2 ip=127.0.0.1
+2026-08-29 13:34:17,526 INFO app audit request_id=9981d439cfa1193191227695 method=POST path=/crm/api/update_status status=200 user_id=7 company_id=2 ip=127.0.0.1
+2026-08-29 13:34:18,134 INFO app audit request_id=a164d1d94766e7bc3c68e27f method=POST path=/crm/api/update_status status=200 user_id=7 company_id=2 ip=127.0.0.1
+2026-08-29 13:34:32,865 INFO app audit request_id=52b3d7044a50c85001d71769 method=POST path=/sales/add/1136 status=400 user_id=7 company_id=2 ip=127.0.0.1
+2026-08-29 13:34:43,444 INFO app audit request_id=e348ae2107d971b07dec9f4f method=POST path=/sales/add/1167 status=200 user_id=7 company_id=2 ip=127.0.0.1
+2026-08-29 13:34:45,723 INFO app audit request_id=026447e0368ecc5ec6911f03 method=POST path=/sales/finish status=200 user_id=7 company_id=2 ip=127.0.0.1
+2026-08-29 13:35:09,887 ERROR app No se pudo generar el PDF de la venta 23
+Traceback (most recent call last):
+  File "/home/pavel/Escritorio/crud/routes/sales/exports.py", line 130, in export_pdf
+    pdf = pdfkit.from_string(html_rendered, False, options=options)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/pdfkit/api.py", line 75, in from_string
+    return r.to_pdf(output_path)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/pdfkit/pdfkit.py", line 201, in to_pdf
+    self.handle_error(exit_code, stderr)
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/pdfkit/pdfkit.py", line 155, in handle_error
+    raise IOError('wkhtmltopdf reported an error:\n' + stderr)
+OSError: wkhtmltopdf reported an error:
+Exit with code 1 due to network error: ProtocolUnknownError
+
+2026-08-29 13:39:01,303 ERROR app No se pudo generar el PDF de la venta 23
+Traceback (most recent call last):
+  File "/home/pavel/Escritorio/crud/routes/sales/exports.py", line 130, in export_pdf
+    pdf = pdfkit.from_string(html_rendered, False, options=options)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/pdfkit/api.py", line 75, in from_string
+    return r.to_pdf(output_path)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/pdfkit/pdfkit.py", line 201, in to_pdf
+    self.handle_error(exit_code, stderr)
+  File "/home/pavel/Escritorio/crud/.venv/lib/python3.12/site-packages/pdfkit/pdfkit.py", line 155, in handle_error
+    raise IOError('wkhtmltopdf reported an error:\n' + stderr)
+OSError: wkhtmltopdf reported an error:
+Exit with code 1 due to network error: ProtocolUnknownError
+
+2026-08-29 15:45:03,648 INFO app PostgreSQL configurado; release=2026.08.13 env=development
+2026-08-29 15:46:23,581 INFO app audit request_id=18333074f57be0c617028a72 method=POST path=/retail/catalog-setup/apply-uom-all status=302 user_id=7 company_id=2 ip=127.0.0.1
+2026-08-29 15:47:55,700 INFO app audit request_id=18cd60e7e7e224907723f455 method=POST path=/edit/1136 status=302 user_id=7 company_id=2 ip=127.0.0.1
+2026-08-29 15:57:28,060 INFO app PostgreSQL configurado; release=2026.08.13 env=development
+2026-08-29 15:58:10,920 INFO app PostgreSQL configurado; release=2026.08.13 env=development
+2026-08-29 15:58:40,572 INFO app PostgreSQL configurado; release=2026.08.13 env=development
+2026-08-29 15:59:19,881 INFO app PostgreSQL configurado; release=2026.08.13 env=development
+2026-08-29 16:00:40,489 INFO app PostgreSQL configurado; release=2026.08.13 env=development
+2026-08-29 16:01:49,472 INFO app PostgreSQL configurado; release=2026.08.13 env=development
+2026-08-29 16:03:07,335 INFO app audit request_id=2ccb967e82f4a00da7903b2b method=POST path=/sales/assign-client status=200 user_id=7 company_id=2 ip=127.0.0.1
+2026-08-29 16:08:27,341 INFO app audit request_id=3c6253e5dbef0bda492b596c method=POST path=/edit/1167 status=302 user_id=7 company_id=2 ip=127.0.0.1
+2026-08-29 16:08:40,886 INFO app audit request_id=932fe3d85185964dd34b26b8 method=POST path=/edit/1166 status=302 user_id=7 company_id=2 ip=127.0.0.1
+2026-08-29 16:09:09,283 INFO app audit request_id=57ba427f1d3f8d98312c33fd method=POST path=/edit/1135 status=302 user_id=7 company_id=2 ip=127.0.0.1
+2026-08-29 16:09:22,598 INFO app audit request_id=c5a65553c1aa4dbc63b37f8c method=POST path=/edit/1154 status=302 user_id=7 company_id=2 ip=127.0.0.1
+2026-08-29 16:09:53,007 INFO app PostgreSQL configurado; release=2026.08.13 env=development
+2026-08-29 16:11:04,846 INFO app audit request_id=b3b39c08159aea202889e5d5 method=POST path=/edit/1128 status=302 user_id=7 company_id=2 ip=127.0.0.1
+2026-08-29 16:11:22,151 INFO app audit request_id=e80483919fea29dac84814fa method=POST path=/edit/1127 status=302 user_id=7 company_id=2 ip=127.0.0.1
+2026-08-29 16:12:07,075 INFO app audit request_id=5934de35cbb74349f2313d25 method=POST path=/edit/1131 status=302 user_id=7 company_id=2 ip=127.0.0.1
+2026-08-29 16:14:39,247 INFO app PostgreSQL configurado; release=2026.08.13 env=development
+2026-08-29 16:15:04,894 INFO app audit request_id=9529510a433209e65ff1bfa7 method=POST path=/edit/1145 status=302 user_id=7 company_id=2 ip=127.0.0.1
+2026-08-29 16:15:16,127 INFO app audit request_id=2d1d854846c36a79570e143d method=POST path=/sales/assign-client status=200 user_id=7 company_id=2 ip=127.0.0.1
+2026-08-29 16:15:51,676 INFO app audit request_id=f60eb91c74dc86c103cd0006 method=POST path=/sales/add/1154 status=200 user_id=7 company_id=2 ip=127.0.0.1
