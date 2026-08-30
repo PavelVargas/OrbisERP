@@ -1,8 +1,16 @@
 #!/usr/bin/env python3
 """Idempotent seed for browser smoke tests. Never run against production."""
 import os
+import sys
+from pathlib import Path
 from decimal import Decimal
 from datetime import timedelta
+
+# Permite ejecutar este archivo directamente desde scripts/
+# sin perder acceso a app.py y los paquetes de la raiz.
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 if os.getenv('APP_ENV') not in {'testing', 'development'}:
     raise SystemExit('seed_e2e.py solo puede ejecutarse con APP_ENV=testing/development')
