@@ -14,7 +14,7 @@
 <body class="orbis-print">
 <div class="preview-shell">
   <header class="preview-toolbar">
-    <div class="preview-title"><a href="{{ url_for('sales_bp.sale_detail', sale_id=sale.id) }}" aria-label="Volver a la venta">←</a><div><strong>Ticket térmico #{{ '%06d'|format(sale.id) }}</strong><small>Vista previa fiel a la impresión de {{ width }} mm.</small></div></div>
+    <div class="preview-title"><a href="{{ url_for('sales_bp.sale_detail', sale_id=sale.id) }}" aria-label="Volver a la venta">←</a><div><strong>Ticket térmico #{{ '%06d'|format(sale.id) }}</strong><small>Vista previa del ticket · impresión fiel de {{ width }} mm.</small></div></div>
     <div class="preview-controls">
       <span class="printer-label">Impresión: <b>{{ {'BROWSER':'Sistema / navegador','WEBUSB':'USB térmica','ELECTRON':'Orbis Desktop'}.get(printer_mode, printer_mode) }}</b>{% if printer_name %} · {{ printer_name }}{% endif %}</span>
       <div class="width-control"><input id="ticketWidth" type="number" min="40" max="112" step="1" value="{{ width }}" aria-label="Ancho del ticket"><b>mm</b></div>
