@@ -100,7 +100,7 @@ def as_decimal(value):
     return Decimal(str(value or 0))
 
 
-def compile_finish(*, payment_method='CASH', sale_status='PENDING', has_items=True, webhook_fails=False):
+def compile_finish(*, payment_method='CASH', sale_status='PENDING', has_items=True, webhook_fails=False, cash_received=None):
     source = (ROOT / 'routes/sales/actions.py').read_text(encoding='utf-8')
     tree = ast.parse(source)
     names = {'_money', '_payment_plan', 'finish_sale'}
@@ -145,9 +145,12 @@ def compile_finish(*, payment_method='CASH', sale_status='PENDING', has_items=Tr
 
     orm_session = FakeSession()
     browser_session = {'company_id': 2, 'current_sale_id': 1842, 'user_id': 7}
+    form = {'payment_method': payment_method}
+    if cash_received is not None:
+        form['cash_received'] = str(cash_received)
     request = SimpleNamespace(
         headers={'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json'},
-        form={'payment_method': payment_method},
+        form=form,
     )
     logger = FakeLogger()
     calls = {
@@ -229,6 +232,12 @@ def test_consumer_final_sale_commits_for_cash_card_and_transfer():
         assert sale.payment_method == method
         assert sale.amount_paid == Decimal('739.50')
         assert sale.balance == Decimal('0.00')
+        if method == 'CASH':
+            assert sale.cash_received == Decimal('739.50')
+            assert sale.cash_change == Decimal('0.00')
+        else:
+            assert sale.cash_received is None
+            assert sale.cash_change == Decimal('0.00')
         assert browser_session.get('current_sale_id') is None
         assert orm_session.commit_count == 1
         assert orm_session.rollback_count == 0
@@ -298,3 +307,34 @@ def test_repeated_request_after_completion_is_idempotent():
     assert orm_session.commit_count == 0
     assert orm_session.added == []
     assert calls['finalized'] == []
+
+def test_cash_sale_persists_tendered_amount_and_change():
+    finish, sale, browser_session, orm_session, calls, logger = compile_finish(
+        payment_method='CASH', cash_received='800.00'
+    )
+
+    response = finish()
+
+    assert response['ok'] is True
+    assert sale.status == 'COMPLETED'
+    assert sale.amount_paid == Decimal('739.50')
+    assert sale.cash_received == Decimal('800.00')
+    assert sale.cash_change == Decimal('60.50')
+    assert orm_session.commit_count == 1
+    assert orm_session.rollback_count == 0
+
+
+def test_cash_sale_rejects_tender_below_amount_due():
+    finish, sale, browser_session, orm_session, calls, logger = compile_finish(
+        payment_method='CASH', cash_received='700.00'
+    )
+
+    payload, status = finish()
+
+    assert status == 409
+    assert payload['ok'] is False
+    assert 'efectivo recibido' in payload['error'].lower()
+    assert sale.status == 'PENDING'
+    assert orm_session.commit_count == 0
+    assert orm_session.rollback_count == 1
+

@@ -121,6 +121,45 @@ def thermal_receipt(sale_id):
     width = max(40, min(112, width))
     requested_autoprint = request.args.get('autoprint')
     autoprint = (requested_autoprint == '1') if requested_autoprint is not None else bool(settings and settings.receipt_auto_print)
+    # Keep the thermal template presentation-only: derive compact operational
+    # metadata here so 58/80 mm rendering remains deterministic.
+    article_count = sum((item.quantity for item in sale.items), 0)
+    warranty_days = sorted({
+        int(getattr(item.product, 'warranty_days', 0) or 0)
+        for item in sale.items
+        if int(getattr(item.product, 'warranty_days', 0) or 0) > 0
+    })
+    if len(warranty_days) == 1:
+        warranty_label = f'{warranty_days[0]} DÍAS DE GARANTÍA'
+    elif warranty_days:
+        warranty_label = 'GARANTÍA SEGÚN ARTÍCULO'
+    else:
+        warranty_label = None
+
+    payment_labels = {
+        'CASH': 'EFECTIVO',
+        'CARD': 'TARJETA',
+        'TRANSFER': 'TRANSFERENCIA',
+        'CREDIT': 'CRÉDITO',
+        'GIFT_CARD': 'GIFT CARD',
+        'LOYALTY': 'PUNTOS',
+        'OTHER': 'OTRO',
+    }
+    ticket_payments = [
+        {
+            'label': payment_labels.get(str(payment.method or '').upper(), str(payment.method or 'PAGO').upper()),
+            'amount': payment.amount,
+            'reference': payment.reference,
+        }
+        for payment in (sale.payments or [])
+    ]
+    if not ticket_payments and sale.amount_paid:
+        ticket_payments = [{
+            'label': payment_labels.get(str(sale.payment_method or '').upper(), str(sale.payment_method or 'PAGO').upper()),
+            'amount': sale.amount_paid,
+            'reference': None,
+        }]
+
     return render_template(
         'sales/receipt_thermal.html',
         sale=sale,
@@ -129,6 +168,9 @@ def thermal_receipt(sale_id):
         selected_currency=selected_currency,
         currency_symbol=currency_symbol,
         conversion_rate=conversion_rate,
+        article_count=article_count,
+        warranty_label=warranty_label,
+        ticket_payments=ticket_payments,
         autoprint=autoprint,
         printer_mode=(settings.receipt_printer_mode if settings else 'BROWSER'),
         printer_name=(settings.receipt_printer_name if settings else None),

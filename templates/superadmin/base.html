@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es" data-orbis-seed-theme="{{ 'dark' if (request.cookies.get('orbis_theme') or session.get('theme')) == 'dark' else 'light' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}Centro maestro{% endblock %} · OrbisERP</title>
+  {% include 'layouts/theme_prepaint.html' %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base_css/base.css', v='20260830-admin2') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260830-admin2') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_compact.css', v='20260830-admin2') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/feedback.css', v='20260830-admin2') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/superadmin_css/superadmin.css', v='20260830-admin2') }}">
+  {% block head %}{% endblock %}
+</head>
+<body class="orbis-app superadmin-app">
+  <aside class="sa-sidebar" id="saSidebar">
+    <div class="sa-brand">
+      <span class="sa-brand-mark"><i class="bi bi-grid-1x2-fill"></i></span>
+      <div><strong>OrbisERP</strong><small>Administración global</small></div>
+    </div>
+
+    <nav class="sa-nav" aria-label="Administración global">
+      <div class="sa-nav-group"><span>PLATAFORMA</span>
+        <a href="{{ url_for('superadmin_bp.admin_dashboard') }}" class="{{ 'active' if request.endpoint == 'superadmin_bp.admin_dashboard' else '' }}"><i class="bi bi-speedometer2"></i><span>Resumen</span></a>
+        <a href="{{ url_for('superadmin_bp.clients') }}" class="{{ 'active' if request.endpoint == 'superadmin_bp.clients' else '' }}"><i class="bi bi-buildings"></i><span>Clientes</span></a>
+        <a href="{{ url_for('superadmin_bp.view_payments') }}" class="{{ 'active' if request.endpoint == 'superadmin_bp.view_payments' else '' }}"><i class="bi bi-credit-card-2-front"></i><span>Pagos</span>{% if master_pending_count|default(0) %}<b>{{ master_pending_count }}</b>{% endif %}</a>
+      </div>
+      <div class="sa-nav-group"><span>CONTROL</span>
+        <a href="{{ url_for('superadmin_bp.activity') }}" class="{{ 'active' if request.endpoint == 'superadmin_bp.activity' else '' }}"><i class="bi bi-clock-history"></i><span>Actividad</span></a>
+      </div>
+    </nav>
+
+    <div class="sa-sidebar-foot">
+      <button type="button" class="sa-nav-action" id="themeBtn"><i id="themeIco" class="bi bi-moon"></i><span id="themeTxt">Cambiar apariencia</span></button>
+      <form method="post" action="{{ url_for('login_bp.logout') }}"><button type="submit" class="sa-nav-action danger"><i class="bi bi-box-arrow-right"></i><span>Cerrar sesión</span></button></form>
+    </div>
+  </aside>
+
+  <div class="sa-app">
+    <header class="sa-topbar">
+      <button type="button" class="sa-mobile-menu" id="saMenuBtn" aria-label="Abrir menú"><i class="bi bi-list"></i></button>
+      <div class="sa-topbar-context"><b>Centro maestro</b><span>Sin empresa asignada</span></div>
+      <div class="sa-topbar-actions">
+        <a href="{{ url_for('superadmin_bp.view_payments') }}" class="sa-top-link"><i class="bi bi-wallet2"></i><span>Pagos</span></a>
+        <span class="sa-user-avatar">{{ (session.get('user_name') or 'A')[:1]|upper }}</span>
+        <div class="sa-user-copy"><strong>{{ session.get('user_name') or 'Superadmin' }}</strong><small>Superadmin</small></div>
+      </div>
+    </header>
+
+    <main class="sa-content">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}<div class="sa-flashes">{% for category,message in messages %}<div class="sa-flash {{ category }}"><i class="bi {{ 'bi-check-circle' if category == 'success' else 'bi-exclamation-circle' }}"></i><span>{{ message }}</span></div>{% endfor %}</div>{% endif %}
+      {% endwith %}
+
+      <header class="sa-page-head">
+        <div><span class="sa-eyebrow">{% block eyebrow %}ADMINISTRACIÓN{% endblock %}</span><h1>{% block heading %}Centro maestro{% endblock %}</h1><p>{% block subtitle %}{% endblock %}</p></div>
+        <div class="sa-page-actions">{% block actions %}{% endblock %}</div>
+      </header>
+
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <div class="sa-mobile-backdrop" id="saBackdrop" hidden></div>
+  <script src="{{ url_for('static', filename='js/feedback.js', v='20260830-admin2') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/admin.js', v='20260830-admin2') }}" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

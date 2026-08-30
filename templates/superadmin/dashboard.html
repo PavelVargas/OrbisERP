@@ -1,116 +1,58 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Centro maestro · OrbisERP</title>
-  {% include 'layouts/theme_prepaint.html' %}
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/superadmin_css/superadmin.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/feedback.css') }}">
-  <script src="{{ url_for('static', filename='js/feedback.js') }}" defer></script>
-  <script src="{{ url_for('static', filename='js/admin.js') }}" defer></script>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-orange1') }}">
-</head>
-<body class="master-body orbis-master">
-  <nav class="master-topbar">
-    <a class="master-brand" href="{{ url_for('superadmin_bp.admin_dashboard') }}">
-      <span><i class="bi bi-intersect"></i></span>
-      <div><strong>OrbisERP</strong><small>Centro maestro</small></div>
-    </a>
-    <div class="master-top-actions">
-      <span class="master-health"><i></i> Plataforma operativa</span>
-      <a class="master-icon-action" href="{{ url_for('superadmin_bp.view_payments') }}" title="Pagos"><i class="bi bi-wallet2"></i>{% set pending_payments = companies|selectattr('receipt_status','equalto','PENDING')|list|length %}{% if pending_payments %}<b>{{ pending_payments }}</b>{% endif %}</a>
-      <button id="themeBtn" class="master-icon-action" type="button" title="Cambiar tema"><i id="themeIco" class="bi bi-moon-fill"></i><span id="themeTxt" class="sr-only">Tema</span></button>
-      <form method="post" action="{{ url_for('login_bp.logout') }}"><button class="master-icon-action danger" type="submit" title="Cerrar sesión"><i class="bi bi-box-arrow-right"></i></button></form>
-    </div>
-  </nav>
+{% extends 'superadmin/base.html' %}
+{% block title %}Resumen{% endblock %}
+{% block eyebrow %}PLATAFORMA{% endblock %}
+{% block heading %}Resumen global{% endblock %}
+{% block subtitle %}Clientes, cobros, suscripciones y capacidad desde un contexto independiente de cualquier empresa.{% endblock %}
+{% block actions %}
+<button type="button" class="sa-btn secondary" data-open-modal="broadcastModal"><i class="bi bi-megaphone"></i> Anuncio global</button>
+<a class="sa-btn" href="{{ url_for('superadmin_bp.view_payments') }}"><i class="bi bi-credit-card"></i> Revisar pagos</a>
+{% endblock %}
+{% block content %}
+<section class="sa-kpis">
+  <article><span><i class="bi bi-cash-stack"></i></span><div><small>Cobrado este mes</small><strong>RD$ {{ '{:,.2f}'.format(collected_month) }}</strong><em>Pagos registrados</em></div></article>
+  <article><span><i class="bi bi-graph-up-arrow"></i></span><div><small>MRR estimado</small><strong>RD$ {{ '{:,.0f}'.format(total_mrr) }}</strong><em>Según planes activos</em></div></article>
+  <article><span><i class="bi bi-buildings"></i></span><div><small>Clientes</small><strong>{{ companies|length }}</strong><em>{{ total_users }} usuarios de clientes</em></div></article>
+  <article><span><i class="bi bi-receipt"></i></span><div><small>Pagos pendientes</small><strong>{{ pending_payments }}</strong><em>Comprobantes por revisar</em></div></article>
+</section>
 
-  <main class="master-shell">
-    {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div class="master-flashes">{% for cat,msg in messages %}<div class="master-flash {{ cat }}"><i class="bi {{ 'bi-check-circle' if cat=='success' else 'bi-exclamation-circle' }}"></i><span>{{ msg }}</span></div>{% endfor %}</div>{% endif %}{% endwith %}
+<section class="sa-grid-3">
+  <article class="sa-panel">
+    <header><div><small>INFRAESTRUCTURA</small><h2>Almacenamiento</h2></div><b class="sa-pill {{ 'warn' if infra_perc > 80 else 'ok' }}">{{ infra_perc }}%</b></header>
+    <div class="sa-big-number"><strong>{{ total_used_mb }}</strong><span>MB / {{ total_disk_mb }} MB</span></div>
+    <progress max="100" value="{{ [infra_perc,100]|min }}"></progress>
+    <p>{{ 'Capacidad alta; conviene ampliar o depurar almacenamiento.' if infra_perc > 80 else 'Capacidad dentro del margen operativo.' }}</p>
+  </article>
+  <article class="sa-panel">
+    <header><div><small>SUSCRIPCIONES</small><h2>Planes contratados</h2></div></header>
+    <div class="sa-plan-list">{% set total_nodes = companies|length if companies else 1 %}{% for plan in ['BASIC','PRO','ULTRA'] %}<div><span><b>{{ plan }}</b><em>{{ plan_counts[plan] }}</em></span><progress max="100" value="{{ (plan_counts[plan] / total_nodes * 100)|round(1) }}"></progress></div>{% endfor %}</div>
+  </article>
+  <article class="sa-panel">
+    <header><div><small>ATENCIÓN</small><h2>Vencen en 72 horas</h2></div><b class="sa-pill {{ 'warn' if critical_nodes else 'ok' }}">{{ critical_nodes|length }}</b></header>
+    {% if critical_nodes %}<div class="sa-mini-list">{% for node in critical_nodes[:5] %}<a href="{{ url_for('superadmin_bp.clients') }}"><span>{{ node.name[:1]|upper }}</span><div><strong>{{ node.name }}</strong><small>{{ node.plan_name }} · {{ node.expiration_date.strftime('%d/%m/%Y') }}</small></div></a>{% endfor %}</div>{% else %}<div class="sa-empty compact"><i class="bi bi-shield-check"></i><span>Sin vencimientos críticos.</span></div>{% endif %}
+  </article>
+</section>
 
-    <header class="master-heading">
-      <div><span class="master-eyebrow">ADMINISTRACIÓN DE PLATAFORMA</span><h1>Centro de control</h1><p>Empresas, suscripciones, almacenamiento y soporte desde una sola superficie operativa.</p></div>
-      <div class="master-heading-actions"><button type="button" class="master-btn secondary" data-open-broadcast><i class="bi bi-megaphone"></i> Anuncio global{% if active_announcement %}<span class="master-pulse"></span>{% endif %}</button><a class="master-btn" href="{{ url_for('superadmin_bp.view_payments') }}"><i class="bi bi-credit-card"></i> Revisar pagos</a></div>
-    </header>
+{% if active_announcement %}<section class="sa-announcement {{ active_announcement.type }}"><i class="bi bi-megaphone-fill"></i><div><small>ANUNCIO ACTIVO</small><strong>{{ active_announcement.message }}</strong></div><form method="post" action="{{ url_for('superadmin_bp.clear_broadcast') }}"><button type="submit" aria-label="Desactivar anuncio"><i class="bi bi-x-lg"></i></button></form></section>{% endif %}
 
-    <section class="master-kpis">
-      <article><span class="kpi-icon revenue"><i class="bi bi-graph-up-arrow"></i></span><div><small>MRR estimado</small><strong>RD$ {{ '{:,.0f}'.format(total_mrr) }}</strong><em>Ingresos mensuales por planes</em></div></article>
-      <article><span class="kpi-icon companies"><i class="bi bi-buildings"></i></span><div><small>Empresas</small><strong>{{ companies|length }}</strong><em>{{ critical_nodes|length }} con vencimiento próximo</em></div></article>
-      <article><span class="kpi-icon users"><i class="bi bi-people"></i></span><div><small>Usuarios</small><strong>{{ total_users }}</strong><em>Usuarios registrados en plataforma</em></div></article>
-      <article><span class="kpi-icon payments"><i class="bi bi-receipt"></i></span><div><small>Pagos pendientes</small><strong>{{ pending_payments }}</strong><em>Requieren validación manual</em></div></article>
-    </section>
+<section class="sa-grid-2 sa-section-gap">
+  <article class="sa-panel flush">
+    <header class="sa-panel-head"><div><small>CLIENTES</small><h2>Últimos registrados</h2></div><a href="{{ url_for('superadmin_bp.clients') }}">Ver todos <i class="bi bi-arrow-right"></i></a></header>
+    <div class="sa-table-wrap"><table class="sa-table"><thead><tr><th>Cliente</th><th>Plan</th><th>Estado</th><th>Vencimiento</th><th></th></tr></thead><tbody>{% for c in companies[:8] %}<tr><td><strong>{{ c.name }}</strong><small>{{ c.email or c.rnc or 'Sin contacto' }}</small></td><td><span class="sa-tag">{{ c.plan_name }}</span></td><td><span class="sa-status {{ 'ok' if c.status else 'danger' }}">{{ 'Activa' if c.status else 'Suspendida' }}</span></td><td>{{ c.expiration_date.strftime('%d/%m/%Y') if c.expiration_date else 'Sin fecha' }}</td><td><form method="post" action="{{ url_for('superadmin_bp.impersonate', company_id=c.id) }}"><button class="sa-icon-btn" title="Entrar como soporte"><i class="bi bi-box-arrow-in-right"></i></button></form></td></tr>{% else %}<tr><td colspan="5"><div class="sa-empty">No hay clientes registrados.</div></td></tr>{% endfor %}</tbody></table></div>
+  </article>
+  <article class="sa-panel flush">
+    <header class="sa-panel-head"><div><small>COBROS</small><h2>Pagos recientes</h2></div><a href="{{ url_for('superadmin_bp.view_payments') }}">Historial <i class="bi bi-arrow-right"></i></a></header>
+    <div class="sa-table-wrap"><table class="sa-table"><thead><tr><th>Cliente</th><th>Plan</th><th>Fecha</th><th class="num">Monto</th></tr></thead><tbody>{% for invoice, company in recent_payments %}<tr><td><strong>{{ company.name }}</strong><small>{{ invoice.provider|replace('_',' ')|title }}</small></td><td>{{ invoice.plan_name }}</td><td>{{ invoice.paid_at.strftime('%d/%m/%Y') if invoice.paid_at else '—' }}</td><td class="num"><strong>{{ invoice.currency }} {{ '{:,.2f}'.format(invoice.amount) }}</strong></td></tr>{% else %}<tr><td colspan="4"><div class="sa-empty">Todavía no hay cobros registrados.</div></td></tr>{% endfor %}</tbody></table></div>
+  </article>
+</section>
 
-    <section class="master-overview-grid">
-      <article class="master-panel infra-panel">
-        <header><div><span>INFRAESTRUCTURA</span><h2>Capacidad de almacenamiento</h2></div><span class="panel-badge {{ 'warning' if infra_perc > 80 else 'ok' }}">{{ infra_perc }}%</span></header>
-        <div class="infra-value"><strong>{{ total_used_mb }}</strong><span>MB usados de {{ total_disk_mb }} MB</span></div>
-        <progress class="ui-progress {{ 'warning' if infra_perc > 80 else '' }}" max="100" value="{{ infra_perc if infra_perc <= 100 else 100 }}">{{ infra_perc }}%</progress>
-        <p>{{ 'Capacidad alta: conviene ampliar o limpiar almacenamiento.' if infra_perc > 80 else 'Capacidad dentro del margen operativo configurado.' }}</p>
-      </article>
-      <article class="master-panel plan-panel">
-        <header><div><span>SUSCRIPCIONES</span><h2>Distribución de planes</h2></div></header>
-        <div class="plan-bars">
-          {% set total_nodes = companies|length if companies|length else 1 %}
-          {% for plan in ['BASIC','PRO','ULTRA'] %}<div><span><b>{{ plan }}</b><em>{{ plan_counts[plan] }}</em></span><progress class="ui-progress" max="100" value="{{ (plan_counts[plan] / total_nodes * 100)|round(1) }}">{{ (plan_counts[plan] / total_nodes * 100)|round(1) }}%</progress></div>{% endfor %}
-        </div>
-      </article>
-      <article class="master-panel alert-panel">
-        <header><div><span>ATENCIÓN</span><h2>Vencimientos en 72 horas</h2></div><span class="panel-badge {{ 'warning' if critical_nodes else 'ok' }}">{{ critical_nodes|length }}</span></header>
-        {% if critical_nodes %}<div class="critical-list">{% for node in critical_nodes[:4] %}<div><span class="node-avatar">{{ node.name[:1]|upper }}</span><span><strong>{{ node.name }}</strong><small>{{ node.plan_name }} · vence {{ node.expiration_date.strftime('%d/%m/%Y') if node.expiration_date else 'N/D' }}</small></span></div>{% endfor %}</div>{% else %}<div class="master-empty compact"><i class="bi bi-shield-check"></i><span>Sin vencimientos críticos.</span></div>{% endif %}
-      </article>
-    </section>
-
-    {% if active_announcement %}<section class="master-announcement {{ active_announcement.type }}"><i class="bi bi-megaphone-fill"></i><div><span>ANUNCIO ACTIVO · {{ active_announcement.type|upper }}</span><strong>{{ active_announcement.message }}</strong></div><form action="{{ url_for('superadmin_bp.clear_broadcast') }}" method="post"><button type="submit" title="Desactivar"><i class="bi bi-x-lg"></i></button></form></section>{% endif %}
-
-    <section class="master-companies-section">
-      <header class="master-section-head"><div><span>EMPRESAS</span><h2>Nodos administrados</h2><p>Busca, inspecciona o entra en modo soporte sin perder el contexto de estado.</p></div><label class="master-search"><i class="bi bi-search"></i><input id="srch" type="search" placeholder="Buscar por empresa, RNC o email…" autocomplete="off"><kbd>/</kbd></label></header>
-      <div class="master-company-grid" id="grid">
-      {% for c in companies %}
-        {% set usage = c.current_storage_usage or 0 %}{% set storage_limit = c.storage_limit or 0 %}{% set usage_pct = ((usage / storage_limit * 100)|int) if storage_limit > 0 else 0 %}
-        <article class="master-company-card nc" data-name="{{ c.name|lower }}" data-rnc="{{ c.rnc or '' }}" data-admin="{{ c.email or '' }}">
-          <header>
-            <span class="company-logo">{% if c.logo %}<img src="{{ url_for('static', filename=c.logo) }}" alt="Logo de {{ c.name }}">{% else %}<b>{{ c.name[:1]|upper }}</b>{% endif %}</span>
-            <div class="company-title"><small>#NODE-{{ '%03d'|format(c.id) }}</small><h3>{{ c.name }}</h3><span>{{ c.email or 'Sin email administrativo' }}</span></div>
-            <div class="company-badges"><span class="status {{ 'online' if c.status else 'offline' }}"><i></i>{{ 'Activa' if c.status else 'Suspendida' }}</span><span class="plan {{ c.plan_name|lower }}">{{ c.plan_name }}</span>{% if c.is_readonly %}<span class="readonly"><i class="bi bi-lock-fill"></i> Solo lectura</span>{% endif %}</div>
-          </header>
-          <div class="company-body">
-            <dl><div><dt>RNC</dt><dd>{{ c.rnc or 'N/D' }}</dd></div><div><dt>Moneda</dt><dd>{{ c.display_currency_code or 'N/D' }}</dd></div><div><dt>Vencimiento</dt><dd class="{% if c.expiration_date and c.expiration_date < ahora %}danger-text{% endif %}">{{ c.expiration_date.strftime('%d/%m/%Y') if c.expiration_date else 'N/D' }}</dd></div><div><dt>Almacenamiento</dt><dd>{{ (usage / 1024 / 1024)|round(1) }} MB</dd></div></dl>
-            <div class="company-storage"><span><small>Uso del plan</small><b>{{ usage_pct }}%</b></span><progress class="ui-progress {% if usage_pct > 90 %}danger{% elif usage_pct > 75 %}warning{% endif %}" max="100" value="{{ usage_pct if usage_pct <= 100 else 100 }}">{{ usage_pct }}%</progress><small>Límite {{ (storage_limit / 1024 / 1024)|round(0) if storage_limit else 0 }} MB</small></div>
-          </div>
-          <footer>
-            <form method="post" action="{{ url_for('superadmin_bp.impersonate', company_id=c.id) }}"><button class="company-support" type="submit"><i class="bi bi-headset"></i> Entrar como soporte</button></form>
-            <div class="company-actions">
-              <button type="button" class="inspect-company" title="Inspeccionar" data-renew-url="{{ url_for('superadmin_bp.renew_plan', id=c.id) }}" data-company='{{ {"id":c.id,"name":c.name,"rnc":c.rnc,"status":c.status,"is_readonly":c.is_readonly,"email":c.email,"address":c.address or "Sin dirección","tax_name":c.tax_name or "Impuesto","tax_percent":c.tax_percent or 0,"currency":(c.display_currency_code or "N/D") ~ " (" ~ (c.display_currency_symbol or "") ~ ")","expiry":c.expiration_date.strftime("%d/%m/%Y") if c.expiration_date else "N/D","plan":c.plan_name,"usage":(usage / 1024 / 1024)|round(2)}|tojson|forceescape }}'><i class="bi bi-eye"></i></button>
-              <form action="{{ url_for('superadmin_bp.toggle_readonly', id=c.id) }}" method="post"><button type="submit" class="{% if c.is_readonly %}warning{% endif %}" title="{{ 'Quitar solo lectura' if c.is_readonly else 'Activar solo lectura' }}"><i class="bi {{ 'bi-unlock' if c.is_readonly else 'bi-lock' }}"></i></button></form>
-              <form action="{{ url_for('superadmin_bp.refresh_storage', id=c.id) }}" method="post"><button type="submit" title="Recalcular almacenamiento"><i class="bi bi-arrow-clockwise"></i></button></form>
-              <form action="{{ url_for('superadmin_bp.toggle_status', id=c.id) }}" method="post"><button type="submit" title="{{ 'Suspender' if c.status else 'Activar' }}"><i class="bi bi-power"></i></button></form>
-              <form action="{{ url_for('superadmin_bp.delete_company', id=c.id) }}" method="post" data-confirm="¿Eliminar permanentemente {{ c.name }}?" data-confirm-title="Eliminar empresa" data-confirm-detail="Esta acción elimina el tenant y sus datos asociados. No puede deshacerse desde la aplicación." data-confirm-action="Eliminar empresa"><button type="submit" class="danger" title="Eliminar"><i class="bi bi-trash3"></i></button></form>
-            </div>
-          </footer>
-        </article>
-      {% endfor %}
-        <div class="master-empty" id="empty"><i class="bi bi-search"></i><strong>Sin coincidencias</strong><span>Prueba con otro nombre, RNC o correo.</span></div>
-      </div>
-    </section>
-  </main>
-
-  <div class="master-modal-backdrop" id="modalBg" hidden>
-    <section class="master-modal" role="dialog" aria-modal="true" aria-labelledby="m-name">
-      <header><div><span>INSPECCIÓN DE EMPRESA</span><h2 id="m-name">Empresa</h2></div><button type="button" data-close-modal="modalBg"><i class="bi bi-x-lg"></i></button></header>
-      <div class="master-modal-grid">
-        <article><h3>Suscripción</h3><dl><div><dt>ID interno</dt><dd id="m-id"></dd></div><div><dt>Estado</dt><dd id="m-status"></dd></div><div><dt>Restricción</dt><dd id="m-readonly"></dd></div><div><dt>Plan</dt><dd id="m-plan"></dd></div><div><dt>Vencimiento</dt><dd id="m-expiry"></dd></div><div><dt>Disco usado</dt><dd id="m-usage"></dd></div></dl><form id="renewForm" method="post"><button class="master-btn" type="submit"><i class="bi bi-arrow-repeat"></i> Renovar 30 días</button></form></article>
-        <article><h3>Fiscal y contacto</h3><dl><div><dt>RNC</dt><dd id="m-rnc"></dd></div><div><dt>Impuesto</dt><dd id="m-tax"></dd></div><div><dt>Divisa</dt><dd id="m-currency"></dd></div><div><dt>Email</dt><dd id="m-email"></dd></div><div><dt>Dirección</dt><dd id="m-address"></dd></div></dl></article>
-      </div>
-    </section>
-  </div>
-
-  <div class="master-modal-backdrop" id="broadcastModal" hidden>
-    <section class="master-modal broadcast-modal" role="dialog" aria-modal="true" aria-labelledby="broadcastTitle">
-      <header><div><span>COMUNICACIÓN GLOBAL</span><h2 id="broadcastTitle">Publicar anuncio</h2></div><button type="button" data-close-modal="broadcastModal"><i class="bi bi-x-lg"></i></button></header>
-      <form action="{{ url_for('superadmin_bp.create_broadcast') }}" method="post" class="broadcast-form"><label><span>Prioridad</span><select name="type"><option value="info">Informativo</option><option value="warning">Mantenimiento / aviso</option><option value="danger">Urgente</option></select></label><label><span>Mensaje</span><textarea name="message" required maxlength="1000" placeholder="Escribe el mensaje que verán las empresas…"></textarea></label><button type="submit" class="master-btn"><i class="bi bi-send"></i> Publicar anuncio</button></form>
-    </section>
-  </div>
-</body>
-</html>
+<div class="sa-modal-backdrop" id="broadcastModal" hidden>
+  <section class="sa-modal" role="dialog" aria-modal="true" aria-labelledby="broadcastTitle">
+    <header><div><small>COMUNICACIÓN GLOBAL</small><h2 id="broadcastTitle">Publicar anuncio</h2></div><button type="button" data-close-modal="broadcastModal"><i class="bi bi-x-lg"></i></button></header>
+    <form action="{{ url_for('superadmin_bp.create_broadcast') }}" method="post" class="sa-modal-form">
+      <label><span>Prioridad</span><select name="type"><option value="info">Informativo</option><option value="warning">Aviso</option><option value="danger">Urgente</option></select></label>
+      <label><span>Mensaje</span><textarea name="message" required maxlength="500" placeholder="Mensaje para todas las empresas"></textarea></label>
+      <footer><button class="sa-btn secondary" type="button" data-close-modal="broadcastModal">Cancelar</button><button class="sa-btn" type="submit"><i class="bi bi-send"></i> Publicar</button></footer>
+    </form>
+  </section>
+</div>
+{% endblock %}

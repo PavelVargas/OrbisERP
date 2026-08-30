@@ -11,10 +11,13 @@
         }
         const dark = saved === 'dark' || (saved !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
         const theme = dark ? 'dark' : 'light';
+        const canvas = dark ? '#191b1f' : '#f5f7fa';
         document.documentElement.classList.add('orbis-authenticated');
         document.documentElement.classList.toggle('dark', dark);
         document.documentElement.dataset.theme = theme;
         document.documentElement.style.colorScheme = theme;
+        document.documentElement.style.setProperty('background-color', canvas, 'important');
+        try { document.cookie = 'orbis_theme=' + theme + '; Path=/; Max-Age=31536000; SameSite=Lax'; } catch (_error) {}
         const serverTabletMode = {{ 'true' if tablet_mode_active|default(session.get('tablet_mode')) else 'false' }};
         let canonicalUiMode = null;
         let legacyTabletOn = false;
@@ -53,7 +56,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/ux_polish.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/feedback.css') }}">
 <link rel="shortcut icon" href="{{ url_for('static', filename='assets/isotipo.png') }}" type="image/x-icon">
-<script src="{{ url_for('static', filename='js/theme-sync.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/theme-sync.js', v='20260829-smooth2') }}" defer></script>
 <script src="{{ url_for('static', filename='js/tablet_runtime.js', v='20260827-tablet10') }}" defer></script>
 <script src="{{ url_for('static', filename='js/feedback.js') }}" defer></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/app_final.css', v='20260829-orange1') }}">
@@ -61,6 +64,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/tablet_responsive.css', v='20260829-orange1') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/tablet_experience.css', v='20260829-orange1') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/design_system.css', v='20260829-unified1') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260830-odoo19dark1') }}">
 {% endif %}
 
 
@@ -249,4 +253,4 @@
 
 
 <script src="{{ url_for('static', filename='js/left.js', v='20260829-search2') }}"></script>
-<script src="{{ url_for('static', filename='js/commercial.js', v='20260827-tablet10') }}"></script>
+<script src="{{ url_for('static', filename='js/commercial.js', v='20260829-smooth2') }}"></script>

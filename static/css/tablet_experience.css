@@ -7,9 +7,9 @@
    ======================================================================== */
 
 :root {
-    --tablet-motion-fast: 140ms;
-    --tablet-motion-base: 220ms;
-    --tablet-motion-slow: 340ms;
+    --tablet-motion-fast: 100ms;
+    --tablet-motion-base: 140ms;
+    --tablet-motion-slow: 170ms;
     --tablet-motion-ease: cubic-bezier(.2,.78,.24,1);
 }
 
@@ -436,17 +436,17 @@ html.tablet-mode .tablet-footer {
    Motion and perceived fluency
    ------------------------------------------------------------------------ */
 @keyframes orbisTabletPageIn {
-    from { opacity: 0; transform: translateY(8px) scale(.998); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
+    from { transform: translateY(3px); }
+    to { transform: translateY(0); }
 }
 
 @keyframes orbisTabletDockIn {
-    from { opacity: 0; translate: 0 18px; scale: .97; }
-    to { opacity: 1; translate: 0 0; scale: 1; }
+    from { translate: 0 18px; scale: .97; }
+    to { translate: 0 0; scale: 1; }
 }
 
 @keyframes orbisTabletCardIn {
-    from { opacity: 0; transform: translateY(10px); }
+    from { transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
@@ -456,32 +456,22 @@ html.tablet-mode.tablet-mode-ready body > main {
 
 html.tablet-mode.tablet-mode-ready .app-tablet-dock,
 html.tablet-mode.tablet-mode-ready .tablet-launch-dock {
-    animation: orbisTabletDockIn 380ms var(--tablet-motion-ease) both;
+    animation: orbisTabletDockIn 170ms var(--tablet-motion-ease) both;
 }
 
 html.tablet-mode.tablet-mode-ready .tablet-grid > .tablet-app {
-    animation: orbisTabletCardIn 360ms var(--tablet-motion-ease) both;
+    animation: orbisTabletCardIn 160ms var(--tablet-motion-ease) both;
 }
 
-html.tablet-mode.tablet-mode-ready .tablet-grid > .tablet-app:nth-child(2) { animation-delay: 24ms; }
-html.tablet-mode.tablet-mode-ready .tablet-grid > .tablet-app:nth-child(3) { animation-delay: 42ms; }
-html.tablet-mode.tablet-mode-ready .tablet-grid > .tablet-app:nth-child(4) { animation-delay: 60ms; }
-html.tablet-mode.tablet-mode-ready .tablet-grid > .tablet-app:nth-child(5) { animation-delay: 78ms; }
-html.tablet-mode.tablet-mode-ready .tablet-grid > .tablet-app:nth-child(6) { animation-delay: 96ms; }
-html.tablet-mode.tablet-mode-ready .tablet-grid > .tablet-app:nth-child(n/**/+7) { animation-delay: 112ms; }
 
-html.tablet-mode.tablet-navigating body > main {
-    opacity: 0 !important;
-    transform: translateY(4px) scale(.998) !important;
-    transition:
-        opacity 110ms ease,
-        transform 110ms ease !important;
-}
 
-html.tablet-mode.tablet-navigating :where(.app-tablet-dock, .tablet-launch-dock) {
-    opacity: .72 !important;
-    transition: opacity 100ms ease !important;
-}
+
+
+
+
+
+html.tablet-mode.tablet-navigating body > main { transform: none !important; transition: none !important; }
+html.tablet-mode.tablet-navigating :where(.app-tablet-dock, .tablet-launch-dock) { transition: none !important; }
 
 html.tablet-mode body > main :where(
     a,

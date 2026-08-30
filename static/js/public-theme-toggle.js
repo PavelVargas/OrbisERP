@@ -15,6 +15,8 @@
     root.classList.toggle('dark', dark);
     root.dataset.theme = normalized;
     root.style.colorScheme = normalized;
+    root.style.setProperty('background-color', dark ? '#191b1f' : '#f5f7fa', 'important');
+    try { document.cookie = 'orbis_theme=' + normalized + '; Path=/; Max-Age=31536000; SameSite=Lax'; } catch (_error) {}
     if (document.body) {
       document.body.classList.toggle('dark', dark);
       document.body.dataset.theme = normalized;

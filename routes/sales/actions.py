@@ -80,6 +80,29 @@ def _payment_plan(sale, settings):
     credit = sum((amount for part_method, amount, _, _ in parts if part_method == 'CREDIT'), Decimal('0'))
     if credit > 0:
         ensure_credit_allowed(sale.client, credit)
+
+    # Preserve the physical cash tender independently from the amount applied
+    # to the sale. For old/API clients that don't send cash_received we default
+    # to exact payment, keeping backwards compatibility with zero change.
+    cash_due = sum(
+        (amount for part_method, amount, _reference, _card in parts if part_method == 'CASH'),
+        Decimal('0.00'),
+    ).quantize(Decimal('0.01'))
+    if cash_due > 0:
+        raw_received = request.form.get('cash_received')
+        received = cash_due if raw_received in (None, '') else _money(raw_received, 'Efectivo recibido')
+        if received < cash_due:
+            raise BusinessRuleError(
+                f'El efectivo recibido ({received:.2f}) no cubre el monto en efectivo ({cash_due:.2f}).'
+            )
+        if received > Decimal('9999999999.99'):
+            raise BusinessRuleError('El efectivo recibido excede el límite permitido.')
+        sale.cash_received = received
+        sale.cash_change = (received - cash_due).quantize(Decimal('0.01'))
+    else:
+        sale.cash_received = None
+        sale.cash_change = Decimal('0.00')
+
     paid = total - credit
     return method, paid, credit, parts, loyalty_points
 

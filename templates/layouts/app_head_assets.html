@@ -1,6 +1,8 @@
 {# OrbisERP Polished UI · canonical authenticated shell · functional hooks preserved #}
-{% set shell_asset_version = '20260829-polished3' %}
+{% set shell_asset_version = '20260830-odoo19dark1' %}
 {# Shared authenticated shell assets. Keep theme bootstrap before every stylesheet. #}
+<meta name="color-scheme" content="{{ 'dark light' if (request.cookies.get('orbis_theme') or session.get('theme')) == 'dark' else 'light dark' }}">
+<meta name="theme-color" data-orbis-theme-color="1" content="{{ '#191b1f' if (request.cookies.get('orbis_theme') or session.get('theme')) == 'dark' else '#f5f7fa' }}">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script nonce="{{ csp_nonce() if csp_nonce is defined else '' }}">
@@ -14,14 +16,32 @@
         saved = null;
     }
     const serverTheme = {{ (session.get('theme') or '')|tojson }};
-    const systemDark = typeof matchMedia === 'function'
-        && matchMedia('(prefers-color-scheme: dark)').matches;
-    const dark = (saved || serverTheme) === 'dark'
-        || (!saved && !serverTheme && systemDark);
+    const seeded = root.dataset.orbisSeedTheme;
+    const cookieMatch = document.cookie.match(/(?:^|;\s*)orbis_theme=(dark|light)(?:;|$)/);
+    const cookieTheme = cookieMatch ? cookieMatch[1] : null;
+    const systemDark = typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches;
+    const selected = saved || cookieTheme || serverTheme || (seeded === 'dark' || seeded === 'light' ? seeded : null);
+    const dark = selected === 'dark' || (!selected && systemDark);
     const theme = dark ? 'dark' : 'light';
+    const canvas = dark ? '#191b1f' : '#f5f7fa';
     root.classList.toggle('dark', dark);
     root.dataset.theme = theme;
+    root.dataset.orbisSeedTheme = theme;
+    root.style.setProperty('background-color', canvas, 'important');
     root.style.colorScheme = theme;
+    try {
+        document.cookie = 'orbis_theme=' + theme + '; Path=/; Max-Age=31536000; SameSite=Lax';
+    } catch (_error) {}
+    let themeMeta = document.querySelector('meta[name="theme-color"][data-orbis-theme-color]');
+    if (!themeMeta) {
+        themeMeta = document.createElement('meta');
+        themeMeta.name = 'theme-color';
+        themeMeta.dataset.orbisThemeColor = '1';
+        document.head.appendChild(themeMeta);
+    }
+    themeMeta.content = canvas;
+    const schemeMeta = document.querySelector('meta[name="color-scheme"]');
+    if (schemeMeta) schemeMeta.content = dark ? 'dark light' : 'light dark';
     const serverTabletMode = {{ 'true' if tablet_mode_active|default(session.get('tablet_mode')) else 'false' }};
     let canonicalUiMode = null;
     let legacyTabletOn = false;
@@ -34,8 +54,6 @@
     } catch (_error) {
         storedTabletMode = false;
     }
-    // Server/session state wins. Legacy desktop cookies are ignored because an
-    // old duplicate cookie must never kick a tablet session back to desktop.
     const tabletMode = serverTabletMode
         || canonicalUiMode === 'tablet'
         || (canonicalUiMode !== 'desktop' && (legacyTabletOn || storedTabletMode));
@@ -49,7 +67,15 @@
 })();
 </script>
 <style nonce="{{ csp_nonce() if csp_nonce is defined else '' }}">
-html,body{background:#f5f7fa;color-scheme:light}html.dark,html.dark body{background:#0f1115;color-scheme:dark}html.theme-preload *,html.theme-preload *::before,html.theme-preload *::after{transition:none!important;animation:none!important}
+:root{min-height:100%;background:#f5f7fa!important;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){background:#191b1f!important;color-scheme:dark}}
+:root.dark,:root[data-theme="dark"],:root[data-orbis-seed-theme="dark"]{background:#191b1f!important;color-scheme:dark}
+:root:not(.dark)[data-theme="light"],:root[data-orbis-seed-theme="light"]{background:#f5f7fa!important;color-scheme:light}
+html,body{min-height:100%}
+html.dark body,html[data-theme="dark"] body{background:#191b1f!important;color:#f5f7fb}
+html:not(.dark)[data-theme="light"] body{background:#f5f7fa!important}
+html.theme-preload *,html.theme-preload *::before,html.theme-preload *::after{transition:none!important;animation:none!important}
+
 </style>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/quality-accessibility.css', v=shell_asset_version) }}">
 <link rel="preconnect" href="https://fonts.googleapis.com">

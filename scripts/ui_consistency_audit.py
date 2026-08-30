@@ -190,14 +190,16 @@ def main() -> int:
         source = path.read_text(encoding="utf-8", errors="replace")
         if "<html" not in source.lower():
             continue
-        if "orbis_refined.css" not in source:
+        is_print_document = 'orbis-print' in source
+        if not is_print_document and "orbis_refined.css" not in source:
             fail(errors, f"Complete document missing refined stylesheet: {path.relative_to(ROOT)}")
         if not any(profile in source for profile in profile_names):
             fail(errors, f"Complete document missing explicit visual profile: {path.relative_to(ROOT)}")
-        close_head = source.lower().find("</head>")
-        refined_pos = source.find("orbis_refined.css")
-        if refined_pos < 0 or close_head < refined_pos:
-            fail(errors, f"Refined stylesheet is not in final head position: {path.relative_to(ROOT)}")
+        if not is_print_document:
+            close_head = source.lower().find("</head>")
+            refined_pos = source.find("orbis_refined.css")
+            if refined_pos < 0 or close_head < refined_pos:
+                fail(errors, f"Refined stylesheet is not in final head position: {path.relative_to(ROOT)}")
 
     if errors:
         print("UI consistency audit FAILED:", file=sys.stderr)

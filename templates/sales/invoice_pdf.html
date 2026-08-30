@@ -126,7 +126,8 @@
         .orange { color: #f2672a; }
     </style>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_print_v2.css', v='20260829-v2') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-orange1') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260830-odoo19dark1') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_compact.css', v='20260830-odoo19dark1') }}">
 </head>
 <body class="orbis-print">
     {% set is_quote = sale.status == 'QUOTATION' %}
@@ -231,6 +232,7 @@
                         <tr><td class="label">Impuestos</td><td class="value">{{ currency_symbol }}{{ '{:,.2f}'.format(sale.itbis / conversion_rate) }}</td></tr>
                         {% if sale.discount_amount %}<tr><td class="label">Descuento</td><td class="value">- {{ currency_symbol }}{{ '{:,.2f}'.format(sale.discount_amount / conversion_rate) }}</td></tr>{% endif %}
                         {% if not is_quote and paid_amount %}<tr><td class="label">Pagado</td><td class="value">{{ currency_symbol }}{{ '{:,.2f}'.format(paid_amount / conversion_rate) }}</td></tr>{% endif %}
+                        {% if not is_quote and sale.cash_received is not none %}<tr><td class="label">Efectivo recibido</td><td class="value">{{ currency_symbol }}{{ '{:,.2f}'.format(sale.cash_received / conversion_rate) }}</td></tr><tr><td class="label">Cambio</td><td class="value">{{ currency_symbol }}{{ '{:,.2f}'.format((sale.cash_change or 0) / conversion_rate) }}</td></tr>{% endif %}
                         {% if not is_quote and balance_amount and balance_amount > 0 %}<tr class="balance-line"><td class="label">Balance</td><td class="value">{{ currency_symbol }}{{ '{:,.2f}'.format(balance_amount / conversion_rate) }}</td></tr>{% endif %}
                         <tr class="grand"><td>Total</td><td class="value">{{ currency_symbol }}{{ '{:,.2f}'.format(sale.total / conversion_rate) }}</td></tr>
                     </table>

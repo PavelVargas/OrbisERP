@@ -1,5 +1,5 @@
 from services.numeric import NumericValueError, finite_decimal
-from flask import Blueprint, render_template, redirect, url_for, request, abort, flash, session, current_app, g
+from flask import Blueprint, render_template, redirect, url_for, request, abort, flash, session, current_app, g, jsonify
 from models.purchase.purchase_order import PurchaseOrder
 from models.purchase.purchase_order_item import PurchaseOrderItem
 from models.purchase.purchase_tax import PurchaseTax
@@ -239,15 +239,24 @@ def purchase_detail(order_id):
         purchase_uom_ids[product.id] = sorted(allowed)
 
     if request.method == 'POST':
-        if order.status != 'PENDING':
-            flash('No se pueden agregar productos a una orden cerrada.', 'warning')
+        wants_json = (
+            request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+            or request.accept_mimetypes.best == 'application/json'
+        )
+
+        def line_error(message, status=400, category='danger'):
+            if wants_json:
+                return jsonify(ok=False, error=message), status
+            flash(message, category)
             return redirect(url_for('purchase_bp.purchase_detail', order_id=order.id))
+
+        if order.status != 'PENDING':
+            return line_error('No se pueden agregar productos a una orden cerrada.', 409, 'warning')
 
         product_id = request.form.get('product_id', type=int)
         product = Product.query.filter_by(id=product_id, company_id=company_id, status=True).filter(Product.archived_at.is_(None)).first()
         if not product:
-            flash('Selecciona un producto válido del catálogo de tu empresa.', 'danger')
-            return redirect(url_for('purchase_bp.purchase_detail', order_id=order.id))
+            return line_error('Selecciona un producto válido del catálogo de tu empresa.')
 
         try:
             unit_cost = _positive_money(request.form.get('unit_cost'), 'El costo unitario')
@@ -293,46 +302,62 @@ def purchase_detail(order_id):
             base_qty = uom_to_base(product, quantity, uom_id, purpose='purchase')
             uom_factor = base_qty / quantity
         except BusinessRuleError as error:
-            flash(str(error), 'danger')
-            return redirect(url_for('purchase_bp.purchase_detail', order_id=order.id))
+            return line_error(str(error))
 
         tax = PurchaseTax.query.filter_by(id=tax_id, company_id=company_id, active=True).first()
         if not tax:
-            flash('Selecciona un ITBIS válido.', 'danger')
-            return redirect(url_for('purchase_bp.purchase_detail', order_id=order.id))
+            return line_error('Selecciona un ITBIS válido.')
 
-        item = PurchaseOrderItem.query.filter_by(
-            purchase_order_id=order.id, product_id=product_id, variant_id=(variant.id if variant else None), uom_id=uom_id,
-            tax_name=tax.name, tax_rate=tax.rate, tax_included=tax.price_included,
-        ).first()
-
-        if item:
-            item.quantity += quantity
-            item.unit_cost = unit_cost
-            item.tax_name = tax.name
-        else:
-            item = PurchaseOrderItem(
-                purchase_order_id=order.id, 
-                product_id=product_id, variant_id=variant.id if variant else None, uom_id=uom_id, uom_factor=uom_factor,
-                quantity=quantity, 
-                unit_cost=unit_cost, 
-                tax_name=tax.name,
-                tax_rate=tax.rate,
-                tax_included=tax.price_included,
-                quantity_received=0
-            )
-            db.session.add(item)
+        # Cada alta representa una linea independiente de la orden.
+        # No consolidamos productos iguales: un comprador puede repetir el mismo
+        # producto con cantidades, costos, impuestos o condiciones distintas,
+        # igual que en una orden de compra por lineas.
+        item = PurchaseOrderItem(
+            purchase_order_id=order.id,
+            product_id=product_id,
+            variant_id=variant.id if variant else None,
+            uom_id=uom_id,
+            uom_factor=uom_factor,
+            quantity=quantity,
+            unit_cost=unit_cost,
+            tax_name=tax.name,
+            tax_rate=tax.rate,
+            tax_included=tax.price_included,
+            quantity_received=0,
+        )
+        db.session.add(item)
+        created = True
 
         _refresh_order_totals(order)
         db.session.commit()
-        
+
+        if wants_json:
+            ordered_items = PurchaseOrderItem.query.filter_by(purchase_order_id=order.id).order_by(PurchaseOrderItem.id.asc()).all()
+            line_index = next((index for index, row in enumerate(ordered_items, 1) if row.id == item.id), len(ordered_items))
+            total_items = as_decimal(order.total_items or 0)
+            total_items_text = format(total_items.normalize(), 'f') if total_items else '0'
+            return jsonify(
+                ok=True,
+                created=created,
+                item_id=item.id,
+                line_count=len(ordered_items),
+                html=render_template('purchase/_purchase_line.html', item=item, line_index=line_index, order=order),
+                totals={
+                    'subtotal': f'{float(order.subtotal or 0):,.2f}',
+                    'tax_total': f'{float(order.tax_total or 0):,.2f}',
+                    'total': f'{float(order.total_cost or 0):,.2f}',
+                    'total_items': total_items_text,
+                },
+            )
+
         flash('Producto añadido correctamente.', 'success')
         return redirect(url_for('purchase_bp.purchase_detail', order_id=order.id))
 
     main_warehouse = Warehouse.query.filter_by(is_main=True, company_id=company_id, status=True).first()
+    ordered_items = PurchaseOrderItem.query.filter_by(purchase_order_id=order.id).order_by(PurchaseOrderItem.id.asc()).all()
     return render_template(
         'purchase/purchase_detail.html', order=order, products=products,
-        items=order.items, user=user, main_warehouse=main_warehouse,
+        items=ordered_items, user=user, main_warehouse=main_warehouse,
         suppliers=suppliers, taxes=taxes, uoms=uoms, variants=variants, purchase_uom_ids=purchase_uom_ids,
     )
 

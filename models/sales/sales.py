@@ -12,6 +12,8 @@ class Sale(db.Model):
         CheckConstraint("amount_paid >= 0", name="ck_sales_paid_nonnegative"),
         CheckConstraint("balance >= 0", name="ck_sales_balance_nonnegative"),
         CheckConstraint("discount_amount >= 0", name="ck_sales_discount_nonnegative"),
+        CheckConstraint("cash_received IS NULL OR cash_received >= 0", name="ck_sales_cash_received_nonnegative"),
+        CheckConstraint("cash_change >= 0", name="ck_sales_cash_change_nonnegative"),
         CheckConstraint(
             "status IN ('DRAFT','PENDING','QUOTATION','LAYAWAY','COMPLETED','CANCELLED')",
             name="ck_sales_status",
@@ -57,8 +59,13 @@ class Sale(db.Model):
     )
     
     payment_method = db.Column(db.String(20), default='CASH')
-    amount_paid = db.Column(Numeric(10,2), default=0)      
-    balance = db.Column(Numeric(10,2), default=0)            
+    amount_paid = db.Column(Numeric(10,2), default=0)
+    balance = db.Column(Numeric(10,2), default=0)
+    # Cash drawer audit data. ``amount_paid`` remains the amount applied to the
+    # sale; these fields preserve what the customer physically handed over and
+    # the change returned by the cashier.
+    cash_received = db.Column(Numeric(12,2), nullable=True)
+    cash_change = db.Column(Numeric(12,2), nullable=False, default=0)
 
     @property
     def warehouse_names(self):

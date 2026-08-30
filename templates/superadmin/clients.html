@@ -1,0 +1,71 @@
+{% extends 'superadmin/base.html' %}
+{% block title %}Clientes{% endblock %}
+{% block eyebrow %}CLIENTES DE ORBISERP{% endblock %}
+{% block heading %}Empresas y suscripciones{% endblock %}
+{% block subtitle %}Tu usuario Superadmin consulta todos los clientes sin estar asociado a ninguna empresa.{% endblock %}
+{% block actions %}<span class="sa-head-chip"><i class="bi bi-buildings"></i> <b id="clientCount">{{ companies|length }}</b> clientes</span>{% endblock %}
+{% block content %}
+<section class="sa-toolbar">
+  <label class="sa-search"><i class="bi bi-search"></i><input id="clientSearch" type="search" placeholder="Buscar empresa, RNC, correo, plan…" autocomplete="off"></label>
+  <div class="sa-filter-pills" id="clientFilters"><button class="active" data-status="all">Todos</button><button data-status="active">Activos</button><button data-status="pending">Pago pendiente</button><button data-status="expired">Vencidos</button></div>
+</section>
+
+<section class="sa-panel flush">
+  <div class="sa-table-wrap"><table class="sa-table clients-table">
+    <thead><tr><th>Cliente</th><th>Administrador</th><th>Plan</th><th>Usuarios</th><th>Vencimiento</th><th>Pago</th><th>Estado</th><th></th></tr></thead>
+    <tbody id="clientRows">
+    {% for c in companies %}
+      {% set admin = admins.get(c.id) %}{% set expired = c.expiration_date and c.expiration_date < ahora %}
+      <tr data-client-row data-status="{{ 'pending' if c.receipt_status == 'PENDING' else 'expired' if expired else 'active' if c.status else 'expired' }}" data-search="{{ (c.name ~ ' ' ~ (c.rnc or '') ~ ' ' ~ (c.email or '') ~ ' ' ~ (c.plan_name or '') ~ ' ' ~ (admin.email if admin else ''))|lower }}">
+        <td><div class="sa-entity"><span>{{ c.name[:1]|upper }}</span><div><strong>{{ c.name }}</strong><small>#{{ '%04d'|format(c.id) }} · {{ c.rnc or 'RNC sin definir' }}</small></div></div></td>
+        <td><strong>{{ admin.name if admin else 'Sin admin' }}</strong><small>{{ admin.email if admin else (c.email or 'Sin correo') }}</small></td>
+        <td><span class="sa-tag plan">{{ c.plan_name or 'BASIC' }}</span><small>RD$ {{ '{:,.0f}'.format(plan_prices.get(c.plan_name or 'BASIC', 0)) }}/mes</small></td>
+        <td>{{ user_counts.get(c.id, 0) }}</td>
+        <td><strong class="{{ 'danger-text' if expired else '' }}">{{ c.expiration_date.strftime('%d/%m/%Y') if c.expiration_date else 'Sin fecha' }}</strong><small>{{ 'Vencido' if expired else 'Vigente' }}</small></td>
+        <td>{% if c.receipt_status == 'PENDING' %}<span class="sa-status warn">Pendiente</span>{% elif c.receipt_status == 'APPROVED' %}<span class="sa-status ok">Al día</span>{% else %}<span class="sa-status neutral">Sin solicitud</span>{% endif %}</td>
+        <td><span class="sa-status {{ 'ok' if c.status and not expired else 'danger' }}">{{ 'Activa' if c.status and not expired else 'Suspendida' }}</span>{% if c.is_readonly %}<small>Solo lectura</small>{% endif %}</td>
+        <td><div class="sa-row-actions">
+          <form method="post" action="{{ url_for('superadmin_bp.impersonate', company_id=c.id) }}"><button class="sa-icon-btn primary" title="Entrar como soporte"><i class="bi bi-box-arrow-in-right"></i></button></form>
+          <button class="sa-icon-btn" type="button" data-open-client="client-{{ c.id }}" title="Administrar"><i class="bi bi-sliders"></i></button>
+        </div></td>
+      </tr>
+    {% else %}<tr><td colspan="8"><div class="sa-empty">No hay clientes registrados.</div></td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+  <div class="sa-empty" id="clientEmpty" hidden><i class="bi bi-search"></i><strong>No hay coincidencias.</strong></div>
+</section>
+
+{% for c in companies %}
+<div class="sa-modal-backdrop" id="client-{{ c.id }}" hidden><section class="sa-modal client-modal" role="dialog" aria-modal="true">
+  <header><div><small>CLIENTE #{{ '%04d'|format(c.id) }}</small><h2>{{ c.name }}</h2></div><button type="button" data-close-modal="client-{{ c.id }}"><i class="bi bi-x-lg"></i></button></header>
+  <div class="sa-client-modal-grid">
+    <div><small>Plan</small><strong>{{ c.plan_name }}</strong></div><div><small>Estado</small><strong>{{ 'Activa' if c.status else 'Suspendida' }}</strong></div><div><small>RNC</small><strong>{{ c.rnc or 'N/D' }}</strong></div><div><small>Contacto</small><strong>{{ c.email or 'N/D' }}</strong></div><div><small>Moneda</small><strong>{{ c.display_currency_code }}</strong></div><div><small>Vence</small><strong>{{ c.expiration_date.strftime('%d/%m/%Y') if c.expiration_date else 'N/D' }}</strong></div>
+  </div>
+  <div class="sa-modal-actions-grid">
+    <form method="post" action="{{ url_for('superadmin_bp.renew_plan', id=c.id) }}"><button class="sa-btn secondary" type="submit"><i class="bi bi-calendar-plus"></i> Renovar 30 días</button></form>
+    <form method="post" action="{{ url_for('superadmin_bp.refresh_storage', id=c.id) }}"><button class="sa-btn secondary" type="submit"><i class="bi bi-arrow-repeat"></i> Recalcular espacio</button></form>
+    <form method="post" action="{{ url_for('superadmin_bp.toggle_readonly', id=c.id) }}"><button class="sa-btn secondary" type="submit"><i class="bi bi-lock"></i> {{ 'Quitar solo lectura' if c.is_readonly else 'Solo lectura' }}</button></form>
+    <form method="post" action="{{ url_for('superadmin_bp.toggle_status', id=c.id) }}"><button class="sa-btn {{ 'danger' if c.status else '' }}" type="submit"><i class="bi bi-power"></i> {{ 'Suspender' if c.status else 'Reactivar' }}</button></form>
+  </div>
+</section></div>
+{% endfor %}
+{% endblock %}
+{% block scripts %}
+<script nonce="{{ g.csp_nonce }}">
+(() => {
+  const search = document.getElementById('clientSearch');
+  const rows = [...document.querySelectorAll('[data-client-row]')];
+  const filters = [...document.querySelectorAll('#clientFilters [data-status]')];
+  const count = document.getElementById('clientCount');
+  const empty = document.getElementById('clientEmpty');
+  let status = 'all';
+  const apply = () => {
+    const q = (search?.value || '').trim().toLocaleLowerCase('es'); let visible = 0;
+    rows.forEach(row => { const okText = !q || (row.dataset.search || '').includes(q); const okStatus = status === 'all' || row.dataset.status === status; row.hidden = !(okText && okStatus); if (!row.hidden) visible += 1; });
+    if (count) count.textContent = visible; if (empty) empty.hidden = visible !== 0;
+  };
+  search?.addEventListener('input', apply);
+  filters.forEach(btn => btn.addEventListener('click', () => { filters.forEach(x => x.classList.remove('active')); btn.classList.add('active'); status = btn.dataset.status || 'all'; apply(); }));
+})();
+</script>
+{% endblock %}

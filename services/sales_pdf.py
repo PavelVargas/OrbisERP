@@ -260,6 +260,10 @@ def build_sale_invoice_pdf(*, sale, company, static_folder, selected_currency, c
         balance = _decimal(getattr(sale, 'balance', 0))
         if paid:
             total_rows.append([Paragraph('Pagado', base), Paragraph(_money(paid, currency_symbol, conversion_rate), right_strong)])
+        cash_received = getattr(sale, 'cash_received', None)
+        if cash_received is not None:
+            total_rows.append([Paragraph('Efectivo recibido', base), Paragraph(_money(cash_received, currency_symbol, conversion_rate), right_strong)])
+            total_rows.append([Paragraph('Cambio', base), Paragraph(_money(getattr(sale, 'cash_change', 0), currency_symbol, conversion_rate), right_strong)])
         if balance > 0:
             total_rows.append([Paragraph('Balance', base), Paragraph(_money(balance, currency_symbol, conversion_rate), right_strong)])
     total_rows.append([Paragraph('<b>Total</b>', ParagraphStyle('GrandLabel', parent=base, fontName='Helvetica-Bold', fontSize=11, textColor=INK)), Paragraph(_money(getattr(sale, 'total', 0), currency_symbol, conversion_rate), ParagraphStyle('GrandValue', parent=right_strong, fontSize=12, textColor=INK))])

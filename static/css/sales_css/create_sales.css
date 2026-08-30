@@ -35,31 +35,31 @@
 }
 
 html.dark {
-  --pos-bg: #0f1115;
-  --pos-surface: #171a21;
-  --pos-surface-soft: #1d2129;
-  --pos-surface-hover: #242933;
-  --pos-line: #2b313c;
-  --pos-line-strong: #3a4250;
-  --pos-text: #f3f4f6;
-  --pos-text-soft: #d1d5db;
-  --pos-muted: #9aa4b2;
-  --pos-faint: #748094;
-  --pos-primary: #ff925f;
-  --pos-primary-hover: #ffb38e;
-  --pos-primary-soft: #3a2418;
-  --pos-primary-line: #6d3c1e;
-  --pos-success: #4ade80;
-  --pos-success-soft: #16351f;
-  --pos-success-line: #285c37;
-  --pos-warning: #fbbf24;
-  --pos-warning-soft: #392b12;
-  --pos-warning-line: #6b501d;
-  --pos-danger: #f87171;
-  --pos-danger-soft: #3d1f23;
-  --pos-danger-line: #743038;
-  --pos-shadow: 0 8px 24px #090b0f;
-  --pos-overlay: #07090c;
+  --pos-bg: #191b1f;
+  --pos-surface: #222428;
+  --pos-surface-soft: #282b30;
+  --pos-surface-hover: #30343a;
+  --pos-line: #34373d;
+  --pos-line-strong: #484c55;
+  --pos-text: #e9eaec;
+  --pos-text-soft: #c9cbd0;
+  --pos-muted: #9da1aa;
+  --pos-faint: #777c86;
+  --pos-primary: #ff7a45;
+  --pos-primary-hover: #ff8b5d;
+  --pos-primary-soft: #3a251e;
+  --pos-primary-line: #69402f;
+  --pos-success: #62b983;
+  --pos-success-soft: #203027;
+  --pos-success-line: #395844;
+  --pos-warning: #d9a657;
+  --pos-warning-soft: #332a1f;
+  --pos-warning-line: #5d4a30;
+  --pos-danger: #df7373;
+  --pos-danger-soft: #382426;
+  --pos-danger-line: #643a3c;
+  --pos-shadow: 0 8px 24px #121418;
+  --pos-overlay: #101216;
 }
 
 .pos-page,
@@ -527,6 +527,46 @@ body.pos-page .app-tablet-dock { display: none !important; }
 .pos-page .btn-checkout:disabled,
 .pos-page .btn-quote:disabled { border-color: var(--pos-line) !important; background: var(--pos-surface-soft) !important; color: var(--pos-faint) !important; cursor: not-allowed; opacity: 1 !important; }
 .pos-page .layaway-form { display: grid; gap: 7px; }
+
+/* Cash tender: amount physically handed to the cashier is distinct from the
+   amount applied to the sale. This keeps change auditable and drawer totals sane. */
+.pos-page .cash-tender-box {
+  margin-bottom: 8px;
+  padding: 10px;
+  border: 1px solid var(--pos-primary-line);
+  border-radius: 10px;
+  background: var(--pos-primary-soft);
+  color: var(--pos-text);
+}
+.pos-page .cash-tender-box[hidden] { display: none !important; }
+.pos-page .cash-tender-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.pos-page .cash-tender-head > div { min-width: 0; display: grid; gap: 2px; }
+.pos-page .cash-tender-head span { color: var(--pos-text); font-size: 12px; font-weight: 750; }
+.pos-page .cash-tender-head small { color: var(--pos-muted); font-size: 10.5px; line-height: 1.35; }
+.pos-page .cash-tender-head strong { flex: none; color: var(--pos-primary); font-size: 11px; font-weight: 750; white-space: nowrap; }
+.pos-page .cash-tender-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(110px, .85fr); gap: 8px; }
+.pos-page .cash-received-field { min-width: 0; display: grid; gap: 5px; color: var(--pos-muted); font-size: 10.5px; font-weight: 700; }
+.pos-page .cash-money-input {
+  min-width: 0;
+  height: 42px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  border: 1px solid var(--pos-line-strong);
+  border-radius: 9px;
+  background: var(--pos-surface);
+  overflow: hidden;
+}
+.pos-page .cash-money-input:focus-within { border-color: var(--pos-primary); outline: 2px solid var(--pos-primary); outline-offset: 1px; }
+.pos-page .cash-money-input b { padding-left: 10px; color: var(--pos-muted); font-size: 12px; }
+.pos-page .cash-money-input input { width: 100% !important; min-width: 0; height: 40px !important; padding: 0 10px 0 6px !important; border: 0 !important; outline: 0 !important; background: transparent !important; color: var(--pos-text) !important; box-shadow: none !important; font-size: 16px !important; font-weight: 800 !important; text-align: right; }
+.pos-page .cash-money-input input.is-short { color: var(--pos-danger) !important; }
+.pos-page .cash-change-card { min-width: 0; min-height: 64px; padding: 9px 10px; display: grid; align-content: center; justify-items: end; gap: 4px; border: 1px solid var(--pos-line); border-radius: 9px; background: var(--pos-surface); }
+.pos-page .cash-change-card span { color: var(--pos-muted); font-size: 10.5px; font-weight: 700; }
+.pos-page .cash-change-card strong { color: var(--pos-success); font-size: 16px; font-weight: 850; white-space: nowrap; }
+.pos-page .cash-tender-error { display: block; margin-top: 7px; color: var(--pos-danger) !important; font-size: 10.5px; font-weight: 700; }
+.pos-page .cash-tender-error[hidden] { display: none !important; }
+
 .pos-page .split-payment-box { margin-bottom: 8px; padding: 10px; border: 1px solid var(--pos-line); border-radius: 9px; background: var(--pos-surface-soft); color: var(--pos-text); }
 .pos-page .split-payment-box[hidden] { display: none !important; }
 .pos-page .split-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
@@ -536,6 +576,11 @@ body.pos-page .app-tablet-dock { display: none !important; }
 .pos-page .split-reference { width: 100% !important; min-width: 0; min-height: 38px !important; padding: 0 9px !important; border: 1px solid var(--pos-line-strong) !important; border-radius: 8px !important; outline: 0 !important; background: var(--pos-surface) !important; color: var(--pos-text) !important; box-shadow: none !important; font-size: 12px !important; }
 .pos-page .split-reference { margin-top: 7px; }
 .pos-page .split-payment-box small { display: block; margin-top: 7px; color: var(--pos-muted) !important; font-size: 11px !important; line-height: 1.45; }
+@media (max-width: 520px) {
+  .pos-page .cash-tender-grid { grid-template-columns: 1fr; }
+  .pos-page .cash-change-card { min-height: 52px; grid-template-columns: 1fr auto; align-items: center; justify-items: stretch; }
+  .pos-page .cash-change-card strong { text-align: right; }
+}
 
 /* Feedback overlay */
 .pos-page .success-overlay { position: fixed; inset: 0; z-index: 9999; display: none; place-items: center; padding: 20px; background: var(--pos-overlay); }
@@ -655,9 +700,9 @@ html.tablet-mode body.pos-page .order-item { grid-template-columns: 30px minmax(
 html.dark {
   --pos-primary: #fb923c;
   --pos-primary-hover: #fdba74;
-  --pos-primary-soft: #3a2418;
-  --pos-primary-line: #6d3c1e;
-  --pos-shadow: 0 8px 22px #090b0f;
+  --pos-primary-soft: #3a251e;
+  --pos-primary-line: #69402f;
+  --pos-shadow: 0 8px 22px #121418;
 }
 
 body.pos-page {
@@ -1140,10 +1185,10 @@ html.dark .pos-page .sale-product-media {
   --pos-primary-line: #fed7aa;
 }
 html.dark {
-  --pos-primary: #ff925f;
-  --pos-primary-hover: #ffb38e;
-  --pos-primary-soft: #3a2418;
-  --pos-primary-line: #6d3c1e;
+  --pos-primary: #ff7a45;
+  --pos-primary-hover: #ff8b5d;
+  --pos-primary-soft: #3a251e;
+  --pos-primary-line: #69402f;
 }
 
 /* ========================================================================== 

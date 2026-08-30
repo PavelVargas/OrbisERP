@@ -347,6 +347,8 @@
             root.classList.toggle('dark', dark);
             root.dataset.theme = theme;
             root.style.colorScheme = theme;
+            root.style.setProperty('background-color', dark ? '#191b1f' : '#f5f7fa', 'important');
+            try { document.cookie = 'orbis_theme=' + theme + '; Path=/; Max-Age=31536000; SameSite=Lax'; } catch (_error) {}
             document.body?.classList.toggle('dark', dark);
             if (document.body) document.body.dataset.theme = theme;
             storageWrite('localStorage', 'theme', theme);

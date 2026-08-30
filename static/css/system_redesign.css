@@ -50,7 +50,7 @@ html.dark {
     --primary: #ff7b3f;
     --primary-hover: #ff925f;
     --primary-soft:var(--ui-primary-soft);
-    --bg-main: #0f1115;
+    --bg-main: #191b1f;
     --bg-card: #171a20;
     --bg-input: #1d2128;
     --bg-hover: #232831;
@@ -874,7 +874,7 @@ html.dark body.pos-page {
     --pos-orange: #ff7b3f;
     --pos-orange-hover: #ff925f;
     --pos-orange-soft:var(--ui-primary-soft);
-    --pos-page: #0f1115;
+    --pos-page: #191b1f;
     --pos-card: #171a20;
     --pos-soft: #1d2128;
     --pos-text: #f4f5f7;

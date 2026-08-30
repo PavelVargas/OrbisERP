@@ -1,0 +1,28 @@
+<tr class="purchase-existing-line" data-item-id="{{ item.id }}">
+    <td class="line-index">{{ line_index }}</td>
+    <td data-label="Producto">
+        <div class="product-cell">
+            <span>
+                {% set img = product_image_url(item.product) if item.product else none %}
+                {% if img %}<img src="{{ img }}" alt="{{ item.product.name }}" referrerpolicy="no-referrer">{% else %}<i class="bi bi-box-seam"></i>{% endif %}
+            </span>
+            <div>
+                <strong>{{ item.product.name if item.product else 'Producto no disponible' }}</strong>
+                <small>{{ item.variant.sku if item.variant else (item.product.sku if item.product and item.product.sku else 'Sin SKU') }}</small>
+            </div>
+        </div>
+    </td>
+    <td data-label="Variante"><span class="line-secondary">{% if item.variant %}{{ item.variant.attribute_summary or item.variant.name }}{% else %}Base{% endif %}</span></td>
+    <td data-label="Cantidad" class="numeric"><strong>{{ display_quantity(item.quantity) }}</strong>{% if item.quantity_received %}<small class="received-note">{{ display_quantity(item.quantity_received) }} recibidas</small>{% endif %}</td>
+    <td data-label="UdM"><span class="line-secondary">{{ item.uom.symbol if item.uom else (item.product.base_uom.symbol if item.product and item.product.base_uom else 'ud') }}</span></td>
+    <td data-label="Precio unit." class="numeric"><span class="money">RD$ {{ '{:,.2f}'.format(item.unit_cost|float) }}</span></td>
+    <td data-label="Impuestos"><span class="tax-chip {% if item.tax_rate|float == 0 %}tax-exempt{% endif %}">{{ item.tax_name }}</span><small class="tax-amount">RD$ {{ '{:,.2f}'.format(item.tax_amount|float) }}</small></td>
+    <td data-label="Importe" class="numeric"><strong class="money">RD$ {{ '{:,.2f}'.format(item.line_total|float) }}</strong></td>
+    <td class="line-action">
+        {% if order.status=='PENDING' and can('purchases.edit') %}
+        <form method="post" action="{{ url_for('purchase_bp.delete_purchase_item',item_id=item.id) }}" data-confirm="¿Quitar este producto de la orden?" data-confirm-title="Quitar línea" data-confirm-detail="Se recalcularán subtotal, ITBIS y total de la orden. El inventario no se modifica hasta recibir la compra." data-confirm-action="Quitar producto" data-confirm-type="warning">
+            <button class="btn-delete-line" title="Quitar línea" aria-label="Quitar línea"><i class="bi bi-trash3"></i></button>
+        </form>
+        {% endif %}
+    </td>
+</tr>

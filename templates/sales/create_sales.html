@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html lang="es" class="{% if tablet_mode_active|default(session.get('tablet_mode')) %}tablet-mode tablet-full-width-profile{% endif %}">
+<html lang="es" class="{% if tablet_mode_active|default(session.get('tablet_mode')) %}tablet-mode tablet-full-width-profile{% endif %}" data-orbis-seed-theme="{{ 'dark' if (request.cookies.get('orbis_theme') or session.get('theme')) == 'dark' else 'light' }}">
 <head>
     <meta name="orbis-ui-profile" content="orbis-pos">{% set shell_assets_loaded = true %}{% include 'layouts/app_head_assets.html' %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Terminal POS | OrbisERP</title>
     
-<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-orange1') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/sales_css/create_sales.css') }}?v=pos-sidebar-orange-v17">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260830-odoo19dark1') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sales_css/create_sales.css') }}?v=pos-cash-change-v18">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_compact.css', v='20260830-odoo19dark1') }}">
 </head>
 <body class="pos-page">
     {% include 'layouts/left_bar.html' %}
@@ -193,6 +194,21 @@
                                 <select name="payment_method" class="method-select" id="payment-method">
                                     <option value="CASH">💵 Efectivo</option><option value="CARD">💳 Tarjeta</option><option value="TRANSFER">🏦 Transferencia</option><option value="CREDIT">📋 Crédito</option><option value="MIXED">🧩 Pago dividido</option>
                                 </select>
+                            </div>
+                            <div id="cash-tender-box" class="cash-tender-box">
+                                <div class="cash-tender-head">
+                                    <div><span>Efectivo recibido</span><small>Introduce lo que entrega el cliente.</small></div>
+                                    <strong id="cash-due-display">A cobrar {{ currency_symbol }} {{ "{:,.2f}".format((sale.total if sale else 0) / conversion_rate) }}</strong>
+                                </div>
+                                <div class="cash-tender-grid">
+                                    <label class="cash-received-field" for="cash-received-display">
+                                        <span>Recibido</span>
+                                        <div class="cash-money-input"><b>{{ currency_symbol }}</b><input id="cash-received-display" type="number" min="0" step="0.01" inputmode="decimal" autocomplete="off" value="{{ '{:.2f}'.format((sale.total if sale else 0) / conversion_rate) }}"></div>
+                                    </label>
+                                    <div class="cash-change-card"><span>Cambio</span><strong id="cash-change-display">{{ currency_symbol }} 0.00</strong></div>
+                                </div>
+                                <input type="hidden" name="cash_received" id="cash-received-base" value="{{ '{:.2f}'.format(sale.total if sale else 0) }}">
+                                <small class="cash-tender-error" id="cash-tender-error" hidden>El efectivo recibido no cubre el monto a cobrar.</small>
                             </div>
                             <div id="split-payment-box" class="split-payment-box" hidden>
                                 <div class="split-row"><label>Efectivo<input name="cash_amount" type="number" min="0" step="0.01" value="0"></label><label>Tarjeta<input name="card_amount" type="number" min="0" step="0.01" value="0"></label></div>
@@ -654,6 +670,8 @@
             if (subtotal) subtotal.textContent = formatMoney(cart.subtotal);
             if (tax) tax.textContent = formatMoney(cart.tax);
             if (total) total.textContent = formatMoney(cart.total);
+            currentCartTotalBase = Number(cart.total || 0);
+            syncCashTender();
             const discountValue = Number(cart.discount || 0);
             if (discount) discount.textContent = `- ${formatMoney(discountValue)}`;
             if (discountLabel) discountLabel.textContent = cart.promotion_code
@@ -896,19 +914,80 @@
         const splitBox = document.getElementById('split-payment-box');
         const finishSaleForm = document.getElementById('finish-sale-form');
         const clientHelp = document.getElementById('client-selector-help');
+        const cashTenderBox = document.getElementById('cash-tender-box');
+        const cashReceivedDisplay = document.getElementById('cash-received-display');
+        const cashReceivedBase = document.getElementById('cash-received-base');
+        const cashDueDisplay = document.getElementById('cash-due-display');
+        const cashChangeDisplay = document.getElementById('cash-change-display');
+        const cashTenderError = document.getElementById('cash-tender-error');
+        let currentCartTotalBase = Number({{ (sale.total if sale else 0)|tojson }}) || 0;
+        let cashReceivedTouched = false;
+
+        function numberValue(value) {
+            const parsed = Number(String(value ?? '').replace(',', '.'));
+            return Number.isFinite(parsed) ? parsed : 0;
+        }
+
+        function cashDueBaseAmount() {
+            const method = String(paymentMethod?.value || 'CASH').toUpperCase();
+            if (method === 'CASH') return Math.max(0, currentCartTotalBase);
+            if (method === 'MIXED') return Math.max(0, numberValue(finishSaleForm?.elements?.cash_amount?.value));
+            return 0;
+        }
+
+        function syncCashTender({resetReceived = false} = {}) {
+            if (!cashTenderBox || !cashReceivedDisplay || !cashReceivedBase) return true;
+            const cashDueBase = cashDueBaseAmount();
+            const hasCash = cashDueBase > 0;
+            cashTenderBox.hidden = !hasCash;
+            if (!hasCash) {
+                cashReceivedBase.value = '';
+                cashTenderError.hidden = true;
+                cashReceivedDisplay.classList.remove('is-short');
+                return true;
+            }
+
+            const dueDisplay = cashDueBase / conversionRate;
+            if (resetReceived || !cashReceivedTouched || !cashReceivedDisplay.value) {
+                cashReceivedDisplay.value = dueDisplay.toFixed(2);
+            }
+            const receivedDisplay = Math.max(0, numberValue(cashReceivedDisplay.value));
+            const receivedBase = receivedDisplay * conversionRate;
+            const changeDisplay = Math.max(0, receivedDisplay - dueDisplay);
+            const enough = receivedBase + 0.00001 >= cashDueBase;
+
+            cashReceivedBase.value = receivedBase.toFixed(2);
+            if (cashDueDisplay) cashDueDisplay.textContent = `A cobrar ${formatMoney(cashDueBase)}`;
+            if (cashChangeDisplay) cashChangeDisplay.textContent = `${currencySymbol} ${changeDisplay.toLocaleString('es-DO', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            cashTenderError.hidden = enough;
+            cashReceivedDisplay.classList.toggle('is-short', !enough);
+            return enough;
+        }
 
         function syncPaymentMode() {
             if (!paymentMethod || !splitBox) return;
-            splitBox.hidden = paymentMethod.value !== 'MIXED';
-            const needsClient = paymentMethod.value === 'CREDIT';
+            const method = paymentMethod.value;
+            splitBox.hidden = method !== 'MIXED';
+            const needsClient = method === 'CREDIT';
             clientHelp?.classList.toggle('is-required', needsClient);
             if (clientHelp) {
                 clientHelp.textContent = needsClient
                     ? 'Selecciona un cliente: las ventas a crédito no pueden registrarse como consumidor final.'
                     : 'Opcional para efectivo, tarjeta o transferencia. Requerido para crédito, puntos y apartados.';
             }
+            cashReceivedTouched = false;
+            syncCashTender({resetReceived: true});
         }
         paymentMethod?.addEventListener('change', syncPaymentMode);
+        finishSaleForm?.elements?.cash_amount?.addEventListener('input', () => {
+            cashReceivedTouched = false;
+            syncCashTender({resetReceived: true});
+        });
+        cashReceivedDisplay?.addEventListener('input', () => {
+            cashReceivedTouched = true;
+            syncCashTender();
+        });
+        cashReceivedDisplay?.addEventListener('focus', event => event.currentTarget.select());
         syncPaymentMode();
 
         function setProcessingOverlay(open, title = '', detail = '') {
@@ -942,6 +1021,16 @@
                     detail: 'Para una venta de mostrador usa efectivo, tarjeta o transferencia. No se guardó ningún cambio.'
                 });
                 posClientSelect?.focus({preventScroll: false});
+                return false;
+            }
+            if (!syncCashTender()) {
+                showPosFeedback({
+                    type: 'warning',
+                    title: 'Efectivo insuficiente',
+                    message: 'El dinero recibido no cubre el monto que debe pagarse en efectivo.',
+                    detail: 'Corrige el importe recibido. OrbisERP calculará el cambio automáticamente.'
+                });
+                cashReceivedDisplay?.focus({preventScroll: false});
                 return false;
             }
             return true;

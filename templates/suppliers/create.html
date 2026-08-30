@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" class="{% if tablet_mode_active|default(session.get('tablet_mode')) %}tablet-mode tablet-full-width-profile{% endif %}">
+<html lang="es" class="{% if tablet_mode_active|default(session.get('tablet_mode')) %}tablet-mode tablet-full-width-profile{% endif %}" data-orbis-seed-theme="{{ 'dark' if (request.cookies.get('orbis_theme') or session.get('theme')) == 'dark' else 'light' }}">
 <head>{% set shell_assets_loaded = true %}{% include 'layouts/app_head_assets.html' %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +7,8 @@
     <link rel="stylesheet" href="/static/css/order_css/supplier.css">
 
 
-<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-orange1') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260830-odoo19dark1') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_compact.css', v='20260830-odoo19dark1') }}">
 </head>
 <body class="orbis-app">
 

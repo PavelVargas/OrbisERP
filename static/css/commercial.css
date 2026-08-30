@@ -101,18 +101,18 @@ body, body * { font-family: "Plus Jakarta Sans", system-ui, -apple-system, Blink
 body { line-height: 1.5; }
 
 /* Motion system: fast, fluid and shared by every authenticated screen. */
-@keyframes orbisPageIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes orbisPageIn { from { transform: translateY(3px); } to { transform: none; } }
 @keyframes orbisToastIn { from { opacity: 0; transform: translate3d(14px, -6px, 0) scale(.98); } to { opacity: 1; transform: none; } }
-.orbis-page { animation: orbisPageIn .42s cubic-bezier(.2,.8,.2,1) both; }
-.orbis-reveal { opacity: 0; transform: translateY(14px) scale(.992); }
-.orbis-reveal.orbis-revealed { opacity: 1; transform: none; transition: opacity .5s cubic-bezier(.2,.8,.2,1) var(--reveal-delay, 0ms), transform .58s cubic-bezier(.2,.8,.2,1) var(--reveal-delay, 0ms); }
-.flash-message { animation: orbisToastIn .35s cubic-bezier(.2,.8,.2,1) both; }
+.orbis-page { animation: none !important; transform: none !important; }
+.orbis-reveal { transform: none !important; }
+.orbis-reveal.orbis-revealed { transform: none !important; transition: none !important; }
+.flash-message { animation: orbisToastIn .18s cubic-bezier(.22,.75,.25,1) both; }
 :where(a, button, input, select, textarea, .card, .table-card, .product-card, .ware-card, .kpi-card, .nav-item, tr, .barcode-button) {
     transition-property: color, background-color, border-color, box-shadow, opacity, transform;
-    transition-duration: .24s;
+    transition-duration: .12s;
     transition-timing-function: cubic-bezier(.2,.8,.2,1);
 }
-:where(button, .btn, [class*="btn-"], .product-card, .ware-card).orbis-pressed { transform: scale(.975) !important; transition-duration: .08s; }
+:where(button, .btn, [class*="btn-"], .product-card, .ware-card).orbis-pressed { transform: none !important; }
 @media (hover: hover) {
     :where(.card, .table-card, .product-card, .ware-card, .kpi-card):hover { will-change: transform; }
 }
@@ -234,7 +234,7 @@ main > script, main > style { display: none; }
 .filter-bar .search-wrapper { flex: 1 1 260px; }
 .filter-controls { flex: 2 1 620px; display: grid !important; grid-template-columns: repeat(3, minmax(145px, 1fr)) auto auto; align-items: center; gap: 8px !important; }
 .product-card, .stat-card, .kpi-card { transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
-.product-card:hover, .stat-card:hover, .kpi-card:hover { border-color: var(--border-strong) !important; box-shadow:var(--ui-shadow-sm)!important; transform: translateY(-2px); }
+.product-card:hover, .stat-card:hover, .kpi-card:hover { border-color: var(--border-strong) !important; box-shadow:var(--ui-shadow-sm)!important; transform: none !important; }
 
 /* Forms */
 label { color: var(--text-main); font-size:12px; font-weight: 650; }

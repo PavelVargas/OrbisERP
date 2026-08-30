@@ -136,15 +136,12 @@
             if (!isDesktopExit) target.searchParams.set(TABLET_QUERY_PARAM, '1');
             if (target.href === location.href || (target.pathname === location.pathname && target.search === location.search && target.hash)) return;
 
+            // Preserve tablet context without adding a perceptible navigation delay.
             event.preventDefault();
-            root.classList.add('tablet-navigating');
-            window.setTimeout(() => {
-                location.assign(target.href);
-            }, 105);
+            location.assign(target.href);
         });
 
         window.addEventListener('pageshow', () => root.classList.remove('tablet-navigating'), { passive: true });
-        window.addEventListener('pagehide', () => root.classList.add('tablet-navigating'), { passive: true });
     };
 
     const stampTabletForms = scope => {

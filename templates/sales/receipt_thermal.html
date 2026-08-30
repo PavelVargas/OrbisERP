@@ -2,74 +2,105 @@
 <html lang="es" data-theme="light">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Vista previa ticket #{{ sale.id }} · OrbisERP</title>
+<title>Ticket #{{ sale.id }} · {{ company.name if company else 'OrbisERP' }}</title>
 <style nonce="{{ csp_nonce() if csp_nonce is defined else '' }}">
-:root{--paper-mm:{{ width }};--preview-scale:4px;--shell:#111416;--shell-2:#181c1f;--line:#2c3338;--muted:#9aa5aa;--ink:#f4f7f8;--accent:#f2672a}*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--shell);color:var(--ink)}body{min-height:100vh}.preview-shell{min-height:100vh;display:grid;grid-template-rows:auto 1fr}.preview-toolbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:14px clamp(16px,3vw,34px);border-bottom:1px solid var(--line);background:#111416;backdrop-filter:none}.preview-title{display:flex;align-items:center;gap:12px}.preview-title>a{width:38px;height:38px;display:grid;place-items:center;border:1px solid var(--line);border-radius:10px;color:var(--ink);text-decoration:none}.preview-title div{display:grid;gap:2px}.preview-title strong{font-size:.92rem}.preview-title small{color:var(--muted);font-size:.72rem}.preview-controls{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}.width-control{height:40px;display:grid;grid-template-columns:70px 36px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--shell-2)}.width-control input{min-width:0;border:0;background:transparent;color:var(--ink);padding:0 10px;font:700 .78rem inherit;outline:0}.width-control b{display:grid;place-items:center;border-left:1px solid var(--line);color:var(--muted);font-size:.7rem}.preset{height:40px;padding:0 10px;border:1px solid var(--line);border-radius:10px;background:var(--shell-2);color:var(--ink);font-weight:750;cursor:pointer}.preset:hover{border-color:var(--accent);color:var(--accent)}.print-btn{height:40px;display:inline-flex;align-items:center;gap:7px;padding:0 15px;border:0;border-radius:10px;background:var(--accent);color:#fff;font-weight:850;cursor:pointer}.printer-label{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:.72rem}.preview-workspace{display:grid;place-items:start center;padding:34px 20px 60px;overflow:auto;background:#111416}.paper-wrap{display:grid;gap:12px;justify-items:center}.paper-caption{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:.72rem}.paper-caption b{color:var(--ink)}
-.receipt-paper{width:min(calc(var(--paper-mm) * var(--preview-scale)),calc(100vw - 40px));min-width:188px;padding:18px 14px 26px;background:#fff;color:#111;border:1px solid #d7dde3;box-shadow:none;font:{{ '10px' if width < 60 else '11px' }} /1.38 ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere;transition:width .16s ease}.receipt-paper header{text-align:center}.receipt-brand{font:900 18px/1.15 Arial,sans-serif;letter-spacing:-.02em}.receipt-company-meta{display:grid;gap:1px;margin-top:4px}.receipt-document-type{display:inline-block;margin-top:6px;padding:2px 6px;border:1px solid #111;font-weight:900;font-size:.84em}.rule{border:0;border-top:1px dashed #222;margin:9px 0}.row{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.row>span:last-child,.row>b:last-child{text-align:right}.muted{color:#555}.item{margin:8px 0}.item-name{font-weight:900}.item-meta{display:flex;justify-content:space-between;gap:7px;margin-top:2px}.trace{margin-top:2px;color:#555;font-size:.9em}.total-row{margin-top:4px;padding-top:5px;border-top:1px solid #111;font-size:1.25em;font-weight:950}.payments-title{margin:3px 0 5px}.receipt-footer{text-align:center;display:grid;gap:2px;padding-top:2px}.receipt-footer strong{font-family:Arial,sans-serif}.receipt-id{margin-top:5px;font-size:.84em;color:#666}
-@page{size:{{ width }}mm auto;margin:3mm}@media(max-width:820px){.preview-toolbar{align-items:flex-start;flex-direction:column}.preview-controls{width:100%;justify-content:flex-start}.printer-label{width:100%}.preview-workspace{padding-top:22px}}@media print{html,body{background:#fff!important}.preview-shell{display:block}.preview-toolbar,.paper-caption{display:none!important}.preview-workspace{display:block;padding:0;background:#fff}.paper-wrap{display:block}.receipt-paper{width:auto!important;min-width:0;max-width:none;padding:0;box-shadow:none;transition:none}}
+:root{--paper-mm:{{ width }};--preview-scale:4px;--shell:#111416;--shell-2:#181c1f;--line:#2c3338;--muted:#9aa5aa;--ink:#f4f7f8;--accent:#f2672a}*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--shell);color:var(--ink)}body{min-height:100vh}.preview-shell{min-height:100vh;display:grid;grid-template-rows:auto 1fr}.preview-toolbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:14px clamp(16px,3vw,34px);border-bottom:1px solid var(--line);background:#111416}.preview-title{display:flex;align-items:center;gap:12px}.preview-title>a{width:38px;height:38px;display:grid;place-items:center;border:1px solid var(--line);border-radius:10px;color:var(--ink);text-decoration:none}.preview-title div{display:grid;gap:2px}.preview-title strong{font-size:.92rem}.preview-title small{color:var(--muted);font-size:.72rem}.preview-controls{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}.width-control{height:40px;display:grid;grid-template-columns:70px 36px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--shell-2)}.width-control input{min-width:0;border:0;background:transparent;color:var(--ink);padding:0 10px;font:700 .78rem inherit;outline:0}.width-control b{display:grid;place-items:center;border-left:1px solid var(--line);color:var(--muted);font-size:.7rem}.preset{height:40px;padding:0 10px;border:1px solid var(--line);border-radius:10px;background:var(--shell-2);color:var(--ink);font-weight:750;cursor:pointer}.preset:hover{border-color:var(--accent);color:var(--accent)}.print-btn{height:40px;display:inline-flex;align-items:center;gap:7px;padding:0 15px;border:0;border-radius:10px;background:var(--accent);color:#fff;font-weight:850;cursor:pointer}.printer-label{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:.72rem}.preview-workspace{display:grid;place-items:start center;padding:34px 20px 60px;overflow:auto;background:#111416}.paper-wrap{display:grid;gap:12px;justify-items:center}.paper-caption{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:.72rem}.paper-caption b{color:var(--ink)}
+.receipt-paper{width:min(calc(var(--paper-mm) * var(--preview-scale)),calc(100vw - 40px));min-width:188px;padding:20px 15px 26px;background:#fff;color:#050505;border:1px solid #d9dde2;box-shadow:0 12px 38px #d7dbe1;font:{{ '9.5px' if width < 60 else '10.5px' }} /1.34 "Courier New",Courier,ui-monospace,monospace;overflow-wrap:anywhere;transition:width .12s ease}.ticket-center{text-align:center}.ticket-company{font-size:1.23em;font-weight:900;letter-spacing:.04em;text-transform:uppercase}.ticket-company-meta{display:grid;gap:1px;margin-top:3px}.ticket-company-meta span{display:block}.ticket-rule{border:0;border-top:1px dashed #111;margin:11px 0}.ticket-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start}.ticket-row+.ticket-row{margin-top:2px}.ticket-row>span:last-child,.ticket-row>b:last-child{text-align:right}.ticket-label{font-weight:700}.ticket-client{margin-top:5px}.ticket-item{margin:9px 0}.ticket-item-head{display:grid;grid-template-columns:auto minmax(0,1fr);gap:7px;font-weight:800}.ticket-item-head .qty{white-space:nowrap}.ticket-item-price{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;margin-top:2px;padding-left:20px}.ticket-item-price b{text-align:right}.ticket-trace{margin-top:2px;padding-left:20px;font-size:.86em}.ticket-count{font-weight:800}.ticket-total{margin-top:4px;font-size:1.13em;font-weight:900}.ticket-payment{font-weight:800}.ticket-reference{padding-left:12px;font-size:.86em}.ticket-nonfiscal{margin-top:8px;font-size:.88em;font-weight:800}.ticket-footer{display:grid;gap:2px;text-align:center;padding-top:3px}.ticket-footer strong{text-transform:uppercase}.ticket-footer .warranty{font-weight:800}.ticket-footer .powered{margin-top:3px;font-size:.78em;color:#555}
+@page{size:{{ width }}mm auto;margin:3mm}@media(max-width:820px){.preview-toolbar{align-items:flex-start;flex-direction:column}.preview-controls{width:100%;justify-content:flex-start}.printer-label{width:100%}.preview-workspace{padding-top:22px}}@media print{html,body{background:#fff!important;color:#000!important}.preview-shell{display:block}.preview-toolbar,.paper-caption{display:none!important}.preview-workspace{display:block;padding:0;background:#fff}.paper-wrap{display:block}.receipt-paper{width:auto!important;min-width:0;max-width:none;padding:0;border:0;box-shadow:none;transition:none;color:#000!important;background:#fff!important}.ticket-rule{border-top-color:#000}.ticket-footer .powered{color:#000}}
 </style>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_print_v2.css', v='20260829-v2') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-orange1') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_print_v2.css', v='20260829-ticket2') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_compact.css', v='20260830-odoo19dark1') }}">
 </head>
 <body class="orbis-print">
 <div class="preview-shell">
   <header class="preview-toolbar">
-    <div class="preview-title"><a href="{{ url_for('sales_bp.sale_detail', sale_id=sale.id) }}" aria-label="Volver a la venta">←</a><div><strong>Vista previa del ticket #{{ sale.id }}</strong><small>El papel blanco representa la salida térmica real.</small></div></div>
+    <div class="preview-title"><a href="{{ url_for('sales_bp.sale_detail', sale_id=sale.id) }}" aria-label="Volver a la venta">←</a><div><strong>Ticket térmico #{{ '%06d'|format(sale.id) }}</strong><small>Vista previa fiel a la impresión de {{ width }} mm.</small></div></div>
     <div class="preview-controls">
       <span class="printer-label">Impresión: <b>{{ {'BROWSER':'Sistema / navegador','WEBUSB':'USB térmica','ELECTRON':'Orbis Desktop'}.get(printer_mode, printer_mode) }}</b>{% if printer_name %} · {{ printer_name }}{% endif %}</span>
       <div class="width-control"><input id="ticketWidth" type="number" min="40" max="112" step="1" value="{{ width }}" aria-label="Ancho del ticket"><b>mm</b></div>
       <button class="preset" type="button" data-width="58">58</button><button class="preset" type="button" data-width="60">60</button><button class="preset" type="button" data-width="72">72</button><button class="preset" type="button" data-width="80">80</button>
-      <button class="print-btn" id="printTicket" type="button">⌁ Imprimir ticket</button>
+      <button class="print-btn" id="printTicket" type="button">Imprimir ticket</button>
     </div>
   </header>
   <main class="preview-workspace">
     <div class="paper-wrap">
-      <div class="paper-caption"><span>ANCHO ACTUAL</span><b id="ticketWidthLabel">{{ width }} mm</b></div>
+      <div class="paper-caption"><span>VISTA PREVIA</span><b id="ticketWidthLabel">{{ width }} mm</b></div>
       <article class="receipt-paper" id="receiptPaper">
-        <header>
-          <div class="receipt-brand">{{ company.name if company else 'OrbisERP' }}</div>
-          <div class="receipt-company-meta">{% if company and company.rnc %}<span>RNC: {{ company.rnc }}</span>{% endif %}{% if company and company.address %}<span>{{ company.address }}</span>{% endif %}{% if company and company.phone %}<span>Tel. {{ company.phone }}</span>{% endif %}</div>
-          <span class="receipt-document-type">{{ 'COTIZACIÓN' if sale.status == 'QUOTATION' else 'TICKET DE VENTA' }}</span>
-          {% if company and company.fiscal_mode == 'disabled' %}<div class="muted">Documento comercial no fiscal</div>{% endif %}
+        <header class="ticket-center">
+          <div class="ticket-company">{{ company.name if company else 'OrbisERP' }}</div>
+          <div class="ticket-company-meta">
+            {% if company and company.rnc %}<span>RNC {{ company.rnc }}</span>{% endif %}
+            {% if company and company.phone %}<span>Tel. {{ company.phone }}</span>{% endif %}
+            {% if sale.branch and sale.branch.address %}<span>{{ sale.branch.address }}</span>{% elif company and company.address %}<span>{{ company.address }}</span>{% endif %}
+          </div>
         </header>
-        <hr class="rule">
-        <div class="row"><span>Venta</span><b>#{{ '%06d'|format(sale.id) }}</b></div>
-        <div class="row"><span>Fecha</span><span>{{ sale.created_at.strftime('%d/%m/%Y %H:%M') }}</span></div>
-        <div class="row"><span>Cliente</span><span>{{ sale.client.name if sale.client else (sale.customer_name or 'Consumidor final') }}</span></div>
-        {% if sale.branch %}<div class="row"><span>Sucursal</span><span>{{ sale.branch.name }}</span></div>{% endif %}
-        {% if sale.terminal %}<div class="row"><span>Terminal</span><span>{{ sale.terminal.name }}</span></div>{% endif %}
-        <div class="row"><span>Vendedor</span><span>{{ sale.user.name if sale.user else 'Sistema' }}</span></div>
-        <hr class="rule">
+
+        <hr class="ticket-rule">
+        <div class="ticket-row"><span class="ticket-label">{{ 'COTIZACIÓN' if sale.status == 'QUOTATION' else 'TICKET' }}</span><b>#{{ '%06d'|format(sale.id) }}</b></div>
+        <div class="ticket-row"><span>{{ sale.created_at.strftime('%d/%m/%Y') }}</span><span>{{ sale.created_at.strftime('%I:%M %p') }}</span></div>
+        <div class="ticket-row"><span class="ticket-label">CAJERO</span><span>{{ sale.user.name if sale.user else 'Sistema' }}</span></div>
+        <div class="ticket-row"><span class="ticket-label">CAJA</span><span>{% if sale.terminal %}{{ sale.terminal.code or sale.terminal.name }}{% elif sale.branch %}{{ sale.branch.code or sale.branch.name }}{% else %}—{% endif %}</span></div>
+        {% if sale.client or (sale.customer_name and sale.customer_name != 'Consumidor final') %}<div class="ticket-row ticket-client"><span class="ticket-label">CLIENTE</span><span>{{ sale.client.name if sale.client else sale.customer_name }}</span></div>{% endif %}
+
+        <hr class="ticket-rule">
         {% for item in sale.items %}
-        <div class="item">
-          <div class="item-name">{{ item.product.name }}{% if item.variant %} · {{ item.variant.attribute_summary or item.variant.name }}{% endif %}</div>
-          <div class="item-meta"><span>{{ display_quantity(item.quantity) }} {{ item.uom.symbol if item.uom else (item.product.base_uom.symbol if item.product.base_uom else 'ud') }} × {{ currency_symbol }}{{ '{:,.2f}'.format(item.price / conversion_rate) }}</span><b>{{ currency_symbol }}{{ '{:,.2f}'.format((item.quantity * item.price) / conversion_rate) }}</b></div>
-          {% for serial in item.serials %}<div class="trace">Serie/IMEI: {{ serial.serial_number }}</div>{% endfor %}
-          {% for alloc in item.lot_allocations %}<div class="trace">Lote: {{ alloc.lot.lot_number }} · {{ display_quantity(alloc.quantity) }}</div>{% endfor %}
-        </div>
+        <section class="ticket-item">
+          <div class="ticket-item-head"><span class="qty">{{ display_quantity(item.quantity) }} x</span><span>{{ item.product.name }}{% if item.variant %} · {{ item.variant.attribute_summary or item.variant.name }}{% endif %}</span></div>
+          <div class="ticket-item-price"><span>{{ currency_symbol }}{{ '{:,.2f}'.format(item.price / conversion_rate) }}</span><b>{{ currency_symbol }}{{ '{:,.2f}'.format((item.quantity * item.price) / conversion_rate) }}</b></div>
+          {% for serial in item.serials %}<div class="ticket-trace">Serie/IMEI: {{ serial.serial_number }}</div>{% endfor %}
+          {% for alloc in item.lot_allocations %}<div class="ticket-trace">Lote: {{ alloc.lot.lot_number }} · {{ display_quantity(alloc.quantity) }}</div>{% endfor %}
+        </section>
         {% endfor %}
-        <hr class="rule">
-        <div class="row"><span>Subtotal</span><span>{{ currency_symbol }}{{ '{:,.2f}'.format(sale.subtotal / conversion_rate) }}</span></div>
-        <div class="row"><span>Impuestos</span><span>{{ currency_symbol }}{{ '{:,.2f}'.format(sale.itbis / conversion_rate) }}</span></div>
-        {% if sale.discount_amount %}<div class="row"><span>Descuento</span><span>-{{ currency_symbol }}{{ '{:,.2f}'.format(sale.discount_amount / conversion_rate) }}</span></div>{% endif %}
-        <div class="row total-row"><span>TOTAL</span><span>{{ currency_symbol }}{{ '{:,.2f}'.format(sale.total / conversion_rate) }}</span></div>
-        {% if sale.payments %}<hr class="rule"><div class="payments-title"><b>Pagos</b></div>{% for payment in sale.payments %}<div class="row"><span>{{ payment.method }}</span><span>{{ currency_symbol }}{{ '{:,.2f}'.format(payment.amount / conversion_rate) }}</span></div>{% endfor %}{% endif %}
-        {% if sale.balance and sale.balance>0 %}<div class="row"><b>Balance pendiente</b><b>{{ currency_symbol }}{{ '{:,.2f}'.format(sale.balance / conversion_rate) }}</b></div>{% endif %}
-        <hr class="rule">
-        <footer class="receipt-footer"><strong>Gracias por su compra</strong><span class="muted">Conserve este ticket para cambios, devoluciones o garantía.</span><span class="receipt-id">OrbisERP · venta {{ sale.id }}</span></footer>
+
+        <hr class="ticket-rule">
+        <div class="ticket-row ticket-count"><span>ARTÍCULOS</span><span>{{ display_quantity(article_count) }}</span></div>
+
+        <hr class="ticket-rule">
+        <div class="ticket-row"><span>Subtotal</span><span>{{ currency_symbol }}{{ '{:,.2f}'.format(sale.subtotal / conversion_rate) }}</span></div>
+        <div class="ticket-row"><span>ITBIS</span><span>{{ currency_symbol }}{{ '{:,.2f}'.format(sale.itbis / conversion_rate) }}</span></div>
+        {% if sale.discount_amount %}<div class="ticket-row"><span>Descuento</span><span>-{{ currency_symbol }}{{ '{:,.2f}'.format(sale.discount_amount / conversion_rate) }}</span></div>{% endif %}
+        <hr class="ticket-rule">
+        <div class="ticket-row ticket-total"><span>TOTAL</span><span>{{ currency_symbol }}{{ '{:,.2f}'.format(sale.total / conversion_rate) }}</span></div>
+
+        {% if ticket_payments %}
+        <hr class="ticket-rule">
+        {% if sale.payment_method == 'CASH' and sale.cash_received is not none %}
+        <div class="ticket-row ticket-payment"><span>EFECTIVO</span><span>{{ currency_symbol }}{{ '{:,.2f}'.format(sale.cash_received / conversion_rate) }}</span></div>
+        <div class="ticket-row"><span>CAMBIO</span><span>{{ currency_symbol }}{{ '{:,.2f}'.format((sale.cash_change or 0) / conversion_rate) }}</span></div>
+        {% else %}
+        {% for payment in ticket_payments %}
+        <div class="ticket-row ticket-payment"><span>{{ payment.label }}</span><span>{{ currency_symbol }}{{ '{:,.2f}'.format(payment.amount / conversion_rate) }}</span></div>
+        {% if payment.reference %}<div class="ticket-reference">Ref. {{ payment.reference }}</div>{% endif %}
+        {% endfor %}
+        {% if sale.cash_received is not none %}
+        <div class="ticket-row"><span>RECIBIDO EFECTIVO</span><span>{{ currency_symbol }}{{ '{:,.2f}'.format(sale.cash_received / conversion_rate) }}</span></div>
+        <div class="ticket-row"><span>CAMBIO</span><span>{{ currency_symbol }}{{ '{:,.2f}'.format((sale.cash_change or 0) / conversion_rate) }}</span></div>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        {% if sale.balance and sale.balance > 0 %}<div class="ticket-row"><span class="ticket-label">BALANCE</span><b>{{ currency_symbol }}{{ '{:,.2f}'.format(sale.balance / conversion_rate) }}</b></div>{% endif %}
+
+        <hr class="ticket-rule">
+        <footer class="ticket-footer">
+          {% if company and company.fiscal_mode == 'disabled' %}<span class="ticket-nonfiscal">DOCUMENTO NO FISCAL</span>{% endif %}
+          <strong>Gracias por su compra</strong>
+          {% if warranty_label %}<span class="warranty">{{ warranty_label }}</span>{% endif %}
+          {% if company and company.invoice_footer %}<span>{{ company.invoice_footer }}</span>{% endif %}
+          <span class="powered">OrbisERP · {{ sale.id }}</span>
+        </footer>
       </article>
     </div>
   </main>
 </div>
 <script nonce="{{ csp_nonce() if csp_nonce is defined else '' }}">
 (() => {
-  const input=document.getElementById('ticketWidth'),paper=document.getElementById('receiptPaper'),label=document.getElementById('ticketWidthLabel');
+  const input=document.getElementById('ticketWidth'),label=document.getElementById('ticketWidthLabel');
   const clamp=v=>Math.min(112,Math.max(40,Number(v)||80));
   function setWidth(value){value=clamp(value);input.value=value;document.documentElement.style.setProperty('--paper-mm',value);label.textContent=value+' mm';let style=document.getElementById('dynamicPageSize');if(!style){style=document.createElement('style');style.id='dynamicPageSize';style.nonce={{ (csp_nonce() if csp_nonce is defined else '')|tojson }};document.head.appendChild(style)}style.textContent='@page{size:'+value+'mm auto;margin:3mm}';}
   input.addEventListener('input',()=>setWidth(input.value));input.addEventListener('change',()=>setWidth(input.value));
   document.querySelectorAll('[data-width]').forEach(btn=>btn.addEventListener('click',()=>setWidth(btn.dataset.width)));
   document.getElementById('printTicket').addEventListener('click',()=>window.print());setWidth({{ width }});
-  {% if autoprint %}window.addEventListener('load',()=>setTimeout(()=>window.print(),180),{once:true});{% endif %}
+  {% if autoprint %}window.addEventListener('load',()=>setTimeout(()=>window.print(),120),{once:true});{% endif %}
 })();
 </script>
 </body></html>

@@ -1,6 +1,6 @@
 {
   "release": "2026.08.13",
-  "alembic_head": "a3c7d5e9f102",
+  "alembic_head": "c6e1a4f8b207",
   "source_archive": "crud(20260827-054609).zip",
   "validation": {
     "focused_offline_and_contract_tests": {
@@ -12,10 +12,10 @@
     "static_release_audit": {
       "status": "passed",
       "jinja_templates": 118,
-      "endpoints": 256,
-      "url_for_references": 1168,
-      "static_asset_references": 141,
-      "alembic_revisions": 27,
+      "endpoints": 257,
+      "url_for_references": 1233,
+      "static_asset_references": 205,
+      "alembic_revisions": 29,
       "javascript_files": 15
     },
     "ui_consistency_audit": {

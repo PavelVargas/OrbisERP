@@ -7,7 +7,7 @@ Este documento separa lo que el software puede verificar de lo que exige una dec
 - [ ] Ejecutar `python scripts/static_release_audit.py` y exigir resultado OK.
 
 - [ ] Ejecutar `pip install -r requirements.txt` y `python -m pip check`.
-- [ ] Ejecutar `flask --app app db upgrade`; después confirmar que `flask --app app db current` coincide con `python scripts/release_identity.py` (head de este paquete: `a3c7d5e9f102`).
+- [ ] Ejecutar `flask --app app db upgrade`; después confirmar que `flask --app app db current` coincide con `python scripts/release_identity.py` (head de este paquete: `c6e1a4f8b207`).
 - [ ] Ejecutar `pytest -q -rs --ignore=tests/e2e` contra PostgreSQL de pruebas.
 - [ ] Ejecutar smoke E2E de Playwright o confirmar que GitHub Actions terminó verde.
 - [ ] Ejecutar `flask --app app audit-integrity` y `flask --app app validate-integrity`.

@@ -1,0 +1,404 @@
+/*
+ * OrbisERP COMPACT DENSITY · 2026-08-30
+ * Desktop-first density pass. Keeps the existing visual language while fitting
+ * materially more information in one viewport. Loaded after module CSS.
+ */
+
+@media (min-width: 901px) {
+  :root {
+    --ui-sidebar: 210px;
+    --ui-sidebar-collapsed: 60px;
+    --ui-topbar: 50px;
+    --ui-page-pad: clamp(14px, 1vw, 20px);
+    --ui-control-sm: 30px;
+    --ui-control: 34px;
+    --ui-control-lg: 38px;
+    --ui-space-1: 3px;
+    --ui-space-2: 6px;
+    --ui-space-3: 9px;
+    --ui-space-4: 12px;
+    --ui-space-5: 15px;
+    --ui-space-6: 18px;
+    --ui-space-7: 22px;
+    --ui-space-8: 28px;
+    --ui-space-9: 32px;
+    --ui-radius: 8px;
+    --ui-radius-lg: 10px;
+    --ui-radius-xl: 13px;
+  }
+
+  body.orbis-app { font-size: 12.75px !important; line-height: 1.42 !important; }
+  body.orbis-app:not(.pos-page) > main {
+    margin-left: var(--ui-sidebar) !important;
+    padding: calc(var(--ui-topbar) + 14px) var(--ui-page-pad) 24px !important;
+  }
+  html.sidebar-collapsed body.orbis-app:not(.pos-page) > main { margin-left: var(--ui-sidebar-collapsed) !important; }
+
+  /* Sidebar: same navigation, substantially less vertical consumption. */
+  #app-sidebar.sidebar { width: var(--ui-sidebar) !important; }
+  #app-sidebar .sidebar-header { padding: 7px 6px 6px !important; }
+  #app-sidebar .brand { min-height: 36px !important; margin-bottom: 5px !important; padding: 2px 6px !important; gap: 8px !important; }
+  #app-sidebar .brand-icon { width: 28px !important; height: 28px !important; min-width: 28px !important; border-radius: 7px !important; }
+  #app-sidebar .brand-icon img { width: 21px !important; height: 21px !important; }
+  #app-sidebar .brand-name { font-size: 12px !important; }
+  #app-sidebar .brand-meta { margin-top: 1px !important; font-size: 9px !important; }
+  #app-sidebar .sidebar-search { height: 32px !important; min-height: 32px !important; padding-inline: 8px !important; gap: 6px !important; border-radius: 7px !important; }
+  #app-sidebar .sidebar-search input { font-size: 11.5px !important; }
+  #app-sidebar .sidebar-search-hint,
+  #app-sidebar .sidebar-search kbd { font-size: 9px !important; }
+  #app-sidebar .sidebar-nav { padding: 2px 6px 8px !important; }
+  #app-sidebar .nav-section { margin-bottom: 4px !important; }
+  #app-sidebar .section-title,
+  #app-sidebar .nav-section-toggle { min-height: 22px !important; padding-inline: 7px !important; font-size: 9px !important; letter-spacing: .05em !important; }
+  #app-sidebar .nav-items { gap: 0 !important; }
+  #app-sidebar .nav-item { min-height: 31px !important; padding: 2px 7px !important; gap: 7px !important; border-radius: 7px !important; }
+  #app-sidebar .nav-icon { width: 22px !important; height: 22px !important; min-width: 22px !important; font-size: 12.5px !important; }
+  #app-sidebar .nav-label { font-size: 11.25px !important; }
+  #app-sidebar .nav-item.active::after { top: 7px !important; bottom: 7px !important; width: 2px !important; }
+  #app-sidebar .sidebar-footer { padding: 6px !important; }
+  #app-sidebar .sidebar-footer .nav-item { min-height: 31px !important; }
+  #app-sidebar .collapse-btn { width: 24px !important; height: 24px !important; right: 6px !important; bottom: 8px !important; }
+  html.sidebar-collapsed #app-sidebar.sidebar { width: var(--ui-sidebar-collapsed) !important; }
+
+  /* Topbar stays visually stable but takes less height. */
+  .app-topbar { left: var(--ui-sidebar) !important; height: var(--ui-topbar) !important; min-height: var(--ui-topbar) !important; padding-inline: var(--ui-page-pad) !important; }
+  html.sidebar-collapsed .app-topbar { left: var(--ui-sidebar-collapsed) !important; }
+  .app-topbar__context,
+  .app-topbar__context strong { font-size: 11.25px !important; }
+  .app-topbar__context > span:last-child { font-size: 10.5px !important; }
+  .app-topbar__actions { gap: 5px !important; }
+  .app-topbar__button,
+  .app-topbar__profile { min-height: 30px !important; height: 30px !important; padding: 0 8px !important; border-radius: 7px !important; font-size: 11px !important; }
+  .app-topbar__avatar { width: 23px !important; height: 23px !important; min-width: 23px !important; font-size: 10px !important; }
+
+  /* Page hierarchy: smaller headers and much less whitespace before content. */
+  body.orbis-app:not(.pos-page) > main :where(
+    .workspace-header,.bo-header,.page-header,.clients-header,.stock-header,.suppliers-header,
+    .purchases-header,.sales-header,.staff-header,.reports-header,.history-header,.monthly-header,
+    .kardex-header,.company-settings-header,.profile-header,.hub-header,.cash-header,.ops-hero,
+    .data-hero,.master-heading,.section-header
+  ) { margin-bottom: 13px !important; gap: 12px !important; }
+  body.orbis-app:not(.pos-page) > main :where(.workspace-eyebrow,.bo-eyebrow,.eyebrow,.hub-eyebrow,.section-kicker,.card-kicker,.setup-kicker,.retail-eyebrow,.master-eyebrow) {
+    margin-bottom: 3px !important; font-size: 9.5px !important; letter-spacing: .055em !important;
+  }
+  body.orbis-app:not(.pos-page) > main :where(.workspace-header,.bo-header,.page-header,.clients-header,.stock-header,.suppliers-header,.purchases-header,.sales-header,.staff-header,.reports-header,.history-header,.monthly-header,.kardex-header,.company-settings-header,.profile-header,.hub-header,.cash-header,.ops-hero,.data-hero,.master-heading,.section-header) :where(h1,h2) {
+    font-size: clamp(22px, 1.65vw, 28px) !important; line-height: 1.08 !important;
+  }
+  body.orbis-app:not(.pos-page) > main :where(.workspace-header,.bo-header,.page-header,.clients-header,.stock-header,.suppliers-header,.purchases-header,.sales-header,.staff-header,.reports-header,.history-header,.monthly-header,.kardex-header,.company-settings-header,.profile-header,.hub-header,.cash-header,.ops-hero,.data-hero,.master-heading,.section-header) p {
+    margin-top: 4px !important; font-size: 11.5px !important; line-height: 1.4 !important;
+  }
+  body.orbis-app:not(.pos-page) > main :where(.workspace-back,.ops-back,.back-link,.reports-back) { min-height: 26px !important; margin-bottom: 4px !important; font-size: 11px !important; }
+  body.orbis-app :where(.workspace-header-actions,.bo-header-actions,.hub-header__actions,.actions,.workspace-actions,.module-toolbar,.workspace-table-actions,.bo-form-actions) { gap: 6px !important; }
+
+  /* Surfaces, grids and metrics. */
+  body.orbis-app :where(
+    .workspace-card,.bo-card,.content-card,.table-card,.detail-card,.summary-card,.stats-card,
+    .toolbar-card,.search-card,.form-container,.form-container-left,.filter-panel,.filters-panel,
+    .control-panel,.configuration-column,.ops-card,.master-panel,.supplier-select-card,.section-shell,
+    .capability-card,.hub-card,.workspace-panel,.info-box,.activity-panel,.product-panel
+  ) { padding: 13px !important; border-radius: 9px !important; }
+  body.orbis-app :where(.workspace-card-head,.bo-card-head,.card-header,.panel-heading,.module-card-head,.retail-card-head) { margin-bottom: 9px !important; gap: 10px !important; }
+  body.orbis-app :where(.workspace-card-head,.bo-card-head,.card-header,.panel-heading,.module-card-head,.retail-card-head) :where(h2,h3) { font-size: 13px !important; }
+  body.orbis-app :where(.workspace-card-head,.bo-card-head,.card-header,.panel-heading,.module-card-head,.retail-card-head) p { margin-top: 2px !important; font-size: 11px !important; line-height: 1.35 !important; }
+  body.orbis-app :where(.workspace-grid,.metric-grid,.stats-grid,.kpi-grid,.bo-kpis) { gap: 8px !important; margin-bottom: 10px !important; }
+  body.orbis-app :where(.workspace-metric,.workspace-kpi,.metric-card,.stat-card,.kpi-card,.bo-kpi) { min-height: 82px !important; padding: 11px !important; border-radius: 9px !important; }
+  body.orbis-app :where(.workspace-metric,.workspace-kpi,.metric-card,.stat-card,.kpi-card,.bo-kpi) > :where(span,.metric-card__top) { font-size: 9.5px !important; }
+  body.orbis-app :where(.workspace-metric,.workspace-kpi,.metric-card,.stat-card,.kpi-card,.bo-kpi) > strong { margin: 7px 0 3px !important; font-size: clamp(18px, 1.35vw, 23px) !important; }
+  body.orbis-app :where(.workspace-metric,.workspace-kpi,.metric-card,.stat-card,.kpi-card,.bo-kpi) footer { margin-top: 5px !important; font-size: 10.5px !important; }
+  body.orbis-app :where(.workspace-columns,.overview-grid,.activity-grid,.secondary-grid,.retail-subgrid,.bo-grid) { gap: 10px !important; }
+  body.orbis-app:not(.pos-page) > main :where(.workspace-card,.bo-card,.hub-card,.content-card,.table-card,.detail-card,.summary-card,.module-page,.retail-shell) + :where(.workspace-card,.bo-card,.hub-card,.content-card,.table-card,.detail-card,.summary-card,.module-page,.retail-shell) { margin-top: 10px !important; }
+
+  /* Controls and forms. */
+  body.orbis-app :where(.workspace-btn,.primary-action,.btn-primary,.master-btn,.export-report,.btn-nav-primary,.btn-hero-primary,button.primary,a.primary) { min-height: 32px !important; padding-inline: 11px !important; border-radius: 7px !important; gap: 5px !important; font-size: 11px !important; }
+  body.orbis-app :where(.workspace-icon-btn,.icon-btn,.icon-action,button[class*="icon-btn"],a[class*="icon-btn"],.product-action-icon) { width: 31px !important; height: 31px !important; min-width: 31px !important; min-height: 31px !important; border-radius: 7px !important; }
+  body.orbis-app :where(.workspace-form,.bo-form-grid,.modern-form,.form-grid,.retail-form,.crm-dialog-grid) { gap: 9px !important; }
+  body.orbis-app :where(.workspace-field,.workspace-form label,.modern-form label,.bo-form-grid label,.retail-form label,.field-group,.form-group) { gap: 4px !important; font-size: 10.5px !important; }
+  body.orbis-app :where(input:not([type="checkbox"]):not([type="radio"]),select) { min-height: 34px !important; height: 34px; padding-inline: 9px !important; border-radius: 7px !important; font-size: 11.5px !important; }
+  body.orbis-app textarea { min-height: 70px !important; padding: 8px 9px !important; border-radius: 7px !important; font-size: 11.5px !important; line-height: 1.4 !important; }
+  body.orbis-app .workspace-filter { margin-bottom: 9px !important; gap: 6px !important; }
+  body.orbis-app :where(.workspace-help,.help-text,.form-help,.field-help) { font-size: 10.5px !important; line-height: 1.35 !important; }
+
+  /* Tables and lists: biggest vertical saving across CRUD screens. */
+  body.orbis-app :where(.workspace-table-wrap,.bo-table-wrap,.table-responsive,.table-wrap,.purchases-table-wrap,[class*="table-container"]) { border-radius: 9px !important; }
+  body.orbis-app :where(table,.workspace-table,.bo-table,.retail-table,.commercial-table) :where(th,td) { padding: 7px 9px !important; }
+  body.orbis-app :where(table,.workspace-table,.bo-table,.retail-table,.commercial-table) th { font-size: 9.5px !important; letter-spacing: .035em !important; }
+  body.orbis-app :where(table,.workspace-table,.bo-table,.retail-table,.commercial-table) td { font-size: 11.5px !important; }
+  body.orbis-app :where(.workspace-tag,.workspace-badge,.module-chip,.retail-chip,.retail-pill,.status,.bo-status,.pill-badge,.badge) { min-height: 20px !important; padding-inline: 6px !important; gap: 4px !important; font-size: 9.5px !important; }
+  body.orbis-app :where(.workspace-empty,.bo-empty,.module-empty,.empty-state) { min-height: 100px !important; padding: 16px 12px !important; gap: 5px !important; }
+  body.orbis-app :where(.workspace-empty,.bo-empty,.module-empty,.empty-state) > i { font-size: 20px !important; }
+  body.orbis-app :where(.workspace-empty,.bo-empty,.module-empty,.empty-state) p { font-size: 11px !important; }
+  body.orbis-app :where(.workspace-mini-row,.module-row,.retail-record,.list-row) { min-height: 42px !important; padding: 6px 0 !important; }
+  body.orbis-app .module-page { --module-gap: 9px !important; }
+  body.orbis-app .module-card-grid { gap: 8px !important; }
+  body.orbis-app .module-entity-card { padding: 11px !important; }
+  body.orbis-app .module-page .module-tab { min-height: 28px !important; padding-inline: 8px !important; font-size: 10.5px !important; }
+  body.orbis-app .module-page .module-row { padding: 7px 2px !important; }
+  body.orbis-app .module-page .module-row-icon { width: 30px !important; height: 30px !important; flex-basis: 30px !important; }
+
+  /* Dashboard/report utility areas. */
+  body.orbis-app .quick-panel { margin-bottom: 10px !important; padding: 10px !important; grid-template-columns: 150px minmax(0,1fr) !important; gap: 8px !important; }
+  body.orbis-app .quick-actions { gap: 4px !important; }
+  body.orbis-app .quick-actions a { min-height: 44px !important; padding: 6px 8px !important; }
+  body.orbis-app .sales-chart { min-height: 200px !important; }
+  body.orbis-app .priority-list > a { min-height: 46px !important; padding: 6px !important; }
+
+  /* CRM: fit the complete workbench much better in 768/900px-high screens. */
+  body.orbis-app .crm-v3 { --crm-side: 248px !important; }
+  body.orbis-app .crm-v3 .crm-v3-stats { gap: 7px !important; margin-bottom: 9px !important; }
+  body.orbis-app .crm-v3 .crm-v3-stats article { min-height: 66px !important; padding: 9px !important; border-radius: 9px !important; }
+  body.orbis-app .crm-v3 .crm-v3-stats article > span { font-size: 9px !important; }
+  body.orbis-app .crm-v3 .crm-v3-stats article > strong { margin: 5px 0 1px !important; font-size: 17px !important; }
+  body.orbis-app .crm-v3 .crm-v3-stats article > small { font-size: 9.5px !important; }
+  body.orbis-app .crm-v3 .crm-v3-shell { min-height: 500px !important; border-radius: 10px !important; }
+  body.orbis-app .crm-v3 .crm-directory { padding: 10px !important; }
+  body.orbis-app .crm-v3 .crm-directory > header { margin-bottom: 8px !important; }
+  body.orbis-app .crm-v3 .crm-directory-search { height: 33px !important; margin-bottom: 7px !important; }
+  body.orbis-app .crm-v3 .crm-client-kpis { gap: 7px !important; }
+  body.orbis-app .crm-v3 .crm-client-kpis article { min-height: 58px !important; padding: 8px !important; }
+  body.orbis-app .crm-v3 .crm-v3-columns { gap: 8px !important; }
+  body.orbis-app .crm-v3 .crm-v3-card { padding: 10px !important; }
+  body.orbis-app .crm-v3 .crm-card-head { margin-bottom: 8px !important; }
+  body.orbis-app .crm-v3 .crm-pipeline button { min-height: 50px !important; padding: 6px !important; }
+  body.orbis-app .crm-v3 .crm-task-list { max-height: 190px !important; }
+  body.orbis-app .crm-v3 .crm-task-item { min-height: 42px !important; padding: 6px !important; }
+
+  /* Purchase document: preserve the Odoo-like line workflow, shrink only chrome. */
+  body.orbis-app .purchase-page { padding-top: 8px !important; }
+  body.orbis-app .purchase-page .order-header { margin-bottom: 6px !important; padding: 3px 0 6px !important; }
+  body.orbis-app .purchase-page .order-header h1 { font-size: clamp(21px,1.6vw,27px) !important; }
+  body.orbis-app .purchase-page .order-progress[data-layout="stagebar"] { margin-bottom: 7px !important; }
+  body.orbis-app .purchase-page .order-progress[data-layout="stagebar"] .progress-step { min-width: 122px !important; padding: 5px 9px !important; }
+  body.orbis-app .purchase-page .purchase-document-info { min-height: 122px !important; padding: 14px 20px !important; gap: 28px !important; }
+  body.orbis-app .purchase-page .purchase-document-primary > h2 { margin: 2px 0 12px !important; font-size: 20px !important; }
+  body.orbis-app .purchase-page .purchase-document-secondary { gap: 8px !important; }
+  body.orbis-app .purchase-page .purchase-document-tabs { min-height: 32px !important; padding-inline: 14px !important; }
+  body.orbis-app .purchase-page .purchase-document-tabs button { height: 32px !important; }
+  body.orbis-app .purchase-page .purchase-document-tabs > span { margin-bottom: 8px !important; }
+  body.orbis-app .purchase-page .odoo-lines-table th { height: 28px !important; }
+  body.orbis-app .purchase-page .odoo-lines-table td { height: 42px !important; padding: 5px 7px !important; }
+  body.orbis-app .purchase-page .purchase-entry-row td { height: 50px !important; }
+  body.orbis-app .purchase-page .purchase-entry-row input,
+  body.orbis-app .purchase-page .purchase-entry-row select { height: 30px !important; min-height: 30px !important; }
+  body.orbis-app .purchase-page .purchase-sheet-footer { padding: 12px 18px 14px !important; gap: 20px !important; }
+  body.orbis-app .purchase-page .purchase-sheet-footer .order-notes { min-height: 64px !important; padding-block: 6px !important; }
+  body.orbis-app .purchase-page .purchase-document-total .summary-row { padding: 4px 0 !important; }
+  body.orbis-app .purchase-page .purchase-document-total .summary-total { padding: 7px 0 !important; }
+  body.orbis-app .purchase-page .purchase-document-total .summary-total strong { font-size: 18px !important; }
+
+  /* Scanner: remove the large dead vertical areas while keeping the scan target obvious. */
+  body.scanner-mode-page .scanner-workstation { padding: calc(var(--ui-topbar) + 12px) var(--ui-page-pad) 22px !important; }
+  body.scanner-mode-page .scanner-toolbar { min-height: 42px !important; padding-bottom: 8px !important; }
+  body.scanner-mode-page .scanner-heading { gap: 10px !important; }
+  body.scanner-mode-page .scanner-heading h1 { font-size: clamp(21px,1.7vw,27px) !important; }
+  body.scanner-mode-page .scanner-heading p { margin-top: 4px !important; font-size: 10.5px !important; }
+  body.scanner-mode-page .manual-scan { min-height: 48px !important; padding: 5px 5px 5px 12px !important; }
+  body.scanner-mode-page .manual-scan input { height: 36px !important; min-height: 36px !important; }
+  body.scanner-mode-page .scan-step { min-height: 52px !important; padding: 7px 10px !important; }
+  body.scanner-mode-page .scanner-idle { min-height: 190px !important; padding: 20px !important; }
+  body.scanner-mode-page .scanner-idle > span { width: 44px !important; height: 44px !important; }
+  body.scanner-mode-page .scanner-idle h2 { font-size: 15px !important; }
+  body.scanner-mode-page .transfer-details { gap: 9px !important; }
+  body.scanner-mode-page .route-path { min-height: 58px !important; padding: 9px 12px !important; }
+  body.scanner-mode-page .product-node { padding: 12px !important; }
+  body.scanner-mode-page .product-title { margin-top: 5px !important; font-size: clamp(17px,1.5vw,22px) !important; }
+  body.scanner-mode-page .progress-wrapper { margin: 11px 0 9px !important; }
+  body.scanner-mode-page .counter-box { min-height: 64px !important; padding: 9px !important; }
+  body.scanner-mode-page .qty-now { font-size: clamp(25px,3vw,34px) !important; }
+  body.scanner-mode-page .qty-total { font-size: 19px !important; }
+  body.scanner-mode-page .fractional-entry { margin-top: 9px !important; padding-top: 9px !important; gap: 10px !important; }
+  body.scanner-mode-page .scanner-confirm { min-height: 40px !important; }
+
+  /* POS: denser terminal without sacrificing the product image. */
+  body.pos-page { --pos-topbar-h: 52px !important; --pos-order-w: clamp(340px, 24vw, 390px) !important; font-size: 12.5px !important; }
+  body.pos-page .pos-topbar { height: var(--pos-topbar-h) !important; padding-inline: 12px !important; gap: 10px !important; }
+  body.pos-page .back-btn { min-height: 30px !important; font-size: 11.5px !important; }
+  body.pos-page .topbar-divider { height: 22px !important; }
+  body.pos-page .topbar-title { font-size: 13px !important; }
+  body.pos-page .topbar-subtitle { font-size: 10px !important; }
+  body.pos-page .topbar-badge,
+  body.pos-page .clock-chip { min-height: 28px !important; padding-inline: 8px !important; font-size: 10.5px !important; border-radius: 7px !important; }
+  body.pos-page .pos-layout { top: var(--pos-topbar-h) !important; }
+  body.pos-page .search-bar-area { padding: 8px 10px !important; }
+  body.pos-page #barcode-input { height: 36px !important; min-height: 36px !important; padding-left: 38px !important; font-size: 11.5px !important; border-radius: 8px !important; }
+  body.pos-page .catalog-status { min-width: 88px !important; min-height: 28px !important; font-size: 10px !important; }
+  body.pos-page #product-grid.product-area { padding: 8px !important; gap: 8px !important; grid-template-columns: repeat(auto-fill,minmax(218px,1fr)) !important; }
+  body.pos-page #product-grid > article.retail-pos-card { min-height: 292px !important; border-radius: 10px !important; }
+  body.pos-page .sale-product-media { height: 132px !important; min-height: 132px !important; }
+  body.pos-page .sale-product-media > img { padding: 6px !important; }
+  body.pos-page .pos-card-body { padding: 9px 10px 10px !important; }
+  body.pos-page .card-header-tags { margin-bottom: 5px !important; }
+  body.pos-page .badge-ui { min-height: 18px !important; padding-inline: 5px !important; font-size: 9px !important; }
+  body.pos-page .product-sku { font-size: 9.5px !important; }
+  body.pos-page .product-name { min-height: 31px !important; margin-top: 2px !important; font-size: 12px !important; }
+  body.pos-page .pos-price-row { margin-top: 5px !important; }
+  body.pos-page .product-price { font-size: 14px !important; }
+  body.pos-page .pos-stock-row { margin-top: 4px !important; }
+  body.pos-page .pos-stock-badge { min-height: 19px !important; font-size: 9.5px !important; }
+  body.pos-page .pos-card-controls { padding-top: 7px !important; gap: 5px !important; grid-template-columns: minmax(0,1fr) 58px !important; }
+  body.pos-page .pos-card-controls select,
+  body.pos-page .pos-card-controls input { height: 32px !important; min-height: 32px !important; font-size: 10.5px !important; }
+  body.pos-page #product-grid .add-product-btn { min-height: 36px !important; font-size: 11px !important; }
+  body.pos-page .order-head { padding: 9px 10px !important; }
+  body.pos-page .client-selector-wrap { margin-top: 7px !important; }
+  body.pos-page .client-select,
+  body.pos-page .method-select { height: 34px !important; min-height: 34px !important; font-size: 11px !important; }
+  body.pos-page .client-icon { top: 17px !important; }
+  body.pos-page .client-selector-help { margin-top: 4px !important; font-size: 9.5px !important; }
+  body.pos-page .order-item { padding: 7px 9px !important; grid-template-columns: 26px minmax(0,1fr) auto 30px !important; gap: 6px !important; }
+  body.pos-page .item-qty-badge { width: 26px !important; height: 26px !important; font-size: 10.5px !important; }
+  body.pos-page .item-name,
+  body.pos-page .item-line-total { font-size: 11px !important; }
+  body.pos-page .item-unit-price { font-size: 9.5px !important; }
+  body.pos-page .summary-section { padding: 7px 10px !important; }
+  body.pos-page .summary-line { padding: 2px 0 !important; font-size: 10.5px !important; }
+  body.pos-page .summary-line.total-line { padding-top: 4px !important; font-size: 12.5px !important; }
+  body.pos-page .promotion-panel { padding: 7px 10px !important; }
+  body.pos-page .promotion-code-input,
+  body.pos-page .promotion-apply-btn { height: 34px !important; min-height: 34px !important; }
+  body.pos-page .checkout-section { padding: 7px 10px max(8px,env(safe-area-inset-bottom)) !important; }
+  body.pos-page .action-buttons-stack { gap: 5px !important; }
+  body.pos-page .payment-method-row { margin-bottom: 5px !important; }
+  body.pos-page .btn-checkout,
+  body.pos-page .btn-quote { min-height: 35px !important; font-size: 10.75px !important; }
+  body.pos-page .cash-tender-box,
+  body.pos-page .split-payment-box { margin-bottom: 5px !important; padding: 7px !important; }
+  body.pos-page .cash-money-input { height: 35px !important; }
+  body.pos-page .cash-money-input input { height: 33px !important; font-size: 14px !important; }
+  body.pos-page .cash-change-card { min-height: 48px !important; padding: 6px 8px !important; }
+}
+
+/* Public/master surfaces get a lighter density adjustment without tiny touch targets. */
+@media (min-width: 901px) {
+  body.orbis-public,
+  body.orbis-master { font-size: 13px !important; line-height: 1.42 !important; }
+  body.orbis-public :where(input,select,button,a[class*="btn"],.btn),
+  body.orbis-master :where(input,select,button,a[class*="btn"],.btn) { min-height: 36px; }
+  body.orbis-public :where(.auth-card,.register-card,.verify-card,.public-card),
+  body.orbis-master :where(.master-card,.master-panel,.payment-card) { padding: 18px !important; }
+}
+
+/* Tablet/mobile remain touch-friendly; only trim excessive outer whitespace. */
+@media (max-width: 900px) {
+  body.orbis-app:not(.pos-page) > main { padding-inline: 14px !important; }
+  body.orbis-app :where(.workspace-card,.bo-card,.content-card,.detail-card,.summary-card,.module-entity-card) { padding: 14px !important; }
+  body.orbis-app :where(table,.workspace-table,.bo-table,.retail-table,.commercial-table) :where(th,td) { padding: 9px 10px !important; }
+}
+
+/* --------------------------------------------------------------------------
+   ODOO 19-INSPIRED DARK MODE · 2026-08-30
+   Neutral graphite canvas, low-contrast separators and flatter document/list
+   surfaces. OrbisERP deliberately retains orange as the brand/action accent.
+   -------------------------------------------------------------------------- */
+html.dark,
+html[data-theme="dark"],
+html[data-orbis-seed-theme="dark"] {
+  background: #191b1f !important;
+  color-scheme: dark;
+}
+html.dark body,
+html[data-theme="dark"] body,
+html[data-orbis-seed-theme="dark"] body {
+  background: var(--ui-bg) !important;
+  color: var(--ui-text) !important;
+}
+html.dark #app-sidebar.sidebar {
+  background: #202226 !important;
+  border-right-color: #303339 !important;
+}
+html.dark .app-topbar {
+  background: #202226 !important;
+  border-bottom-color: #303339 !important;
+}
+html.dark #app-sidebar .sidebar-search,
+html.dark .app-topbar__button--search,
+html.dark .app-topbar__button,
+html.dark .app-topbar__profile {
+  background: transparent !important;
+  border-color: transparent !important;
+}
+html.dark #app-sidebar .sidebar-search,
+html.dark .app-topbar__button--search {
+  background: #282b30 !important;
+}
+html.dark #app-sidebar .nav-item.active {
+  background: #35251f !important;
+  color: #ffb28f !important;
+}
+html.dark #app-sidebar .nav-item:hover:not(.active) {
+  background: #292c31 !important;
+}
+html.dark body.orbis-app:not(.pos-page) :where(
+  .workspace-card,.bo-card,.content-card,.table-card,.detail-card,.summary-card,.form-container,
+  .form-container-left,.configuration-column,.ops-card,.master-panel,.supplier-select-card,.section-shell,
+  .capability-card,.hub-card,.workspace-panel,.product-panel,.sales-card,.lines-card,.route-card,.items-card,
+  .retail-launch-card,.retail-record,.odoo-product-card,.purchase-document-sheet,.purchase-lines-card
+) {
+  background: #222428 !important;
+  border-color: #34373d !important;
+  box-shadow: none !important;
+}
+html.dark body.orbis-app:not(.pos-page) :where(
+  input:not([type="checkbox"]):not([type="radio"]),select,textarea,.filter-panel,.filters-panel,.toolbar-card,
+  .search-card,.control-panel,.module-toolbar,.filters-bar,.action-bar,.module-row,.module-entity-card,.module-kv > div
+) {
+  background-color: #282b30 !important;
+  border-color: #3a3d44 !important;
+  color: #e9eaec !important;
+  box-shadow: none !important;
+}
+html.dark body.orbis-app:not(.pos-page) :where(input,textarea)::placeholder { color: #777c86 !important; }
+html.dark body.orbis-app:not(.pos-page) :where(table,.workspace-table,.bo-table,.retail-table,.commercial-table,.purchase-lines-table) {
+  background: #222428 !important;
+  border-color: #34373d !important;
+}
+html.dark body.orbis-app:not(.pos-page) :where(table,.workspace-table,.bo-table,.retail-table,.commercial-table,.purchase-lines-table) th {
+  background: #202226 !important;
+  color: #a8abb2 !important;
+  border-color: #34373d !important;
+}
+html.dark body.orbis-app:not(.pos-page) :where(table,.workspace-table,.bo-table,.retail-table,.commercial-table,.purchase-lines-table) td {
+  background: #222428 !important;
+  color: #d4d6da !important;
+  border-color: #34373d !important;
+}
+html.dark body.orbis-app:not(.pos-page) :where(table,.workspace-table,.bo-table,.retail-table,.commercial-table,.purchase-lines-table) tbody tr:hover td {
+  background: #282b30 !important;
+}
+html.dark body.orbis-app :where(dialog,.global-search-panel,.orbis-feedback-card,.orbis-confirm-card) {
+  background: #222428 !important;
+  border-color: #3a3d44 !important;
+  color: #e9eaec !important;
+  box-shadow: 0 20px 55px #101216 !important;
+}
+html.dark body.orbis-app :where(.workspace-alert,.flash,.alert) {
+  box-shadow: none !important;
+}
+
+/* Normalize legacy module-local dark tokens into the same graphite system. */
+html.dark,
+html[data-theme="dark"],
+html[data-orbis-seed-theme="dark"] {
+  --cat-bg: var(--ui-bg) !important;
+  --cat-card: var(--ui-surface) !important;
+  --cat-border: var(--ui-line) !important;
+  --cat-text: var(--ui-text) !important;
+  --cat-muted: var(--ui-muted) !important;
+  --trace-bg: var(--ui-bg) !important;
+  --trace-card: var(--ui-surface) !important;
+  --trace-text: var(--ui-text) !important;
+  --trace-muted: var(--ui-muted) !important;
+  --trace-line: var(--ui-line) !important;
+  --trace-accent: var(--ui-primary) !important;
+  --stock-bg: var(--ui-bg) !important;
+  --stock-card: var(--ui-surface) !important;
+  --stock-soft: var(--ui-surface-soft) !important;
+  --stock-border: var(--ui-line) !important;
+  --stock-text: var(--ui-text) !important;
+  --stock-muted: var(--ui-muted) !important;
+  --master-bg: var(--ui-bg) !important;
+  --master-surface: var(--ui-surface) !important;
+  --master-soft: var(--ui-surface-soft) !important;
+  --master-border: var(--ui-line) !important;
+  --master-text: var(--ui-text) !important;
+  --master-muted: var(--ui-muted) !important;
+}

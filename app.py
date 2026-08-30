@@ -838,14 +838,25 @@ def enforce_request_security():
         # Keep non-security-critical cached context synchronized with the user row.
         # This makes role/permission/location edits effective on the next request
         # without forcing a logout/login cycle.
+        # A superadmin normally has no tenant. When support impersonation is active,
+        # preserve the explicitly selected company/location context instead of
+        # overwriting it with the superadmin row (whose company_id is NULL).
+        support_context = bool(
+            authenticated_user.role == 'superadmin'
+            and session.get('impersonating')
+            and session.get('company_id')
+        )
         live_context = {
             'user_name': authenticated_user.name,
             'user_role': authenticated_user.role,
-            'company_id': authenticated_user.company_id,
-            'warehouse_id': authenticated_user.warehouse_id,
-            'branch_id': authenticated_user.branch_id,
-            'terminal_id': authenticated_user.terminal_id,
         }
+        if not support_context:
+            live_context.update({
+                'company_id': authenticated_user.company_id,
+                'warehouse_id': authenticated_user.warehouse_id,
+                'branch_id': authenticated_user.branch_id,
+                'terminal_id': authenticated_user.terminal_id,
+            })
         for key, value in live_context.items():
             if session.get(key) != value:
                 if value is None:

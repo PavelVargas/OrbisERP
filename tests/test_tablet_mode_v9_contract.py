@@ -69,8 +69,9 @@ def test_tablet_navigation_has_motion_with_reduced_motion_escape_hatch():
     assert 'tablet-navigating' in css
     assert '@media (prefers-reduced-motion: reduce)' in css
     assert 'initNavigationMotion' in runtime
-    assert "root.classList.add('tablet-navigating')" in runtime
+    assert "root.classList.add('tablet-navigating')" not in runtime
     assert 'location.assign(target.href)' in runtime
+    assert 'setTimeout' not in runtime.split('const initNavigationMotion', 1)[1].split('const stampTabletForms', 1)[0]
 
 
 def test_final_tablet_experience_layer_loads_after_generated_responsive_rules():

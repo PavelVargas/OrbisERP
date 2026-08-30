@@ -5,6 +5,12 @@
   var LEGACY_KEY = 'orbis-theme';
   var applying = false;
 
+  function syncThemeCookie(theme) {
+    try {
+      document.cookie = 'orbis_theme=' + theme + '; Path=/; Max-Age=31536000; SameSite=Lax';
+    } catch (_error) {}
+  }
+
   function normalize(value) {
     return value === 'dark' ? 'dark' : value === 'light' ? 'light' : null;
   }
@@ -17,6 +23,8 @@
       stored = null;
     }
     if (stored) return stored;
+    var seeded = normalize(document.documentElement.dataset.theme);
+    if (seeded) return seeded;
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
 
@@ -28,11 +36,26 @@
     var root = document.documentElement;
     if (root.classList.contains('dark') !== dark) root.classList.toggle('dark', dark);
     if (root.dataset.theme !== theme) root.dataset.theme = theme;
+    if (root.dataset.orbisSeedTheme !== theme) root.dataset.orbisSeedTheme = theme;
     if (root.style.colorScheme !== theme) root.style.colorScheme = theme;
+    var canvas = dark ? '#191b1f' : '#f5f7fa';
+    root.style.setProperty('background-color', canvas, 'important');
+    var themeMetas = document.querySelectorAll('meta[name="theme-color"]');
+    if (!themeMetas.length && document.head) {
+      var meta = document.createElement('meta');
+      meta.name = 'theme-color';
+      meta.dataset.orbisThemeColor = '1';
+      document.head.appendChild(meta);
+      themeMetas = [meta];
+    }
+    Array.prototype.forEach.call(themeMetas, function (meta) { meta.content = canvas; });
+    var schemeMeta = document.querySelector('meta[name="color-scheme"]');
+    if (schemeMeta) schemeMeta.content = dark ? 'dark light' : 'light dark';
     if (document.body) {
       if (document.body.classList.contains('dark') !== dark) document.body.classList.toggle('dark', dark);
       if (document.body.dataset.theme !== theme) document.body.dataset.theme = theme;
     }
+    syncThemeCookie(theme);
     if (persist !== false) {
       try {
         localStorage.setItem(KEY, theme);
@@ -55,9 +78,9 @@
   }
 
   function finishInitialPaint() {
-    requestAnimationFrame(function () {
-      requestAnimationFrame(function () { document.documentElement.classList.remove('theme-preload'); });
-    });
+    var root = document.documentElement;
+    root.classList.remove('theme-preload');
+    root.classList.add('ui-ready');
   }
 
   applyTheme(preferredTheme(), false);
@@ -75,6 +98,13 @@
 
   window.addEventListener('storage', function (event) {
     if (event.key === KEY || event.key === LEGACY_KEY) applyTheme(event.newValue, false);
+  });
+
+
+  window.addEventListener('pageshow', function () {
+      applyTheme(preferredTheme(), false);
+    document.documentElement.classList.remove('theme-preload');
+    document.documentElement.classList.add('ui-ready');
   });
 
   window.OrbisTheme = Object.freeze({

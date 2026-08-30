@@ -1,21 +1,53 @@
-{# Canonical theme bootstrap for standalone/public pages. Keep inline so the
-   correct palette is applied before CSS paints; theme-sync maintains it live. #}
-<style>html{background:#f5f7fa;color-scheme:light}html.dark{background:#0f1115;color-scheme:dark}html.theme-preload *,html.theme-preload *::before,html.theme-preload *::after{transition:none!important;animation:none!important}</style>
-<script>
+{# Canonical no-flash theme bootstrap for standalone/public pages.
+   The document root is server-seeded when a persisted theme cookie exists;
+   this inline bootstrap then reconciles localStorage before any external CSS. #}
+<meta name="color-scheme" content="{{ 'dark light' if (request.cookies.get('orbis_theme') or session.get('theme')) == 'dark' else 'light dark' }}">
+<meta name="theme-color" data-orbis-theme-color="1" content="{{ '#191b1f' if (request.cookies.get('orbis_theme') or session.get('theme')) == 'dark' else '#f5f7fa' }}">
+<script nonce="{{ csp_nonce() if csp_nonce is defined else '' }}">
 (() => {
+    const root = document.documentElement;
+    root.classList.add('theme-preload');
     let saved = null;
     try {
         saved = localStorage.getItem('theme') || localStorage.getItem('orbis-theme');
     } catch (_error) {
         saved = null;
     }
-    const dark = saved === 'dark' || (saved !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+    const seeded = root.dataset.orbisSeedTheme;
+    const systemDark = typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches;
+    const selected = saved || (seeded === 'dark' ? 'dark' : seeded === 'light' ? 'light' : null);
+    const dark = selected === 'dark' || (!selected && systemDark);
     const theme = dark ? 'dark' : 'light';
-    const root = document.documentElement;
-    root.classList.add('theme-preload');
+    const canvas = dark ? '#191b1f' : '#f5f7fa';
     root.classList.toggle('dark', dark);
     root.dataset.theme = theme;
+    root.dataset.orbisSeedTheme = theme;
+    root.style.setProperty('background-color', canvas, 'important');
     root.style.colorScheme = theme;
+    try {
+        document.cookie = 'orbis_theme=' + theme + '; Path=/; Max-Age=31536000; SameSite=Lax';
+    } catch (_error) {}
+    let meta = document.querySelector('meta[name="theme-color"][data-orbis-theme-color]');
+    if (!meta) {
+        meta = document.createElement('meta');
+        meta.name = 'theme-color';
+        meta.dataset.orbisThemeColor = '1';
+        document.head.appendChild(meta);
+    }
+    meta.content = canvas;
+    const schemeMeta = document.querySelector('meta[name="color-scheme"]');
+    if (schemeMeta) schemeMeta.content = dark ? 'dark light' : 'light dark';
 })();
 </script>
-<script src="{{ url_for('static', filename='js/theme-sync.js') }}" defer></script>
+<style nonce="{{ csp_nonce() if csp_nonce is defined else '' }}">
+:root{min-height:100%;background:#f5f7fa!important;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){background:#191b1f!important;color-scheme:dark}}
+:root.dark,:root[data-theme="dark"],:root[data-orbis-seed-theme="dark"]{background:#191b1f!important;color-scheme:dark}
+:root:not(.dark)[data-theme="light"],:root[data-orbis-seed-theme="light"]{background:#f5f7fa!important;color-scheme:light}
+html,body{min-height:100%}
+html.dark body,html[data-theme="dark"] body{background:#191b1f!important;color:#f5f7fb}
+html:not(.dark)[data-theme="light"] body{background:#f5f7fa!important}
+html.theme-preload *,html.theme-preload *::before,html.theme-preload *::after{transition:none!important;animation:none!important}
+
+</style>
+<script src="{{ url_for('static', filename='js/theme-sync.js', v='20260830-odoo19dark1') }}" defer></script>

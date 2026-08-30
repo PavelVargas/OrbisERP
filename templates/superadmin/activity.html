@@ -1,0 +1,13 @@
+{% extends 'superadmin/base.html' %}
+{% block title %}Actividad{% endblock %}
+{% block eyebrow %}AUDITORÍA{% endblock %}
+{% block heading %}Actividad del centro maestro{% endblock %}
+{% block subtitle %}Registro de soporte, cambios de estado, renovaciones, anuncios y aprobaciones de pago.{% endblock %}
+{% block actions %}<span class="sa-head-chip"><i class="bi bi-shield-check"></i> {{ rows|length }} eventos recientes</span>{% endblock %}
+{% block content %}
+<section class="sa-panel flush">
+  <div class="sa-table-wrap"><table class="sa-table activity-table"><thead><tr><th>Fecha</th><th>Acción</th><th>Cliente</th><th>Detalle</th><th>IP</th></tr></thead><tbody>
+  {% for log, company in rows %}<tr><td>{{ log.created_at.strftime('%d/%m/%Y %H:%M') if log.created_at else '—' }}</td><td><span class="sa-tag">{{ log.action }}</span></td><td>{{ company.name if company else 'Plataforma' }}</td><td>{{ log.description or 'Sin detalle' }}</td><td><code class="sa-code">{{ log.ip_address or '—' }}</code></td></tr>{% else %}<tr><td colspan="5"><div class="sa-empty">No hay actividad registrada.</div></td></tr>{% endfor %}
+  </tbody></table></div>
+</section>
+{% endblock %}

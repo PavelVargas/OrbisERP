@@ -1,56 +1,49 @@
 (() => {
   'use strict';
   const root = document.documentElement;
+  const body = document.body;
   const $ = (id) => document.getElementById(id);
 
-  const storedTheme = () => {
-    try { const value = localStorage.getItem('theme') || localStorage.getItem('orbis-theme'); if (['dark','light'].includes(value)) return value; } catch (_e) {}
-    return root.dataset.theme === 'dark' || matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  };
-  const setTheme = (theme) => {
-    if (window.OrbisTheme) return window.OrbisTheme.set(theme);
-    const dark = theme === 'dark';
-    root.classList.toggle('dark', dark); root.dataset.theme = theme; root.style.colorScheme = theme;
-    try { localStorage.setItem('theme', theme); localStorage.setItem('orbis-theme', theme); } catch (_e) {}
-    return theme;
-  };
-  const updateThemeButton = (theme) => {
+  const currentTheme = () => root.classList.contains('dark') ? 'dark' : 'light';
+  const paintThemeButton = () => {
+    const dark = currentTheme() === 'dark';
     const icon = $('themeIco'); const text = $('themeTxt');
-    if (icon) icon.className = theme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
-    if (text) text.textContent = theme === 'dark' ? 'Usar modo claro' : 'Usar modo oscuro';
+    if (icon) icon.className = dark ? 'bi bi-sun' : 'bi bi-moon';
+    if (text) text.textContent = dark ? 'Modo claro' : 'Modo oscuro';
   };
-  let theme = setTheme(storedTheme()); updateThemeButton(theme);
-  $('themeBtn')?.addEventListener('click', () => { theme = setTheme(theme === 'dark' ? 'light' : 'dark'); updateThemeButton(theme); });
-  document.addEventListener('orbis:themechange', (event) => { theme = event.detail?.theme || storedTheme(); updateThemeButton(theme); });
+  paintThemeButton();
+  $('themeBtn')?.addEventListener('click', () => {
+    const next = currentTheme() === 'dark' ? 'light' : 'dark';
+    if (window.OrbisTheme) window.OrbisTheme.set(next);
+    else {
+      root.classList.toggle('dark', next === 'dark'); root.dataset.theme = next;
+      try { localStorage.setItem('theme', next); localStorage.setItem('orbis-theme', next); document.cookie = `orbis_theme=${next}; Path=/; Max-Age=31536000; SameSite=Lax`; } catch (_e) {}
+    }
+    paintThemeButton();
+  });
+  document.addEventListener('orbis:themechange', paintThemeButton);
 
-  const openBackdrop = (id) => { const el = $(id); if (!el) return; el.hidden = false; document.body.style.overflow = 'hidden'; el.querySelector('button,input,select,textarea')?.focus(); };
-  const closeBackdrop = (id) => { const el = $(id); if (!el) return; el.hidden = true; if (!document.querySelector('.master-modal-backdrop:not([hidden])')) document.body.style.overflow = ''; };
-
-  document.querySelector('[data-open-broadcast]')?.addEventListener('click', () => openBackdrop('broadcastModal'));
-  document.querySelectorAll('[data-close-modal]').forEach((btn) => btn.addEventListener('click', () => closeBackdrop(btn.dataset.closeModal)));
-  document.querySelectorAll('.master-modal-backdrop').forEach((backdrop) => backdrop.addEventListener('click', (event) => { if (event.target === backdrop) closeBackdrop(backdrop.id); }));
-  document.addEventListener('keydown', (event) => { if (event.key === 'Escape') document.querySelectorAll('.master-modal-backdrop:not([hidden])').forEach((el) => closeBackdrop(el.id)); });
-
-  document.querySelectorAll('.inspect-company').forEach((button) => button.addEventListener('click', () => {
-    let data = {};
-    try { data = JSON.parse(button.dataset.company || '{}'); } catch (_e) { return; }
-    const assign = (id, value) => { const el = $(id); if (el) el.textContent = value ?? 'N/D'; };
-    assign('m-name', data.name || 'Empresa'); assign('m-id', `#NODE-${String(data.id || 0).padStart(3,'0')}`);
-    assign('m-status', data.status ? 'Activa' : 'Suspendida'); assign('m-readonly', data.is_readonly ? 'Solo lectura' : 'Acceso total');
-    assign('m-plan', data.plan); assign('m-expiry', data.expiry); assign('m-rnc', data.rnc || 'N/D'); assign('m-tax', `${data.tax_name || 'Impuesto'} (${data.tax_percent || 0}%)`);
-    assign('m-currency', data.currency); assign('m-usage', `${data.usage || 0} MB`); assign('m-email', data.email || 'N/D'); assign('m-address', data.address || 'N/D');
-    const renew = $('renewForm'); if (renew) renew.action = button.dataset.renewUrl || '';
-    openBackdrop('modalBg');
-  }));
-
-  const search = $('srch'); const empty = $('empty');
-  const applySearch = () => {
-    if (!search) return; const term = search.value.trim().toLocaleLowerCase('es'); let visible = 0;
-    document.querySelectorAll('.nc').forEach((card) => { const haystack = `${card.dataset.name || ''} ${card.dataset.rnc || ''} ${card.dataset.admin || ''}`.toLocaleLowerCase('es'); const ok = !term || haystack.includes(term); card.hidden = !ok; if (ok) visible += 1; });
-    if (empty) empty.style.display = visible ? 'none' : 'grid';
+  const openModal = (id) => {
+    const modal = $(id); if (!modal) return;
+    modal.hidden = false; body.style.overflow = 'hidden';
+    modal.querySelector('button,input,select,textarea')?.focus();
   };
-  search?.addEventListener('input', applySearch);
-  document.addEventListener('keydown', (event) => { if (event.key === '/' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '')) { event.preventDefault(); search?.focus(); } });
+  const closeModal = (id) => {
+    const modal = $(id); if (!modal) return;
+    modal.hidden = true;
+    if (!document.querySelector('.sa-modal-backdrop:not([hidden])')) body.style.overflow = '';
+  };
+  document.querySelectorAll('[data-open-modal]').forEach(btn => btn.addEventListener('click', () => openModal(btn.dataset.openModal)));
+  document.querySelectorAll('[data-open-client]').forEach(btn => btn.addEventListener('click', () => openModal(btn.dataset.openClient)));
+  document.querySelectorAll('[data-close-modal]').forEach(btn => btn.addEventListener('click', () => closeModal(btn.dataset.closeModal)));
+  document.querySelectorAll('.sa-modal-backdrop').forEach(bg => bg.addEventListener('click', event => { if (event.target === bg) closeModal(bg.id); }));
+  document.addEventListener('keydown', event => { if (event.key === 'Escape') document.querySelectorAll('.sa-modal-backdrop:not([hidden])').forEach(x => closeModal(x.id)); });
 
-  requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('theme-preload')));
+  const sidebar = $('saSidebar'); const backdrop = $('saBackdrop'); const menu = $('saMenuBtn');
+  const closeSidebar = () => { sidebar?.classList.remove('open'); if (backdrop) backdrop.hidden = true; };
+  menu?.addEventListener('click', () => { sidebar?.classList.toggle('open'); if (backdrop) backdrop.hidden = !sidebar?.classList.contains('open'); });
+  backdrop?.addEventListener('click', closeSidebar);
+  sidebar?.querySelectorAll('a').forEach(link => link.addEventListener('click', () => { if (innerWidth <= 760) closeSidebar(); }));
+
+  requestAnimationFrame(() => root.classList.remove('theme-preload'));
 })();

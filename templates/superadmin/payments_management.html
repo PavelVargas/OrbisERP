@@ -1,143 +1,48 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Pagos | OrbisERP</title>
-    {% include 'layouts/theme_prepaint.html' %}
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/base_css/base.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/orbis_refined.css', v='20260829-orange1') }}">
-</head>
-<body class="master-theme orbis-master payments-management">
-    <header class="topbar">
-        <div class="topbar-content">
-            <a href="{{ url_for('superadmin_bp.admin_dashboard') }}" class="nav-logo">
-                <i class="bi bi-arrow-left-circle-fill"></i>
-                <span>Panel Maestro</span>
-            </a>
-            <button id="themeBtn" class="btn-theme">
-                <i id="themeIco"></i>
-                <span id="themeTxt"></span>
-            </button>
-        </div>
-    </header>
+{% extends 'superadmin/base.html' %}
+{% block title %}Pagos{% endblock %}
+{% block eyebrow %}FACTURACIÓN{% endblock %}
+{% block heading %}Pagos de tus clientes{% endblock %}
+{% block subtitle %}Revisa comprobantes pendientes y consulta el historial real de cobros de OrbisERP.{% endblock %}
+{% block actions %}<span class="sa-head-chip"><i class="bi bi-clock"></i> {{ pending|length }} pendientes</span>{% endblock %}
+{% block content %}
+<section class="sa-kpis payments-kpis">
+  <article><span><i class="bi bi-calendar-month"></i></span><div><small>Cobrado este mes</small><strong>RD$ {{ '{:,.2f}'.format(collected_month) }}</strong><em>Facturas pagadas</em></div></article>
+  <article><span><i class="bi bi-wallet2"></i></span><div><small>Cobrado histórico</small><strong>RD$ {{ '{:,.2f}'.format(collected_total) }}</strong><em>Desde el registro de pagos</em></div></article>
+  <article><span><i class="bi bi-receipt-cutoff"></i></span><div><small>Pagos registrados</small><strong>{{ paid_count }}</strong><em>Manual + pasarela</em></div></article>
+  <article><span><i class="bi bi-hourglass-split"></i></span><div><small>Pendientes</small><strong>{{ pending|length }}</strong><em>Requieren revisión</em></div></article>
+</section>
 
-    <main>
-        <section class="hero">
-            <div class="hero-inner">
-                <div data-ui-style="r952c843f21">AUDITORÍA DE PAGOS</div>
-                <h2>Solicitudes Pendientes</h2>
-                <p>Valida los comprobantes para aplicar renovaciones automáticas en los nodos.</p>
-            </div>
-        </section>
+<section class="sa-panel flush sa-section-gap">
+  <header class="sa-panel-head padded"><div><small>POR REVISAR</small><h2>Comprobantes pendientes</h2><p>Al aprobar se registra el cobro en el historial y se renueva la suscripción.</p></div></header>
+  <div class="sa-table-wrap"><table class="sa-table"><thead><tr><th>Cliente</th><th>Operación</th><th>Monto esperado</th><th>Vencimiento</th><th>Comprobante</th><th></th></tr></thead><tbody>
+  {% for company in pending %}{% set target_plan = company.requested_plan or company.plan_name or 'BASIC' %}<tr>
+    <td><div class="sa-entity"><span>{{ company.name[:1]|upper }}</span><div><strong>{{ company.name }}</strong><small>#{{ '%04d'|format(company.id) }} · {{ company.email or 'Sin correo' }}</small></div></div></td>
+    <td><strong>{{ target_plan }}</strong><small>{{ 'Cambio desde ' ~ company.plan_name if company.requested_plan and company.requested_plan != company.plan_name else 'Renovación mensual' }}</small></td>
+    <td><strong>RD$ {{ '{:,.2f}'.format(plan_prices.get(target_plan, 0)) }}</strong><small>Tarifa configurada</small></td>
+    <td>{{ company.expiration_date.strftime('%d/%m/%Y') if company.expiration_date else 'Sin fecha' }}</td>
+    <td>{% if company.last_receipt_path %}<a class="sa-text-link" href="{{ url_for('superadmin_bp.download_receipt', company_id=company.id) }}" target="_blank" rel="noopener"><i class="bi bi-file-earmark-image"></i> Ver comprobante</a>{% else %}<span class="sa-status neutral">Sin archivo</span>{% endif %}</td>
+    <td><form method="post" action="{{ url_for('superadmin_bp.approve_payment', id=company.id) }}"><button type="submit" class="sa-btn compact"><i class="bi bi-check2"></i> Aprobar pago</button></form></td>
+  </tr>{% else %}<tr><td colspan="6"><div class="sa-empty"><i class="bi bi-check2-circle"></i><strong>No hay pagos pendientes.</strong></div></td></tr>{% endfor %}
+  </tbody></table></div>
+</section>
 
-        <div class="content-container">
-            <table class="payments-table">
-                <thead>
-                    <tr>
-                        <th>Empresa</th>
-                        <th>Plan / Operación</th>
-                        <th>Estado</th>
-                        <th>Vencimiento</th>
-                        <th>Comprobante</th>
-                        <th>Acción</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for company in payments %}
-                    <tr>
-                        <td>
-                            <div data-ui-style="rba30f188c7">
-                                <strong data-ui-style="rf112760ebc">{{ company.name }}</strong>
-                                <span data-ui-style="rafd2d7152f">#NODE-{{ company.id }}</span>
-                            </div>
-                        </td>
-                        <td>
-                            <div data-ui-style="r3088da1131">
-                                <span data-ui-style="racb751cfda">
-                                    {{ company.plan_name }}
-                                </span>
-                                {% if company.requested_plan and company.requested_plan != company.plan_name %}
-                                    <i class="bi bi-arrow-right" data-ui-style="rf8b7863d6d"></i>
-                                    <span data-ui-style="r14a8ad844c">
-                                        {{ company.requested_plan }}
-                                    </span>
-                                {% endif %}
-                            </div>
-                        </td>
-                        <td>
-                            <span class="pill status-{{ company.receipt_status }}">
-                                <i class="bi {{ 'bi-clock-history' if company.receipt_status == 'PENDING' else 'bi-check-circle-fill' }}"></i>
-                                {{ 'PENDIENTE' if company.receipt_status == 'PENDING' else 'APROBADO' }}
-                            </span>
-                        </td>
-                        <td>
-                            <div data-ui-style="reefff2f8dd">
-                                <i class="bi bi-calendar-event" data-ui-style="r979e86e5e9"></i>
-                                {{ company.expiration_date.strftime('%d/%m/%Y') if company.expiration_date else 'N/A' }}
-                            </div>
-                        </td>
-                        <td>
-                            {% if company.last_receipt_path %}
-                            <a href="{{ url_for('superadmin_bp.download_receipt', company_id=company.id) }}" target="_blank" rel="noopener" data-ui-style="r340a40920e">
-                                <i class="bi bi-file-earmark-image"></i> Ver Recibo
-                            </a>
-                            {% else %}
-                            <span data-ui-style="rbfc60b4648">Sin archivo</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if company.receipt_status == 'PENDING' %}
-                            <form action="{{ url_for('superadmin_bp.approve_payment', id=company.id) }}" method="POST">
-                                <button type="submit" class="btn-approve">
-                                    <i class="bi bi-check-lg"></i> APROBAR
-                                </button>
-                            </form>
-                            {% else %}
-                            <span data-ui-style="rb41d648de9">
-                                <i class="bi bi-shield-fill-check"></i> PROCESADO
-                            </span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </main>
-
-    <script>
-        (() => {
-            const icon = document.getElementById('themeIco');
-            const text = document.getElementById('themeTxt');
-            const button = document.getElementById('themeBtn');
-            const current = () => document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-            const paint = (theme) => {
-                const dark = theme === 'dark';
-                if (icon) icon.className = dark ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
-                if (text) text.textContent = dark ? 'Modo claro' : 'Modo oscuro';
-            };
-            paint(current());
-            button?.addEventListener('click', () => {
-                const theme = window.OrbisTheme
-                    ? window.OrbisTheme.toggle()
-                    : (current() === 'dark' ? 'light' : 'dark');
-                if (!window.OrbisTheme) {
-                    const dark = theme === 'dark';
-                    document.documentElement.classList.toggle('dark', dark);
-                    document.documentElement.dataset.theme = theme;
-                    document.body.classList.toggle('dark', dark);
-                    try {
-                        localStorage.setItem('theme', theme);
-                        localStorage.setItem('orbis-theme', theme);
-                    } catch (_error) {}
-                }
-                paint(theme);
-            });
-            document.addEventListener('orbis:themechange', (event) => paint(event.detail?.theme || current()));
-        })();
-    </script>
-</body>
-</html>
+<section class="sa-panel flush sa-section-gap">
+  <header class="sa-panel-head padded"><div><small>HISTORIAL</small><h2>Cobros registrados</h2><p>Los pagos aprobados desde esta versión quedan persistidos aquí; los webhooks también aparecen automáticamente.</p></div><label class="sa-search mini"><i class="bi bi-search"></i><input id="paymentSearch" type="search" placeholder="Buscar cliente, plan o referencia"></label></header>
+  <div class="sa-table-wrap"><table class="sa-table"><thead><tr><th>Fecha</th><th>Cliente</th><th>Plan</th><th>Origen</th><th>Referencia</th><th>Período</th><th class="num">Monto</th><th>Estado</th></tr></thead><tbody id="paymentRows">
+  {% for invoice, company in history %}<tr data-payment-row data-search="{{ (company.name ~ ' ' ~ invoice.plan_name ~ ' ' ~ invoice.provider ~ ' ' ~ invoice.external_id)|lower }}">
+    <td>{{ invoice.paid_at.strftime('%d/%m/%Y %H:%M') if invoice.paid_at else invoice.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+    <td><strong>{{ company.name }}</strong><small>#{{ '%04d'|format(company.id) }}</small></td>
+    <td><span class="sa-tag plan">{{ invoice.plan_name }}</span></td>
+    <td>{{ invoice.provider|replace('_',' ')|title }}</td>
+    <td><code class="sa-code">{{ invoice.external_id }}</code></td>
+    <td>{{ invoice.period_end.strftime('%d/%m/%Y') if invoice.period_end else '—' }}</td>
+    <td class="num"><strong>{{ invoice.currency }} {{ '{:,.2f}'.format(invoice.amount) }}</strong></td>
+    <td><span class="sa-status {{ 'ok' if invoice.status|upper == 'PAID' else 'warn' }}">{{ invoice.status }}</span></td>
+  </tr>{% else %}<tr><td colspan="8"><div class="sa-empty">Todavía no hay historial de cobros.</div></td></tr>{% endfor %}
+  </tbody></table></div>
+  <div class="sa-empty" id="paymentEmpty" hidden><i class="bi bi-search"></i><strong>No hay coincidencias.</strong></div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script nonce="{{ g.csp_nonce }}">(() => { const input=document.getElementById('paymentSearch'); const rows=[...document.querySelectorAll('[data-payment-row]')]; const empty=document.getElementById('paymentEmpty'); const apply=()=>{const q=(input?.value||'').trim().toLocaleLowerCase('es');let n=0;rows.forEach(r=>{r.hidden=!!q && !(r.dataset.search||'').includes(q);if(!r.hidden)n++;});if(empty)empty.hidden=n!==0;};input?.addEventListener('input',apply);})();</script>
+{% endblock %}

@@ -242,8 +242,7 @@ def list_companies():
         flash("Acceso denegado", "danger")
         return redirect(url_for('dashboard_bp.dashboard'))
 
-    companies = Company.query.all()
-    return render_template("company/list_companies.html", companies=companies, user=user)
+    return redirect(url_for('superadmin_bp.clients'))
 
 
 # =====================================================
@@ -295,7 +294,7 @@ def stop_impersonate():
     session.pop('original_user_id', None)
 
     flash("Sesión restaurada", "success")
-    return redirect(url_for('company_bp.list_companies'))
+    return redirect(url_for('superadmin_bp.clients'))
 
 
 # =====================================================
