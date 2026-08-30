@@ -11,12 +11,8 @@ from models.retail import ProductBarcode
 from db import db
 from decimal import Decimal
 from datetime import datetime
-import pdfkit
-import base64
-import io
-from barcode import Code128
-from barcode.writer import ImageWriter
 from flask import render_template, make_response
+from services.transfer_pdf import build_transfer_pdf
 import re
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
@@ -450,35 +446,24 @@ def view_transfer(transfer_id):
 @transfer_bp.route('/print/<int:transfer_id>')
 def print_transfer(transfer_id):
     company_id = session.get('company_id')
-    transfer = StockTransfer.query.filter_by(id=transfer_id, company_id=company_id).first_or_404()
+    user_id = session.get('user_id')
+    if not company_id or not user_id:
+        return redirect(url_for('login_bp.login'))
 
-    barcode_value = f"TR{transfer.id:06d}" 
-    
-    buffer = io.BytesIO()
-    Code128(barcode_value, writer=ImageWriter()).write(buffer)
-    barcode_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    transfer = StockTransfer.query.options(
+        joinedload(StockTransfer.product),
+        joinedload(StockTransfer.from_warehouse),
+        joinedload(StockTransfer.to_warehouse),
+        joinedload(StockTransfer.from_location),
+        joinedload(StockTransfer.to_location),
+        joinedload(StockTransfer.creator),
+    ).filter_by(id=transfer_id, company_id=company_id).first_or_404()
+    user = User.query.filter_by(id=user_id, company_id=company_id).first()
 
-    html_content = render_template(
-        'transfers/pdf_template.html', 
-        transfer=transfer, 
-        barcode_base64=barcode_base64
-    )
-
-    options = {
-        'page-size': 'A4',
-        'margin-top': '0mm',
-        'margin-right': '0mm',
-        'margin-bottom': '0mm',
-        'margin-left': '0mm',
-        'encoding': "UTF-8",
-        'enable-local-file-access': None
-    }
-    
-    pdf = pdfkit.from_string(html_content, False, options=options)
+    pdf = build_transfer_pdf(transfer=transfer, user=user)
     response = make_response(pdf)
     response.headers['Content-Type'] = 'application/pdf'
     response.headers['Content-Disposition'] = f'inline; filename=Conduce_TR{transfer.id}.pdf'
-    
     return response
 
 @transfer_bp.route('/api/get_details/<string:code>')
